@@ -1,0 +1,74 @@
+{
+ "id": 1001,
+ "name": "x",
+ "label": "5 de oct de 2026",
+ "gf": 2900000,
+ "tI": 14261865,
+ "tC": 6136418,
+ "tM": 8125447,
+ "resultado": 5225447,
+ "dist": {
+  "mostrador": 45,
+  "whatsapp": 25,
+  "rappi": 15,
+  "pedidosya": 15,
+  "fudo": 0,
+  "mercadopago": 0
+ },
+ "mode": "manual",
+ "manualUnits": {
+  "pizza_muzza": 420,
+  "pizza_napo": 260,
+  "pizza_fuga": 200,
+  "pizza_jamon": 180,
+  "empanada_jyq": 150,
+  "gaseosa": 330
+ },
+ "rows": [
+  {
+   "name": "Pizza Muzzarella",
+   "units": 420,
+   "ing": 4099221,
+   "cost": 1719186,
+   "marg": 2380035
+  },
+  {
+   "name": "Pizza Napolitana",
+   "units": 260,
+   "ing": 2564120,
+   "cost": 1079338,
+   "marg": 1484782
+  },
+  {
+   "name": "Pizza Fugazzeta",
+   "units": 200,
+   "ing": 2206190,
+   "cost": 895660,
+   "marg": 1310530
+  },
+  {
+   "name": "Pizza Jamón y Morrones",
+   "units": 180,
+   "ing": 2353257,
+   "cost": 1015434,
+   "marg": 1337823
+  },
+  {
+   "name": "Empanadas Jamón y Queso (x6)",
+   "units": 150,
+   "ing": 1271498,
+   "cost": 605100,
+   "marg": 666398
+  },
+  {
+   "name": "Gaseosa 1,5 L",
+   "units": 330,
+   "ing": 1767579,
+   "cost": 821700,
+   "marg": 945879
+  }
+ ],
+ "savedAt": "2026-08-06T12:00:00.000Z",
+ "gananciaDiaria": 174181.56666666668,
+ "gananciaWeekly": 1206800.6928406467
+}

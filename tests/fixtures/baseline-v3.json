@@ -1,0 +1,3703 @@
+{
+ "generatedFrom": "reference/Sahten v3.html",
+ "scenarios": {
+  "base": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 1835.4430379746836,
+    "gfUnitsBase": 1580,
+    "gfCoverageAmount": 2900000,
+    "gfCoveragePct": 100,
+    "tierProfitTotal": 5340205.6632911395,
+    "tierProfitTotalProj": 5340205.6632911395,
+    "totalGFPct": 95,
+    "globalComm": 0,
+    "usd": 1200
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9500,
+     "mostradorFinalPrice": 9500,
+     "projUnits": 420,
+     "ch": {
+      "mostrador": {
+       "price": 9500,
+       "net": 9500,
+       "priceDisc": 9500,
+       "netDisc": 9500,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 10950,
+       "net": 10403,
+       "priceDisc": 10950,
+       "netDisc": 10403,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13800,
+       "net": 9660,
+       "priceDisc": 13800,
+       "netDisc": 9660,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13800,
+       "net": 9936,
+       "priceDisc": 13800,
+       "netDisc": 9936,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 10950,
+       "net": 10293,
+       "priceDisc": 10950,
+       "netDisc": 10293,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9600,
+     "mostradorFinalPrice": 9600,
+     "projUnits": 260,
+     "ch": {
+      "mostrador": {
+       "price": 9600,
+       "net": 9600,
+       "priceDisc": 9600,
+       "netDisc": 9600,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11050,
+       "net": 10498,
+       "priceDisc": 11050,
+       "netDisc": 10498,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13900,
+       "net": 9730,
+       "priceDisc": 13900,
+       "netDisc": 9730,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13900,
+       "net": 10008,
+       "priceDisc": 13900,
+       "netDisc": 10008,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11050,
+       "net": 10387,
+       "priceDisc": 11050,
+       "netDisc": 10387,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 10750,
+     "mostradorFinalPrice": 10750,
+     "projUnits": 200,
+     "ch": {
+      "mostrador": {
+       "price": 10750,
+       "net": 10750,
+       "priceDisc": 10750,
+       "netDisc": 10750,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 12350,
+       "net": 11733,
+       "priceDisc": 12350,
+       "netDisc": 11733,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 15600,
+       "net": 10920,
+       "priceDisc": 15600,
+       "netDisc": 10920,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 15600,
+       "net": 11232,
+       "priceDisc": 15600,
+       "netDisc": 11232,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 12350,
+       "net": 11609,
+       "priceDisc": 12350,
+       "netDisc": 11609,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 12700,
+     "mostradorFinalPrice": 12700,
+     "projUnits": 180,
+     "ch": {
+      "mostrador": {
+       "price": 12700,
+       "net": 12700,
+       "priceDisc": 12700,
+       "netDisc": 12700,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 14600,
+       "net": 13870,
+       "priceDisc": 14600,
+       "netDisc": 13870,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 18400,
+       "net": 12880,
+       "priceDisc": 18400,
+       "netDisc": 12880,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 18400,
+       "net": 13248,
+       "priceDisc": 18400,
+       "netDisc": 13248,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 14600,
+       "net": 13724,
+       "priceDisc": 14600,
+       "netDisc": 13724,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 8200,
+     "mostradorFinalPrice": 8200,
+     "projUnits": 150,
+     "ch": {
+      "mostrador": {
+       "price": 8200,
+       "net": 8200,
+       "priceDisc": 8200,
+       "netDisc": 8200,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 9450,
+       "net": 8978,
+       "priceDisc": 9450,
+       "netDisc": 8978,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 11900,
+       "net": 8330,
+       "priceDisc": 11900,
+       "netDisc": 8330,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 11900,
+       "net": 8568,
+       "priceDisc": 11900,
+       "netDisc": 8568,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 9450,
+       "net": 8883,
+       "priceDisc": 9450,
+       "netDisc": 8883,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 1,
+     "costPerUnit": 2490,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 5200,
+     "mostradorFinalPrice": 5200,
+     "projUnits": 330,
+     "ch": {
+      "mostrador": {
+       "price": 5200,
+       "net": 5200,
+       "priceDisc": 5200,
+       "netDisc": 5200,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 6000,
+       "net": 5700,
+       "priceDisc": 6000,
+       "netDisc": 5700,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 7550,
+       "net": 5285,
+       "priceDisc": 7550,
+       "netDisc": 5285,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 7550,
+       "net": 5436,
+       "priceDisc": 7550,
+       "netDisc": 5436,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 6000,
+       "net": 5640,
+       "priceDisc": 6000,
+       "netDisc": 5640,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 29900,
+     "mostradorFinalPrice": 29900,
+     "projUnits": 40,
+     "ch": {
+      "mostrador": {
+       "price": 29900,
+       "net": 29900,
+       "priceDisc": 29900,
+       "netDisc": 29900,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 34400,
+       "net": 32680,
+       "priceDisc": 34400,
+       "netDisc": 32680,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 43350,
+       "net": 30345,
+       "priceDisc": 43350,
+       "netDisc": 30345,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 43350,
+       "net": 31212,
+       "priceDisc": 43350,
+       "netDisc": 31212,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 34400,
+       "net": 32336,
+       "priceDisc": 34400,
+       "netDisc": 32336,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 15774856,
+    "tC": 6810652,
+    "tM": 8964204,
+    "resultado": 6064204,
+    "totalUnits": 1580,
+    "ticketProm": 9984.086075949366,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9534.177215189873,
+      "ticketCliente": 9534.177215189873
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10428.379746835442,
+      "ticketCliente": 10976.898734177215
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9681.487341772152,
+      "ticketCliente": 13830.696202531646
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9958.101265822785,
+      "ticketCliente": 13830.696202531646
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10318.284810126583,
+      "ticketCliente": 10976.898734177215
+     }
+    ],
+    "gananciaDiaria": 202140.13333333333,
+    "gananciaWeekly": 1400509.0069284064,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4182528,
+      "cost": 1719186,
+      "marg": 2463342
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2611596,
+      "cost": 1079338,
+      "marg": 1532258
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2249760,
+      "cost": 895660,
+      "marg": 1354100
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2391192,
+      "cost": 1015434,
+      "marg": 1375758
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1288770,
+      "cost": 605100,
+      "marg": 683670
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1799226,
+      "cost": 821700,
+      "marg": 977526
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1251784,
+      "cost": 674234,
+      "marg": 577550
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 15774856,
+    "tC": 6810652,
+    "tM": 8964204,
+    "resultado": 6064204,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "manualUnits": {},
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4182528,
+      "cost": 1719186,
+      "marg": 2463342
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2611596,
+      "cost": 1079338,
+      "marg": 1532258
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2249760,
+      "cost": 895660,
+      "marg": 1354100
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2391192,
+      "cost": 1015434,
+      "marg": 1375758
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1288770,
+      "cost": 605100,
+      "marg": 683670
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1799226,
+      "cost": 821700,
+      "marg": 977526
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1251784,
+      "cost": 674234,
+      "marg": 577550
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": 202140.13333333333,
+    "gananciaWeekly": 1400509.0069284064
+   },
+   "fmt": [
+    "$12.346",
+    "$1",
+    "$-1.234",
+    1250,
+    1300
+   ]
+  },
+  "comision5": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 1835.4430379746836,
+    "gfUnitsBase": 1580,
+    "gfCoverageAmount": 2900000,
+    "gfCoveragePct": 100,
+    "tierProfitTotal": 5340205.6632911395,
+    "tierProfitTotalProj": 5340205.6632911395,
+    "totalGFPct": 95,
+    "globalComm": 0.05,
+    "usd": 1400
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9500,
+     "mostradorFinalPrice": 10000,
+     "projUnits": 420,
+     "ch": {
+      "mostrador": {
+       "price": 10000,
+       "net": 10000,
+       "priceDisc": 10000,
+       "netDisc": 10000,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11450,
+       "net": 10878,
+       "priceDisc": 11450,
+       "netDisc": 10878,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 14450,
+       "net": 10115,
+       "priceDisc": 14450,
+       "netDisc": 10115,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 14450,
+       "net": 10404,
+       "priceDisc": 14450,
+       "netDisc": 10404,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11450,
+       "net": 10763,
+       "priceDisc": 11450,
+       "netDisc": 10763,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9600,
+     "mostradorFinalPrice": 10100,
+     "projUnits": 260,
+     "ch": {
+      "mostrador": {
+       "price": 10100,
+       "net": 10100,
+       "priceDisc": 10100,
+       "netDisc": 10100,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11600,
+       "net": 11020,
+       "priceDisc": 11600,
+       "netDisc": 11020,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 14600,
+       "net": 10220,
+       "priceDisc": 14600,
+       "netDisc": 10220,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 14600,
+       "net": 10512,
+       "priceDisc": 14600,
+       "netDisc": 10512,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11600,
+       "net": 10904,
+       "priceDisc": 11600,
+       "netDisc": 10904,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 10750,
+     "mostradorFinalPrice": 11300,
+     "projUnits": 200,
+     "ch": {
+      "mostrador": {
+       "price": 11300,
+       "net": 11300,
+       "priceDisc": 11300,
+       "netDisc": 11300,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 13000,
+       "net": 12350,
+       "priceDisc": 13000,
+       "netDisc": 12350,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 16350,
+       "net": 11445,
+       "priceDisc": 16350,
+       "netDisc": 11445,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 16350,
+       "net": 11772,
+       "priceDisc": 16350,
+       "netDisc": 11772,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 13000,
+       "net": 12220,
+       "priceDisc": 13000,
+       "netDisc": 12220,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 12700,
+     "mostradorFinalPrice": 13350,
+     "projUnits": 180,
+     "ch": {
+      "mostrador": {
+       "price": 13350,
+       "net": 13350,
+       "priceDisc": 13350,
+       "netDisc": 13350,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 15350,
+       "net": 14583,
+       "priceDisc": 15350,
+       "netDisc": 14583,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 19350,
+       "net": 13545,
+       "priceDisc": 19350,
+       "netDisc": 13545,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 19350,
+       "net": 13932,
+       "priceDisc": 19350,
+       "netDisc": 13932,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 15350,
+       "net": 14429,
+       "priceDisc": 15350,
+       "netDisc": 14429,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 8200,
+     "mostradorFinalPrice": 8600,
+     "projUnits": 150,
+     "ch": {
+      "mostrador": {
+       "price": 8600,
+       "net": 8600,
+       "priceDisc": 8600,
+       "netDisc": 8600,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 9900,
+       "net": 9405,
+       "priceDisc": 9900,
+       "netDisc": 9405,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 12500,
+       "net": 8750,
+       "priceDisc": 12500,
+       "netDisc": 8750,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 12500,
+       "net": 9000,
+       "priceDisc": 12500,
+       "netDisc": 9000,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 9900,
+       "net": 9306,
+       "priceDisc": 9900,
+       "netDisc": 9306,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 1,
+     "costPerUnit": 2490,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 5200,
+     "mostradorFinalPrice": 5450,
+     "projUnits": 330,
+     "ch": {
+      "mostrador": {
+       "price": 5450,
+       "net": 5450,
+       "priceDisc": 5450,
+       "netDisc": 5450,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 6300,
+       "net": 5985,
+       "priceDisc": 6300,
+       "netDisc": 5985,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 7900,
+       "net": 5530,
+       "priceDisc": 7900,
+       "netDisc": 5530,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 7900,
+       "net": 5688,
+       "priceDisc": 7900,
+       "netDisc": 5688,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 6300,
+       "net": 5922,
+       "priceDisc": 6300,
+       "netDisc": 5922,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 29900,
+     "mostradorFinalPrice": 31400,
+     "projUnits": 40,
+     "ch": {
+      "mostrador": {
+       "price": 31400,
+       "net": 31400,
+       "priceDisc": 31400,
+       "netDisc": 31400,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 36100,
+       "net": 34295,
+       "priceDisc": 36100,
+       "netDisc": 34295,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 45500,
+       "net": 31850,
+       "priceDisc": 45500,
+       "netDisc": 31850,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 45500,
+       "net": 32760,
+       "priceDisc": 45500,
+       "netDisc": 32760,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 36100,
+       "net": 33934,
+       "priceDisc": 36100,
+       "netDisc": 33934,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 16554128,
+    "tC": 6810652,
+    "tM": 9743476,
+    "resultado": 6843476,
+    "totalUnits": 1580,
+    "ticketProm": 10477.296202531645,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10021.20253164557,
+      "ticketCliente": 10021.20253164557
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10940.822784810127,
+      "ticketCliente": 11516.45569620253
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10154.430379746835,
+      "ticketCliente": 14506.32911392405
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10444.556962025317,
+      "ticketCliente": 14506.32911392405
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10825.468354430379,
+      "ticketCliente": 11516.45569620253
+     }
+    ],
+    "gananciaDiaria": 228115.86666666667,
+    "gananciaWeekly": 1580479.4457274827,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4381440,
+      "cost": 1719186,
+      "marg": 2662254
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2743312,
+      "cost": 1079338,
+      "marg": 1663974
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2363480,
+      "cost": 895660,
+      "marg": 1467820
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2514204,
+      "cost": 1015434,
+      "marg": 1498770
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1351830,
+      "cost": 605100,
+      "marg": 746730
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1885950,
+      "cost": 821700,
+      "marg": 1064250
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1313912,
+      "cost": 674234,
+      "marg": 639678
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 16554128,
+    "tC": 6810652,
+    "tM": 9743476,
+    "resultado": 6843476,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "manualUnits": {},
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4381440,
+      "cost": 1719186,
+      "marg": 2662254
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2743312,
+      "cost": 1079338,
+      "marg": 1663974
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2363480,
+      "cost": 895660,
+      "marg": 1467820
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2514204,
+      "cost": 1015434,
+      "marg": 1498770
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1351830,
+      "cost": 605100,
+      "marg": 746730
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1885950,
+      "cost": 821700,
+      "marg": 1064250
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1313912,
+      "cost": 674234,
+      "marg": 639678
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": 228115.86666666667,
+    "gananciaWeekly": 1580479.4457274827
+   },
+   "fmt": [
+    "$12.346",
+    "$1",
+    "$-1.234",
+    1250,
+    1300
+   ]
+  },
+  "mixto": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 2132.3529411764707,
+    "gfUnitsBase": 1360,
+    "gfCoverageAmount": 3251838.2352941176,
+    "gfCoveragePct": 112.13235294117648,
+    "tierProfitTotal": 5236770.129411764,
+    "tierProfitTotalProj": 5236770.129411764,
+    "totalGFPct": 95,
+    "globalComm": 0.03,
+    "usd": 1200
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 2132.3529411764707,
+     "absorbs": true,
+     "mostradorPrice": 10950,
+     "mostradorFinalPrice": 12400,
+     "projUnits": 420,
+     "ch": {
+      "mostrador": {
+       "price": 12400,
+       "net": 12400,
+       "priceDisc": 12400,
+       "netDisc": 12400,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 14250,
+       "net": 13538,
+       "priceDisc": 14250,
+       "netDisc": 13538,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 18000,
+       "net": 12600,
+       "priceDisc": 17100,
+       "netDisc": 11970,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 18000,
+       "net": 12960,
+       "priceDisc": 18000,
+       "netDisc": 12960,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 14250,
+       "net": 13395,
+       "priceDisc": 14250,
+       "netDisc": 13395,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 2132.3529411764707,
+     "absorbs": true,
+     "mostradorPrice": 9050,
+     "mostradorFinalPrice": 10250,
+     "projUnits": 260,
+     "ch": {
+      "mostrador": {
+       "price": 10250,
+       "net": 10250,
+       "priceDisc": 10250,
+       "netDisc": 10250,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11800,
+       "net": 11210,
+       "priceDisc": 11800,
+       "netDisc": 11210,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 14850,
+       "net": 10395,
+       "priceDisc": 14100,
+       "netDisc": 9870,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 14850,
+       "net": 10692,
+       "priceDisc": 14850,
+       "netDisc": 10692,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11800,
+       "net": 11092,
+       "priceDisc": 11800,
+       "netDisc": 11092,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 2132.3529411764707,
+     "absorbs": true,
+     "mostradorPrice": 11050,
+     "mostradorFinalPrice": 12500,
+     "projUnits": 200,
+     "ch": {
+      "mostrador": {
+       "price": 12500,
+       "net": 12500,
+       "priceDisc": 12500,
+       "netDisc": 12500,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 14400,
+       "net": 13680,
+       "priceDisc": 14400,
+       "netDisc": 13680,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 18150,
+       "net": 12705,
+       "priceDisc": 17250,
+       "netDisc": 12075,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 18150,
+       "net": 13068,
+       "priceDisc": 18150,
+       "netDisc": 13068,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 14400,
+       "net": 13536,
+       "priceDisc": 14400,
+       "netDisc": 13536,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 0,
+     "absorbs": false,
+     "mostradorPrice": 9600,
+     "mostradorFinalPrice": 10900,
+     "projUnits": 180,
+     "ch": {
+      "mostrador": {
+       "price": 10900,
+       "net": 10900,
+       "priceDisc": 10900,
+       "netDisc": 10900,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 12500,
+       "net": 11875,
+       "priceDisc": 12500,
+       "netDisc": 11875,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 15750,
+       "net": 11025,
+       "priceDisc": 14950,
+       "netDisc": 10465,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 15750,
+       "net": 11340,
+       "priceDisc": 15750,
+       "netDisc": 11340,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 12500,
+       "net": 11750,
+       "priceDisc": 12500,
+       "netDisc": 11750,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 2132.3529411764707,
+     "absorbs": true,
+     "mostradorPrice": 8650,
+     "mostradorFinalPrice": 9800,
+     "projUnits": 150,
+     "ch": {
+      "mostrador": {
+       "price": 9800,
+       "net": 9800,
+       "priceDisc": 9800,
+       "netDisc": 9800,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11250,
+       "net": 10688,
+       "priceDisc": 11250,
+       "netDisc": 10688,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 14200,
+       "net": 9940,
+       "priceDisc": 12800,
+       "netDisc": 8960,
+       "disc": 0.1
+      },
+      "pedidosya": {
+       "price": 14200,
+       "net": 10224,
+       "priceDisc": 14200,
+       "netDisc": 10224,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11250,
+       "net": 10575,
+       "priceDisc": 11250,
+       "netDisc": 10575,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 2.5,
+     "costPerUnit": 996,
+     "gfAssigned": 3198.5294117647063,
+     "absorbs": true,
+     "mostradorPrice": 5050,
+     "mostradorFinalPrice": 5700,
+     "projUnits": 330,
+     "ch": {
+      "mostrador": {
+       "price": 5700,
+       "net": 5700,
+       "priceDisc": 5700,
+       "netDisc": 5700,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 6600,
+       "net": 6270,
+       "priceDisc": 6600,
+       "netDisc": 6270,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 8300,
+       "net": 5810,
+       "priceDisc": 7900,
+       "netDisc": 5530,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 8300,
+       "net": 5976,
+       "priceDisc": 8300,
+       "netDisc": 5976,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 6600,
+       "net": 6204,
+       "priceDisc": 6600,
+       "netDisc": 6204,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 0,
+     "absorbs": false,
+     "mostradorPrice": 26950,
+     "mostradorFinalPrice": 30550,
+     "projUnits": 40,
+     "ch": {
+      "mostrador": {
+       "price": 30550,
+       "net": 30550,
+       "priceDisc": 30550,
+       "netDisc": 30550,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 35100,
+       "net": 33345,
+       "priceDisc": 35100,
+       "netDisc": 33345,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 44250,
+       "net": 30975,
+       "priceDisc": 42050,
+       "netDisc": 29435,
+       "disc": 0.05
+      },
+      "pedidosya": {
+       "price": 44250,
+       "net": 31860,
+       "priceDisc": 44250,
+       "netDisc": 31860,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 35100,
+       "net": 32994,
+       "priceDisc": 35100,
+       "netDisc": 32994,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 17514022,
+    "tC": 6317632,
+    "tM": 11196390,
+    "resultado": 8296390,
+    "totalUnits": 1580,
+    "ticketProm": 11084.824050632911,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10701.26582278481,
+      "ticketCliente": 10701.26582278481
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 11696.303797468354,
+      "ticketCliente": 12311.708860759494
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10277.594936708861,
+      "ticketCliente": 14682.278481012658
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 11175.949367088608,
+      "ticketCliente": 15522.151898734177
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 11573.006329113925,
+      "ticketCliente": 12311.708860759494
+     }
+    ],
+    "gananciaDiaria": 276546.3333333333,
+    "gananciaWeekly": 1916025.404157044,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 5398092,
+      "cost": 1719186,
+      "marg": 3678906
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2761928,
+      "cost": 1079338,
+      "marg": 1682590
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2594360,
+      "cost": 895660,
+      "marg": 1698700
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2027880,
+      "cost": 1015434,
+      "marg": 1012446
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1507410,
+      "cost": 605100,
+      "marg": 902310
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1958880,
+      "cost": 328680,
+      "marg": 1630200
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1265472,
+      "cost": 674234,
+      "marg": 591238
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 17514022,
+    "tC": 6317632,
+    "tM": 11196390,
+    "resultado": 8296390,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "manualUnits": {},
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 5398092,
+      "cost": 1719186,
+      "marg": 3678906
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2761928,
+      "cost": 1079338,
+      "marg": 1682590
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2594360,
+      "cost": 895660,
+      "marg": 1698700
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2027880,
+      "cost": 1015434,
+      "marg": 1012446
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1507410,
+      "cost": 605100,
+      "marg": 902310
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1958880,
+      "cost": 328680,
+      "marg": 1630200
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1265472,
+      "cost": 674234,
+      "marg": 591238
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": 276546.3333333333,
+    "gananciaWeekly": 1916025.404157044
+   },
+   "fmt": [
+    "$12.346",
+    "$1",
+    "$-1.234",
+    1250,
+    1300
+   ]
+  },
+  "sinVentas": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 3222.222222222222,
+    "gfUnitsBase": 0,
+    "gfCoverageAmount": 0,
+    "gfCoveragePct": 0,
+    "tierProfitTotal": 0,
+    "tierProfitTotalProj": 0,
+    "totalGFPct": 95,
+    "globalComm": 0,
+    "usd": 1200
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 11700,
+     "mostradorFinalPrice": 11700,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 11700,
+       "net": 11700,
+       "priceDisc": 11700,
+       "netDisc": 11700,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 13450,
+       "net": 12778,
+       "priceDisc": 13450,
+       "netDisc": 12778,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 16950,
+       "net": 11865,
+       "priceDisc": 16950,
+       "netDisc": 11865,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 16950,
+       "net": 12204,
+       "priceDisc": 16950,
+       "netDisc": 12204,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 13450,
+       "net": 12643,
+       "priceDisc": 13450,
+       "netDisc": 12643,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 11800,
+     "mostradorFinalPrice": 11800,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 11800,
+       "net": 11800,
+       "priceDisc": 11800,
+       "netDisc": 11800,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 13550,
+       "net": 12873,
+       "priceDisc": 13550,
+       "netDisc": 12873,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 17100,
+       "net": 11970,
+       "priceDisc": 17100,
+       "netDisc": 11970,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 17100,
+       "net": 12312,
+       "priceDisc": 17100,
+       "netDisc": 12312,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 13550,
+       "net": 12737,
+       "priceDisc": 13550,
+       "netDisc": 12737,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 13100,
+     "mostradorFinalPrice": 13100,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 13100,
+       "net": 13100,
+       "priceDisc": 13100,
+       "netDisc": 13100,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 15050,
+       "net": 14298,
+       "priceDisc": 15050,
+       "netDisc": 14298,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 19000,
+       "net": 13300,
+       "priceDisc": 19000,
+       "netDisc": 13300,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 19000,
+       "net": 13680,
+       "priceDisc": 19000,
+       "netDisc": 13680,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 15050,
+       "net": 14147,
+       "priceDisc": 15050,
+       "netDisc": 14147,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 15050,
+     "mostradorFinalPrice": 15050,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 15050,
+       "net": 15050,
+       "priceDisc": 15050,
+       "netDisc": 15050,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 17300,
+       "net": 16435,
+       "priceDisc": 17300,
+       "netDisc": 16435,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 21800,
+       "net": 15260,
+       "priceDisc": 21800,
+       "netDisc": 15260,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 21800,
+       "net": 15696,
+       "priceDisc": 21800,
+       "netDisc": 15696,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 17300,
+       "net": 16262,
+       "priceDisc": 17300,
+       "netDisc": 16262,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 10150,
+     "mostradorFinalPrice": 10150,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 10150,
+       "net": 10150,
+       "priceDisc": 10150,
+       "netDisc": 10150,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11650,
+       "net": 11068,
+       "priceDisc": 11650,
+       "netDisc": 11068,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 14700,
+       "net": 10290,
+       "priceDisc": 14700,
+       "netDisc": 10290,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 14700,
+       "net": 10584,
+       "priceDisc": 14700,
+       "netDisc": 10584,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11650,
+       "net": 10951,
+       "priceDisc": 11650,
+       "netDisc": 10951,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 1,
+     "costPerUnit": 2490,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 6850,
+     "mostradorFinalPrice": 6850,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 6850,
+       "net": 6850,
+       "priceDisc": 6850,
+       "netDisc": 6850,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 7900,
+       "net": 7505,
+       "priceDisc": 7900,
+       "netDisc": 7505,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 9950,
+       "net": 6965,
+       "priceDisc": 9950,
+       "netDisc": 6965,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 9950,
+       "net": 7164,
+       "priceDisc": 9950,
+       "netDisc": 7164,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 7900,
+       "net": 7426,
+       "priceDisc": 7900,
+       "netDisc": 7426,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 3222.222222222222,
+     "absorbs": true,
+     "mostradorPrice": 32100,
+     "mostradorFinalPrice": 32100,
+     "projUnits": 0,
+     "ch": {
+      "mostrador": {
+       "price": 32100,
+       "net": 32100,
+       "priceDisc": 32100,
+       "netDisc": 32100,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 36900,
+       "net": 35055,
+       "priceDisc": 36900,
+       "netDisc": 35055,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 46550,
+       "net": 32585,
+       "priceDisc": 46550,
+       "netDisc": 32585,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 46550,
+       "net": 33516,
+       "priceDisc": 46550,
+       "netDisc": 33516,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 36900,
+       "net": 34686,
+       "priceDisc": 36900,
+       "netDisc": 34686,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 0,
+    "tC": 0,
+    "tM": 0,
+    "resultado": -2900000,
+    "totalUnits": 0,
+    "ticketProm": 0,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 20,
+      "units": 0,
+      "ticketNeto": 0,
+      "ticketCliente": 0
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 0,
+      "ticketNeto": 0,
+      "ticketCliente": 0
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 20,
+      "units": 0,
+      "ticketNeto": 0,
+      "ticketCliente": 0
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 20,
+      "units": 0,
+      "ticketNeto": 0,
+      "ticketCliente": 0
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 20,
+      "units": 0,
+      "ticketNeto": 0,
+      "ticketCliente": 0
+     }
+    ],
+    "gananciaDiaria": -96666.66666666667,
+    "gananciaWeekly": -669745.9584295612,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 0,
+    "tC": 0,
+    "tM": 0,
+    "resultado": -2900000,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "manualUnits": {},
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 0,
+      "ing": 0,
+      "cost": 0,
+      "marg": 0
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": -96666.66666666667,
+    "gananciaWeekly": -669745.9584295612
+   },
+   "fmt": [
+    "$12.346",
+    "$1",
+    "$-1.234",
+    1250,
+    1300
+   ]
+  },
+  "monedaChica": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 1835.4430379746836,
+    "gfUnitsBase": 1580,
+    "gfCoverageAmount": 2900000,
+    "gfCoveragePct": 100,
+    "tierProfitTotal": 5340205.6632911395,
+    "tierProfitTotalProj": 5340205.6632911395,
+    "totalGFPct": 95,
+    "globalComm": 0,
+    "usd": 1200
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9486,
+     "mostradorFinalPrice": 9486,
+     "projUnits": 420,
+     "ch": {
+      "mostrador": {
+       "price": 9486,
+       "net": 9486,
+       "priceDisc": 9486,
+       "netDisc": 9486,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 10909,
+       "net": 10364,
+       "priceDisc": 10909,
+       "netDisc": 10364,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13754.5,
+       "net": 9628,
+       "priceDisc": 13754.5,
+       "netDisc": 9628,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13754.5,
+       "net": 9903,
+       "priceDisc": 13754.5,
+       "netDisc": 9903,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 10909,
+       "net": 10254,
+       "priceDisc": 10909,
+       "netDisc": 10254,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9579,
+     "mostradorFinalPrice": 9579,
+     "projUnits": 260,
+     "ch": {
+      "mostrador": {
+       "price": 9579,
+       "net": 9579,
+       "priceDisc": 9579,
+       "netDisc": 9579,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11016,
+       "net": 10465,
+       "priceDisc": 11016,
+       "netDisc": 10465,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13889.5,
+       "net": 9723,
+       "priceDisc": 13889.5,
+       "netDisc": 9723,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13889.5,
+       "net": 10000,
+       "priceDisc": 13889.5,
+       "netDisc": 10000,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11016,
+       "net": 10355,
+       "priceDisc": 11016,
+       "netDisc": 10355,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 10733.5,
+     "mostradorFinalPrice": 10733.5,
+     "projUnits": 200,
+     "ch": {
+      "mostrador": {
+       "price": 10733.5,
+       "net": 10734,
+       "priceDisc": 10733.5,
+       "netDisc": 10734,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 12343.5,
+       "net": 11726,
+       "priceDisc": 12343.5,
+       "netDisc": 11726,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 15563.5,
+       "net": 10894,
+       "priceDisc": 15563.5,
+       "netDisc": 10894,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 15563.5,
+       "net": 11206,
+       "priceDisc": 15563.5,
+       "netDisc": 11206,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 12343.5,
+       "net": 11603,
+       "priceDisc": 12343.5,
+       "netDisc": 11603,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 12710.5,
+     "mostradorFinalPrice": 12710.5,
+     "projUnits": 180,
+     "ch": {
+      "mostrador": {
+       "price": 12710.5,
+       "net": 12711,
+       "priceDisc": 12710.5,
+       "netDisc": 12711,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 14617,
+       "net": 13886,
+       "priceDisc": 14617,
+       "netDisc": 13886,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 18430,
+       "net": 12901,
+       "priceDisc": 18430,
+       "netDisc": 12901,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 18430,
+       "net": 13270,
+       "priceDisc": 18430,
+       "netDisc": 13270,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 14617,
+       "net": 13740,
+       "priceDisc": 14617,
+       "netDisc": 13740,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 8217,
+     "mostradorFinalPrice": 8217,
+     "projUnits": 150,
+     "ch": {
+      "mostrador": {
+       "price": 8217,
+       "net": 8217,
+       "priceDisc": 8217,
+       "netDisc": 8217,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 9449.5,
+       "net": 8977,
+       "priceDisc": 9449.5,
+       "netDisc": 8977,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 11914.5,
+       "net": 8340,
+       "priceDisc": 11914.5,
+       "netDisc": 8340,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 11914.5,
+       "net": 8578,
+       "priceDisc": 11914.5,
+       "netDisc": 8578,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 9449.5,
+       "net": 8883,
+       "priceDisc": 9449.5,
+       "netDisc": 8883,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 1,
+     "costPerUnit": 2490,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 5190.5,
+     "mostradorFinalPrice": 5190.5,
+     "projUnits": 330,
+     "ch": {
+      "mostrador": {
+       "price": 5190.5,
+       "net": 5191,
+       "priceDisc": 5190.5,
+       "netDisc": 5191,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 5969,
+       "net": 5671,
+       "priceDisc": 5969,
+       "netDisc": 5671,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 7526,
+       "net": 5268,
+       "priceDisc": 7526,
+       "netDisc": 5268,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 7526,
+       "net": 5419,
+       "priceDisc": 7526,
+       "netDisc": 5419,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 5969,
+       "net": 5611,
+       "priceDisc": 5969,
+       "netDisc": 5611,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 29906,
+     "mostradorFinalPrice": 29906,
+     "projUnits": 40,
+     "ch": {
+      "mostrador": {
+       "price": 29906,
+       "net": 29906,
+       "priceDisc": 29906,
+       "netDisc": 29906,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 34392,
+       "net": 32672,
+       "priceDisc": 34392,
+       "netDisc": 32672,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 43363.5,
+       "net": 30354,
+       "priceDisc": 43363.5,
+       "netDisc": 30354,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 43363.5,
+       "net": 31222,
+       "priceDisc": 43363.5,
+       "netDisc": 31222,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 34392,
+       "net": 32328,
+       "priceDisc": 34392,
+       "netDisc": 32328,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 15750758,
+    "tC": 6810652,
+    "tM": 8940106,
+    "resultado": 6040106,
+    "totalUnits": 1580,
+    "ticketProm": 9968.83417721519,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9526.113924050633,
+      "ticketCliente": 9525.889240506329
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10407.164556962025,
+      "ticketCliente": 10954.79430379747
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9668.556962025317,
+      "ticketCliente": 13812.37658227848
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 9944.879746835442,
+      "ticketCliente": 13812.37658227848
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 20,
+      "units": 316,
+      "ticketNeto": 10297.45569620253,
+      "ticketCliente": 10954.79430379747
+     }
+    ],
+    "gananciaDiaria": 201336.86666666667,
+    "gananciaWeekly": 1394943.648960739,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4169340,
+      "cost": 1719186,
+      "marg": 2450154
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2606344,
+      "cost": 1079338,
+      "marg": 1527006
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2246520,
+      "cost": 895660,
+      "marg": 1350860
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2394288,
+      "cost": 1015434,
+      "marg": 1378854
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1289850,
+      "cost": 605100,
+      "marg": 684750
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1792560,
+      "cost": 821700,
+      "marg": 970860
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1251856,
+      "cost": 674234,
+      "marg": 577622
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 15750758,
+    "tC": 6810652,
+    "tM": 8940106,
+    "resultado": 6040106,
+    "dist": {
+     "mostrador": 20,
+     "fudo": 20,
+     "rappi": 20,
+     "pedidosya": 20,
+     "mercadopago": 20
+    },
+    "mode": "ventas",
+    "manualUnits": {},
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 420,
+      "ing": 4169340,
+      "cost": 1719186,
+      "marg": 2450154
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2606344,
+      "cost": 1079338,
+      "marg": 1527006
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 200,
+      "ing": 2246520,
+      "cost": 895660,
+      "marg": 1350860
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2394288,
+      "cost": 1015434,
+      "marg": 1378854
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 150,
+      "ing": 1289850,
+      "cost": 605100,
+      "marg": 684750
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1792560,
+      "cost": 821700,
+      "marg": 970860
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1251856,
+      "cost": 674234,
+      "marg": 577622
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": 201336.86666666667,
+    "gananciaWeekly": 1394943.648960739
+   },
+   "fmt": [
+    "US$12,345.68",
+    "US$0.50",
+    "US$-1,234.50",
+    1234.5,
+    1275
+   ]
+  },
+  "proyeccionManual": {
+   "global": {
+    "totalGF": 2900000,
+    "totalGFRaw": 2900000,
+    "gfPerUnit": 1835.4430379746836,
+    "gfUnitsBase": 1580,
+    "gfCoverageAmount": 2900000,
+    "gfCoveragePct": 100,
+    "tierProfitTotal": 5340205.6632911395,
+    "tierProfitTotalProj": 6049008.497468355,
+    "totalGFPct": 95,
+    "globalComm": 0,
+    "usd": 1200
+   },
+   "products": {
+    "pizza_muzza": {
+     "totalCost": 4093.3,
+     "porc": 1,
+     "costPerUnit": 4093.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9500,
+     "mostradorFinalPrice": 9500,
+     "projUnits": 900,
+     "ch": {
+      "mostrador": {
+       "price": 9500,
+       "net": 9500,
+       "priceDisc": 9500,
+       "netDisc": 9500,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 10950,
+       "net": 10403,
+       "priceDisc": 10950,
+       "netDisc": 10403,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13800,
+       "net": 9660,
+       "priceDisc": 13800,
+       "netDisc": 9660,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13800,
+       "net": 9936,
+       "priceDisc": 13800,
+       "netDisc": 9936,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 10950,
+       "net": 10293,
+       "priceDisc": 10950,
+       "netDisc": 10293,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_napo": {
+     "totalCost": 4151.3,
+     "porc": 1,
+     "costPerUnit": 4151.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 9600,
+     "mostradorFinalPrice": 9600,
+     "projUnits": 260,
+     "ch": {
+      "mostrador": {
+       "price": 9600,
+       "net": 9600,
+       "priceDisc": 9600,
+       "netDisc": 9600,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 11050,
+       "net": 10498,
+       "priceDisc": 11050,
+       "netDisc": 10498,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 13900,
+       "net": 9730,
+       "priceDisc": 13900,
+       "netDisc": 9730,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 13900,
+       "net": 10008,
+       "priceDisc": 13900,
+       "netDisc": 10008,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 11050,
+       "net": 10387,
+       "priceDisc": 11050,
+       "netDisc": 10387,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_fuga": {
+     "totalCost": 4478.3,
+     "porc": 1,
+     "costPerUnit": 4478.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 10750,
+     "mostradorFinalPrice": 10750,
+     "projUnits": 50,
+     "ch": {
+      "mostrador": {
+       "price": 10750,
+       "net": 10750,
+       "priceDisc": 10750,
+       "netDisc": 10750,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 12350,
+       "net": 11733,
+       "priceDisc": 12350,
+       "netDisc": 11733,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 15600,
+       "net": 10920,
+       "priceDisc": 15600,
+       "netDisc": 10920,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 15600,
+       "net": 11232,
+       "priceDisc": 15600,
+       "netDisc": 11232,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 12350,
+       "net": 11609,
+       "priceDisc": 12350,
+       "netDisc": 11609,
+       "disc": 0
+      }
+     }
+    },
+    "pizza_jamon": {
+     "totalCost": 5641.3,
+     "porc": 1,
+     "costPerUnit": 5641.3,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 12700,
+     "mostradorFinalPrice": 12700,
+     "projUnits": 180,
+     "ch": {
+      "mostrador": {
+       "price": 12700,
+       "net": 12700,
+       "priceDisc": 12700,
+       "netDisc": 12700,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 14600,
+       "net": 13870,
+       "priceDisc": 14600,
+       "netDisc": 13870,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 18400,
+       "net": 12880,
+       "priceDisc": 18400,
+       "netDisc": 12880,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 18400,
+       "net": 13248,
+       "priceDisc": 18400,
+       "netDisc": 13248,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 14600,
+       "net": 13724,
+       "priceDisc": 14600,
+       "netDisc": 13724,
+       "disc": 0
+      }
+     }
+    },
+    "empanada_jyq": {
+     "totalCost": 4034,
+     "porc": 1,
+     "costPerUnit": 4034,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 8200,
+     "mostradorFinalPrice": 8200,
+     "projUnits": 7,
+     "ch": {
+      "mostrador": {
+       "price": 8200,
+       "net": 8200,
+       "priceDisc": 8200,
+       "netDisc": 8200,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 9450,
+       "net": 8978,
+       "priceDisc": 9450,
+       "netDisc": 8978,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 11900,
+       "net": 8330,
+       "priceDisc": 11900,
+       "netDisc": 8330,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 11900,
+       "net": 8568,
+       "priceDisc": 11900,
+       "netDisc": 8568,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 9450,
+       "net": 8883,
+       "priceDisc": 9450,
+       "netDisc": 8883,
+       "disc": 0
+      }
+     }
+    },
+    "gaseosa": {
+     "totalCost": 2490,
+     "porc": 1,
+     "costPerUnit": 2490,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 5200,
+     "mostradorFinalPrice": 5200,
+     "projUnits": 330,
+     "ch": {
+      "mostrador": {
+       "price": 5200,
+       "net": 5200,
+       "priceDisc": 5200,
+       "netDisc": 5200,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 6000,
+       "net": 5700,
+       "priceDisc": 6000,
+       "netDisc": 5700,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 7550,
+       "net": 5285,
+       "priceDisc": 7550,
+       "netDisc": 5285,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 7550,
+       "net": 5436,
+       "priceDisc": 7550,
+       "netDisc": 5436,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 6000,
+       "net": 5640,
+       "priceDisc": 6000,
+       "netDisc": 5640,
+       "disc": 0
+      }
+     }
+    },
+    "combo_fiesta": {
+     "totalCost": 16855.850000000002,
+     "porc": 1,
+     "costPerUnit": 16855.850000000002,
+     "gfAssigned": 1835.4430379746836,
+     "absorbs": true,
+     "mostradorPrice": 29900,
+     "mostradorFinalPrice": 29900,
+     "projUnits": 40,
+     "ch": {
+      "mostrador": {
+       "price": 29900,
+       "net": 29900,
+       "priceDisc": 29900,
+       "netDisc": 29900,
+       "disc": 0
+      },
+      "fudo": {
+       "price": 34400,
+       "net": 32680,
+       "priceDisc": 34400,
+       "netDisc": 32680,
+       "disc": 0
+      },
+      "rappi": {
+       "price": 43350,
+       "net": 30345,
+       "priceDisc": 43350,
+       "netDisc": 30345,
+       "disc": 0
+      },
+      "pedidosya": {
+       "price": 43350,
+       "net": 31212,
+       "priceDisc": 43350,
+       "netDisc": 31212,
+       "disc": 0
+      },
+      "mercadopago": {
+       "price": 34400,
+       "net": 32336,
+       "priceDisc": 34400,
+       "netDisc": 32336,
+       "disc": 0
+      }
+     }
+    }
+   },
+   "projection": {
+    "name": "Proyección actual",
+    "gf": 2900000,
+    "tI": 17448659,
+    "tC": 7526829,
+    "tM": 9921830,
+    "resultado": 7021830,
+    "totalUnits": 1767,
+    "ticketProm": 9874.736276174306,
+    "channelBreakdown": [
+     {
+      "id": "mostrador",
+      "name": "Mostrador",
+      "pct": 40,
+      "units": 707,
+      "ticketNeto": 9529.654782116582,
+      "ticketCliente": 9529.654782116582
+     },
+     {
+      "id": "fudo",
+      "name": "Fudo",
+      "pct": 20,
+      "units": 353,
+      "ticketNeto": 10428.113186191285,
+      "ticketCliente": 10976.598754951896
+     },
+     {
+      "id": "rappi",
+      "name": "Rappi",
+      "pct": 15,
+      "units": 265,
+      "ticketNeto": 9679.886813808715,
+      "ticketCliente": 13828.40973401245
+     },
+     {
+      "id": "pedidosya",
+      "name": "Pedidos Ya",
+      "pct": 15,
+      "units": 265,
+      "ticketNeto": 9956.455008488963,
+      "ticketCliente": 13828.40973401245
+     },
+     {
+      "id": "mercadopago",
+      "name": "Mercado Pago",
+      "pct": 10,
+      "units": 177,
+      "ticketNeto": 10318.002829654783,
+      "ticketCliente": 10976.598754951896
+     }
+    ],
+    "gananciaDiaria": 234061,
+    "gananciaWeekly": 1621669.7459584295,
+    "dist": {
+     "mostrador": 40,
+     "fudo": 20,
+     "rappi": 15,
+     "pedidosya": 15,
+     "mercadopago": 10
+    },
+    "mode": "manual",
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 900,
+      "ing": 8864370,
+      "cost": 3683970,
+      "marg": 5180400
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2584140,
+      "cost": 1079338,
+      "marg": 1504802
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 50,
+      "ing": 556515,
+      "cost": 223915,
+      "marg": 332600
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2366208,
+      "cost": 1015434,
+      "marg": 1350774
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 7,
+      "ing": 59490,
+      "cost": 28238,
+      "marg": 31252
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1779410,
+      "cost": 821700,
+      "marg": 957710
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1238526,
+      "cost": 674234,
+      "marg": 564292
+     }
+    ],
+    "live": true
+   },
+   "snapshot": {
+    "gf": 2900000,
+    "tI": 17448659,
+    "tC": 7526829,
+    "tM": 9921830,
+    "resultado": 7021830,
+    "dist": {
+     "mostrador": 40,
+     "fudo": 20,
+     "rappi": 15,
+     "pedidosya": 15,
+     "mercadopago": 10
+    },
+    "mode": "manual",
+    "manualUnits": {
+     "pizza_muzza": 900,
+     "pizza_fuga": 50,
+     "empanada_jyq": 7
+    },
+    "rows": [
+     {
+      "name": "Pizza Muzzarella",
+      "units": 900,
+      "ing": 8864370,
+      "cost": 3683970,
+      "marg": 5180400
+     },
+     {
+      "name": "Pizza Napolitana",
+      "units": 260,
+      "ing": 2584140,
+      "cost": 1079338,
+      "marg": 1504802
+     },
+     {
+      "name": "Pizza Fugazzeta",
+      "units": 50,
+      "ing": 556515,
+      "cost": 223915,
+      "marg": 332600
+     },
+     {
+      "name": "Pizza Jamón y Morrones",
+      "units": 180,
+      "ing": 2366208,
+      "cost": 1015434,
+      "marg": 1350774
+     },
+     {
+      "name": "Empanadas Jamón y Queso (x6)",
+      "units": 7,
+      "ing": 59490,
+      "cost": 28238,
+      "marg": 31252
+     },
+     {
+      "name": "Gaseosa 1,5 L",
+      "units": 330,
+      "ing": 1779410,
+      "cost": 821700,
+      "marg": 957710
+     },
+     {
+      "name": "Combo Fiesta",
+      "units": 40,
+      "ing": 1238526,
+      "cost": 674234,
+      "marg": 564292
+     }
+    ],
+    "name": "x",
+    "gananciaDiaria": 234061,
+    "gananciaWeekly": 1621669.7459584295
+   },
+   "fmt": [
+    "$12.346",
+    "$1",
+    "$-1.234",
+    1250,
+    1300
+   ]
+  }
+ },
+ "menuEngineering": {
+  "diag": {
+   "q": {
+    "pizza_muzza": "horse",
+    "pizza_napo": "horse",
+    "pizza_fuga": "star",
+    "pizza_jamon": "puzzle",
+    "empanada_jyq": "star",
+    "gaseosa": "star",
+    "combo_fiesta": "star"
+   },
+   "sim": {
+    "gf": 2900000,
+    "resultado": 6064204,
+    "cmTot": 8964204,
+    "units": 1580,
+    "rev": 15774856,
+    "fc": 0.45211444503451936,
+    "beUnits": 512,
+    "coverage": 3.0911048275862067
+   },
+   "rows": [
+    {
+     "id": "pizza_muzza",
+     "units": 420,
+     "net": 9958.4,
+     "cost": 4093.3,
+     "price": 9500,
+     "cat": "Pizzas"
+    },
+    {
+     "id": "pizza_napo",
+     "units": 260,
+     "net": 10044.6,
+     "cost": 4151.3,
+     "price": 9600,
+     "cat": "Pizzas"
+    },
+    {
+     "id": "pizza_fuga",
+     "units": 200,
+     "net": 11248.8,
+     "cost": 4478.3,
+     "price": 10750,
+     "cat": "Pizzas"
+    },
+    {
+     "id": "pizza_jamon",
+     "units": 180,
+     "net": 13284.400000000001,
+     "cost": 5641.3,
+     "price": 12700,
+     "cat": "Pizzas"
+    },
+    {
+     "id": "empanada_jyq",
+     "units": 150,
+     "net": 8591.800000000001,
+     "cost": 4034,
+     "price": 8200,
+     "cat": "Empanadas"
+    },
+    {
+     "id": "gaseosa",
+     "units": 330,
+     "net": 5452.2,
+     "cost": 2490,
+     "price": 5200,
+     "cat": "Bebidas"
+    },
+    {
+     "id": "combo_fiesta",
+     "units": 40,
+     "net": 31294.600000000002,
+     "cost": 16855.850000000002,
+     "price": 29900,
+     "cat": "Combos"
+    }
+   ],
+   "ings": [
+    {
+     "id": "muzza",
+     "month": 3046560,
+     "share": 0.4473228113842845,
+     "uses": 5
+    },
+    {
+     "id": "gaseosa",
+     "month": 792000,
+     "share": 0.1162884258364691,
+     "uses": 1
+    },
+    {
+     "id": "jamon",
+     "month": 495000,
+     "share": 0.07268026614779319,
+     "uses": 2
+    },
+    {
+     "id": "harina",
+     "month": 462150,
+     "share": 0.06785693939434874,
+     "uses": 5
+    },
+    {
+     "id": "tomate",
+     "month": 283800,
+     "share": 0.0416700192580681,
+     "uses": 3
+    },
+    {
+     "id": "aceite",
+     "month": 193800,
+     "share": 0.02845542541301479,
+     "uses": 5
+    },
+    {
+     "id": "aceituna",
+     "month": 96720,
+     "share": 0.014201283518817288,
+     "uses": 2
+    },
+    {
+     "id": "tomate_f",
+     "month": 78000,
+     "share": 0.0114526479990462,
+     "uses": 1
+    }
+   ],
+   "chans": [
+    {
+     "id": "mostrador",
+     "ratio": 1,
+     "dist": 0.2
+    },
+    {
+     "id": "rappi",
+     "ratio": 1.0156177763413718,
+     "dist": 0.2
+    },
+    {
+     "id": "pedidosya",
+     "ratio": 1.0446354270939824,
+     "dist": 0.2
+    },
+    {
+     "id": "mercadopago",
+     "ratio": 1.0826228823517206,
+     "dist": 0.2
+    },
+    {
+     "id": "fudo",
+     "ratio": 1.0941743847771277,
+     "dist": 0.2
+    }
+   ],
+   "missing": {
+    "noUnits": [],
+    "noRecipe": [
+     "Combo Fiesta"
+    ]
+   }
+  },
+  "goals": {
+   "plato": [
+    {
+     "key": "precio",
+     "ok": false,
+     "ch": {
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 6750862.352,
+     "fc": 0.4123648687049413,
+     "cmTot": 9650862.352,
+     "units": 1456.0000000000002,
+     "met": "Margen por plato +18% (objetivo +30%)"
+    },
+    {
+     "key": "costo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      }
+     },
+     "resultado": 6408260.799999999,
+     "fc": 0.42927477429633565,
+     "cmTot": 9308260.799999999,
+     "units": 1580,
+     "met": "Margen por plato +3% (objetivo +30%)"
+    },
+    {
+     "key": "mix",
+     "ok": false,
+     "ch": {
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      }
+     },
+     "resultado": 6270567.699999999,
+     "fc": 0.4519382289753292,
+     "cmTot": 9170567.7,
+     "units": 1607,
+     "met": "Margen por plato 0% (objetivo +30%)"
+    },
+    {
+     "key": "combo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      },
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      },
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 7301566.716799999,
+     "fc": 0.39108959012399624,
+     "cmTot": 10201566.716799999,
+     "units": 1479.76,
+     "met": "Margen por plato +20% (objetivo +30%)"
+    }
+   ],
+   "mensual": [
+    {
+     "key": "precio",
+     "ok": false,
+     "ch": {
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 6750862.352,
+     "fc": 0.4123648687049413,
+     "cmTot": 9650862.352,
+     "units": 1456.0000000000002,
+     "met": "Faltan $23.249.138 por mes"
+    },
+    {
+     "key": "costo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      }
+     },
+     "resultado": 6408260.799999999,
+     "fc": 0.42927477429633565,
+     "cmTot": 9308260.799999999,
+     "units": 1580,
+     "met": "Faltan $23.591.739 por mes"
+    },
+    {
+     "key": "mix",
+     "ok": false,
+     "ch": {
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      }
+     },
+     "resultado": 6270567.699999999,
+     "fc": 0.4519382289753292,
+     "cmTot": 9170567.7,
+     "units": 1607,
+     "met": "Faltan $23.729.432 por mes"
+    },
+    {
+     "key": "combo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      },
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      },
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 7301566.716799999,
+     "fc": 0.39108959012399624,
+     "cmTot": 10201566.716799999,
+     "units": 1479.76,
+     "met": "Faltan $22.698.433 por mes"
+    }
+   ],
+   "equilibrio": [
+    {
+     "key": "precio",
+     "ok": true,
+     "ch": {
+      "priceAdj": {}
+     },
+     "resultado": 6064204,
+     "fc": 0.45211444503451936,
+     "cmTot": 8964204,
+     "units": 1580,
+     "met": "Objetivo alcanzado (resultado $6.064.204)"
+    },
+    {
+     "key": "costo",
+     "ok": true,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      }
+     },
+     "resultado": 6408260.799999999,
+     "fc": 0.42927477429633565,
+     "cmTot": 9308260.799999999,
+     "units": 1580,
+     "met": "Objetivo alcanzado (resultado $6.408.261)"
+    },
+    {
+     "key": "mix",
+     "ok": true,
+     "ch": {
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      }
+     },
+     "resultado": 6270567.699999999,
+     "fc": 0.4519382289753292,
+     "cmTot": 9170567.7,
+     "units": 1607,
+     "met": "Objetivo alcanzado (resultado $6.270.568)"
+    },
+    {
+     "key": "combo",
+     "ok": true,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      },
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      },
+      "priceAdj": {}
+     },
+     "resultado": 6620789.139999999,
+     "fc": 0.42920676190538004,
+     "cmTot": 9520789.139999999,
+     "units": 1607,
+     "met": "Objetivo alcanzado (resultado $6.620.789)"
+    }
+   ],
+   "foodcost": [
+    {
+     "key": "precio",
+     "ok": false,
+     "ch": {
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 6750862.352,
+     "fc": 0.4123648687049413,
+     "cmTot": 9650862.352,
+     "units": 1456.0000000000002,
+     "met": "Costo de materia prima 41.2% (objetivo 28%)"
+    },
+    {
+     "key": "costo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      }
+     },
+     "resultado": 6408260.799999999,
+     "fc": 0.42927477429633565,
+     "cmTot": 9308260.799999999,
+     "units": 1580,
+     "met": "Costo de materia prima 42.9% (objetivo 28%)"
+    },
+    {
+     "key": "mix",
+     "ok": false,
+     "ch": {
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      }
+     },
+     "resultado": 6270567.699999999,
+     "fc": 0.4519382289753292,
+     "cmTot": 9170567.7,
+     "units": 1607,
+     "met": "Costo de materia prima 45.2% (objetivo 28%)"
+    },
+    {
+     "key": "combo",
+     "ok": false,
+     "ch": {
+      "ingCut": {
+       "muzza": 0.08,
+       "gaseosa": 0.08,
+       "harina": 0.08
+      },
+      "chSurcharge": {},
+      "unitAdj": {
+       "pizza_jamon": 1.15
+      },
+      "priceAdj": {
+       "pizza_muzza": 1.15,
+       "pizza_napo": 1.15,
+       "pizza_jamon": 1.15,
+       "empanada_jyq": 1.05,
+       "gaseosa": 1.05,
+       "combo_fiesta": 1.05
+      }
+     },
+     "resultado": 7301566.716799999,
+     "fc": 0.39108959012399624,
+     "cmTot": 10201566.716799999,
+     "units": 1479.76,
+     "met": "Costo de materia prima 39.1% (objetivo 28%)"
+    }
+   ]
+  }
+ }
+}

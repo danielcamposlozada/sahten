@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Menú</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#235328;--accent:#F28C00;--ink:#1e2c1f;--muted:#6f7f71;--bg:#faf8f5;--card:#fff;--border:#e2ddd5;--red:#c0392b;--r:14px}
+*{box-sizing:border-box}body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--primary);color:#fff;padding:28px 16px 22px;text-align:center}
+header h1{margin:0 0 4px;font-size:26px;letter-spacing:-.02em}header p{margin:0;opacity:.85;font-size:14px}
+.cats{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border)}
+.cat{flex:none;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.cat.on{background:var(--primary);border-color:var(--primary);color:#fff}
+main{max-width:980px;margin:0 auto;padding:16px 16px 110px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.ph{aspect-ratio:4/3;background:#ede8df;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#b9b2a5}.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}.cat-l{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+.name{font-weight:700;font-size:15px}.price{font-weight:800;font-size:16px;color:var(--primary);margin-top:auto}
+.add{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+.qty{display:flex;align-items:center;justify-content:space-between;gap:8px}.qty button{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-size:18px;cursor:pointer}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:none;z-index:8}
+.bar.on{display:block}.bar button{width:100%;max-width:980px;margin:0 auto;display:flex;justify-content:space-between;border:0;background:var(--primary);color:#fff;border-radius:12px;padding:14px 18px;font-weight:700;font-size:15px;cursor:pointer}
+.ov{position:fixed;inset:0;background:rgba(15,25,17,.55);z-index:20;display:none;align-items:flex-end;justify-content:center}.ov.on{display:flex}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px 24px}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:18px}}
+.sheet h2{margin:0 0 12px;font-size:19px}.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px}.row.t{font-weight:800;font-size:17px;border-top:2px solid var(--primary);margin-top:6px;padding-top:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.seg button{padding:10px;border-radius:10px;border:1.5px solid var(--border);background:#fff;font-weight:700;cursor:pointer}.seg button.on{border-color:var(--primary);background:rgba(35,83,40,.08);color:var(--primary)}
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px}input,select,textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;background:#fff}
+.sug{border:1px solid var(--border);border-radius:10px;margin-top:4px;overflow:hidden}.sug div{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border)}.sug div:last-child{border:0}.sug div:hover{background:#f5f1ea}
+.note{font-size:13px;padding:10px 12px;border-radius:10px;background:#f5f1ea;margin-top:10px}.note.err{background:#fdecea;color:var(--red)}.note.ok{background:#e8f4ea;color:var(--primary)}
+.cta{width:100%;margin-top:14px;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:15px;background:var(--primary);color:#fff;cursor:pointer}.cta.wa{background:#25D366}.cta.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--border)}.cta[disabled]{opacity:.5;cursor:not-allowed}
+.empty{text-align:center;color:var(--muted);padding:60px 16px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+</style>
+</head>
+<body>
+<header><h1 id="h-title">Menú</h1><p id="h-sub"></p></header>
+<nav class="cats" id="cats"></nav>
+<main><div id="msg"></div><div class="grid" id="grid"></div></main>
+<footer id="foot"></footer>
+<div class="bar" id="bar"><button onclick="openCart()"><span id="bar-n">0 productos</span><span id="bar-t">$0</span></button></div>
+<div class="ov" id="ov" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet"></div></div>
+
+<script id="menu-fallback" type="application/json">/*__MENU_JSON__*/null</script>
+<script>
+/*__SHARED__*/
+</script>
+<script>
+(function(){
+'use strict';
+var MENU=null, cart={}, type='delivery', geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
+var cur=function(){return (MENU&&MENU.store&&MENU.store.currency)||{symbol:'$',locale:'es-AR'}};
+var fmt=function(n){return cur().symbol+Number(n||0).toLocaleString(cur().locale,{maximumFractionDigits:0})};
+var q=new URLSearchParams(location.search);
+
+// ── carga: menú en vivo (Supabase, si hay) y respaldo en menu.json ──
+function sb(){return MENU&&MENU.supabase;}
+function sbHeaders(extra){var s=sb();return Object.assign({apikey:s.anonKey,Authorization:'Bearer '+s.anonKey,'Content-Type':'application/json'},extra||{});}
+function slugFromLocation(){
+  var s=q.get('store'); if(s) return s;
+  var h=location.hostname.split('.'); if(h.length>=3 && h[0]!=='www') return h[0];
+  return '';
+}
+function load(){
+  return fetch('menu.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('menu.json '+r.status);return r.json();})
+   .catch(function(){var el=$('menu-fallback');var d=null;try{d=JSON.parse(el.textContent.replace(/^\/\*.*?\*\//,''));}catch(e){}if(!d)throw new Error('No pudimos cargar el menú.');return d;})
+   .then(function(base){
+     MENU=base; var s=sb(); if(!s) return;
+     var slug=slugFromLocation()||s.slug;
+     var url=s.url+'/rest/v1/stores?select=id,menus(json)&'+(slug?'slug=eq.'+encodeURIComponent(slug):'id=eq.'+encodeURIComponent(s.storeId));
+     return fetch(url,{headers:sbHeaders()}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
+       var live=rows&&rows[0]&&rows[0].menus&&(Array.isArray(rows[0].menus)?rows[0].menus[0]:rows[0].menus);
+       if(live&&live.json&&live.json.products){var keep=base.supabase;MENU=live.json;
+       /* las fotos son archivos de la carpeta publicada: una foto nueva sin volver a publicar no existe todavía */
+       var had={};base.products.forEach(function(b){if(b.image)had[b.id+'|'+b.image]=1;});
+       MENU.products.forEach(function(p){if(p.image&&!had[p.id+'|'+p.image])p.image=null;});MENU.supabase=keep;if(rows[0].id)MENU.supabase=Object.assign({},keep,{storeId:rows[0].id});}
+     }).catch(function(){/* sin conexión: queda el menu.json */});
+   });
+}
+
+// ── pantalla ──
+var activeCat='all';
+function applyTheme(){var t=MENU.theme||{};if(t.primary)document.documentElement.style.setProperty('--primary',t.primary);if(t.accent)document.documentElement.style.setProperty('--accent',t.accent);}
+function render(){
+  var c=MENU.config||{};document.title=(MENU.store.name||'Menú');
+  $('h-title').textContent=c.title||MENU.store.name||'Menú';$('h-sub').textContent=c.subtitle||'';
+  $('foot').textContent=[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
+  if(c.enabled===false){$('grid').innerHTML='';$('cats').innerHTML='';$('msg').innerHTML='<div class="empty"><b>Menú no disponible por ahora</b><br>Volvé a intentar más tarde.</div>';return;}
+  var cats=c.categories&&c.categories.length?c.categories:Array.from(new Set(MENU.products.map(function(p){return p.category}).filter(Boolean)));
+  $('cats').innerHTML=['all'].concat(cats).map(function(k){return '<button class="cat '+(k===activeCat?'on':'')+'" data-cat="'+esc(k)+'">'+(k==='all'?'Todo':esc(k))+'</button>'}).join('');
+  var list=MENU.products.filter(function(p){return activeCat==='all'||p.category===activeCat});
+  $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">Todavía no hay productos para mostrar.</div>';
+  bar();
+}
+function card(p){
+  var n=cart[p.id]||0, showP=MENU.config.showPrices!==false;
+  var img=p.image&&MENU.config.showImages!==false?'<img loading="lazy" src="'+esc(p.image)+'" alt="" onerror="this.parentNode.textContent=this.getAttribute(\'data-i\')" data-i="'+esc((p.name||'?').charAt(0).toUpperCase())+'">':esc((p.name||'?').charAt(0).toUpperCase());
+  return '<div class="card"><div class="ph">'+img+'</div><div class="body">'+(p.category?'<div class="cat-l">'+esc(p.category)+'</div>':'')+'<div class="name">'+esc(p.name)+'</div>'+(showP?'<div class="price">'+fmt(p.price)+'</div>':'')+
+   (n?'<div class="qty"><button data-dec="'+esc(p.id)+'" aria-label="Quitar">−</button><b>'+n+'</b><button data-inc="'+esc(p.id)+'" aria-label="Agregar">+</button></div>':'<button class="add" data-inc="'+esc(p.id)+'">Agregar</button>')+'</div></div>';
+}
+function lines(){return MENU.products.filter(function(p){return cart[p.id]}).map(function(p){return {id:p.id,name:p.name,qty:cart[p.id],unitPrice:p.price,lineTotal:p.price*cart[p.id]}});}
+function subtotal(){return lines().reduce(function(s,l){return s+l.lineTotal},0);}
+function count(){return lines().reduce(function(s,l){return s+l.qty},0);}
+function bar(){var n=count();$('bar').classList.toggle('on',n>0);$('bar-n').textContent=n+(n===1?' producto':' productos');$('bar-t').textContent=fmt(subtotal());}
+function change(id,d){cart[id]=Math.max(0,(cart[id]||0)+d);if(!cart[id])delete cart[id];if(geo)ship=shippingFor(MENU.delivery,geo.lat,geo.lng,subtotal());render();if($('ov').classList.contains('on'))sheet();}
+
+// ── carrito / checkout ──
+function openCart(){step='cart';sheet();$('ov').classList.add('on');}
+function closeSheet(){$('ov').classList.remove('on');}
+function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]});}
+function total(){return subtotal()+(type==='delivery'&&ship&&ship.ok?ship.cost:0);}
+function shipNote(){
+  if(type!=='delivery')return '';
+  if(!geo)return '<div class="note">Escribí tu dirección y elegí una de las sugerencias para calcular el envío.</div>';
+  if(ship.out)return '<div class="note err">Tu dirección está fuera de la zona de entrega ('+ship.distKm.toFixed(1)+' km). Podés retirar en el local.</div>';
+  if(ship.belowMin)return '<div class="note err">El pedido mínimo para delivery es '+fmt(ship.minOrder)+'.</div>';
+  return '<div class="note ok">Envío '+(ship.free?'<b>gratis</b>':'<b>'+fmt(ship.cost)+'</b>')+' · '+esc(ship.zone.name)+'</div>';
+}
+function sheet(){
+  var s=$('sheet'),ls=lines();
+  if(step==='done'){s.innerHTML=done();return;}
+  if(!ls.length){s.innerHTML='<h2>Tu pedido</h2><div class="empty">El carrito está vacío.</div><button class="cta ghost" data-close>Seguir viendo el menú</button>';return;}
+  pay=pay||payMethods()[0]||'efectivo';
+  var labels=PAY_LABELS;
+  var canSend=!sending&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok));
+  s.innerHTML='<h2>Tu pedido</h2>'+ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('')+
+   '<div class="row"><span>Subtotal</span><span>'+fmt(subtotal())+'</span></div>'+(type==='delivery'&&ship&&ship.ok?'<div class="row"><span>Envío</span><span>'+(ship.cost?fmt(ship.cost):'Gratis')+'</span></div>':'')+'<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div>'+
+   '<div class="seg"><button data-type="delivery" class="'+(type==='delivery'?'on':'')+'">🛵 Delivery</button><button data-type="pickup" class="'+(type==='pickup'?'on':'')+'">🏠 Retiro en local</button></div>'+
+   (MENU.config.deliveryNote&&type==='delivery'?'<div class="note">'+esc(MENU.config.deliveryNote)+'</div>':'')+
+   '<label>Nombre</label><input id="f-name" autocomplete="name" value="'+esc(form.name)+'"><label>Teléfono</label><input id="f-phone" type="tel" autocomplete="tel" value="'+esc(form.phone)+'">'+
+   (type==='delivery'?'<label>Dirección de entrega</label><input id="f-addr" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'"><div id="sugs"></div>'+shipNote():'<div class="note">Retiro: '+esc(MENU.store.address||'en el local')+'</div>')+
+   '<label>Forma de pago</label><select id="f-pay">'+payMethods().map(function(k){return '<option value="'+k+'"'+(k===pay?' selected':'')+'>'+(labels[k]||k)+'</option>'}).join('')+'</select>'+
+   '<label>Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea>'+
+   '<div id="err"></div><button class="cta" id="send"'+(canSend?'':' disabled')+'>'+(sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="cta ghost" data-close>Seguir viendo el menú</button>';
+  var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
+  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');
+  if($('f-pay'))$('f-pay').addEventListener('change',function(){pay=this.value;});
+  if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;suggest(this.value);refreshSend();});
+  renderSugs();
+}
+function refreshSend(){var b=$('send');if(!b)return;b.disabled=sending||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok)));}
+function suggest(v){clearTimeout(sugTimer);sugs=[];renderSugs();if(!v||v.length<5)return;sugTimer=setTimeout(function(){
+  var near=MENU.delivery&&MENU.delivery.lat!=null?'&viewbox='+[MENU.delivery.lng-0.4,MENU.delivery.lat+0.4,MENU.delivery.lng+0.4,MENU.delivery.lat-0.4].join(',')+'&bounded=0':'';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=es&addressdetails=1&q='+encodeURIComponent(v)+near).then(function(r){return r.json()}).then(function(rows){
+    sugs=(rows||[]).map(function(d){return {label:d.display_name.split(',').slice(0,3).join(','),lat:+d.lat,lng:+d.lon};});renderSugs();}).catch(function(){sugs=[];var e=$('err');if(e)e.innerHTML='<div class="note err">No pudimos buscar la dirección (sin conexión).</div>';});},500);}
+function renderSugs(){var el=$('sugs');if(!el)return;el.innerHTML=sugs.length?'<div class="sug">'+sugs.map(function(s,i){return '<div data-sug="'+i+'">'+esc(s.label)+'</div>'}).join('')+'</div>':'';}
+function pickSug(i){var s=sugs[i];if(!s)return;form.address=s.label;geo={lat:s.lat,lng:s.lng};sugs=[];ship=shippingFor(MENU.delivery,s.lat,s.lng,subtotal());sheet();}
+
+function buildOrder(){
+  var ls=lines(),sub=subtotal(),sh=type==='delivery'&&ship&&ship.ok?ship.cost:0;
+  return {id:'web_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),num:Math.floor(Math.random()*9000)+1000,createdAt:new Date().toISOString(),source:type,status:'pendiente',
+    customerName:form.name.trim(),customerPhone:form.phone.trim(),customerEmail:form.email.trim(),address:type==='delivery'?form.address:'Retiro en local',zoneName:type==='delivery'&&ship&&ship.zone?ship.zone.name:'',
+    lat:geo?geo.lat:null,lng:geo?geo.lng:null,paymentMethod:pay,items:ls,subtotal:sub,discount:0,shipping:sh,total:sub+sh,notes:form.notes.trim()};
+}
+function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
+function send(){
+  if(sending)return; var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
+  if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
+  var s=sb();
+  fetch(s.url+'/rest/v1/orders',{method:'POST',headers:sbHeaders({Prefer:'return=minimal'}),body:JSON.stringify({store_id:s.storeId,payload:o})})
+   .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);sending=false;finish(o,true);})
+   .catch(function(){sending=false;step='cart';sheet();var e=$('err');if(e)e.innerHTML='<div class="note err"><b>No pudimos enviar tu pedido.</b> Revisá tu conexión y reintentá'+(MENU.store.whatsapp?', o pedilo por WhatsApp.':'.')+(MENU.store.whatsapp?'<br><a href="'+esc(waLink(o))+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>':'')+'</div>';});
+}
+function finish(o,sent){cart={};step='done';render();sheet();$('ov').classList.add('on');}
+function done(){
+  var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
+  var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';
+  return '<h2>¡Gracias, '+esc(o.customerName)+'!</h2><div class="note ok">'+(sent?'Recibimos tu pedido <b>#'+String(o.num).padStart(4,'0')+'</b>. Te vamos a avisar por teléfono.':'Se abrió WhatsApp con tu pedido <b>#'+String(o.num).padStart(4,'0')+'</b>. Enviá el mensaje para confirmarlo.')+'</div>'+bankHtml+
+   '<div class="row t"><span>Total</span><span>'+fmt(o.total)+'</span></div>'+(MENU.store.whatsapp?'<a class="cta wa" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+esc(waLink(o))+'">'+(sent?'Avisar por WhatsApp':'Abrir WhatsApp de nuevo')+'</a>':'')+'<button class="cta ghost" data-close>Volver al menú</button>';
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-cat],[data-inc],[data-dec],[data-type],[data-sug],[data-close],#send');if(!t)return;
+  if(t.dataset.cat!==undefined){activeCat=t.dataset.cat;render();}
+  else if(t.dataset.inc!==undefined)change(t.dataset.inc,1);
+  else if(t.dataset.dec!==undefined)change(t.dataset.dec,-1);
+  else if(t.dataset.type!==undefined){type=t.dataset.type;if(type==='delivery'&&geo)ship=shippingFor(MENU.delivery,geo.lat,geo.lng,subtotal());sheet();}
+  else if(t.dataset.sug!==undefined)pickSug(+t.dataset.sug);
+  else if(t.hasAttribute('data-close'))closeSheet();
+  else if(t.id==='send')send();
+});
+window.openCart=openCart;window.__menu=function(){return MENU;};
+load().then(function(){applyTheme();render();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
+})();
+</script>
+</body>
+</html>

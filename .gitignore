@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+.tmp
+uploads/
+.thumbnail
+.claude/
+Prompt Claude Code - Sahten.md
+src-tauri/target

@@ -1,0 +1,1091 @@
+{
+ "_version": 2,
+ "PRODUCTS": [
+  {
+   "id": "pizza_muzza",
+   "name": "Pizza Muzzarella",
+   "star": true,
+   "tier": "T3",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 420,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 3719.3,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Pizzas",
+   "precioMostrador": 9550,
+   "pesoTotal": "800",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [],
+   "ingredients": [
+    {
+     "ingId": "harina",
+     "qty": 300,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "levadura",
+     "qty": 8,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "sal",
+     "qty": 6,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceite",
+     "qty": 15,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "tomate",
+     "qty": 150,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "muzza",
+     "qty": 300,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceituna",
+     "qty": 30,
+     "unit": "g",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "caja",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    },
+    {
+     "envId": "servilleta",
+     "qty": 2,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  },
+  {
+   "id": "pizza_napo",
+   "name": "Pizza Napolitana",
+   "star": false,
+   "tier": "T3",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 260,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 3777.3,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Pizzas",
+   "precioMostrador": 9650,
+   "pesoTotal": "850",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [],
+   "ingredients": [
+    {
+     "ingId": "harina",
+     "qty": 300,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "levadura",
+     "qty": 8,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "sal",
+     "qty": 6,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceite",
+     "qty": 15,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "tomate",
+     "qty": 150,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "muzza",
+     "qty": 280,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "tomate_f",
+     "qty": 120,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "albahaca",
+     "qty": 5,
+     "unit": "g",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "caja",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    },
+    {
+     "envId": "servilleta",
+     "qty": 2,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  },
+  {
+   "id": "pizza_fuga",
+   "name": "Pizza Fugazzeta",
+   "star": true,
+   "tier": "T2",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 200,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 4104.3,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Pizzas",
+   "precioMostrador": 10800,
+   "pesoTotal": "950",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [],
+   "ingredients": [
+    {
+     "ingId": "harina",
+     "qty": 300,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "levadura",
+     "qty": 8,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "sal",
+     "qty": 6,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceite",
+     "qty": 15,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "muzza",
+     "qty": 350,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "cebolla",
+     "qty": 250,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceituna",
+     "qty": 30,
+     "unit": "g",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "caja",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    },
+    {
+     "envId": "servilleta",
+     "qty": 2,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  },
+  {
+   "id": "pizza_jamon",
+   "name": "Pizza Jamón y Morrones",
+   "star": false,
+   "tier": "T2",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 180,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 5267.3,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Pizzas",
+   "precioMostrador": 12800,
+   "pesoTotal": "900",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [],
+   "ingredients": [
+    {
+     "ingId": "harina",
+     "qty": 300,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "levadura",
+     "qty": 8,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "sal",
+     "qty": 6,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceite",
+     "qty": 15,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "tomate",
+     "qty": 150,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "muzza",
+     "qty": 280,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "jamon",
+     "qty": 120,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "morron",
+     "qty": 100,
+     "unit": "g",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "caja",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    },
+    {
+     "envId": "servilleta",
+     "qty": 2,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  },
+  {
+   "id": "empanada_jyq",
+   "name": "Empanadas Jamón y Queso (x6)",
+   "star": false,
+   "tier": "T4",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 150,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 3760,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Empanadas",
+   "precioMostrador": 8300,
+   "pesoTotal": "700",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [],
+   "ingredients": [
+    {
+     "ingId": "harina",
+     "qty": 250,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "aceite",
+     "qty": 30,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "muzza",
+     "qty": 180,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "jamon",
+     "qty": 120,
+     "unit": "g",
+     "v": 0
+    },
+    {
+     "ingId": "cebolla",
+     "qty": 60,
+     "unit": "g",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "caja_emp",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    },
+    {
+     "envId": "servilleta",
+     "qty": 2,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  },
+  {
+   "id": "gaseosa",
+   "name": "Gaseosa 1,5 L",
+   "star": false,
+   "tier": "T5",
+   "gfPct": 15,
+   "gfPctOverride": null,
+   "avgMes": 330,
+   "discount": 0,
+   "discountType": "pct",
+   "receta_cost": 2400,
+   "porciones": 1,
+   "merma": 0,
+   "porcionesOverride": null,
+   "porcionLabel": "porciones",
+   "recetaOnly": false,
+   "category": "Bebidas",
+   "precioMostrador": 5250,
+   "pesoTotal": "",
+   "pesoUnit": "g",
+   "porcionCant": "",
+   "porcionUnit": "g",
+   "pesoTotalManual": false,
+   "weeks": [
+    25,
+    25,
+    25,
+    25
+   ],
+   "tags": [
+    {
+     "0": "r",
+     "1": "e",
+     "2": "v",
+     "3": "e",
+     "4": "n",
+     "5": "t",
+     "6": "a"
+    }
+   ],
+   "ingredients": [
+    {
+     "ingId": "gaseosa",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "packaging": [
+    {
+     "envId": "bolsa",
+     "qty": 1,
+     "unit": "u",
+     "v": 0
+    }
+   ],
+   "combos": [],
+   "channelDiscounts": {},
+   "absorbeGF": null,
+   "priceAdj": 1
+  }
+ ],
+ "INGREDIENTES": [
+  {
+   "id": "harina",
+   "name": "Harina 000",
+   "precioPkg": 1300,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "levadura",
+   "name": "Levadura fresca",
+   "precioPkg": 3500,
+   "grPaquete": 500,
+   "unit": "g",
+   "cantidad": 500
+  },
+  {
+   "id": "sal",
+   "name": "Sal fina",
+   "precioPkg": 800,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "aceite",
+   "name": "Aceite de oliva",
+   "precioPkg": 9500,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "tomate",
+   "name": "Puré de tomate",
+   "precioPkg": 2200,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "muzza",
+   "name": "Muzzarella",
+   "precioPkg": 8800,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "jamon",
+   "name": "Jamón cocido",
+   "precioPkg": 12500,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "morron",
+   "name": "Morrón rojo",
+   "precioPkg": 3800,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "cebolla",
+   "name": "Cebolla",
+   "precioPkg": 1100,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "aceituna",
+   "name": "Aceitunas verdes",
+   "precioPkg": 5200,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "tomate_f",
+   "name": "Tomate fresco",
+   "precioPkg": 2500,
+   "grPaquete": 1000,
+   "unit": "g",
+   "cantidad": 1000
+  },
+  {
+   "id": "albahaca",
+   "name": "Albahaca",
+   "precioPkg": 1800,
+   "grPaquete": 100,
+   "unit": "g",
+   "cantidad": 100
+  },
+  {
+   "id": "gaseosa",
+   "name": "Gaseosa 1,5 L (reventa)",
+   "precioPkg": 2400,
+   "grPaquete": 1,
+   "unit": "ml",
+   "cantidad": 1
+  }
+ ],
+ "ENVASES": [
+  {
+   "id": "caja",
+   "name": "Caja de pizza",
+   "precioPkg": 36000,
+   "cantidad": 100
+  },
+  {
+   "id": "servilleta",
+   "name": "Servilleta",
+   "precioPkg": 3500,
+   "cantidad": 500
+  },
+  {
+   "id": "bolsa",
+   "name": "Bolsa de papel",
+   "precioPkg": 9000,
+   "cantidad": 100
+  },
+  {
+   "id": "caja_emp",
+   "name": "Caja de empanadas x6",
+   "precioPkg": 26000,
+   "cantidad": 100
+  }
+ ],
+ "GASTOS_OP": [
+  {
+   "id": "gmuvk420o252h",
+   "name": "Alquiler",
+   "amount": 650000
+  },
+  {
+   "id": "gmuvk420oesjy",
+   "name": "Luz, agua y gas",
+   "amount": 280000
+  },
+  {
+   "id": "gmuvk420ofbih",
+   "name": "Sistema de caja",
+   "amount": 60000
+  },
+  {
+   "id": "gmuvk420ojnw6",
+   "name": "Impuestos",
+   "amount": 220000
+  },
+  {
+   "id": "gmuvk420o9k0q",
+   "name": "Misceláneos",
+   "amount": 90000
+  }
+ ],
+ "GASTOS_S": [
+  {
+   "id": "gmuvk420o8fle",
+   "name": "Pizzero",
+   "amount": 900000
+  },
+  {
+   "id": "gmuvk420o6gab",
+   "name": "Ayudante y caja",
+   "amount": 700000
+  }
+ ],
+ "STOCK": {
+  "harina": {
+   "actual": 18000,
+   "minimo": 10000,
+   "unit": "g"
+  },
+  "levadura": {
+   "actual": 450,
+   "minimo": 500,
+   "unit": "g"
+  },
+  "sal": {
+   "actual": 3000,
+   "minimo": 1000,
+   "unit": "g"
+  },
+  "aceite": {
+   "actual": 4200,
+   "minimo": 2000,
+   "unit": "g"
+  },
+  "tomate": {
+   "actual": 9000,
+   "minimo": 5000,
+   "unit": "g"
+  },
+  "muzza": {
+   "actual": 14000,
+   "minimo": 8000,
+   "unit": "g"
+  },
+  "jamon": {
+   "actual": 3500,
+   "minimo": 3000,
+   "unit": "g"
+  },
+  "morron": {
+   "actual": 2200,
+   "minimo": 1500,
+   "unit": "g"
+  },
+  "cebolla": {
+   "actual": 6000,
+   "minimo": 3000,
+   "unit": "g"
+  },
+  "aceituna": {
+   "actual": 2500,
+   "minimo": 1000,
+   "unit": "g"
+  },
+  "tomate_f": {
+   "actual": 1800,
+   "minimo": 1500,
+   "unit": "g"
+  },
+  "albahaca": {
+   "actual": 60,
+   "minimo": 100,
+   "unit": "g"
+  },
+  "gaseosa": {
+   "actual": 14,
+   "minimo": 8,
+   "unit": "g"
+  },
+  "caja": {
+   "actual": 180,
+   "minimo": 100,
+   "unit": "u"
+  },
+  "servilleta": {
+   "actual": 900,
+   "minimo": 500,
+   "unit": "u"
+  },
+  "bolsa": {
+   "actual": 70,
+   "minimo": 50,
+   "unit": "u"
+  },
+  "caja_emp": {
+   "actual": 40,
+   "minimo": 30,
+   "unit": "u"
+  },
+  "pizza_muzza": {
+   "actual": 0,
+   "minimo": 0,
+   "unit": "u"
+  },
+  "pizza_napo": {
+   "actual": 0,
+   "minimo": 0,
+   "unit": "u"
+  },
+  "pizza_fuga": {
+   "actual": 0,
+   "minimo": 0,
+   "unit": "u"
+  },
+  "pizza_jamon": {
+   "actual": 0,
+   "minimo": 0,
+   "unit": "u"
+  },
+  "empanada_jyq": {
+   "actual": 0,
+   "minimo": 0,
+   "unit": "u"
+  }
+ },
+ "MOVIMIENTOS": [
+  {
+   "fecha": "2/10/2026 09:10 a. m.",
+   "ing": "Muzzarella",
+   "tipo": "ingreso",
+   "qty": 20000,
+   "nota": "Compra semanal",
+   "categoria": "ingrediente",
+   "unit": "g"
+  },
+  {
+   "fecha": "3/10/2026 08:45 a. m.",
+   "ing": "Harina 000",
+   "tipo": "ingreso",
+   "qty": 25000,
+   "nota": "Bolsa 25 kg",
+   "categoria": "ingrediente",
+   "unit": "g"
+  },
+  {
+   "fecha": "4/10/2026 11:30 p. m.",
+   "ing": "Jamón cocido",
+   "tipo": "egreso",
+   "qty": -600,
+   "nota": "Merma por vencimiento",
+   "categoria": "ingrediente",
+   "unit": "g"
+  }
+ ],
+ "TIERS": [
+  {
+   "id": "T1",
+   "name": "Premium (100%)",
+   "factor": 2,
+   "color": "#c0392b"
+  },
+  {
+   "id": "T2",
+   "name": "Alto (70%)",
+   "factor": 1.7,
+   "color": "#d68910"
+  },
+  {
+   "id": "T3",
+   "name": "Estándar (60%)",
+   "factor": 1.6,
+   "color": "#235328"
+  },
+  {
+   "id": "T4",
+   "name": "Accesible (40%)",
+   "factor": 1.4,
+   "color": "#2980b9"
+  },
+  {
+   "id": "T5",
+   "name": "Mínimo (20%)",
+   "factor": 1.2,
+   "color": "#6b7c6c"
+  }
+ ],
+ "CHANNELS": [
+  {
+   "id": "mostrador",
+   "name": "Mostrador",
+   "desc": "Venta directa en el local",
+   "surcharge": 0,
+   "enabled": true,
+   "commission": 0,
+   "channelDisc": 0
+  },
+  {
+   "id": "fudo",
+   "name": "Fudo",
+   "desc": "Sistema propio del local",
+   "surcharge": 0.15,
+   "enabled": false,
+   "commission": 0.05,
+   "channelDisc": 0
+  },
+  {
+   "id": "rappi",
+   "name": "Rappi",
+   "desc": "Plataforma de delivery",
+   "surcharge": 0.45,
+   "enabled": true,
+   "commission": 0.3,
+   "channelDisc": 0
+  },
+  {
+   "id": "pedidosya",
+   "name": "Pedidos Ya",
+   "desc": "Plataforma de delivery",
+   "surcharge": 0.45,
+   "enabled": true,
+   "commission": 0.28,
+   "channelDisc": 0
+  },
+  {
+   "id": "mercadopago",
+   "name": "Mercado Pago",
+   "desc": "Pago online / QR",
+   "surcharge": 0.15,
+   "enabled": false,
+   "commission": 0.06,
+   "channelDisc": 0
+  },
+  {
+   "id": "whatsapp",
+   "name": "WhatsApp",
+   "desc": "Pedidos por mensaje",
+   "surcharge": 0.05,
+   "enabled": true,
+   "commission": 0,
+   "channelDisc": 0
+  }
+ ],
+ "projChannelDist": {
+  "mostrador": 60,
+  "whatsapp": 20,
+  "rappi": 10,
+  "pedidosya": 10,
+  "fudo": 0,
+  "mercadopago": 0
+ },
+ "projChannelLocked": {},
+ "projManualMode": true,
+ "projManualUnits": {
+  "pizza_muzza": 420,
+  "pizza_napo": 260,
+  "pizza_fuga": 200,
+  "pizza_jamon": 180,
+  "empanada_jyq": 150,
+  "gaseosa": 330
+ },
+ "projSnapshots": [
+  {
+   "id": 1001,
+   "name": "x",
+   "label": "5 de oct de 2026",
+   "gf": 2900000,
+   "tI": 14261865,
+   "tC": 6136418,
+   "tM": 8125447,
+   "resultado": 5225447,
+   "dist": {
+    "mostrador": 45,
+    "whatsapp": 25,
+    "rappi": 15,
+    "pedidosya": 15,
+    "fudo": 0,
+    "mercadopago": 0
+   },
+   "mode": "manual",
+   "manualUnits": {
+    "pizza_muzza": 420,
+    "pizza_napo": 260,
+    "pizza_fuga": 200,
+    "pizza_jamon": 180,
+    "empanada_jyq": 150,
+    "gaseosa": 330
+   },
+   "rows": [
+    {
+     "name": "Pizza Muzzarella",
+     "units": 420,
+     "ing": 4099221,
+     "cost": 1719186,
+     "marg": 2380035
+    },
+    {
+     "name": "Pizza Napolitana",
+     "units": 260,
+     "ing": 2564120,
+     "cost": 1079338,
+     "marg": 1484782
+    },
+    {
+     "name": "Pizza Fugazzeta",
+     "units": 200,
+     "ing": 2206190,
+     "cost": 895660,
+     "marg": 1310530
+    },
+    {
+     "name": "Pizza Jamón y Morrones",
+     "units": 180,
+     "ing": 2353257,
+     "cost": 1015434,
+     "marg": 1337823
+    },
+    {
+     "name": "Empanadas Jamón y Queso (x6)",
+     "units": 150,
+     "ing": 1271498,
+     "cost": 605100,
+     "marg": 666398
+    },
+    {
+     "name": "Gaseosa 1,5 L",
+     "units": 330,
+     "ing": 1767579,
+     "cost": 821700,
+     "marg": 945879
+    }
+   ],
+   "savedAt": "2026-08-06T12:00:00.000Z",
+   "gananciaDiaria": 174181.56666666668,
+   "gananciaWeekly": 1206800.6928406467
+  }
+ ],
+ "activeProjSnapshotId": 1001,
+ "gfDiscHistory": [],
+ "usdRate": "1400",
+ "globalCommission": "0",
+ "customTC": 0,
+ "customers": [],
+ "orders": [],
+ "mostradorDiscounts": [],
+ "mostradorPayments": [],
+ "reportData": {},
+ "menuConfig": {},
+ "tiendaConfig": {},
+ "gfPages": [
+  {
+   "id": 1,
+   "label": "",
+   "sector": "",
+   "rows": 15,
+   "showCheckboxes": true
+  }
+ ],
+ "gfCurrentTpl": "ingredientes",
+ "gfActiveColumns": [
+  "producto",
+  "unidad",
+  "teorica",
+  "real",
+  "diferencia",
+  "uso",
+  "desperdicio",
+  "obs"
+ ],
+ "gfResponsable": "",
+ "gfFecha": "2026-10-05",
+ "gfTurno": "",
+ "gfSupervisor": "",
+ "gfSector": "",
+ "gfSucursal": "",
+ "gfObs": "",
+ "visibleCols": [
+  "etiquetas",
+  "categoria",
+  "estrella",
+  "costo_receta",
+  "costo_total",
+  "tier",
+  "gf_prod",
+  "comision",
+  "subtotal",
+  "por_canal",
+  "margen"
+ ],
+ "ingView": "grilla",
+ "ingSearch": "",
+ "ingSortVal": "",
+ "envSearch": "",
+ "envSortVal": "",
+ "ventasView": "grilla",
+ "stockView": "tabla",
+ "movFilter": "todo",
+ "currentPanel": "dashboard",
+ "tabState": {
+  "_panel": "dashboard"
+ },
+ "notifications": [],
+ "savedAt": "6/8/2026, 12:00:00"
+}

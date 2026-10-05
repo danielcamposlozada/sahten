@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sahten",
+  "version": "0.4.1",
+  "identifier": "app.sahten.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      { "label": "main", "title": "Sahten", "width": 1280, "height": 820, "minWidth": 960, "minHeight": 640, "dragDropEnabled": false }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Business",
+    "shortDescription": "Costos, precios, proyección y mostrador para gastronomía",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "createUpdaterArtifacts": true,
+    "macOS": { "minimumSystemVersion": "11.0" },
+    "fileAssociations": [
+      { "ext": ["sahten"], "name": "Proyecto de Sahten", "description": "Proyecto de Sahten", "mimeType": "application/json", "role": "Editor" }
+    ]
+  },
+  "plugins": {
+    "fs": { "requireLiteralLeadingDot": false },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVDMDBGRjk1RDFGNjg5OTQKUldTVWlmYlJsZjhBWERVdUttV2w5SFYySHpGN2w1OUxoRXQxV1VhV2JUSzB4RkV1YXkwKzQxZHgK",
+      "endpoints": ["https://github.com/danielcamposlozada/sahten/releases/latest/download/latest.json"]
+    }
+  }
+}

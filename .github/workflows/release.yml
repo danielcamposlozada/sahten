@@ -1,0 +1,88 @@
+# Instaladores de escritorio: .dmg (macOS universal: Apple Silicon + Intel) y .msi / .exe (Windows).
+# Se dispara al publicar una etiqueta  v*  (por ejemplo: git tag v4.0.1 && git push --tags).
+# Crea un borrador de Release con los instaladores y el latest.json que usa el actualizador automático.
+#
+# Secretos del repositorio (Settings › Secrets and variables › Actions):
+#   TAURI_SIGNING_PRIVATE_KEY            contenido de ~/.tauri/sahten-updater.key   (obligatorio: firma las actualizaciones)
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD   vacío si la clave no tiene contraseña
+#   Opcionales, solo si pagás la cuenta de Apple Developer (USD 99/año) para firmar y notarizar:
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+name: Release
+on:
+  push: { tags: ['v*'] }
+  workflow_dispatch: {}
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run check:versions
+      - run: npm test
+
+  release:
+    needs: tests
+    permissions: { contents: write }
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+          - platform: windows-latest
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    env:
+      HAS_APPLE: ${{ secrets.APPLE_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with: { workspaces: './src-tauri -> target' }
+      - run: npm ci
+      # Sin firma de Apple (por defecto): no se pasan las variables APPLE_* (vacías hacen fallar la importación del certificado)
+      - name: Instaladores (sin firma de Apple)
+        if: env.HAS_APPLE != 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Sahten ${{ github.ref_name }}'
+          releaseBody: 'Instaladores de Sahten. Si macOS o Windows muestran un aviso al abrirla, seguí docs/INSTALACION.md.'
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
+
+      # Con cuenta de Apple Developer (opcional): firma y notariza el .dmg
+      - name: Instaladores (firmados y notarizados)
+        if: env.HAS_APPLE == 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Sahten ${{ github.ref_name }}'
+          releaseBody: 'Instaladores de Sahten. Si macOS o Windows muestran un aviso al abrirla, seguí docs/INSTALACION.md.'
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}

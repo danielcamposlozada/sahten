@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sahten · Sistema de Gestión</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#235328">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+</head>
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56" style="background:#1a2e1c">
+  <rect x="4" y="4" width="72" height="48" rx="6" fill="#235328"/>
+  <rect x="4" y="4" width="18" height="48" rx="6" fill="#1a3d1f"/>
+  <circle cx="13" cy="14" r="3" fill="#F28C00"/>
+  <rect x="9" y="22" width="8" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="9" y="27" width="8" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="9" y="32" width="8" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="26" y="10" width="20" height="10" rx="3" fill="rgba(242,140,0,0.2)" stroke="#F28C00" stroke-width="0.5"/>
+  <rect x="50" y="10" width="20" height="10" rx="3" fill="rgba(35,83,40,0.3)" stroke="#4CAF50" stroke-width="0.5"/>
+  <rect x="26" y="24" width="44" height="24" rx="3" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+  <text x="40" cy="28" y="38" text-anchor="middle" font-family="sans-serif" font-size="5" fill="#F28C00" font-weight="700">SAHTEN</text>
+</svg>
+</template>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo" id="brand-logo-wrap">
+      <div id="brand-logo-slot">
+      <svg viewBox="0 0 1703 704" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M531.857 0C480.757 0 439.365 41.3922 439.365 92.4921V217.882H405.927V92.4921C405.927 41.3922 364.535 0 313.435 0C262.336 0 220.943 41.3922 220.943 92.4921V368.485H338.918V644.478C338.918 658.635 327.458 669.961 313.435 669.961C299.413 669.961 287.953 658.5 287.953 644.478V468.932H204.225V485.516H220.943V611.041C220.943 662.141 262.336 703.533 313.435 703.533C322.334 703.533 330.828 702.32 338.918 699.893C377.614 688.837 405.927 653.242 405.927 611.041V335.048H287.953V59.0547C287.953 44.8978 299.413 33.5722 313.435 33.5722C327.458 33.5722 338.918 45.0326 338.918 59.0547V234.601H405.927H422.646H439.365H506.374V59.0547C506.374 44.8978 517.835 33.5722 531.857 33.5722C545.879 33.5722 557.339 45.0326 557.339 59.0547V335.048H531.857C480.757 335.048 439.365 376.44 439.365 427.54V703.533H624.349V92.4921C624.349 41.3922 582.957 0 531.857 0ZM557.339 569.649V670.096H506.24V394.103C506.24 379.946 517.7 368.62 531.722 368.62C545.744 368.62 557.205 380.08 557.205 394.103V569.649H557.339Z" fill="white" opacity="0.9"/><path d="M1172.43 0C1121.33 0 1079.94 41.3922 1079.94 92.4921V611.041C1079.94 662.141 1121.33 703.533 1172.43 703.533C1223.53 703.533 1264.92 662.141 1264.92 611.041V468.932H1197.91H1181.19V485.651H1197.91V644.478C1197.91 658.635 1186.45 669.961 1172.43 669.961C1158.41 669.961 1146.95 658.5 1146.95 644.478V368.485H1264.92V92.4921C1264.92 41.3922 1223.53 0 1172.43 0ZM1197.91 335.048H1146.81V59.0547C1146.81 44.8978 1158.27 33.5722 1172.29 33.5722C1186.32 33.5722 1197.78 45.0326 1197.78 59.0547V335.048H1197.91Z" fill="white" opacity="0.9"/><path d="M750.416 335.048H724.933V0.27002H641.205V16.8539H657.924V703.534H724.933V393.968C724.933 379.811 736.394 368.486 750.416 368.486C764.438 368.486 775.898 379.946 775.898 393.968V703.534H842.908V427.54C842.908 376.44 801.516 335.048 750.416 335.048Z" fill="white" opacity="0.9"/><path d="M934.181 16.9887H950.9V0.27002H867.172V611.041C867.172 662.141 908.564 703.534 959.664 703.534C1010.76 703.534 1052.16 662.141 1052.16 611.041V468.933H968.428V485.516H985.146V644.479C985.146 658.636 973.686 669.961 959.664 669.961C945.642 669.961 934.181 658.501 934.181 644.479V134.02H1052.16V100.582H934.181V16.8539V16.9887Z" fill="white" opacity="0.9"/><path d="M1496.14 686.949H1479.42V92.4921C1479.42 41.3922 1438.03 0 1386.93 0H1277.72V16.7187H1294.44V703.668H1361.45H1378.17V686.949H1361.45V59.0547C1361.45 44.8978 1372.91 33.5722 1386.93 33.5722C1401.09 33.5722 1412.41 45.0326 1412.41 59.0547V703.668H1479.42H1496.14V686.949Z" fill="white" opacity="0.9"/><path d="M1594.63 280.34C1553.6 277.315 1503.4 285.065 1451.12 317.439C1417.92 338.062 1391.8 362.495 1371.33 386.439C1305.74 361.712 1289.87 326.367 1289.87 326.367C1289.87 326.367 1273.77 410.538 1192.19 410.701C1140.56 410.805 1116.43 369.98 1105.76 340.122C1157.34 314.204 1199.76 304.796 1199.76 304.796L1157 259.467C1084.68 290.447 1023.82 275.51 947.569 229.052C881.944 189.027 828.943 212.797 828.943 212.797L799.367 278.351C799.367 278.351 864.859 252.404 914.892 276.685C972.005 304.536 1036.14 308.71 1036.14 308.71C1036.14 308.71 934.73 410.501 872.958 410.625C811.185 410.749 799.275 350.298 799.275 350.298L743.551 309.297C743.551 309.297 714.045 409.51 657.224 409.624C600.403 409.738 593.908 345.691 593.908 345.691L537.015 309.712C537.015 309.712 523.075 412.761 459.181 412.889C395.287 413.017 393.754 353.98 393.754 353.98L335.43 310.116C335.43 310.116 329.54 547.005 187.605 547.29C45.671 547.575 54.2303 348.208 54.2303 348.208L2.28529 310.785C-15.8219 451.848 102.35 594.072 235.042 570.142C367.733 546.212 379.43 382.693 379.43 382.693C398.61 423.767 455.274 462.854 511.586 444.336C561.301 427.982 578.166 372.972 578.166 372.972C596.422 423.37 651.44 464.612 711.75 441.066C761.224 421.844 783.533 377.101 783.533 377.101C833.503 488.149 955.79 448.703 1032.29 386.641C1049.48 372.743 1067.37 360.995 1084.56 351.16C1101.15 391.284 1134.74 447.388 1191.8 447.274C1280.68 447.095 1311.43 377.476 1311.43 377.476C1311.43 377.476 1323.72 393.466 1350.87 411.339C1322.66 451.075 1311.17 483.367 1311.17 483.367L1351.81 528.7C1351.81 528.7 1357.39 485.903 1394.53 434.198C1427.33 447.518 1470.74 457.948 1526.14 457.837C1679.39 457.53 1702.06 356.614 1702.06 356.614C1682.17 313.151 1640.61 283.834 1593.45 280.582L1594.63 280.34ZM1528.17 410.027C1486.44 410.111 1452.01 406.595 1423.23 400.916C1436.41 387.026 1451.94 372.892 1470.54 359.23C1576.24 281.572 1669.94 330.624 1669.94 330.624C1669.94 330.624 1640.4 409.802 1528.17 410.027Z" fill="#F28C00"/></svg>
+      <div class="logo-sub" id="brand-name-sub">Sistema de Gestión · Beta v<span data-app-version></span></div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Inicio</div>
+      <div class="nav-item active" onclick="showPanel('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></div>
+      <div class="nav-section">Vender</div>
+      <div class="nav-item" onclick="showPanel('mostrador')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>Mostrador</span><span class="nav-badge">Alpha</span></div>
+      <div class="nav-item" onclick="showPanel('menuonline')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Menú Online</span></div>
+      <div class="nav-section">Producir</div>
+      <div class="nav-item" onclick="showPanel('costreceta')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>Costo Receta</span></div>
+      <div class="nav-item" onclick="showPanel('productos')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menú</span></div>
+      <div class="nav-item" onclick="showPanel('stock')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>Stock</span></div>
+      <div class="nav-section">Configurar</div>
+      <div class="nav-item" onclick="showPanel('ingredientes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2z"/><path d="M12 12v10"/><path d="M2 12h20"/></svg><span>Ingredientes</span></div>
+      <div class="nav-item" onclick="showPanel('envases')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Envases</span></div>
+      <div class="nav-item" onclick="showPanel('gastos')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Gastos Fijos</span></div>
+      <div class="nav-item" id="nav-nube" onclick="showPanel('nube')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Nube y usuarios</div>
+      <div class="nav-item" onclick="showPanel('ajustes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Ajustes</span></div>
+      <div class="nav-section">Analizar</div>
+      <div class="nav-item" onclick="showPanel('ventas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Ventas + GF</span></div>
+      <div class="nav-item" onclick="showPanel('proyeccion')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Proyección</span></div>
+      <div class="nav-item" onclick="showPanel('reportes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Reportes</span></div>
+      <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0"></div>
+      <div class="nav-item" onclick="showPanel('wiki')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Guía de uso</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="usd-widget">
+        <div class="usd-label">USD $</div>
+        <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">$<input class="usd-input" id="usd-rate" type="number" value="1200" oninput="SAHTEN.setSetting('usdRate',this.value);const mv=document.getElementById('usd-rate-mobile');const dv=document.getElementById('usd-rate-drawer');if(mv)mv.value=this.value;if(dv)dv.value=this.value;recalcAll()"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- BOTTOM NAV (mobile only) -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-item active" id="bn-dashboard" onclick="showPanel('dashboard');closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-productos" onclick="showPanel('productos');closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <span>Menú</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-ingredientes" onclick="showPanel('ingredientes');closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2z"/><path d="M12 12v10"/><path d="M2 12h20"/></svg>
+      <span>Ingredientes</span>
+    </button>
+    <button class="bottom-nav-item" id="bn-proyeccion" onclick="showPanel('proyeccion');closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Proyección</span>
+    </button>
+    <button class="bottom-nav-more" id="bn-more" onclick="toggleDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>Más</span>
+    </button>
+  </nav>
+
+  <!-- APP DRAWER -->
+  <div class="app-drawer-overlay" id="app-drawer-overlay" onclick="if(event.target===this)closeDrawer()">
+    <div class="app-drawer">
+      <div class="app-drawer-handle"><div></div></div>
+      <div class="app-drawer-title">Sahten · Menú</div>
+
+      <div class="app-drawer-section">Principal</div>
+      <div class="app-drawer-grid">
+        <button class="app-drawer-item" id="ad-dashboard" onclick="showPanel('dashboard');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="app-drawer-item" id="ad-productos" onclick="showPanel('productos');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span>Menú</span>
+        </button>
+        <button class="app-drawer-item" id="ad-ventas" onclick="showPanel('ventas');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Ventas + GF</span>
+        </button>
+        <button class="app-drawer-item" id="ad-stock" onclick="showPanel('stock');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>Stock</span>
+        </button>
+        <button class="app-drawer-item" id="ad-proyeccion" onclick="showPanel('proyeccion');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Proyección</span>
+        </button>
+        <button class="app-drawer-item" id="ad-costreceta" onclick="showPanel('costreceta');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Costo Receta</span>
+        </button>
+      </div>
+
+      <div class="app-drawer-section">Configuración</div>
+      <div class="app-drawer-grid">
+        <button class="app-drawer-item" id="ad-ingredientes" onclick="showPanel('ingredientes');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2z"/><path d="M12 12v10"/><path d="M2 12h20"/></svg>
+          <span>Ingredientes</span>
+        </button>
+        <button class="app-drawer-item" id="ad-envases" onclick="showPanel('envases');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>Envases</span>
+        </button>
+        <button class="app-drawer-item" id="ad-canales" onclick="showPanel('canales');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>Canales</span>
+        </button>
+        <button class="app-drawer-item" id="ad-gastos" onclick="showPanel('gastos');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Gastos Fijos</span>
+        </button>
+        <button class="app-drawer-item" id="ad-ajustes" onclick="showPanel('ajustes');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Ajustes</span>
+        </button>
+        <button class="app-drawer-item" id="ad-wiki" onclick="showPanel('wiki');closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Guía</span>
+        </button>
+      </div>
+
+      <div class="app-drawer-usd">
+        <label>USD $</label>
+        <input type="number" id="usd-rate-drawer" placeholder="1400"
+          oninput="SAHTEN.setSetting('usdRate',this.value);const s=document.getElementById('usd-rate');const m=document.getElementById('usd-rate-mobile');if(s)s.value=this.value;if(m)m.value=this.value;recalcAll()">
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+
+      <!-- Desktop actions (hidden on mobile) -->
+      <div class="topbar-actions topbar-desktop">
+        <span id="autosave-badge" class="autosave-badge">✓ Guardado</span>
+        <button class="btn notif-bell-btn" id="notif-bell-desktop" onclick="openNotifDrawer()" title="Notificaciones" style="position:relative;padding:8px 10px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-bell-badge" style="position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:#e04040;color:white;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 4px;line-height:1">0</span>
+        </button>
+        <button class="btn" onclick="SAHTEN.project.open()" title="Abrir proyecto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Abrir
+        </button>
+        <button class="btn btn-accent" onclick="SAHTEN.project.save()" title="Guardar proyecto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Guardar
+        </button>
+        <button class="btn" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
+        </button>
+        <button class="btn btn-primary" onclick="recalcAll()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Recalcular
+        </button>
+      </div>
+
+      <!-- Mobile actions: autosave badge + bell + ⋯ menu -->
+      <div class="topbar-actions topbar-mobile">
+        <span id="autosave-badge-mobile" class="autosave-badge">✓</span>
+        <button class="btn notif-bell-btn" id="notif-bell-mobile" onclick="openNotifDrawer()" title="Notificaciones" style="position:relative;padding:6px 8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-bell-badge-m" style="position:absolute;top:0;right:0;min-width:14px;height:14px;border-radius:7px;background:#e04040;color:white;font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+        </button>
+        <div class="topbar-menu-wrap">
+          <button class="btn topbar-more-btn" id="topbar-more-btn" onclick="toggleTopbarMenu()" title="Acciones">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+          <div class="topbar-menu" id="topbar-menu">
+            <div class="topbar-menu-usd">
+              <label>USD $</label>
+              <input type="number" id="usd-rate-mobile" placeholder="1400"
+                oninput="SAHTEN.setSetting('usdRate',this.value);const s=document.getElementById('usd-rate');const d=document.getElementById('usd-rate-drawer');if(s)s.value=this.value;if(d)d.value=this.value;recalcAll()">
+            </div>
+            <div class="topbar-menu-sep"></div>
+            <button class="topbar-menu-item" onclick="SAHTEN.project.open();closeTopbarMenu()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Abrir
+            </button>
+            <button class="topbar-menu-item accent" onclick="SAHTEN.project.save();closeTopbarMenu()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Guardar
+            </button>
+            <button class="topbar-menu-item" onclick="exportCSV();closeTopbarMenu()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar CSV
+            </button>
+            <button class="topbar-menu-item primary" onclick="recalcAll();closeTopbarMenu()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Recalcular
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="panel active">
+        <div class="kpi-grid" id="dash-kpis"></div>
+        <!-- PROYECCIÓN ACTIVA en dashboard -->
+        <div id="dash-proj-banner" style="display:none;margin-bottom:18px"></div>
+        <div class="charts-grid">
+
+          <!-- CHART 1: Canal compare — full width, FIRST, Google Ads style -->
+          <div class="chart-card full-chart" style="order:-1">
+            <div class="chart-card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <span class="tip-wrap">Precio por canal — todos los productos
+                <span class="tip-box">Línea por canal activo. Hacé clic en la leyenda para activar/desactivar canales. El eje Y muestra el precio cobrado al cliente.</span>
+              </span>
+              <div id="dash-compare-legend" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
+            <div class="chart-container" style="height:300px"><canvas id="chart-compare"></canvas></div>
+          </div>
+
+          <!-- CHART 2: Margen bruto con filtros -->
+          <div class="chart-card">
+            <div class="chart-card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <span class="tip-wrap">Margen bruto por producto
+                <span class="tip-box">Ganancia en $ por unidad vendida en Mostrador (precio cobrado − costo total con GF). Verde ≥ 45%, amarillo ≥ 30%, rojo &lt; 30%.</span>
+              </span>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <select id="dash-margin-filter" onchange="renderDashboard()" style="border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:12px;background:white;outline:none">
+                  <option value="top10">Top 10 mayor margen</option>
+                  <option value="bot10">Top 10 menor margen</option>
+                  <option value="all">Todos</option>
+                </select>
+                <div id="dash-prod-filter-wrap" style="display:flex;gap:4px;flex-wrap:wrap;max-width:400px;max-height:60px;overflow-y:auto"></div>
+              </div>
+            </div>
+            <div class="chart-container" style="height:260px"><canvas id="chart-margins"></canvas></div>
+          </div>
+
+          <!-- CHART 3: Gastos fijos -->
+          <div class="chart-card">
+            <div class="chart-card-title">
+              <span class="tip-wrap">Distribución gastos fijos
+                <span class="tip-box">Cómo se distribuyen los gastos fijos mensuales entre operativos y sueldos. El total se divide entre los productos según su % de GF asignado.</span>
+              </span>
+            </div>
+            <div class="chart-container" style="height:280px"><canvas id="chart-gf"></canvas></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PRODUCTOS -->
+      <div id="panel-productos" class="panel">
+        <div class="panel-toolbar">
+          <div class="ptb-view-group">
+            <button class="ptb-view-btn active" id="pv-tabla" title="Vista tabla" onclick="setProdView('tabla')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            </button>
+            <button class="ptb-view-btn" id="pv-grilla" title="Vista grilla" onclick="setProdView('grilla')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+          </div>
+          <div class="ptb-sep"></div>
+          <div class="ptb-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="prod-search" placeholder="Buscar producto..." class="ptb-search" oninput="renderProductos()">
+          </div>
+          <select id="prod-sort" class="ptb-select" onchange="renderProductos()">
+            <option value="">Orden original</option>
+            <option value="name-asc">A → Z</option>
+            <option value="name-desc">Z → A</option>
+            <option value="cost-desc">Más costoso primero</option>
+            <option value="cost-asc">Más barato primero</option>
+            <option value="price-desc">Precio ↓</option>
+            <option value="price-asc">Precio ↑</option>
+            <option value="tier">Por Tier</option>
+          </select>
+          <div class="ptb-spacer"></div>
+          <div class="ptb-actions">
+            <div class="ptb-col-btn" style="position:relative">
+              <button class="btn" id="col-toggle-btn" onclick="toggleColPanel()" style="font-size:12px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Columnas
+              </button>
+            </div>
+            <button class="btn btn-accent" onclick="showAddProductModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar
+            </button>
+          </div>
+        </div>
+        <div id="gf-remaining-bar" class="gf-remaining"></div>
+        <div class="bulk-bar" id="bulk-bar">
+          <span class="bulk-count-chip" id="bulk-count-lbl">0 sel.</span>
+          <div class="bulk-sep"></div>
+
+          <!-- ETIQUETA -->
+          <button class="bulk-btn" id="bulk-btn-tag" onclick="bulkTogglePop('tag')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Etiqueta
+          </button>
+
+          <!-- ESTRELLA -->
+          <button class="bulk-btn" id="bulk-btn-star" onclick="bulkTogglePop('star')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Estrella
+          </button>
+
+          <!-- TIER -->
+          <button class="bulk-btn" id="bulk-btn-tier" onclick="bulkTogglePop('tier')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Tier
+          </button>
+
+          <!-- DESCUENTO -->
+          <button class="bulk-btn" id="bulk-btn-disc" onclick="bulkTogglePop('disc')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            Descuento
+          </button>
+
+          <div class="bulk-sep"></div>
+
+          <!-- ELIMINAR -->
+          <button class="bulk-btn danger" onclick="bulkDelete()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Eliminar
+          </button>
+
+          <button class="bulk-close" onclick="clearSelection()" title="Cancelar selección">×</button>
+        </div>
+
+        <!-- BULK POPOVERS (fixed, fuera del flujo) -->
+        <div id="bulk-pop-tag"  class="bulk-pop" style="display:none"></div>
+        <div id="bulk-pop-star" class="bulk-pop" style="display:none"></div>
+        <div id="bulk-pop-tier" class="bulk-pop" style="display:none"></div>
+        <div id="bulk-pop-disc" class="bulk-pop" style="display:none"></div>
+        <div class="card">
+          <div class="card-header" style="padding:12px 16px">
+            <div class="card-title">Tabla de precios</div>
+            <div id="col-panel" style="display:none;position:absolute;right:16px;top:auto;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:12px 16px;z-index:50;min-width:200px" class="dropdown-panel">
+              <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px">Mostrar / Ocultar columnas</div>
+              <div id="col-checkboxes" style="display:flex;flex-direction:column;gap:7px"></div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px">
+                <button class="btn" style="font-size:11px;padding:4px 10px;flex:1" onclick="setAllCols(true)">Mostrar todo</button>
+                <button class="btn" style="font-size:11px;padding:4px 10px;flex:1" onclick="setAllCols(false)">Ocultar todo</button>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <table class="prod-table">
+              <thead><tr id="prod-thead-row">
+                <th><input type="checkbox" class="prod-cb" id="cb-all" onchange="toggleAll(this.checked)"></th>
+                <th class="sortable" data-sort="name" style="min-width:220px;width:220px" onclick="setProdSort('name')"><span style="color:rgba(255,255,255,0.65)">Producto<span class="sort-icon">↕</span></span></th>
+                <th data-col="etiquetas"><span style="color:rgba(255,255,255,0.65)">Etiquetas</span></th>
+                <th data-col="categoria"><span style="color:rgba(255,255,255,0.65)">Categoría</span></th>
+                <th data-col="estrella"><span style="color:rgba(255,255,255,0.65)">⭐</span></th>
+                <th class="sortable" data-sort="cost" data-col="costo_receta" onclick="setProdSort('cost')"><span style="color:rgba(255,255,255,0.65)">Costo receta<span class="sort-icon">↕</span></span></th>
+                <th class="sortable" data-sort="cost_total" data-col="costo_total" onclick="setProdSort('cost_total')"><span style="color:rgba(255,255,255,0.65)">Costo + GF<span class="sort-icon">↕</span></span></th>
+                <th data-col="tier"><span style="color:rgba(255,255,255,0.65)">Tier</span></th>
+                <th data-col="gf_prod"><span style="color:rgba(255,255,255,0.65)">GF %</span></th>
+                <th data-col="descuento"><span style="color:rgba(255,255,255,0.65)">Descuento</span></th>
+                <th data-col="comision"><span style="color:rgba(255,255,255,0.65)">Com. %</span></th>
+                <th class="sortable" data-sort="base" data-col="subtotal" onclick="setProdSort('base')"><span style="color:rgba(255,255,255,0.65)">Base tier<span class="sort-icon">↕</span></span></th>
+                <th data-col="por_canal"><span style="color:rgba(255,255,255,0.65)">Por canal</span></th>
+                <th class="sortable" data-sort="margin" data-col="margen" onclick="setProdSort('margin')"><span style="color:rgba(255,255,255,0.65)">Margen<span class="sort-icon">↕</span></span></th>
+                <th style="width:44px"></th>
+              </tr></thead>
+              <tbody id="prod-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- PROD GRID VIEW -->
+        <div id="prod-grid-container" style="display:none"></div>
+      </div>
+
+      <!-- PROYECCION -->
+      <div id="panel-proyeccion" class="panel">
+        <div class="info-banner"><strong>Proyección mensual:</strong> Usá las unidades de <strong>Ventas + GF</strong> o ingresá valores manuales por producto. El ingreso refleja lo que <strong>vos recibís</strong> (precio cobrado − comisión de plataforma). Distribuí las ventas entre canales activos.</div>
+
+        <!-- SAVE/EXPORT BAR -->
+        <div class="proj-snapshot-bar">
+          <button class="btn btn-accent" onclick="saveProjectionSnapshot()" title="Guardar esta proyección en memoria local">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar proyección
+          </button>
+          <button class="btn" onclick="exportProjectionPDF()" title="Imprimir / exportar como PDF con gráficos">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir / PDF
+          </button>
+          <button class="btn" onclick="exportProjectionCSV()" title="Exportar la proyección actual como CSV">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+          </button>
+          <button class="btn" onclick="toggleSavedProjections()" id="btn-saved-proj" title="Ver proyecciones guardadas">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Historial
+          </button>
+          <button class="btn" onclick="resetProyeccion()" title="Reiniciar distribución de canales y unidades manuales">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+            Reiniciar
+          </button>
+          <span id="proj-save-badge" style="font-size:11px;color:var(--green);font-family:'DM Mono',monospace;opacity:0;transition:opacity 0.5s"></span>
+        </div>
+        <!-- Active snapshot indicator bar -->
+        <div id="proj-active-snap-bar" style="display:none;align-items:center;gap:8px;background:rgba(35,83,40,0.06);border:1px solid var(--primary);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--ink);flex-wrap:wrap"></div>
+
+        <!-- SAVED PROJECTIONS PANEL -->
+        <div id="saved-projections-panel" style="display:none;margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Proyecciones guardadas</div><div style="display:flex;gap:6px"><input type="file" id="proj-import-input" accept=".json" style="display:none" onchange="importProjectionJSON(event)"><button class="btn" style="font-size:11px;padding:4px 10px" onclick="document.getElementById('proj-import-input').click()" title="Importar una proyección exportada (.json)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Importar proyección</button><button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="clearAllProjections()">Borrar todo</button></div></div>
+            <div class="card-body" style="padding:12px">
+              <div id="proj-snapshot-list" class="proj-snapshot-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="proj-controls" style="align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div class="form-group">
+            <span class="form-label">
+              <span class="tip-wrap">Gastos fijos del mes<span class="tip-box">Total neto de gastos fijos del mes (operativos + sueldos menos descuento). Este valor se resta del margen bruto para calcular el resultado operativo.</span></span>
+            </span>
+            <div id="proj-gf-display" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--primary);padding:6px 0"></div>
+            <div style="font-size:11px;color:var(--muted)">Desde Gastos Fijos · Total neto GF</div>
+          </div>
+
+          <!-- UNITS MODE SWITCH -->
+          <div class="form-group" style="min-width:260px">
+            <span class="form-label">
+              <span class="tip-wrap">Fuente de unidades<span class="tip-box">Modo "Ventas + GF": toma el promedio mensual que cargaste en la sección Ventas + GF. Modo "Manual": ingresás vos las unidades por producto para esta proyección sin afectar los datos originales.</span></span>
+            </span>
+            <div class="proj-mode-switch" style="margin-top:4px">
+              <span class="proj-mode-label active" id="lbl-ventas-mode">Ventas + GF</span>
+              <label class="toggle">
+                <input type="checkbox" id="proj-manual-toggle" onchange="toggleProjMode(this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="proj-mode-label" id="lbl-manual-mode">Manual</span>
+            </div>
+
+          </div>
+
+          <div class="form-group" style="flex:1;min-width:260px">
+            <span class="form-label">
+              <span class="tip-wrap">Distribución por canal (%)<span class="tip-box">Qué porcentaje de las ventas va por cada canal. Deben sumar 100%. El ingreso calculado es lo que vos recibís después de descontar la comisión de la plataforma de cada canal.</span></span>
+              <span class="tip-wrap" style="font-size:10px;color:var(--muted);font-weight:500;margin-left:6px">⚠ no guardado<span class="tip-box">Este reparto es temporal: se resetea al recargar la página o cambiar de proyección. Para que quede fijo, guardalo con "Guardar proyección" (queda en el Historial) o con «Guardar» (todos los datos del proyecto).</span></span>
+            </span>
+            <div id="proj-channel-dist" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+          </div>
+        </div>
+
+        <!-- HERO: Resultado operativo -->
+        <div id="proj-hero-result" style="margin-bottom:16px"></div>
+
+        <!-- GF Coverage bar (misma lógica que Menú) -->
+        <div id="proj-gf-coverage-bar" class="gf-remaining" style="margin-bottom:16px"></div>
+
+        <!-- Punto de equilibrio -->
+        <div id="proj-breakeven-card" style="margin-bottom:16px"></div>
+        <div id="proj-gf-contrib-card" style="margin-bottom:16px"></div>
+
+        <!-- KPIs secundarios -->
+        <div class="kpi-grid" id="proj-kpis"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Proyección mensual por producto</div>
+            <div style="font-size:11px;color:var(--muted)">Ingreso = lo que recibís (precio cobrado − comisión plataforma)</div>
+          </div>
+          <div class="table-wrap">
+            <table class="proj-table">
+              <thead><tr id="proj-thead-row"></tr></thead>
+              <tbody id="proj-tbody"></tbody>
+              <tfoot id="proj-tfoot" class="proj-tfoot"></tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-title tip-wrap">Ingresos netos por producto<span class="tip-box tip-right">Lo que vos recibís de cada producto después de comisiones de plataforma, ponderado por la distribución de canales.</span></div>
+            <div class="chart-container"><canvas id="chart-proj-ing"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title tip-wrap">Margen vs Costo<span class="tip-box tip-right">Costo variable (receta + envases + GF asignado) en rojo vs. margen neto (ingreso − costo) en verde por producto.</span></div>
+            <div class="chart-container"><canvas id="chart-proj-mc"></canvas></div>
+          </div>
+          <div class="chart-card full-chart">
+            <div class="chart-card-title tip-wrap">Resultado operativo<span class="tip-box">Comparativa del mes: Ingresos netos recibidos, costos variables, margen bruto, gastos fijos del período y resultado final (positivo = ganancia, negativo = pérdida).</span></div>
+            <div class="chart-container" style="height:190px"><canvas id="chart-proj-res"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VENTAS + GF -->
+      <div id="panel-ventas" class="panel">
+        <div class="info-banner"><strong>Ventas + GF:</strong> El <strong>GF por unidad</strong> = GF Total ÷ unidades mensuales de los productos que <strong>absorben GF</strong> (interruptor en cada producto). Los que no lo absorben no suman GF a su precio. Podés editar el promedio mensual y el %GF de cada producto abajo.</div>
+        <div id="ventas-gf-coverage-bar" class="gf-remaining" style="margin-bottom:16px"></div>
+        <div id="ventas-gf-summary" class="gf-remaining"></div>
+        <div class="view-btns">
+          <button class="view-btn active" id="vv-grilla" onclick="setVentasView('grilla')">Grilla</button>
+          <button class="view-btn" id="vv-lista" onclick="setVentasView('lista')">Lista</button>
+        </div>
+        <div class="ventas-grid vis" id="ventas-grid"></div>
+        <div class="ventas-list" id="ventas-list"><div class="card"><div class="card-body" style="padding:0" id="ventas-list-body"></div></div></div>
+      </div>
+
+      <!-- STOCK v2 -->
+      <div id="panel-stock" class="panel">
+
+        <!-- TOP BAR -->
+        <div class="s2-topbar">
+          <div class="s2-topbar-left">
+            <div class="s2-title-block">
+              <span class="s2-title-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </span>
+              <div>
+                <div class="s2-title">Control de Stock</div>
+                <div class="s2-subtitle">Movimientos, retiros y control operativo</div>
+              </div>
+            </div>
+          </div>
+          <div class="s2-topbar-right">
+            <div class="s2-search-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" id="stock-search" placeholder="Buscar producto..." oninput="renderStock()" class="s2-search-input">
+            </div>
+            <select id="stock-filter" onchange="renderStock()" class="s2-filter-select">
+              <option value="all">Todos</option>
+              <option value="low">⚠ Bajo</option>
+              <option value="out">🔴 Sin stock</option>
+              <option value="ok">✅ OK</option>
+            </select>
+            <button class="s2-btn-retirar" onclick="showStockModal('uso_interno')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              Retirar Stock
+            </button>
+            <button class="s2-btn-ingreso" onclick="showStockModal('ingreso')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Registrar Ingreso
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI STRIP -->
+        <div class="s2-kpi-strip" id="stock-kpis"></div>
+
+        <!-- DIFERENCIA TEORICO vs REAL BANNER -->
+        <div class="s2-diff-banner" id="stock-diff-banner"></div>
+
+        <!-- VIEW TABS -->
+        <div class="s2-view-tabs">
+          <div class="s2-tabs-left">
+            <button class="s2-tab active" id="sv-tabla" onclick="setStockView('tabla')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Lista
+            </button>
+            <button class="s2-tab" id="sv-grilla" onclick="setStockView('grilla')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Grilla
+            </button>
+          </div>
+          <div class="s2-tabs-right">
+            <span class="s2-count-label" id="s2-item-count"></span>
+          </div>
+        </div>
+
+        <!-- STOCK CONTENT -->
+        <div id="stock-content"></div>
+
+        <!-- HISTORIAL -->
+        <div class="s2-historial-card">
+          <div class="s2-historial-header">
+            <div class="s2-historial-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Historial de movimientos
+            </div>
+            <div class="s2-historial-controls">
+              <div class="s2-time-btns">
+                <button class="s2-time-btn active" id="mh-hoy" onclick="setMovFilter('hoy')">Hoy</button>
+                <button class="s2-time-btn" id="mh-sem" onclick="setMovFilter('semana')">Semana</button>
+                <button class="s2-time-btn" id="mh-mes" onclick="setMovFilter('mes')">Mes</button>
+                <button class="s2-time-btn" id="mh-todo" onclick="setMovFilter('todo')">Todo</button>
+              </div>
+              <select id="stock-mov-filter-ing" onchange="renderStock()" class="s2-filter-select" style="max-width:160px">
+                <option value="">Todos los productos</option>
+              </select>
+            </div>
+          </div>
+          <div class="s2-mov-summary" id="stock-mov-summary"></div>
+          <div style="overflow-x:auto">
+            <table class="s2-mov-table"><thead><tr><th>Fecha / Hora</th><th>Producto</th><th>Motivo</th><th>Cantidad</th><th>Observación</th></tr></thead><tbody id="stock-movs"></tbody></table>
+          </div>
+        </div>
+
+        <!-- GENERADOR DE FORMATO INVENTARIO -->
+        <div class="s2-print-section" id="gen-formato-section">
+
+          <!-- HEADER -->
+          <div class="s2-print-header">
+            <div class="s2-print-header-left">
+              <div class="s2-print-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div>
+                <div class="s2-print-title">Generador de Formato de Inventario</div>
+                <div class="s2-print-desc">Configurá y generá planillas A4 para control físico de stock · Multi-hoja</div>
+              </div>
+            </div>
+            <div class="s2-print-actions">
+              <button class="s2-btn-preview" id="gf-toggle-config-btn" onclick="gfToggleConfig()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Configurar
+              </button>
+              <button class="s2-btn-preview" onclick="gfTogglePreview()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Vista previa
+              </button>
+              <button class="s2-btn-print" onclick="gfImprimirTodo()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir / PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- CONFIG PANEL (colapsable) -->
+          <div id="gf-config-panel" style="margin-top:18px;display:none">
+
+            <!-- DATOS GENERALES -->
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;gap:7px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Datos generales de la planilla
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+                <div class="s2-field">
+                  <div class="s2-field-label">Responsable</div>
+                  <input type="text" id="gf-responsable" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Nombre del responsable" oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Fecha</div>
+                  <input type="date" id="gf-fecha" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Turno / Período</div>
+                  <input type="text" id="gf-turno" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Ej: Mañana, Semana 22..." oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Supervisor</div>
+                  <input type="text" id="gf-supervisor" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Nombre del supervisor" oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Sector / Área</div>
+                  <input type="text" id="gf-sector" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Cocina, Depósito, Barra..." oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Sucursal / Local</div>
+                  <input type="text" id="gf-sucursal" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Nombre del local" oninput="gfRenderAll()">
+                </div>
+                <div class="s2-field">
+                  <div class="s2-field-label">Observación general</div>
+                  <input type="text" id="gf-obs" class="s2-qty-input" style="font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400" placeholder="Nota fija para todas las hojas..." oninput="gfRenderAll()">
+                </div>
+              </div>
+            </div>
+
+            <!-- TIPO DE PLANTILLA -->
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;gap:7px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+                Tipo de plantilla base
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="gf-tpl-btns">
+                <button class="gf-tpl-btn active" id="gf-tpl-ingredientes" onclick="gfSetTemplate('ingredientes')">🍴<br><strong>Ingredientes</strong><br><span>Desde tu stock virtual</span></button>
+                <button class="gf-tpl-btn" id="gf-tpl-envases" onclick="gfSetTemplate('envases')">📦<br><strong>Envases y Papelería</strong><br><span>Desde tu stock virtual</span></button>
+                <button class="gf-tpl-btn" id="gf-tpl-libre" onclick="gfSetTemplate('libre')">✏️<br><strong>Libre / Vacía</strong><br><span>Solo filas en blanco</span></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                La planilla usa los ítems actuales de tu stock virtual —
+                <span id="gf-tpl-count-badge" style="font-weight:600;color:var(--primary)">cargando...</span>
+              </div>
+
+              <!-- COLUMNAS -->
+              <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Columnas visibles</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap" id="gf-col-toggles"></div>
+            </div>
+
+            <!-- HOJAS A GENERAR -->
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:7px">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Hojas a generar
+                </div>
+                <span id="gf-pages-badge" style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:rgba(35,83,40,0.1);color:var(--primary)">1 hoja</span>
+              </div>
+              <div id="gf-pages-list" style="display:flex;flex-direction:column;gap:8px"></div>
+              <button onclick="gfAddPage()" style="margin-top:10px;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1.5px dashed var(--primary);border-radius:8px;background:transparent;color:var(--primary);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s" onmouseover="this.style.background='rgba(35,83,40,0.05)'" onmouseout="this.style.background='transparent'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Agregar otra hoja
+              </button>
+            </div>
+
+          </div><!-- /gf-config-panel -->
+
+
+        </div>
+
+      </div>
+      <!-- STOCK PRINT OVERLAY (hidden, for print only) -->
+      <div id="stock-print-overlay" style="display:none">
+        <div id="stock-print-doc"></div>
+      </div>
+      <!-- gf-print-overlay lives at body level, moved via JS -->
+
+      <!-- INGREDIENTES -->
+      <div id="panel-ingredientes" class="panel">
+        <div class="info-banner"><strong>Base de ingredientes:</strong> Editá precios. Los cambios se reflejan en los costos de receta.</div>
+        <div class="panel-toolbar">
+          <div class="ptb-view-group">
+            <button class="ptb-view-btn active" id="iv-grilla" title="Vista grilla" onclick="setIngView('grilla')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="ptb-view-btn" id="iv-lista" title="Vista lista" onclick="setIngView('lista')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            </button>
+          </div>
+          <div class="ptb-sep"></div>
+          <div class="ptb-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="ing-search" placeholder="Buscar ingrediente..." class="ptb-search" oninput="renderIngredientes()">
+          </div>
+          <select id="ing-sort" class="ptb-select" onchange="renderIngredientes()">
+            <option value="">Orden original</option>
+            <option value="name-asc">A → Z</option>
+            <option value="name-desc">Z → A</option>
+            <option value="price-desc">Precio ↓</option>
+            <option value="price-asc">Precio ↑</option>
+          </select>
+          <div class="ptb-spacer"></div>
+          <div class="ptb-actions">
+            <button class="btn btn-accent" onclick="addIngrediente()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" id="ing-container">
+            <div class="ing-grid" id="ing-grid"></div>
+            <div id="ing-list" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENVASES -->
+      <div id="panel-envases" class="panel">
+        <div class="info-banner"><strong>Envases y papelería:</strong> Editá nombre, precio de paquete y cantidad. El precio unitario se calcula automáticamente.</div>
+        <div class="panel-toolbar">
+          <div class="ptb-view-group">
+            <button class="ptb-view-btn active" id="ev-lista" title="Vista lista" onclick="">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            </button>
+          </div>
+          <div class="ptb-sep"></div>
+          <div class="ptb-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="env-search" placeholder="Buscar envase..." class="ptb-search" oninput="renderEnvases()">
+          </div>
+          <select id="env-sort" class="ptb-select" onchange="renderEnvases()">
+            <option value="">Orden original</option>
+            <option value="name-asc">A → Z</option>
+            <option value="name-desc">Z → A</option>
+            <option value="price-desc">Precio ↓</option>
+            <option value="price-asc">Precio ↑</option>
+          </select>
+          <div class="ptb-spacer"></div>
+          <div class="ptb-actions">
+            <button class="btn btn-accent" onclick="addEnvase()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <table class="env-table"><thead><tr><th>Nombre</th><th>Precio paquete ($)</th><th>Cant. unidades</th><th>Precio unitario</th><th>$/u (USD)</th><th></th></tr></thead>
+            <tbody id="env-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AJUSTES (Unified: Personalización + Canales + Tiers + Backup + Datos) -->
+      <div id="panel-ajustes" class="panel">
+
+        <!-- TAB: TIERS -->
+        <div id="aj-tab-tiers" class="aj-tab-panel" style="display:none">
+          <div class="info-banner"><strong>Ajustes de ganancia:</strong> Factor 1.30 = 30% de ganancia sobre el costo. Se aplica después de sumar los gastos fijos al costo.</div>
+          <div class="card"><div class="card-header"><div class="card-title">Tiers de ajuste</div></div><div class="card-body"><div class="tier-grid" id="tier-grid"></div><button class="add-tier-btn" onclick="addTier()">+ Agregar tier personalizado</button></div></div>
+        </div>
+
+        <!-- TAB: BACKUP -->
+        <div id="aj-tab-backup" class="aj-tab-panel" style="display:none">
+        <!-- se dibuja desde src/project/ui.js (renderBackupPanel) -->
+        </div><!-- /aj-tab-backup -->
+
+        <!-- TAB: DATOS (Zona peligrosa) -->
+        <div id="aj-tab-datos" class="aj-tab-panel" style="display:none">
+        <div class="card danger-zone">
+          <div class="card-header">
+            <div class="card-title danger-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Zona peligrosa
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="danger-row">
+              <div>
+                <div class="danger-row-title">Eliminar toda la información</div>
+                <div class="danger-row-desc">
+                  Borra <strong>todos los productos del menú, recetas, envases, gastos fijos, descuentos, proyecciones guardadas y unidades manuales</strong>.
+                  La aplicación queda vacía y lista desde cero. Los canales, tiers y la personalización se conservan.
+                  <br><strong style="color:var(--red)">Esta acción no se puede deshacer.</strong>
+                </div>
+              </div>
+              <button class="btn btn-danger" onclick="wipeAllData()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Borrar todo
+              </button>
+            </div>
+          </div>
+        </div>
+        </div><!-- /aj-tab-datos -->
+
+        <!-- TAB: TIENDA ONLINE -->
+        <div id="aj-tab-tienda" class="aj-tab-panel" style="display:none">
+          <div id="tienda-online-content"></div>
+        </div>
+
+      </div><!-- /panel-ajustes -->
+
+      <!-- CANALES (hidden panel, content moved via JS) -->
+      <div id="panel-canales" class="panel">
+        <div class="info-banner"><strong>Canales de venta:</strong> El <strong>Mostrador</strong> define el precio base. Los canales aplican un sobrecargo sobre ese precio para cubrir la comisión de la plataforma. <strong>Fórmula:</strong> Precio cobrado = Mostrador × (1 + sobrecargo). Vos recibís = Precio cobrado × (1 − comisión). El sobrecargo debe ser ≥ comisión/(1−comisión) para que siempre recibas el precio de mostrador.</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">🏪 Mostrador — Precio base (referencia para los demás canales)</div>
+          </div>
+          <div class="card-body">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px">El subtotal del mostrador es el valor que usan los demás canales como referencia para calcular sus precios. Modificar el sobrecargo aquí afecta todos los canales.</div>
+            <div id="channel-mostrador"></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-header"><div class="card-title">Canales de delivery y plataformas</div></div><div class="card-body"><div class="channel-grid" id="channel-grid"></div></div></div>
+      </div>
+
+      <!-- GASTOS FIJOS -->
+      <div id="panel-gastos" class="panel">
+        <div class="commission-panel">
+          <div style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:10px">Comisión de venta global (%)</div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input id="global-commission" type="number" class="form-input" value="0" min="0" max="50" step="0.5" style="width:100px" oninput="SAHTEN.setSetting('globalCommission',this.value);recalcAll();renderChannels()">
+              <span style="font-size:13px;color:var(--muted)">%</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Se suma al precio <strong>después</strong> del sobrecargo por canal. Útil para comisiones de personal, promotores o ajustes de temporada.</div>
+          </div>
+          <div style="margin-top:10px;background:rgba(242,140,0,0.07);border:1px solid rgba(242,140,0,0.25);border-radius:8px;padding:10px 14px">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">✦ Cómo se aplica esta comisión</div>
+            <div style="font-size:11px;color:var(--ink);line-height:1.6">
+              <strong>Mostrador:</strong> (Costo × Tier × Sobrecargo%) × <span style="color:var(--accent);font-weight:700">(1 + Com. venta%)</span> = Precio final<br>
+              <strong>Delivery:</strong> (Precio mostrador × Sobrecargo canal%) × <span style="color:var(--accent);font-weight:700">(1 + Com. venta%)</span> = Cobrado al cliente<br>
+              <span style="font-size:10px;color:var(--muted)">Este porcentaje está incluido en todos los precios marcados en naranja en Canales de Venta, Menú y Proyección.</span>
+            </div>
+          </div>
+        </div>
+        <div class="gf-grid">
+          <div class="card"><div class="card-header"><div class="card-title">Gastos operativos</div><button class="add-row-btn" onclick="addGastoRow('op')">+ Agregar</button></div><div class="card-body" id="gf-operativos"></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Sueldos</div><button class="add-row-btn" onclick="addGastoRow('s')">+ Agregar</button></div><div class="card-body" id="gf-sueldos"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Control mensual</div><div id="gfm-nav" style="display:flex;align-items:center;gap:8px"></div></div><div class="card-body" id="gfm-body"></div></div>
+        <div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Historial de gastos fijos</div></div><div class="card-body" id="gfm-history"></div></div>
+        <div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Resumen mensual</div></div><div class="card-body"><div class="kpi-grid" id="gf-kpis"></div><div class="chart-container" style="height:220px;margin-top:14px"><canvas id="chart-gf-detail"></canvas></div></div></div>
+      </div>
+
+      <!-- PANEL COSTO DE RECETA -->
+      <div id="panel-costreceta" class="panel">
+  <div class="info-banner"><strong>Costo de Receta:</strong> Espacio de trabajo interno. Las recetas creadas aquí <strong>no aparecen en el Menú público</strong> salvo que actives "Mostrar en Menú". Una receta puede rendir varias porciones — el costo por porción se distribuye automáticamente. Los productos del Menú también se muestran aquí para que puedas editar su receta.</div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Costo de Receta por Producto</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="text" id="cr-search" placeholder="Buscar producto..." class="s2-qty-input"
+          style="font-size:13px;font-family:'DM Sans',sans-serif;width:170px"
+          oninput="renderCostReceta()">
+        <select class="s2-filter-select" id="cr-visibility-filter" onchange="renderCostReceta()">
+          <option value="all">Todas las recetas</option>
+          <option value="menu">📋 Solo en Menú</option>
+          <option value="internal">🔒 Solo internas</option>
+        </select>
+        <select class="s2-filter-select" onchange="crSetSort(this.value)">
+          <option value="name-asc">A → Z</option>
+          <option value="name-desc">Z → A</option>
+          <option value="cost-desc">Más costoso primero</option>
+          <option value="cost-asc">Más barato primero</option>
+          <option value="tier">Por Tier</option>
+        </select>
+        <button class="btn btn-accent" style="font-size:12px;padding:6px 14px" onclick="crNewRecipe()">+ Nueva receta</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="kpi-grid" id="cr-kpis" style="margin-bottom:18px"></div>
+      <div id="cr-tabla-container"></div>
+    </div>
+  </div>
+    </div>
+
+<!-- PANEL MOSTRADOR -->
+      <div id="panel-mostrador" class="panel"></div>
+
+<!-- PANEL REPORTES -->
+      <div id="panel-reportes" class="panel"></div>
+
+<!-- PANEL MENÚ ONLINE -->
+      <div id="panel-menuonline" class="panel"></div>
+      <div id="panel-nube" class="panel"></div>
+
+<!-- PANEL PERSONALIZACIÓN -->
+      <div id="panel-personalizacion" class="panel">
+        <div class="info-banner">
+          <strong>Personalización:</strong> Adaptá Sahten a tu negocio. Cambiá el nombre, el logo y la paleta de colores. Todos los cambios se guardan automáticamente.
+        </div>
+
+        <div class="custom-grid">
+          <!-- ──── Identidad ──── -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Identidad de marca</div></div>
+            <div class="card-body">
+              <div class="custom-row">
+                <label class="custom-label">Nombre del negocio</label>
+                <input type="text" id="cust-brand-name" class="custom-input" placeholder="Ej: Sahten, La Cocina, Mi Local..." maxlength="32" oninput="custUpdateName(this.value)">
+                <div class="custom-hint">Aparece en el sidebar y en los reportes impresos.</div>
+              </div>
+
+              <div class="custom-row">
+                <label class="custom-label">Subtítulo / Tagline</label>
+                <input type="text" id="cust-brand-sub" class="custom-input" placeholder="Sistema de Gestión..." maxlength="60" oninput="custUpdateSub(this.value)">
+              </div>
+
+              <div class="custom-row">
+                <label class="custom-label">Estilo del logo</label>
+                <div class="logo-style-grid">
+                  <button class="logo-style-btn" data-style="default" onclick="custSetLogoStyle('default')">
+                    <div class="logo-style-preview logo-style-default">
+                      <svg viewBox="0 0 1703 704" style="width:75%;height:60%" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M531.857 0C480.757 0 439.365 41.3922 439.365 92.4921V217.882H405.927V92.4921C405.927 41.3922 364.535 0 313.435 0C262.336 0 220.943 41.3922 220.943 92.4921V368.485H338.918V644.478C338.918 658.635 327.458 669.961 313.435 669.961C299.413 669.961 287.953 658.5 287.953 644.478V468.932H204.225V485.516H220.943V611.041C220.943 662.141 262.336 703.533 313.435 703.533C322.334 703.533 330.828 702.32 338.918 699.893C377.614 688.837 405.927 653.242 405.927 611.041V335.048H287.953V59.0547C287.953 44.8978 299.413 33.5722 313.435 33.5722C327.458 33.5722 338.918 45.0326 338.918 59.0547V234.601H405.927H422.646H439.365H506.374V59.0547C506.374 44.8978 517.835 33.5722 531.857 33.5722C545.879 33.5722 557.339 45.0326 557.339 59.0547V335.048H531.857C480.757 335.048 439.365 376.44 439.365 427.54V703.533H624.349V92.4921C624.349 41.3922 582.957 0 531.857 0ZM557.339 569.649V670.096H506.24V394.103C506.24 379.946 517.7 368.62 531.722 368.62C545.744 368.62 557.205 380.08 557.205 394.103V569.649H557.339Z" fill="white" opacity="0.9"/><path d="M1172.43 0C1121.33 0 1079.94 41.3922 1079.94 92.4921V611.041C1079.94 662.141 1121.33 703.533 1172.43 703.533C1223.53 703.533 1264.92 662.141 1264.92 611.041V468.932H1197.91H1181.19V485.651H1197.91V644.478C1197.91 658.635 1186.45 669.961 1172.43 669.961C1158.41 669.961 1146.95 658.5 1146.95 644.478V368.485H1264.92V92.4921C1264.92 41.3922 1223.53 0 1172.43 0ZM1197.91 335.048H1146.81V59.0547C1146.81 44.8978 1158.27 33.5722 1172.29 33.5722C1186.32 33.5722 1197.78 45.0326 1197.78 59.0547V335.048H1197.91Z" fill="white" opacity="0.9"/><path d="M750.416 335.048H724.933V0.27002H641.205V16.8539H657.924V703.534H724.933V393.968C724.933 379.811 736.394 368.486 750.416 368.486C764.438 368.486 775.898 379.946 775.898 393.968V703.534H842.908V427.54C842.908 376.44 801.516 335.048 750.416 335.048Z" fill="white" opacity="0.9"/><path d="M934.181 16.9887H950.9V0.27002H867.172V611.041C867.172 662.141 908.564 703.534 959.664 703.534C1010.76 703.534 1052.16 662.141 1052.16 611.041V468.933H968.428V485.516H985.146V644.479C985.146 658.636 973.686 669.961 959.664 669.961C945.642 669.961 934.181 658.501 934.181 644.479V134.02H1052.16V100.582H934.181V16.8539V16.9887Z" fill="white" opacity="0.9"/><path d="M1496.14 686.949H1479.42V92.4921C1479.42 41.3922 1438.03 0 1386.93 0H1277.72V16.7187H1294.44V703.668H1361.45H1378.17V686.949H1361.45V59.0547C1361.45 44.8978 1372.91 33.5722 1386.93 33.5722C1401.09 33.5722 1412.41 45.0326 1412.41 59.0547V703.668H1479.42H1496.14V686.949Z" fill="white" opacity="0.9"/><path d="M1594.63 280.34C1553.6 277.315 1503.4 285.065 1451.12 317.439C1417.92 338.062 1391.8 362.495 1371.33 386.439C1305.74 361.712 1289.87 326.367 1289.87 326.367C1289.87 326.367 1273.77 410.538 1192.19 410.701C1140.56 410.805 1116.43 369.98 1105.76 340.122C1157.34 314.204 1199.76 304.796 1199.76 304.796L1157 259.467C1084.68 290.447 1023.82 275.51 947.569 229.052C881.944 189.027 828.943 212.797 828.943 212.797L799.367 278.351C799.367 278.351 864.859 252.404 914.892 276.685C972.005 304.536 1036.14 308.71 1036.14 308.71C1036.14 308.71 934.73 410.501 872.958 410.625C811.185 410.749 799.275 350.298 799.275 350.298L743.551 309.297C743.551 309.297 714.045 409.51 657.224 409.624C600.403 409.738 593.908 345.691 593.908 345.691L537.015 309.712C537.015 309.712 523.075 412.761 459.181 412.889C395.287 413.017 393.754 353.98 393.754 353.98L335.43 310.116C335.43 310.116 329.54 547.005 187.605 547.29C45.671 547.575 54.2303 348.208 54.2303 348.208L2.28529 310.785C-15.8219 451.848 102.35 594.072 235.042 570.142C367.733 546.212 379.43 382.693 379.43 382.693C398.61 423.767 455.274 462.854 511.586 444.336C561.301 427.982 578.166 372.972 578.166 372.972C596.422 423.37 651.44 464.612 711.75 441.066C761.224 421.844 783.533 377.101 783.533 377.101C833.503 488.149 955.79 448.703 1032.29 386.641C1049.48 372.743 1067.37 360.995 1084.56 351.16C1101.15 391.284 1134.74 447.388 1191.8 447.274C1280.68 447.095 1311.43 377.476 1311.43 377.476C1311.43 377.476 1323.72 393.466 1350.87 411.339C1322.66 451.075 1311.17 483.367 1311.17 483.367L1351.81 528.7C1351.81 528.7 1357.39 485.903 1394.53 434.198C1427.33 447.518 1470.74 457.948 1526.14 457.837C1679.39 457.53 1702.06 356.614 1702.06 356.614C1682.17 313.151 1640.61 283.834 1593.45 280.582L1594.63 280.34ZM1528.17 410.027C1486.44 410.111 1452.01 406.595 1423.23 400.916C1436.41 387.026 1451.94 372.892 1470.54 359.23C1576.24 281.572 1669.94 330.624 1669.94 330.624C1669.94 330.624 1640.4 409.802 1528.17 410.027Z" fill="#F28C00"/></svg>
+                    </div>
+                    <span>Logo Sahten</span>
+                  </button>
+                  <button class="logo-style-btn" data-style="text" onclick="custSetLogoStyle('text')">
+                    <div class="logo-style-preview logo-style-text">
+                      <span id="cust-text-preview">Aa</span>
+                    </div>
+                    <span>Solo texto</span>
+                  </button>
+                  <button class="logo-style-btn" data-style="upload" onclick="document.getElementById('cust-logo-upload').click()">
+                    <div class="logo-style-preview logo-style-upload">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;color:rgba(255,255,255,0.7)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <span>Subir imagen</span>
+                  </button>
+                </div>
+                <input type="file" id="cust-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="custHandleLogoUpload(event)">
+                <div class="custom-hint">PNG, JPG o SVG. Máx 300KB. Recomendado: fondo transparente.</div>
+              </div>
+
+              <!-- Logo B&W para impresión de comandas -->
+              <div class="custom-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+                <label class="custom-label">Logo para impresión (B&N)</label>
+                <div class="custom-hint" style="margin-bottom:10px">Logo en blanco y negro para comandas e impresiones térmicas. Si no subís uno, se usa el logo principal en negro automáticamente.</div>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                  <div id="cust-bw-logo-preview" class="bw-logo-preview">
+                    <span class="bw-logo-empty">Sin logo B&N</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <button class="btn" onclick="document.getElementById('cust-bw-logo-upload').click()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Subir logo B&N
+                    </button>
+                    <button class="btn" id="cust-bw-logo-remove" style="display:none" onclick="custRemoveBwLogo()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                      Quitar
+                    </button>
+                  </div>
+                  <input type="file" id="cust-bw-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="custHandleBwLogoUpload(event)">
+                </div>
+                <button class="btn" style="margin-top:12px" onclick="previewComandaFromSettings()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Previsualizar comanda
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ──── Tema de colores ──── -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Paleta de colores</div></div>
+            <div class="card-body">
+              <div class="custom-hint" style="margin-bottom:14px">Elegí una paleta predefinida o personalizá los colores principales.</div>
+              <div class="palette-grid" id="palette-grid"></div>
+
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border)">
+                <div class="custom-label" style="margin-bottom:12px">Colores personalizados</div>
+                <div class="color-pickers-row">
+                  <div class="color-picker-item">
+                    <span class="custom-hint">Primario</span>
+                    <div class="color-picker-wrap">
+                      <input type="color" id="cust-primary" oninput="custSetCustomColor('primary', this.value)">
+                      <input type="text" id="cust-primary-hex" class="custom-input small" value="#235328" oninput="custSetCustomColor('primary', this.value)">
+                    </div>
+                  </div>
+                  <div class="color-picker-item">
+                    <span class="custom-hint">Acento</span>
+                    <div class="color-picker-wrap">
+                      <input type="color" id="cust-accent" oninput="custSetCustomColor('accent', this.value)">
+                      <input type="text" id="cust-accent-hex" class="custom-input small" value="#F28C00" oninput="custSetCustomColor('accent', this.value)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ──── Modo & Reset ──── -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Tema visual</div></div>
+            <div class="card-body">
+              <div class="theme-mode-row">
+                <button class="theme-mode-btn" id="cust-mode-light" onclick="custSetMode('light')">
+                  <div class="theme-mode-preview" style="background:#f2f2f7"></div>
+                  <div class="theme-mode-info">
+                    <strong>Modo claro</strong>
+                    <span>Fondo blanco · iOS clásico</span>
+                  </div>
+                </button>
+                <button class="theme-mode-btn" id="cust-mode-dark" onclick="custSetMode('dark')">
+                  <div class="theme-mode-preview" style="background:#0e1610"></div>
+                  <div class="theme-mode-info">
+                    <strong>Modo oscuro</strong>
+                    <span>Tonos verde-noche</span>
+                  </div>
+                </button>
+                <button class="theme-mode-btn" id="cust-mode-auto" onclick="custSetMode('auto')">
+                  <div class="theme-mode-preview" style="background:linear-gradient(135deg,#f2f2f7 50%,#0e1610 50%)"></div>
+                  <div class="theme-mode-info">
+                    <strong>Automático</strong>
+                    <span>Sigue al sistema</span>
+                  </div>
+                </button>
+              </div>
+
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn" onclick="custReset()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                  Restablecer todo
+                </button>
+                <button class="btn btn-primary" onclick="custExport()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Exportar config
+                </button>
+                <button class="btn" onclick="document.getElementById('cust-import').click()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Importar config
+                </button>
+                <input type="file" id="cust-import" accept=".json,application/json" style="display:none" onchange="custImport(event)">
+              </div>
+            </div>
+          </div>
+
+          <!-- ──── Vista previa ──── -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Vista previa</div></div>
+            <div class="card-body">
+              <div class="preview-frame">
+                <div class="preview-sidebar">
+                  <div class="preview-sidebar-logo" id="preview-sidebar-logo">SAHTEN</div>
+                  <div class="preview-sidebar-item active">📊 Dashboard</div>
+                  <div class="preview-sidebar-item">📋 Menú</div>
+                  <div class="preview-sidebar-item">📈 Proyección</div>
+                </div>
+                <div class="preview-main">
+                  <div class="preview-card">
+                    <div class="preview-card-label">Margen promedio</div>
+                    <div class="preview-card-value">42%</div>
+                  </div>
+                  <div class="preview-card preview-card-accent">
+                    <div class="preview-card-label">Ventas hoy</div>
+                    <div class="preview-card-value">$12.4K</div>
+                  </div>
+                  <div class="preview-btns">
+                    <button class="preview-btn preview-btn-primary">Guardar</button>
+                    <button class="preview-btn preview-btn-accent">Acción</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<!-- WIKI / GUÍA DE USO -->
+      <div id="panel-wiki" class="panel">
+        
+
+        <!-- HERO -->
+        <div class="wk-hero">
+          <h1>Guía de uso · Sahten</h1>
+          <p>Todo lo que necesitás saber para usar el sistema de gestión de precios y costos.</p>
+          <div class="wk-badges">
+            <span class="wk-badge orange">Beta v<span data-app-version></span></span>
+            <span class="wk-badge">11 módulos</span>
+            <span class="wk-badge">Sin servidor</span>
+            <span class="wk-badge">Funciona offline</span>
+          </div>
+        </div>
+
+        <!-- TABS de navegación -->
+        <div class="wk-tabs">
+          <button class="wk-tab active"  onclick="wkTab(this,'wk-inicio')">Inicio</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-flujo')">Flujo de trabajo</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-ingredientes')">Ingredientes</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-recetas')">Recetas</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-menu')">Menú</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-canales')">Canales</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-gastos')">Gastos Fijos</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-proyeccion')">Proyección</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-formulas')">Fórmulas</button>
+          <button class="wk-tab"         onclick="wkTab(this,'wk-glosario')">Glosario</button>
+        </div>
+
+        <!-- ═══ INICIO ═══ -->
+        <div id="wk-inicio" class="wk-section active">
+          <div class="wk-h2">¿Qué es Sahten?</div>
+          <p class="wk-p">Sistema de gestión de precios y costos para gastronomía artesanal. Corre como un único archivo HTML en el browser — sin internet, sin servidor, sin cuenta.</p>
+          <div class="wk-kpi-row">
+            <div class="wk-kpi"><div class="kl">Módulos</div><div class="kv">11</div></div>
+            <div class="wk-kpi"><div class="kl">Canales</div><div class="kv orange">6</div></div>
+            <div class="wk-kpi"><div class="kl">Versión</div><div class="kv">0.8</div></div>
+            <div class="wk-kpi"><div class="kl">Datos</div><div class="kv" style="font-size:13px">JSON local</div></div>
+          </div>
+          <div class="wk-h3">¿Para qué sirve?</div>
+          <ul style="font-size:14px;line-height:2;padding-left:18px">
+            <li>Calcular el <strong>costo real</strong> de cada producto (ingredientes + envases + GF)</li>
+            <li>Fijar <strong>precios de venta</strong> por canal con márgenes claros</li>
+            <li>Proyectar <strong>ingresos y ganancia</strong> mensual por escenario</li>
+            <li>Controlar el <strong>stock</strong> con alertas de mínimos</li>
+            <li>Gestionar <strong>descuentos</strong> por producto, canal o combinación</li>
+          </ul>
+          <div class="wk-info green">
+            <strong>💾 Autosave</strong>
+            Cada proyecto es un archivo .sahten. Cada cambio se guarda automáticamente en ese archivo 2 segundos después de la última modificación; el indicador de la barra superior muestra «Guardado hace X s». En Ajustes › Archivo y respaldo podés restaurar el respaldo de ayer o deshacer la última estrategia.
+          </div>
+        </div>
+
+        <!-- ═══ FLUJO ═══ -->
+        <div id="wk-flujo" class="wk-section">
+          <div class="wk-h2">Flujo de trabajo recomendado</div>
+          <p class="wk-p">Seguí este orden la primera vez que configurás la app para obtener precios correctos desde el día uno:</p>
+          <ul class="wk-steps">
+            <li><div class="wk-stepnum">1</div><div class="wk-steptext"><strong>Ingredientes</strong> — Precio del paquete + cantidad que trae. El sistema calcula el precio unitario automáticamente.</div></li>
+            <li><div class="wk-stepnum">2</div><div class="wk-steptext"><strong>Envases y papelería</strong> — Cajas, bolsas, etiquetas, cubiertos. Igual que ingredientes: precio + cantidad del paquete.</div></li>
+            <li><div class="wk-stepnum">3</div><div class="wk-steptext"><strong>Gastos Fijos</strong> — Alquiler, servicios, sueldos. Todo lo que pagás mensualmente sin importar cuánto producís.</div></li>
+            <li><div class="wk-stepnum">4</div><div class="wk-steptext"><strong>Canales de Venta</strong> — Activá los que usás y configurá sobrecargo y comisión de cada uno.</div></li>
+            <li><div class="wk-stepnum">5</div><div class="wk-steptext"><strong>Crear productos en Menú</strong> — Un producto por cada ítem que vendés. Asignale un Tier de ganancia.</div></li>
+            <li><div class="wk-stepnum">6</div><div class="wk-steptext"><strong>Cargar recetas</strong> — En el botón "Receta" de cada producto, agregá ingredientes, envases y rendimiento.</div></li>
+            <li><div class="wk-stepnum">7</div><div class="wk-steptext"><strong>Verificar precios en Menú</strong> — El semáforo 🟢🟡🔴 indica si el margen es saludable en cada canal.</div></li>
+            <li><div class="wk-stepnum">8</div><div class="wk-steptext"><strong>Proyectar el mes</strong> — Estimá unidades por canal y revisá la ganancia diaria, semanal y mensual.</div></li>
+          </ul>
+        </div>
+
+        <!-- ═══ INGREDIENTES ═══ -->
+        <div id="wk-ingredientes" class="wk-section">
+          <div class="wk-h2">Ingredientes y Envases</div>
+          <p class="wk-p">La base de todos los cálculos. Cada ítem tiene un precio de paquete y la cantidad que trae. El sistema calcula el precio por unidad base.</p>
+          <table class="wk-table">
+            <thead><tr><th>Unidad</th><th>Úsala para</th><th>Conversión automática</th></tr></thead>
+            <tbody>
+              <tr><td><code>g</code> / <code>kg</code></td><td>Harinas, carnes, especias</td><td>✓ g ↔ kg</td></tr>
+              <tr><td><code>ml</code> / <code>L</code></td><td>Aceites, salsas, líquidos</td><td>✓ ml ↔ L</td></tr>
+              <tr><td><code>u</code></td><td>Huevos, limones, bolsas</td><td>Precio / unidad</td></tr>
+            </tbody>
+          </table>
+          <div class="wk-formula">
+            <span class="lbl">Ejemplo: Aceite 750ml a $3.200</span><br>
+            <span class="eq">$3.200 ÷ 750 ml = $4.27 / ml</span><br>
+            <span class="lbl">Receta usa 50ml →</span>
+            <span class="eq"> 50 × $4.27 = $213</span>
+          </div>
+          <div class="wk-info orange">
+            <strong>💡 Tip: Stock</strong>
+            En el módulo Stock podés configurar un mínimo de alerta por ingrediente. Cuando el stock baja del mínimo, la tarjeta se resalta en rojo.
+          </div>
+        </div>
+
+        <!-- ═══ RECETAS ═══ -->
+        <div id="wk-recetas" class="wk-section">
+          <div class="wk-h2">Recetas y Rendimiento</div>
+          <p class="wk-p">El editor de receta se abre con el botón <strong>Receta</strong> en la tabla Menú. Tiene cuatro secciones: Ingredientes, Envases, Rendimiento y Sub-productos.</p>
+
+          <div class="wk-h3">Rendimiento automático</div>
+          <p class="wk-p">Configurás el peso total de la receta y el peso por porción — la app calcula las porciones automáticamente:</p>
+          <div class="wk-formula">
+            <span class="lbl">Receta: 6 kg, porción 200g</span><br>
+            <span class="eq">6000g ÷ 200g = 30 porciones</span><br>
+            <span class="lbl">Costo receta $9.000 →</span>
+            <span class="eq"> $9.000 ÷ 30 = $300 / porción</span>
+          </div>
+
+          <div class="wk-h3">🔥 Merma por cocción</div>
+          <p class="wk-p">Carnes y verduras pierden peso al cocinar. El campo <strong>% Merma</strong> reduce el rendimiento automáticamente:</p>
+          <div class="wk-formula">
+            <span class="lbl">30% de merma en 30 porciones</span><br>
+            <span class="eq">30 × (1 − 0.30) = 21 porciones efectivas</span>
+          </div>
+
+          <div class="wk-h3">Sub-productos / Combos</div>
+          <p class="wk-p">Podés referenciar otro producto del menú como ingrediente. El costo se calcula proporcionalmente según la cantidad usada.</p>
+          <div class="wk-info blue">
+            <strong>⚖ y 📦 switches por combo</strong>
+            ⚖ incluye el peso del sub-producto en el cálculo automático de rendimiento.<br>
+            📦 incluye el costo de envases del sub-producto. Desactivalo si el combo no lleva su propio packaging.
+          </div>
+          <div class="wk-info orange">
+            <strong>🔄 Anidamiento con override local</strong>
+            Si el sub-producto tiene sus propios combos (sub-sub-productos), podés editar las cantidades <em>solo para este producto</em> sin afectar la receta original. Aparece el panel "▸ sub-combos" expandible debajo de cada fila de combo.
+          </div>
+        </div>
+
+        <!-- ═══ MENÚ ═══ -->
+        <div id="wk-menu" class="wk-section">
+          <div class="wk-h2">Menú — Tabla de precios</div>
+          <p class="wk-p">El panel principal. Muestra todos los productos con costo, precios por canal y margen. Columnas activables desde el botón <strong>Columnas</strong>.</p>
+
+          <div class="wk-h3">Semáforo de margen</div>
+          <div class="wk-semaforo">
+            <div class="wk-sem-item" style="background:#d6eed7;border-color:var(--primary)"><strong style="color:var(--primary)">🟢 Verde</strong><div style="font-size:12px;color:var(--primary)">Margen ≥ 45%</div></div>
+            <div class="wk-sem-item" style="background:#fef9e7;border-color:var(--accent)"><strong style="color:var(--accent)">🟡 Amarillo</strong><div style="font-size:12px;color:var(--accent)">30% – 45%</div></div>
+            <div class="wk-sem-item" style="background:#fde8e6;border-color:var(--red)"><strong style="color:var(--red)">🔴 Rojo</strong><div style="font-size:12px;color:var(--red)">Menor a 30%</div></div>
+          </div>
+
+          <div class="wk-h3">Calculadora de precio interactiva</div>
+          <div class="wk-calc">
+            <div class="wk-calc-grid">
+              <div class="wk-calc-field"><label>Costo receta ($)</label><input type="number" id="wk-c-ing" value="2500" min="0" oninput="wkCalc()"></div>
+              <div class="wk-calc-field"><label>GF asignado ($)</label><input type="number" id="wk-c-gf" value="1800" min="0" oninput="wkCalc()"></div>
+              <div class="wk-calc-field"><label>Factor Tier</label>
+                <select id="wk-c-tier" oninput="wkCalc()">
+                  <option value="2.0">T1 — ×2.0 (100%)</option>
+                  <option value="1.7" selected>T2 — ×1.7 (70%)</option>
+                  <option value="1.6">T3 — ×1.6 (60%)</option>
+                  <option value="1.4">T4 — ×1.4 (40%)</option>
+                </select>
+              </div>
+              <div class="wk-calc-field"><label>Sobrecargo canal (%)</label><input type="number" id="wk-c-sur" value="30" min="0" max="200" oninput="wkCalc()"></div>
+            </div>
+            <div class="wk-calc-result">
+              <div><div class="rlbl">Base tier</div><div class="rval orange" id="wk-r-base">—</div></div>
+              <div><div class="rlbl">Precio canal</div><div class="rval" id="wk-r-canal">—</div></div>
+              <div><div class="rlbl">Margen</div><div class="rval good" id="wk-r-margin">—</div></div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="wk-margin-labels"><span>Margen %</span><span id="wk-r-pct">—</span></div>
+              <div class="wk-margin-bar"><div class="wk-margin-fill" id="wk-margin-fill"></div></div>
+            </div>
+          </div>
+
+          <div class="wk-h3">Vista Grilla</div>
+          <p class="wk-p">El segundo botón del toolbar activa tarjetas visuales por producto: nombre, tier, costos, precios por canal y margen de un vistazo.</p>
+
+          <div class="wk-h3">Ordenar columnas</div>
+          <p class="wk-p">Hacé clic en los encabezados <strong>Producto</strong>, <strong>Costo receta</strong>, <strong>Costo + GF</strong>, <strong>Base tier</strong> o <strong>Margen</strong> para ordenar. Segundo clic invierte el orden (↑↓).</p>
+        </div>
+
+        <!-- ═══ CANALES ═══ -->
+        <div id="wk-canales" class="wk-section">
+          <div class="wk-h2">Canales de Venta</div>
+          <p class="wk-p">Configurás los medios de venta: Mostrador, Fudo, Rappi, Pedidos Ya, Mercado Pago, WhatsApp. Cada canal tiene sobrecargo (lo que sumás al precio) y comisión (lo que se queda la plataforma).</p>
+
+          <div class="wk-formula">
+            <span class="lbl">Precio mostrador final</span><br>
+            <span class="eq">(Costo + GF) × Factor Tier × (1 + Sobrecargo) × (1 + Com. Global)</span><br><br>
+            <span class="lbl">Precio canal delivery</span><br>
+            <span class="eq">Mostrador × (1 + Sobrecargo canal) × (1 + Com. Global)</span><br><br>
+            <span class="lbl">Lo que vos recibís</span><br>
+            <span class="eq">Precio cobrado × (1 − Comisión plataforma)</span>
+          </div>
+
+          <div class="wk-ch-pills">
+            <div class="wk-ch-pill" style="background:#235328;color:white"><span>Mostrador</span><span>$12.350</span></div>
+            <div class="wk-ch-pill" style="background:#C44A00;color:white"><span>Fudo</span><span>$14.200</span></div>
+            <div class="wk-ch-pill" style="background:#FF6B00;color:white"><span>Rappi</span><span>$17.900</span></div>
+            <div class="wk-ch-pill" style="background:#e0000b;color:white"><span>Pedidos Ya</span><span>$17.900</span></div>
+            <div class="wk-ch-pill" style="background:#009EE3;color:white"><span>Mercado Pago</span><span>$14.200</span></div>
+          </div>
+
+          <div class="wk-h3">Sistema de descuentos (no acumulables)</div>
+          <table class="wk-table">
+            <thead><tr><th>Tipo</th><th>Dónde</th><th>Prioridad</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Descuento global de canal</strong></td><td>Canales → tarjeta del canal</td><td>Menor</td></tr>
+              <tr><td><strong>Descuento producto × canal</strong></td><td>Menú → ··· → Descuento por canal</td><td>Mayor (override)</td></tr>
+            </tbody>
+          </table>
+          <div class="wk-info orange">
+            <strong>⚠ No acumulables</strong>
+            Si un producto tiene descuento específico para un canal, ese tiene prioridad y el descuento global del canal NO se aplica. Nunca se suman los dos.
+          </div>
+        </div>
+
+        <!-- ═══ GASTOS ═══ -->
+        <div id="wk-gastos" class="wk-section">
+          <div class="wk-h2">Gastos Fijos</div>
+          <p class="wk-p">Costos mensuales independientes del volumen: alquiler, servicios, sueldos. Se distribuyen entre los productos según unidades vendidas.</p>
+          <div class="wk-formula">
+            <span class="lbl">GF por unidad</span><br>
+            <span class="eq">Total GF mensual ÷ Total unidades vendidas/mes</span><br><br>
+            <span class="lbl">Ejemplo: $180.000 ÷ 450 u.</span><br>
+            <span class="eq">= $400 / unidad</span>
+          </div>
+          <div class="wk-h3">Override de GF por producto</div>
+          <ul style="font-size:13px;line-height:2;padding-left:18px">
+            <li><code>100%</code> = GF promedio exacto</li>
+            <li><code>150%</code> = 50% más (producto que demanda más recursos)</li>
+            <li><code>70%</code> = 30% menos (producto simple)</li>
+          </ul>
+          <div class="wk-info blue">
+            <strong>📉 Descuentos sobre GF</strong>
+            En el historial de GF podés registrar descuentos temporales (subsidios, bonificaciones). Reducen el GF total sin modificar los valores base.
+          </div>
+        </div>
+
+        <!-- ═══ PROYECCIÓN ═══ -->
+        <div id="wk-proyeccion" class="wk-section">
+          <div class="wk-h2">Proyección Mensual</div>
+          <p class="wk-p">Estimá la rentabilidad del mes basándote en el volumen de ventas esperado y la distribución de canales.</p>
+
+          <div class="wk-h3">Modos</div>
+          <table class="wk-table">
+            <thead><tr><th>Modo</th><th>Fuente de unidades</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Ventas + GF</strong></td><td>Unidades/mes configuradas en cada producto</td><td>Proyección habitual</td></tr>
+              <tr><td><strong>✏ Manual</strong></td><td>Ingresás las unidades directamente</td><td>Escenarios hipotéticos</td></tr>
+            </tbody>
+          </table>
+
+          <div class="wk-h3">KPIs disponibles</div>
+          <div class="wk-kpi-row">
+            <div class="wk-kpi"><div class="kl">Ingresos netos</div><div class="kv orange">$890K</div></div>
+            <div class="wk-kpi"><div class="kl">Margen bruto</div><div class="kv">$420K</div></div>
+            <div class="wk-kpi"><div class="kl">Resultado</div><div class="kv" style="color:var(--primary)">$240K</div></div>
+            <div class="wk-kpi"><div class="kl">Ganancia/día</div><div class="kv orange">$8K</div></div>
+          </div>
+
+          <div class="wk-h3">Historial de proyecciones</div>
+          <ul style="font-size:13px;line-height:2;padding-left:18px">
+            <li><strong>Guardar</strong>: pedís un nombre, queda en el historial</li>
+            <li><strong>Cargar</strong>: restaura la configuración de canales y unidades</li>
+            <li><strong>Actualizar</strong>: sobreescribe la proyección activa</li>
+            <li><strong>Guardar nueva</strong>: crea una proyección paralela</li>
+            <li><strong>Exportar PDF</strong>: documento de 2 páginas con KPIs, gráficos y tabla detallada</li>
+          </ul>
+          <div class="wk-info green">
+            <strong>📅 Ganancia diaria y semanal</strong>
+            Los KPIs "⚡ Ganancia diaria" y "📅 Ganancia semanal" son el resultado operativo neto dividido por 30 y 4.33 respectivamente. Se colorean verde/rojo según si el resultado es positivo.
+          </div>
+        </div>
+
+        <!-- ═══ FÓRMULAS ═══ -->
+        <div id="wk-formulas" class="wk-section">
+          <div class="wk-h2">Fórmulas y cálculos</div>
+
+          <div class="wk-h3">Costo por unidad</div>
+          <div class="wk-formula">
+            <span class="lbl">Receta simple (1 porción)</span><br>
+            <span class="eq">Costo = Σ ingredientes + Σ envases + Σ combos proporcionales</span><br><br>
+            <span class="lbl">Receta con rendimiento</span><br>
+            <span class="eq">Costo/u = Costo total ÷ (Peso total ÷ Cant/porción) × (1 − merma%)</span>
+          </div>
+
+          <div class="wk-h3">Precio de venta</div>
+          <div class="wk-formula">
+            <span class="lbl">Base</span>   <span class="eq">Costo/u + GF asignado</span><br>
+            <span class="lbl">Base tier</span>   <span class="eq">Base × Factor tier</span><br>
+            <span class="lbl">Mostrador final</span>   <span class="eq">Base tier × (1 + Sobrecargo) × (1 + Com. global)</span><br>
+            <span class="lbl">Canal delivery</span>   <span class="eq">Mostrador × (1 + Sobrecargo canal)</span><br>
+            <span class="lbl">Con descuento</span>   <span class="eq">Precio canal × (1 − Descuento efectivo)</span>
+          </div>
+
+          <div class="wk-h3">Margen</div>
+          <div class="wk-formula">
+            <span class="eq">Margen % = (Precio final − Costo con GF) ÷ Precio final × 100</span>
+          </div>
+
+          <div class="wk-h3">Descuento efectivo (no acumulable)</div>
+          <div class="wk-formula">
+            <span class="lbl">Si producto tiene descuento en canal</span>   <span class="eq">→ usar ese</span><br>
+            <span class="lbl">Si no</span>   <span class="eq">→ usar descuento global del canal</span><br>
+            <span class="lbl">Nunca se suman</span>
+          </div>
+
+          <div class="wk-h3">Proyección</div>
+          <div class="wk-formula">
+            <span class="lbl">Ingreso neto del producto</span><br>
+            <span class="eq">Σ (unidades × %canal × precio neto recibido con descuento)</span><br><br>
+            <span class="lbl">Resultado operativo</span><br>
+            <span class="eq">Margen bruto total − Gastos Fijos totales</span><br><br>
+            <span class="lbl">Ganancia diaria</span>   <span class="eq">Resultado ÷ 30</span><br>
+            <span class="lbl">Ganancia semanal</span>   <span class="eq">Resultado ÷ 4.33</span>
+          </div>
+        </div>
+
+        <!-- ═══ GLOSARIO ═══ -->
+        <div id="wk-glosario" class="wk-section">
+          <div class="wk-h2">Glosario</div>
+          <div class="card" style="padding:0 20px">
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Tier de ganancia</div><div class="wk-gloss-def">Factor multiplicador sobre el costo base: T1=×2.0, T2=×1.7, T3=×1.6, T4=×1.4. Configurable en Ajustes.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">GF (Gastos Fijos)</div><div class="wk-gloss-def">Costos mensuales independientes del volumen. Se distribuyen entre todos los productos según unidades vendidas.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Margen bruto</div><div class="wk-gloss-def">(Precio − Costo con GF) / Precio. Qué porcentaje del precio cobrado es ganancia después de cubrir todos los costos directos.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Resultado operativo</div><div class="wk-gloss-def">Margen bruto total del mes − Gastos Fijos. La ganancia neta real después de cubrir todo.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Sobrecargo de canal</div><div class="wk-gloss-def">Porcentaje adicional al precio mostrador para un canal. Sirve para absorber comisiones y mantener el ingreso neto.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Comisión de plataforma</div><div class="wk-gloss-def">Porcentaje que se queda la plataforma (Rappi, PedidosYa, etc.) del precio cobrado al cliente.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Rendimiento</div><div class="wk-gloss-def">Cuántas porciones produce una receta completa. Determina el costo por porción.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Merma</div><div class="wk-gloss-def">Pérdida de peso durante cocción. Se aplica sobre el rendimiento calculado para obtener las porciones reales.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Sub-producto / Combo</div><div class="wk-gloss-def">Otro producto del menú usado como ingrediente. El costo se calcula proporcionalmente con protección anti-ciclos.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Override de GF</div><div class="wk-gloss-def">% personalizado de GF para un producto. 100% = promedio, 150% = 50% más, 70% = 30% menos.</div></div>
+            <div class="wk-gloss-item"><div class="wk-gloss-term">Comisión global de venta</div><div class="wk-gloss-def">Comisión aplicada a todos los canales. Útil para promotores o comisiones de personal.</div></div>
+          </div>
+        </div>
+
+        <!-- JS de la wiki (scoped) -->
+        
+      </div>
+      <!-- /WIKI -->
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE RECETA COSTOS -->
+<div class="modal-overlay" id="cr-modal-overlay" onclick="if(event.target.id==='cr-modal-overlay')closeCRModal()">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div class="modal-title" id="cr-modal-title">Desglose de receta</div>
+      <button class="modal-close" onclick="closeCRModal()">×</button>
+    </div>
+    <div class="modal-body" id="cr-modal-body"></div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target.id==='modal-overlay')closeModal()">
+  <div class="modal"><div class="modal-header"><div class="modal-title" id="modal-title">Detalle</div><button class="modal-close" onclick="closeModal()">×</button></div><div class="modal-body" id="modal-body"></div></div>
+</div>
+<div class="modal-overlay" id="recipe-overlay" onclick="if(event.target.id==='recipe-overlay')closeRecipe()">
+  <div class="modal"><div class="modal-header"><div class="modal-title" id="recipe-title">Editar receta</div><button class="modal-close" onclick="closeRecipe()">×</button></div><div class="modal-body" id="recipe-body"></div></div>
+</div>
+<div class="modal-overlay" id="add-prod-overlay" onclick="if(event.target.id==='add-prod-overlay')closeAddProdModal()">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="add-prod-modal-title">Nuevo producto · Paso 1 de 2</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:3px" id="add-prod-modal-sub">Nombre y categoría de precio</div>
+      </div>
+      <button class="modal-close" onclick="closeAddProdModal()">×</button>
+    </div>
+
+    <!-- PASO 1 -->
+    <div id="add-prod-step1" class="modal-body" style="display:flex;flex-direction:column;gap:16px">
+      <!-- Step indicator -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div>
+        <div style="height:3px;flex:1;background:var(--border);border-radius:99px"><div id="np-progress" style="height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width 0.3s"></div></div>
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0" id="np-step2-dot">2</div>
+      </div>
+
+      <div class="form-group">
+        <span class="form-label">Nombre del producto</span>
+        <input class="form-input" id="np-name" type="text" placeholder="Ej: Pizza especial, Empanadas, Gaseosa..." style="width:100%"
+          oninput="npUpdateProgress()" onkeydown="if(event.key==='Enter')npGoStep2()">
+      </div>
+
+      <div class="form-group">
+        <span class="form-label">Tier de precio</span>
+        <select class="form-input" id="np-tier" style="font-family:'DM Sans',sans-serif;width:100%"></select>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="np-tier-hint">El factor de ganancia sobre el costo. Podés cambiarlo después.</div>
+      </div>
+
+      <div style="background:var(--secondary);border:1px solid rgba(242,140,0,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--ink)">
+        <strong>Paso siguiente:</strong> vas a cargar los ingredientes y envases. El costo se calcula automáticamente desde la receta.
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" onclick="closeAddProdModal()">Cancelar</button>
+        <button class="btn btn-accent" id="np-next-btn" onclick="npGoStep2()" disabled style="opacity:0.5;cursor:not-allowed">
+          Siguiente → Cargar receta
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 2: transición visual mientras abre el editor de receta -->
+    <div id="add-prod-step2" class="modal-body" style="display:none;flex-direction:column;align-items:center;gap:16px;padding:36px 24px;text-align:center">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:var(--ink)" id="np-created-name"></div>
+      <div style="font-size:13px;color:var(--muted)">Producto creado. Abriendo editor de receta…</div>
+    </div>
+  </div>
+</div>
+<!-- STOCK MODAL v2 - Enhanced -->
+<div class="modal-overlay s2-modal-overlay" id="stock-modal" onclick="if(event.target.id==='stock-modal')closeStockModal()">
+  <div class="s2-modal">
+    <!-- MODAL TOP MOTIVO SELECTOR (Quick reason chips) -->
+    <div class="s2-modal-header">
+      <div class="s2-modal-header-left">
+        <div class="s2-modal-icon" id="sm-header-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>
+        </div>
+        <div>
+          <div class="s2-modal-title" id="sm-modal-title">Registrar Movimiento</div>
+          <div class="s2-modal-sub" id="sm-modal-sub">Seleccioná el motivo del retiro</div>
+        </div>
+      </div>
+      <button class="s2-modal-close" onclick="closeStockModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- MOTIVO CHIPS -->
+    <div class="s2-motivo-grid" id="sm-motivo-grid">
+      <button class="s2-motivo-chip active" data-motivo="uso_interno" onclick="selectMotivo('uso_interno')">
+        <span class="s2-chip-icon">🔧</span>
+        <span class="s2-chip-label">Uso Interno</span>
+      </button>
+      <button class="s2-motivo-chip" data-motivo="desperdicio" onclick="selectMotivo('desperdicio')">
+        <span class="s2-chip-icon">🗑</span>
+        <span class="s2-chip-label">Desperdicio</span>
+      </button>
+      <button class="s2-motivo-chip" data-motivo="degustacion" onclick="selectMotivo('degustacion')">
+        <span class="s2-chip-icon">👨‍🍳</span>
+        <span class="s2-chip-label">Degustación</span>
+      </button>
+      <button class="s2-motivo-chip" data-motivo="vencido" onclick="selectMotivo('vencido')">
+        <span class="s2-chip-icon">⏰</span>
+        <span class="s2-chip-label">Vencido</span>
+      </button>
+      <button class="s2-motivo-chip" data-motivo="ajuste" onclick="selectMotivo('ajuste')">
+        <span class="s2-chip-icon">⚖️</span>
+        <span class="s2-chip-label">Ajuste Manual</span>
+      </button>
+      <button class="s2-motivo-chip" data-motivo="ingreso" onclick="selectMotivo('ingreso')">
+        <span class="s2-chip-icon">📦</span>
+        <span class="s2-chip-label">Ingreso/Compra</span>
+      </button>
+    </div>
+
+    <!-- FORM BODY -->
+    <div class="s2-modal-body">
+      <!-- Hidden tipo -->
+      <input type="hidden" id="sm-tipo" value="uso_interno">
+
+      <!-- CATEGORÍA SELECTOR -->
+      <div class="s2-field">
+        <label class="s2-field-label">Categoría</label>
+        <div style="display:flex;gap:8px">
+          <button class="s2-cat-btn active" id="cat-btn-ing" onclick="setCatModal('ingrediente')">🥩 Ingredientes</button>
+          <button class="s2-cat-btn" id="cat-btn-env" onclick="setCatModal('envase')">📦 Envases</button>
+          <button class="s2-cat-btn" id="cat-btn-prod" onclick="setCatModal('producto')">🍽 Productos</button>
+        </div>
+        <input type="hidden" id="sm-categoria" value="ingrediente">
+      </div>
+
+      <!-- PRODUCTO SELECTOR -->
+      <div class="s2-field">
+        <label class="s2-field-label" id="sm-ing-label">Ingrediente</label>
+        <div class="s2-select-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <select id="sm-ing" class="s2-select-input" style="padding-left:34px" onchange="updateStockIndicator()"></select>
+        </div>
+        <!-- Stock actual indicator -->
+        <div class="s2-stock-indicator" id="sm-stock-indicator"></div>
+      </div>
+
+      <!-- CANTIDAD + UNIDAD ROW -->
+      <div class="s2-field-row">
+        <div class="s2-field" style="flex:2">
+          <label class="s2-field-label">Cantidad</label>
+          <div style="position:relative">
+            <input id="sm-qty" type="number" class="s2-qty-input" value="500" min="1" placeholder="0">
+            <div class="s2-qty-stepper">
+              <button onclick="stepQty(100)" class="s2-step-btn">+100</button>
+              <button onclick="stepQty(500)" class="s2-step-btn">+500</button>
+              <button onclick="stepQty(1000)" class="s2-step-btn">+1kg</button>
+            </div>
+          </div>
+        </div>
+        <div class="s2-field" style="flex:1">
+          <label class="s2-field-label">Unidad</label>
+          <select id="sm-unit" class="s2-select-input">
+            <option value="g">gramos</option>
+            <option value="kg">kilos</option>
+            <option value="L">litros</option>
+            <option value="u">unidades</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- STOCK REAL (para ajuste manual) -->
+      <div class="s2-field" id="sm-stock-real-field" style="display:none">
+        <label class="s2-field-label">Stock real (cantidad real contada)</label>
+        <input id="sm-stock-real" type="number" class="s2-qty-input" placeholder="Cantidad real en depósito" min="0">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">La diferencia entre el stock teórico y esta cantidad se registrará como ajuste.</div>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="s2-field">
+        <label class="s2-field-label">Observaciones <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+        <textarea id="sm-nota" class="s2-textarea" placeholder="Ej: Preparación evento del sábado, merma por corte de luz..."></textarea>
+      </div>
+
+      <!-- STOCK RESULTANTE PREVIEW -->
+      <div class="s2-result-preview" id="sm-result-preview"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="s2-modal-footer">
+      <button class="s2-btn-cancel" onclick="closeStockModal()">Cancelar</button>
+      <button class="s2-btn-confirm" id="sm-confirm-btn" onclick="registrarMovimiento()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Registrar
+      </button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="confirm-modal"><div class="confirm-title" id="confirm-title">Confirmar</div><div class="confirm-text" id="confirm-text"></div><div class="confirm-actions"><button class="btn" onclick="document.getElementById('confirm-overlay').classList.remove('open')">Cancelar</button><button class="btn btn-danger" id="confirm-ok">Aceptar</button></div></div>
+</div>
+
+<!-- PRINT OVERLAY — Proyección -->
+<div id="print-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,25,12,0.72);z-index:9000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px">
+  <div style="background:white;border-radius:16px;width:100%;max-width:820px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 80px rgba(0,0,0,0.4)">
+    <!-- header bar — same style as stock -->
+    <div id="print-action-bar" style="padding:16px 22px;background:#235328;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','DM Sans',sans-serif;font-size:16px;color:white">Vista previa · Proyección mensual</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:1px" id="print-modal-info"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="closePrintOverlay()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Cerrar
+        </button>
+        <button onclick="closePrintOverlayAndPrint()" style="background:var(--accent,#F28C00);border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(242,140,0,0.4)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir / PDF
+        </button>
+      </div>
+    </div>
+    <!-- body: green bg with floating A4 pages -->
+    <div style="background:#4a6b4e;padding:28px 24px;overflow-y:auto;max-height:75vh">
+      <div id="print-content" style="display:flex;flex-direction:column;gap:20px;align-items:center">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- GENERADOR FORMATO: overlay de impresión (fuera del shell para que @media print lo vea) -->
+<div id="gf-print-overlay" style="display:none">
+  <div id="gf-print-doc"></div>
+</div>
+
+<!-- GENERADOR FORMATO: modal de vista previa -->
+<div id="gf-preview-modal" style="display:none;position:fixed;inset:0;background:rgba(10,25,12,0.72);z-index:500;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px">
+  <div style="background:white;border-radius:16px;width:100%;max-width:900px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 80px rgba(0,0,0,0.4)">
+    <!-- modal header -->
+    <div style="padding:16px 22px;background:#235328;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','DM Sans',sans-serif;font-size:16px;color:white">Vista previa · Formato A4</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:1px" id="gf-modal-info"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="gf-modal-page-nav" style="display:flex;gap:4px"></div>
+        <button onclick="gfClosePreviewModal()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Cerrar
+        </button>
+        <button onclick="gfImprimirTodo()" style="background:var(--accent,#F28C00);border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;color:white;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(242,140,0,0.4)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir / PDF
+        </button>
+      </div>
+    </div>
+    <!-- modal body -->
+    <div style="background:#6e8a72;padding:24px;overflow-y:auto">
+      <div id="gf-modal-pages-container"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ROW ACTION PORTAL — floats above everything, outside table-wrap -->
+<div id="row-action-portal" style="display:none;position:fixed;z-index:9999;background:white;border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.14);min-width:180px;padding:5px 0;white-space:nowrap"></div>
+
+<!-- GRID CARD ACTION PORTAL — floats above grid cards -->
+<div id="grid-menu-portal"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
