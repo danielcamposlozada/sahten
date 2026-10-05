@@ -15,4 +15,4 @@ Arquitectura y estado de la migración: [docs/ARQUITECTURA.md](docs/ARQUITECTURA
 
 ## Licencia
 
-MIT (ver `LICENSE`). Podés usar, copiar y modificar Sahten libremente, incluso con fines comerciales, manteniendo el aviso de copyright.
+AGPL-3.0-or-later (ver `LICENSE`). Podés usar, estudiar y modificar Sahten libremente. Si distribuís una versión modificada, o la ofrecés como servicio por red, tenés que publicar su código fuente bajo la misma licencia. Para usos comerciales sin esa obligación, consultá al autor por una licencia aparte.

@@ -1,7 +1,7 @@
 [package]
 name = "sahten"
 version = "0.4.1"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 description = "Sahten · costos, precios, proyección y mostrador para gastronomía"
 edition = "2021"
 rust-version = "1.77"
