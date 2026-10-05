@@ -241,6 +241,11 @@ function _visibleProducts() {
   });
 }
 
+// Precio que se cobra en el Mostrador: el mismo que muestra el panel Menú para el canal Mostrador (incluye el descuento del canal o del producto).
+function _mostPrice(p) {
+  if (typeof channelPriceWithDisc === 'function') { const v = channelPriceWithDisc(p, 'mostrador'); if (v) return v; }
+  return (typeof mostradorFinalPrice === 'function') ? mostradorFinalPrice(p) : 0;
+}
 function _renderMostradorGrid() {
   const grid = document.getElementById('most-product-grid'); if (!grid) return;
   const visible = _visibleProducts();
@@ -249,7 +254,7 @@ function _renderMostradorGrid() {
     return;
   }
   grid.innerHTML = visible.map(p => {
-    const price = (typeof mostradorFinalPrice === 'function') ? mostradorFinalPrice(p) : 0;
+    const price = _mostPrice(p);
     const initial = (p.name||'?').trim().charAt(0).toUpperCase();
     const catBadge = p.category ? '<span class="most-product-cat">'+_esc(p.category)+'</span>' : '';
     return '<div class="most-product" data-id="'+p.id+'" onclick="mostradorAddToCart(\''+p.id+'\',this)">' +
@@ -288,7 +293,7 @@ function mostradorClearCart() { if(!mostradorCart.length) return; mostradorCart=
 function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c&&window.innerWidth<=980) c.classList.toggle('expanded'); }
 
 function _cartItemsWithPrice() {
-  return mostradorCart.map(it => { const p=(typeof PRODUCTS!=='undefined'?PRODUCTS:[]).find(x=>x.id===it.productId); if(!p) return null; const price=(typeof mostradorFinalPrice==='function')?mostradorFinalPrice(p):0; return {product:p,qty:it.qty,unitPrice:price,lineTotal:price*it.qty}; }).filter(Boolean);
+  return mostradorCart.map(it => { const p=(typeof PRODUCTS!=='undefined'?PRODUCTS:[]).find(x=>x.id===it.productId); if(!p) return null; const price=_mostPrice(p); return {product:p,qty:it.qty,unitPrice:price,lineTotal:price*it.qty}; }).filter(Boolean);
 }
 function _calcCartTotals() {
   const items=_cartItemsWithPrice(); const subtotal=items.reduce((s,it)=>s+it.lineTotal,0);

@@ -171,3 +171,20 @@ describe('7 · Dos proyectos → dos tiendas (Supabase)', () => {
     expect((await as('anon', () => db.query('select s.slug, m.json from public.stores s join public.menus m on m.store_id = s.id'))).rows[0].json.products).toHaveLength(1);
   }, 60000);
 });
+
+describe('Mostrador: cobra el mismo precio que muestra el Menú', () => {
+  it('con descuento del canal o del producto, la grilla, el carrito y el pedido usan el precio con descuento', async () => {
+    const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close();
+    const pos = () => { a.ev('renderMostrador()'); return Array.from(a.window.document.querySelectorAll('.most-product')).map(e => e.querySelector('.most-product-price').textContent); };
+    const base = a.ev("mostradorFinalPrice(PRODUCTS[0])");
+    expect(a.ev("channelPriceWithDisc(PRODUCTS[0],'mostrador')")).toBe(base);          // sin descuento: nada cambia
+    a.ev("CHANNELS.find(c=>c.id==='mostrador').channelDisc=10;");
+    const conDesc = a.ev("channelPriceWithDisc(PRODUCTS[0],'mostrador')"); expect(conDesc).toBeLessThan(base);
+    a.ev("showPanel('productos'); renderProductos();");
+    expect(a.window.document.getElementById('prod-tbody').rows[0].textContent).toContain(conDesc.toLocaleString('es-AR'));   // el Menú muestra el precio con descuento
+    expect(pos()[0].replace(/\D/g, '')).toBe(String(conDesc));                            // la grilla del Mostrador, igual
+    a.ev("mostradorAddToCart('pizza_muzza'); mostradorSetOrderType('retiro'); mostradorCheckout();"); await wait(50);
+    expect(a.ev('SAHTEN_ORDERS[0].items[0].unitPrice')).toBe(conDesc); expect(a.ev('SAHTEN_ORDERS[0].total')).toBe(conDesc);
+    a.window.close();
+  }, 60000);
+});
