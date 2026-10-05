@@ -1,6 +1,7 @@
 # Instaladores de escritorio: .dmg (macOS universal: Apple Silicon + Intel) y .msi / .exe (Windows).
 # Se dispara al publicar una etiqueta  v*  (por ejemplo: git tag v4.0.1 && git push --tags).
-# Crea un borrador de Release con los instaladores y el latest.json que usa el actualizador automático.
+# Crea un borrador de Release con los instaladores y el latest.json que usa el actualizador automático, y lo PUBLICA solo
+# cuando terminaron todos los instaladores (macOS y Windows) y están todos los archivos. Si algo falla, queda como borrador.
 #
 # Secretos del repositorio (Settings › Secrets and variables › Actions):
 #   TAURI_SIGNING_PRIVATE_KEY            contenido de ~/.tauri/sahten-updater.key   (obligatorio: firma las actualizaciones)
@@ -86,3 +87,18 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+  publicar:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}', TAG: '${{ github.ref_name }}' }
+    steps:
+      - name: Verificar que estén todos los instaladores y publicar
+        run: |
+          assets=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
+          echo "$assets"
+          for pat in '\.dmg$' '-setup\.exe$' '\.msi$' '^latest\.json$'; do
+            echo "$assets" | grep -Eq "$pat" || { echo "Falta un archivo ($pat): el release queda como borrador"; exit 1; }
+          done
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
