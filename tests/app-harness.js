@@ -6,7 +6,7 @@ import { build } from 'vite';
 import { loadLegacy } from '../scripts/legacy-harness.mjs';
 import { root } from './helpers.js';
 
-const outDirs = { online: path.join(root, '.tmp/test-bundle'), offline: path.join(root, '.tmp/test-bundle-offline') };
+const outDirs = { online: path.join(root, '.tmp/test-bundle-' + process.pid), offline: path.join(root, '.tmp/test-bundle-offline-' + process.pid) };
 const out = outDirs.online;
 
 /** Compila src/main.js como IIFE (una sola vez) y arma un index.html clásico para jsdom. */
