@@ -39,7 +39,7 @@ function renderMenuOnline() {
   const allProducts = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : [];
   const allCats = _getAllCategories(allProducts);
   const orderedCats = _getOrderedCategories(allCats);
-  const visibleCount = allProducts.filter(p => !MENU_CONFIG.hiddenProducts.includes(p.id)).length;
+  const visibleCount = allProducts.filter(p => !MENU_CONFIG.hiddenProducts.includes(p.id) && !(p.category && MENU_CONFIG.hiddenCategories.includes(p.category))).length;   // lo que realmente se publica
 
   panel.innerHTML = `
     <div class="info-banner" style="margin-bottom:18px">
@@ -98,7 +98,7 @@ function _renderMoProductos(allProducts) {
           <td style="text-align:center"><input type="checkbox" ${visible ? 'checked' : ''} onchange="_moToggleProduct('${p.id}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"></td>
           <td><strong>${_esc(p.name)}</strong>${p.star ? ' ⭐' : ''}${catHidden ? ' <span style="font-size:10px;color:var(--accent)">(categoría oculta)</span>' : ''}</td>
           <td>${p.category ? '<span style="background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block">' + _esc(p.category) + '</span>' : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-          <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(parseFloat(p.precio) || 0)}</td>
+          <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(_moPrice(p))}</td>
           <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="_moToggleProduct('${p.id}',${!visible})">${visible ? '🔒' : '✅'}</button></td>
         </tr>`;
       }).join('')}</tbody>
@@ -124,7 +124,7 @@ function _renderMoProductosFiltered(filtered) {
       <td style="text-align:center"><input type="checkbox" ${visible ? 'checked' : ''} onchange="_moToggleProduct('${p.id}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"></td>
       <td><strong>${_esc(p.name)}</strong>${p.star ? ' ⭐' : ''}${catHidden ? ' <span style="font-size:10px;color:var(--accent)">(categoría oculta)</span>' : ''}</td>
       <td>${p.category ? '<span style="background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block">' + _esc(p.category) + '</span>' : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-      <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(parseFloat(p.precio) || 0)}</td>
+      <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(_moPrice(p))}</td>
       <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="_moToggleProduct('${p.id}',${!visible})">${visible ? '🔒' : '✅'}</button></td>
     </tr>`;
   }).join('');
@@ -285,6 +285,8 @@ function _getOrderedCategories(allCats) {
   return ordered;
 }
 
+// Precio que ve el cliente en el menú publicado: el mismo que usa la publicación (precio de Mostrador con tier, recargo y comisión).
+function _moPrice(p) { return (typeof mostradorFinalPrice === 'function') ? mostradorFinalPrice(p) : 0; }
 function _esc(s) { return String(s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
 function _fmtN(n) { return Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 0 }); }
 

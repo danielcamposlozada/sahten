@@ -150,3 +150,23 @@ describe('build sin online (SAHTEN_ONLINE=false)', () => {
     w.close();
   }, 60000);
 });
+
+describe('Menú Online (admin): lee bien los datos', () => {
+  it('la columna Precio muestra el mismo precio que se publica y «Productos visibles» cuenta lo que realmente sale', async () => {
+    const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close();
+    a.ev("showPanel('menuonline'); renderMenuOnline();");
+    const doc = a.window.document;
+    const cells = Array.from(doc.querySelectorAll('#mo-content tbody tr')).map(r => r.cells[3].textContent.replace(/\D/g, ''));
+    const real = a.ev('PRODUCTS.filter(p=>!p.recetaOnly).map(p=>String(mostradorFinalPrice(p)))');
+    expect(cells).toEqual(Array.from(real)); expect(cells.every(c => +c > 0)).toBe(true);
+    const pub = a.on.publish.currentMenu().products.map(p => String(p.price));
+    expect(cells).toEqual(pub);                                                          // admin = menú publicado
+    // ocultar una categoría completa baja el contador de visibles (antes solo contaba los ocultos uno por uno)
+    const cat = a.ev('PRODUCTS[0].category'); const n = a.ev(`PRODUCTS.filter(p=>!p.recetaOnly && p.category==='${cat}').length`);
+    a.ev(`MENU_CONFIG.hiddenCategories=['${cat}']; renderMenuOnline();`);
+    const visibles = +doc.querySelector('.kpi-value.good').textContent;
+    expect(visibles).toBe(a.ev('PRODUCTS.filter(p=>!p.recetaOnly).length') - n);
+    expect(visibles).toBe(a.on.publish.currentMenu().products.length);
+    a.window.close();
+  }, 60000);
+});
