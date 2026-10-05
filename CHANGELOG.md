@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.2
 
 - **Menú Online rediseñado** en una sola pantalla: estado de publicación (sin publicar / al día / cambios sin publicar / falta completar), lista agrupada por categoría con interruptores, arrastrar para ordenar, fotos, avisos por producto (precio $0, sin categoría, sin foto), filtros y búsqueda, ajustes plegables y **vista previa del celular en vivo**.
 - Corrección: la columna Precio del Menú Online mostraba $0 en todos los productos; ahora muestra el precio que se publica. «Productos visibles» ahora cuenta lo que realmente sale (respeta las categorías ocultas).
