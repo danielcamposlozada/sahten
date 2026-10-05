@@ -25,7 +25,7 @@ w.eval(`(function(){ const X=window.__D, set=(a,b)=>{ a.length=0; b.forEach(x=>a
   CHANNELS.forEach(c => Object.assign(c, X.CHANNELS_PATCH[c.id] || {}));
   Object.keys(projChannelDist).forEach(k => delete projChannelDist[k]); Object.assign(projChannelDist, X.DIST);
   Object.keys(projManualUnits).forEach(k => delete projManualUnits[k]); PRODUCTS.forEach(p => projManualUnits[p.id] = p.avgMes); projManualMode = true;
-  Object.assign(SAHTEN_PROJECT, X.PROJECT);
+  Object.assign(SAHTEN_PROJECT, X.PROJECT); Object.assign(MENU_CONFIG, X.MENU_CONFIG); _saveMenuConfig();
   PRODUCTS.forEach(p => { p.receta_cost = p.ingredients.reduce((s, r) => s + calcIngCost(r), 0); });
   initStock();
   Object.entries(X.STOCK_LEVELS).forEach(([id, [actual, minimo]]) => { STOCK[id] = Object.assign(STOCK[id] || {}, { actual, minimo, unit: STOCK[id] && STOCK[id].unit || 'g' }); });

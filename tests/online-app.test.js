@@ -31,14 +31,15 @@ describe('publicar menú desde la app', () => {
     expect(m.products[0].price).toBe(a.ev('mostradorFinalPrice(PRODUCTS.find(p=>p.id===SAHTEN.online.publish.currentMenu().products[0].id))'));
     expect(m.theme.primary).toMatch(/^#/);
     expect(JSON.stringify(m)).not.toMatch(/receta_cost|precioPkg/);
-    const problems = a.on.publish.publishProblems(m);
-    expect(problems.some(t => /WhatsApp/.test(t))).toBe(true);
+    expect(a.on.publish.publishProblems(m).some(t => /WhatsApp/.test(t))).toBe(false);   // el demo ya trae su número
+    a.ev("MENU_CONFIG.whatsappNumber=''");
+    expect(a.on.publish.publishProblems(a.on.publish.currentMenu()).some(t => /WhatsApp/.test(t))).toBe(true);
     a.ev("MENU_CONFIG.whatsappNumber='+54 9 11 5555-0123'");
     expect(a.on.publish.publishProblems(a.on.publish.currentMenu()).some(t => /WhatsApp/.test(t))).toBe(false);
     a.window.close();
   }, 60000);
-  it('Menú Online › Configuración trae el botón «Publicar menú» y la vista previa', async () => {
-    const a = await app(); await a.p.openDemo(); a.ev("showPanel('menuonline'); _moTab='config'; renderMenuOnline();"); await wait(30);
+  it('Menú Online trae el botón «Publicar menú» y la vista previa', async () => {
+    const a = await app(); await a.p.openDemo(); a.ev("showPanel('menuonline'); renderMenuOnline();"); await wait(30);
     const html = a.window.document.getElementById('panel-menuonline').innerHTML;
     expect(html).toMatch(/Publicar menú/); expect(html).toMatch(/Vista previa/); expect(html).not.toMatch(/Sahten Menu v2/);
     a.window.close();
@@ -151,22 +152,44 @@ describe('build sin online (SAHTEN_ONLINE=false)', () => {
   }, 60000);
 });
 
-describe('Menú Online (admin): lee bien los datos', () => {
-  it('la columna Precio muestra el mismo precio que se publica y «Productos visibles» cuenta lo que realmente sale', async () => {
-    const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close();
-    a.ev("showPanel('menuonline'); renderMenuOnline();");
-    const doc = a.window.document;
-    const cells = Array.from(doc.querySelectorAll('#mo-content tbody tr')).map(r => r.cells[3].textContent.replace(/\D/g, ''));
-    const real = a.ev('PRODUCTS.filter(p=>!p.recetaOnly).map(p=>String(mostradorFinalPrice(p)))');
-    expect(cells).toEqual(Array.from(real)); expect(cells.every(c => +c > 0)).toBe(true);
-    const pub = a.on.publish.currentMenu().products.map(p => String(p.price));
-    expect(cells).toEqual(pub);                                                          // admin = menú publicado
-    // ocultar una categoría completa baja el contador de visibles (antes solo contaba los ocultos uno por uno)
+describe('Menú Online (admin): una sola pantalla con estado, lista por categoría y vista previa', () => {
+  const open = async () => { const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close(); a.ev("showPanel('menuonline'); renderMenuOnline();"); return a; };
+  const $$ = (a, sel) => Array.from(a.window.document.querySelectorAll(sel));
+  it('la columna Precio es la del menú publicado y «visibles» cuenta lo que realmente sale', async () => {
+    const a = await open();
+    const rows = $$(a, '.mo-prod .mo-price').map(e => e.textContent.replace(/\D/g, ''));
+    expect(rows.slice().sort()).toEqual(a.on.publish.currentMenu().products.map(p => String(p.price)).sort());
+    expect(rows.every(c => +c > 0)).toBe(true);
     const cat = a.ev('PRODUCTS[0].category'); const n = a.ev(`PRODUCTS.filter(p=>!p.recetaOnly && p.category==='${cat}').length`);
-    a.ev(`MENU_CONFIG.hiddenCategories=['${cat}']; renderMenuOnline();`);
-    const visibles = +doc.querySelector('.kpi-value.good').textContent;
-    expect(visibles).toBe(a.ev('PRODUCTS.filter(p=>!p.recetaOnly).length') - n);
-    expect(visibles).toBe(a.on.publish.currentMenu().products.length);
+    a.ev(`_moCatToggle('${cat}', false)`);
+    expect(a.on.publish.currentMenu().products.length).toBe(a.ev('PRODUCTS.filter(p=>!p.recetaOnly).length') - n);
+    expect($$(a, '.mo-st-sub')[0].textContent).toContain(a.on.publish.currentMenu().products.length + ' producto');
+    a.window.close();
+  }, 60000);
+  it('estado de publicación: sin publicar → publicado al día → cambios sin publicar; avisos por producto', async () => {
+    const a = await open(); const st = () => a.window.document.querySelector('.mo-status').dataset.s;
+    expect(st()).toBe('dirty'); expect($$(a, '.mo-st-title')[0].textContent).toMatch(/Todavía no publicaste/);
+    expect($$(a, '.mo-warn').some(e => /Sin foto/.test(e.textContent))).toBe(true);           // el demo no trae fotos
+    a.on.publish.publish = async () => ({ files: 3, mode: 'zip' });                           // sin abrir selectores de carpeta
+    await a.window._moPublish(); expect(st()).toBe('ok'); expect($$(a, '.mo-st-title')[0].textContent).toMatch(/al día/);
+    a.ev("_moToggleProduct(PRODUCTS[0].id, false)"); expect(st()).toBe('dirty'); expect($$(a, '.mo-st-title')[0].textContent).toMatch(/cambios sin publicar/);
+    a.ev("MENU_CONFIG.whatsappNumber=''; _moRefresh()"); expect(st()).toBe('problem'); expect($$(a, '.mo-problem')[0].textContent).toMatch(/WhatsApp/);
+    a.window.close();
+  }, 60000);
+  it('filtros, búsqueda, orden de categorías y vista previa en vivo', async () => {
+    const a = await open(); const doc = a.window.document;
+    const total = $$(a, '.mo-prod').length; expect(total).toBe(a.ev('PRODUCTS.filter(p=>!p.recetaOnly).length'));
+    a.ev("_moUi.q='napo'; _moRenderList()"); expect($$(a, '.mo-prod').length).toBe(1); a.ev("_moUi.q=''; _moRenderList()");
+    a.ev("_moToggleProduct(PRODUCTS[1].id, false)"); a.ev("_moUi.filter='hidden'; _moRefresh()"); expect($$(a, '.mo-prod').length).toBe(1);
+    a.ev("_moUi.filter='all'; _moRefresh()");
+    const cats = () => $$(a, '.mo-cat-name').map(e => e.textContent);
+    const before = cats(); a.ev(`_moCatMove('${before[0]}', 1)`); expect(cats()[1]).toBe(before[0]);
+    // la vista previa es el menú publicado: mismo orden de categorías, sin el producto oculto
+    const prev = $$(a, '.mo-ph-cat').map(e => e.textContent); expect(prev).toEqual(a.on.publish.currentMenu().config.categories);
+    expect(doc.getElementById('mo-side').textContent).not.toContain(a.ev('PRODUCTS[1].name'));
+    // ajustes: el título se refleja en la vista previa sin perder el foco
+    const input = doc.querySelector('[data-mo-set=title]'); input.value = 'Mi pizzería'; input.dispatchEvent(new a.window.Event('input', { bubbles: true }));
+    expect(doc.querySelector('.mo-ph-head b').textContent).toBe('Mi pizzería'); expect(doc.querySelector('[data-mo-set=title]')).toBe(input);
     a.window.close();
   }, 60000);
 });

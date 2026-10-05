@@ -43,10 +43,11 @@ export const MOVIMIENTOS = [
   { fecha: '4/10/2026 11:30 p. m.', ing: 'Jamón cocido', tipo: 'egreso', qty: -600, nota: 'Merma por vencimiento', categoria: 'ingrediente', unit: 'g' },
 ];
 export const CHANNELS_PATCH = {   // id → cambios sobre los canales de fábrica
-  mostrador: { enabled: true }, whatsapp: { enabled: true, surcharge: 0.05, desc: 'Pedidos por mensaje' }, rappi: { enabled: true, commission: 0.3 },
+  mostrador: { enabled: true }, whatsapp: { enabled: true, surcharge: 0, desc: 'Pedidos por mensaje (mismo precio que Mostrador)' }, rappi: { enabled: true, commission: 0.3 },
   pedidosya: { enabled: true, commission: 0.28 }, fudo: { enabled: false }, mercadopago: { enabled: false },
 };
 export const DIST = { mostrador: 45, whatsapp: 25, rappi: 15, pedidosya: 15, fudo: 0, mercadopago: 0 };
+export const MENU_CONFIG = { title: 'Pizzería La Esquina', subtitle: 'Pedí online y te lo preparamos', whatsappNumber: '+54 9 11 5555-0123' };
 export const PROJECT = { name: 'Pizzería La Esquina (ejemplo)', setupDone: true, demo: true, checklistDismissed: true };
 
 // ── Formato crudo de v3 (filas {n, v} y filas de combo «Pizza x4», «Pizza 1/2») ─────────────────────────────────────────────

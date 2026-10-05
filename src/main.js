@@ -7,6 +7,7 @@ import './styles/app.css';
 import './styles/sahten-enhancements.css';
 import './styles/sahten-mostrador.css';
 import './styles/sahten-reportes.css';
+import './styles/sahten-menuonline.css';
 
 import { initDesktop, isTauri } from './desktop/preload.js';
 import { libs } from './libs.js';

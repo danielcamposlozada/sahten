@@ -801,8 +801,8 @@
   {
    "id": "whatsapp",
    "name": "WhatsApp",
-   "desc": "Pedidos por mensaje",
-   "surcharge": 0.05,
+   "desc": "Pedidos por mensaje (mismo precio que Mostrador)",
+   "surcharge": 0,
    "enabled": true,
    "commission": 0,
    "channelDisc": 0
@@ -981,7 +981,18 @@
   }
  },
  "online": {
-  "menuConfig": {},
+  "menuConfig": {
+   "enabled": true,
+   "title": "Pizzería La Esquina",
+   "subtitle": "Pedí online y te lo preparamos",
+   "categoryOrder": [],
+   "hiddenProducts": [],
+   "hiddenCategories": [],
+   "showPrices": true,
+   "showImages": true,
+   "whatsappNumber": "+54 9 11 5555-0123",
+   "deliveryNote": ""
+  },
   "tiendaConfig": {},
   "supabase": {
    "url": "",

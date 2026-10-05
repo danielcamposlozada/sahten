@@ -30,242 +30,231 @@ function _saveMenuConfig() {
 let MENU_CONFIG = _loadMenuConfig();
 
 // ═══════════════════════════════════════════════════════════
-// RENDER ADMIN PAGE
+// MENÚ ONLINE — una sola pantalla: estado de publicación, lista por categoría y vista previa en vivo
 // ═══════════════════════════════════════════════════════════
+const _moUi = { q: '', filter: 'all', collapsed: {}, bound: false };
+
+function _moProducts() { return (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly && p.name) : []; }
+function _moIsHiddenCat(cat) { return !!cat && MENU_CONFIG.hiddenCategories.includes(cat); }
+function _moIsVisible(p) { return !MENU_CONFIG.hiddenProducts.includes(p.id) && !_moIsHiddenCat(p.category); }
+function _moImg(p) { return (typeof SAHTEN_IMAGES !== 'undefined' && SAHTEN_IMAGES[p.id]) || null; }
+function _moMenu() { try { return SAHTEN.online.publish.currentMenu(); } catch (e) { return null; } }
+function _moProblems(menu) { try { return menu ? SAHTEN.online.publish.publishProblems(menu) : []; } catch (e) { return []; } }
+// Huella del menú publicable: cambia si cambia algo de lo que ve el cliente (se ignora la fecha de generación).
+function _moHash(menu) {
+  const m = menu || _moMenu(); if (!m) return '';
+  const copy = { ...m }; delete copy.generatedAt;
+  const imgs = (typeof SAHTEN_IMAGES !== 'undefined') ? Object.keys(SAHTEN_IMAGES).sort().map(k => k + ':' + String(SAHTEN_IMAGES[k]).length).join(',') : '';
+  const str = JSON.stringify(copy) + '|' + imgs; let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  return String(h);
+}
+function _moWarnings(p) {
+  const out = [];
+  if (MENU_CONFIG.showPrices !== false && !(_moPrice(p) > 0)) out.push({ t: 'Precio $0: no se publica', bad: true });
+  if (!p.category) out.push({ t: 'Sin categoría' });
+  if (MENU_CONFIG.showImages !== false && !_moImg(p)) out.push({ t: 'Sin foto', soft: true });
+  return out;
+}
+
 function renderMenuOnline() {
   const panel = document.getElementById('panel-menuonline');
   if (!panel) return;
-
-  const allProducts = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : [];
-  const allCats = _getAllCategories(allProducts);
-  const orderedCats = _getOrderedCategories(allCats);
-  const visibleCount = allProducts.filter(p => !MENU_CONFIG.hiddenProducts.includes(p.id) && !(p.category && MENU_CONFIG.hiddenCategories.includes(p.category))).length;   // lo que realmente se publica
-
   panel.innerHTML = `
-    <div class="info-banner" style="margin-bottom:18px">
-      <strong>Menú Online:</strong> Configurá qué productos se muestran en tu menú público. Los clientes pueden hacer pedidos que aparecerán en el Mostrador → Delivery.
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
-      <div class="kpi"><div class="kpi-label">Productos visibles</div><div class="kpi-value good">${visibleCount}</div></div>
-      <div class="kpi"><div class="kpi-label">Categorías</div><div class="kpi-value gold">${orderedCats.filter(c => !MENU_CONFIG.hiddenCategories.includes(c)).length}</div></div>
-      <div class="kpi"><div class="kpi-label">Total productos</div><div class="kpi-value">${allProducts.length}</div></div>
-    </div>
-
-    <!-- TABS -->
-    <div class="rep-subtabs" style="margin-bottom:18px">
-      <button class="rep-subtab ${_moTab === 'productos' ? 'active' : ''}" onclick="_moTab='productos';renderMenuOnline()">🍽 Productos</button>
-      <button class="rep-subtab ${_moTab === 'categorias' ? 'active' : ''}" onclick="_moTab='categorias';renderMenuOnline()">📂 Categorías</button>
-      <button class="rep-subtab ${_moTab === 'config' ? 'active' : ''}" onclick="_moTab='config';renderMenuOnline()">⚙ Configuración</button>
-    </div>
-
-    <div id="mo-content"></div>
-  `;
-
-  if (_moTab === 'productos') _renderMoProductos(allProducts);
-  else if (_moTab === 'categorias') _renderMoCategorias(orderedCats, allProducts);
-  else _renderMoConfig();
-}
-
-let _moTab = 'productos';
-
-// ─── Products tab ─────────────────────────────────────
-function _renderMoProductos(allProducts) {
-  const c = document.getElementById('mo-content');
-  if (!c) return;
-
-  const search = document.getElementById('mo-search')?.value?.toLowerCase() || '';
-
-  let filtered = allProducts;
-  if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
-
-  c.innerHTML = `
-    <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
-      <div style="position:relative;flex:1;min-width:200px">
-        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="custom-input" id="mo-search" placeholder="Buscar producto..." value="${_esc(search)}" style="padding-left:36px" oninput="_renderMoProductos(${JSON.stringify(allProducts).length > 100 ? '(typeof PRODUCTS!==\'undefined\'?PRODUCTS.filter(p=>!p.recetaOnly):[])' : '[]'})">
+    <div class="mo">
+      <div id="mo-status"></div>
+      <div class="mo-body">
+        <div class="mo-main">
+          <div class="mo-toolbar">
+            <div class="mo-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" class="custom-input" id="mo-search" placeholder="Buscar producto…" aria-label="Buscar producto" value="${_esc(_moUi.q)}">
+            </div>
+            <div class="mo-chips" id="mo-chips" role="group" aria-label="Filtrar"></div>
+            <button class="btn" data-mo="all-on">Mostrar todos</button>
+            <button class="btn" data-mo="all-off">Ocultar todos</button>
+          </div>
+          <div id="mo-list"></div>
+          <details class="mo-settings" id="mo-settings">
+            <summary>Ajustes del menú</summary>
+            <div class="mo-fields">
+              <label class="f">Título<input type="text" class="custom-input" data-mo-set="title" value="${_esc(MENU_CONFIG.title)}"></label>
+              <label class="f">Subtítulo<input type="text" class="custom-input" data-mo-set="subtitle" value="${_esc(MENU_CONFIG.subtitle)}"></label>
+              <label class="f">WhatsApp donde llegan los pedidos<input type="tel" class="custom-input" data-mo-set="whatsappNumber" placeholder="+54 9 11 1234-5678" value="${_esc(MENU_CONFIG.whatsappNumber)}"></label>
+              <label class="f">Nota de delivery (aparece al pedir)<textarea class="custom-input" rows="2" style="resize:vertical" data-mo-set="deliveryNote">${_esc(MENU_CONFIG.deliveryNote)}</textarea></label>
+              <div class="mo-checks">
+                <label><span class="mo-sw"><input type="checkbox" data-mo-check="showPrices" ${MENU_CONFIG.showPrices !== false ? 'checked' : ''}><span></span></span>Mostrar precios</label>
+                <label><span class="mo-sw"><input type="checkbox" data-mo-check="showImages" ${MENU_CONFIG.showImages !== false ? 'checked' : ''}><span></span></span>Mostrar fotos</label>
+                <label><span class="mo-sw"><input type="checkbox" data-mo-check="enabled" ${MENU_CONFIG.enabled !== false ? 'checked' : ''}><span></span></span>Menú activo</label>
+              </div>
+              <div style="font-size:11.5px;color:var(--muted)">Publicar paso a paso: docs/PUBLICAR.md. El pedido sale por WhatsApp con el precio de Mostrador; no lleva costos ni márgenes.</div>
+            </div>
+          </details>
+        </div>
+        <aside class="mo-side" id="mo-side" aria-label="Vista previa del menú"></aside>
       </div>
-      <button class="btn" onclick="_moToggleAll(true)">✅ Mostrar todos</button>
-      <button class="btn" onclick="_moToggleAll(false)">🔒 Ocultar todos</button>
-    </div>
-
-    <div class="table-wrap"><table class="stock-table">
-      <thead><tr><th style="width:40px">Visible</th><th>Producto</th><th>Categoría</th><th style="text-align:right">Precio</th><th style="width:40px"></th></tr></thead>
-      <tbody>${filtered.map(p => {
-        const visible = !MENU_CONFIG.hiddenProducts.includes(p.id);
-        const catHidden = p.category && MENU_CONFIG.hiddenCategories.includes(p.category);
-        return `<tr style="${!visible ? 'opacity:0.5' : ''}${catHidden ? ';background:rgba(242,140,0,0.05)' : ''}">
-          <td style="text-align:center"><input type="checkbox" ${visible ? 'checked' : ''} onchange="_moToggleProduct('${p.id}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"></td>
-          <td><strong>${_esc(p.name)}</strong>${p.star ? ' ⭐' : ''}${catHidden ? ' <span style="font-size:10px;color:var(--accent)">(categoría oculta)</span>' : ''}</td>
-          <td>${p.category ? '<span style="background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block">' + _esc(p.category) + '</span>' : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-          <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(_moPrice(p))}</td>
-          <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="_moToggleProduct('${p.id}',${!visible})">${visible ? '🔒' : '✅'}</button></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>
-  `;
-
-  // Re-bind search
-  document.getElementById('mo-search')?.addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    const prods = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : [];
-    const f = q ? prods.filter(p => p.name.toLowerCase().includes(q)) : prods;
-    _renderMoProductosFiltered(f);
-  });
+    </div>`;
+  _moBind(panel);
+  _moRefresh();
 }
 
-function _renderMoProductosFiltered(filtered) {
-  const tbody = document.querySelector('#mo-content tbody');
-  if (!tbody) return;
-  tbody.innerHTML = filtered.map(p => {
-    const visible = !MENU_CONFIG.hiddenProducts.includes(p.id);
-    const catHidden = p.category && MENU_CONFIG.hiddenCategories.includes(p.category);
-    return `<tr style="${!visible ? 'opacity:0.5' : ''}${catHidden ? ';background:rgba(242,140,0,0.05)' : ''}">
-      <td style="text-align:center"><input type="checkbox" ${visible ? 'checked' : ''} onchange="_moToggleProduct('${p.id}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"></td>
-      <td><strong>${_esc(p.name)}</strong>${p.star ? ' ⭐' : ''}${catHidden ? ' <span style="font-size:10px;color:var(--accent)">(categoría oculta)</span>' : ''}</td>
-      <td>${p.category ? '<span style="background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block">' + _esc(p.category) + '</span>' : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-      <td style="text-align:right;font-family:var(--mono,'DM Mono',monospace);font-weight:600">$${_fmtN(_moPrice(p))}</td>
-      <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="_moToggleProduct('${p.id}',${!visible})">${visible ? '🔒' : '✅'}</button></td>
-    </tr>`;
+// Estado + lista + vista previa (la barra de búsqueda y los ajustes no se redibujan: se conserva el foco)
+function _moRefresh() {
+  _moRenderStatus(); _moRenderChips(); _moRenderList(); _moRenderPreview();
+}
+
+function _moRenderStatus() {
+  const el = document.getElementById('mo-status'); if (!el) return;
+  const menu = _moMenu(); const problems = _moProblems(menu); const last = MENU_CONFIG.lastPublished;
+  const prods = _moProducts(); const sinFoto = prods.filter(p => _moIsVisible(p) && MENU_CONFIG.showImages !== false && !_moImg(p)).length;
+  let s = 'ok', title, sub;
+  if (problems.length) { s = 'problem'; title = 'Falta completar para publicar'; sub = 'Resolvé los avisos de abajo.'; }
+  else if (!last) { s = 'dirty'; title = 'Todavía no publicaste este menú'; sub = 'Mirá la vista previa y publicalo cuando estés listo.'; }
+  else if (last.hash !== _moHash(menu)) { s = 'dirty'; title = 'Hay cambios sin publicar'; sub = 'Última publicación: ' + _moWhen(last.at) + '. Volvé a publicar para que los clientes los vean.'; }
+  else { title = 'Menú publicado y al día'; sub = 'Última publicación: ' + _moWhen(last.at) + '.'; }
+  const n = menu ? menu.products.length : 0;
+  sub += ` · ${n} producto${n !== 1 ? 's' : ''} en el menú` + (sinFoto ? ` · ${sinFoto} sin foto` : '');
+  el.innerHTML = `<div class="mo-status" data-s="${s}">
+    <span class="mo-st-dot" aria-hidden="true"></span>
+    <div class="mo-st-main"><div class="mo-st-title">${title}</div><div class="mo-st-sub">${_esc(sub)}</div></div>
+    <div class="mo-st-actions">
+      <button class="btn" data-mo="preview">Vista previa en pestaña</button>
+      <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Publicar menú</button>
+    </div>
+    ${problems.length ? `<div class="mo-problems">${problems.map(t => `<div class="mo-problem">${_esc(t)}${/WhatsApp/.test(t) ? '<button class="btn" data-mo="open-settings">Cargar número</button>' : ''}</div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function _moWhen(iso) {
+  try { const d = new Date(iso); return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+}
+
+function _moRenderChips() {
+  const el = document.getElementById('mo-chips'); if (!el) return;
+  const prods = _moProducts();
+  const counts = { all: prods.length, warn: prods.filter(p => _moWarnings(p).some(w => !w.soft)).length, nophoto: prods.filter(p => _moWarnings(p).some(w => w.soft)).length, hidden: prods.filter(p => !_moIsVisible(p)).length };
+  el.innerHTML = [['all', 'Todos'], ['warn', 'Con avisos'], ['nophoto', 'Sin foto'], ['hidden', 'Ocultos']].filter(([k]) => k !== 'nophoto' || counts.nophoto).map(([k, t]) =>
+    `<button class="mo-chip ${_moUi.filter === k ? 'on' : ''}" data-mo-filter="${k}" aria-pressed="${_moUi.filter === k}">${t} ${counts[k]}</button>`).join('');
+}
+
+function _moRenderList() {
+  const el = document.getElementById('mo-list'); if (!el) return;
+  const prods = _moProducts(); const q = _moUi.q.trim().toLowerCase();
+  const match = p => (!q || p.name.toLowerCase().includes(q)) &&
+    (_moUi.filter === 'all' || (_moUi.filter === 'warn' && _moWarnings(p).some(w => !w.soft)) || (_moUi.filter === 'nophoto' && _moWarnings(p).some(w => w.soft)) || (_moUi.filter === 'hidden' && !_moIsVisible(p)));
+  const cats = _getOrderedCategories(_getAllCategories(prods));
+  const groups = cats.map(c => ({ cat: c, items: prods.filter(p => p.category === c) }));
+  const loose = prods.filter(p => !p.category); if (loose.length) groups.push({ cat: '', items: loose });
+  const showImgs = MENU_CONFIG.showImages !== false;
+  const html = groups.map((g, gi) => {
+    const items = g.items.filter(match); if (!items.length) return '';
+    const hiddenCat = _moIsHiddenCat(g.cat); const open = !_moUi.collapsed[g.cat || '∅'];
+    const vis = g.items.filter(_moIsVisible).length;
+    const head = g.cat
+      ? `<div class="mo-cat-head" draggable="true" data-drag-cat="${_esc(g.cat)}">
+          <span class="mo-grip" aria-hidden="true">⋮⋮</span>
+          <button class="mo-iconbtn" data-mo-collapse="${_esc(g.cat)}" aria-expanded="${open}" aria-label="${open ? 'Plegar' : 'Desplegar'} ${_esc(g.cat)}">${open ? '▾' : '▸'}</button>
+          <span class="mo-cat-name">${_esc(g.cat)}</span><span class="mo-cat-count">${vis} de ${g.items.length} visibles</span>
+          <button class="mo-iconbtn" data-mo-catmove="-1" data-cat="${_esc(g.cat)}" aria-label="Subir ${_esc(g.cat)}" ${gi === 0 ? 'disabled' : ''}>▲</button>
+          <button class="mo-iconbtn" data-mo-catmove="1" data-cat="${_esc(g.cat)}" aria-label="Bajar ${_esc(g.cat)}" ${gi >= cats.length - 1 ? 'disabled' : ''}>▼</button>
+          <label class="mo-sw" title="${hiddenCat ? 'Mostrar' : 'Ocultar'} la categoría"><input type="checkbox" data-mo-cat="${_esc(g.cat)}" ${hiddenCat ? '' : 'checked'} aria-label="Categoría ${_esc(g.cat)} visible"><span></span></label>
+        </div>`
+      : `<div class="mo-cat-head" style="cursor:default"><span class="mo-cat-name">Sin categoría</span><span class="mo-cat-count">${g.items.length} producto${g.items.length !== 1 ? 's' : ''} · asignales una categoría desde Menú</span></div>`;
+    const rows = open ? items.map(p => {
+      const vis = _moIsVisible(p), price = _moPrice(p), img = _moImg(p), warns = _moWarnings(p);
+      return `<div class="mo-prod ${vis ? '' : 'off'}">
+        <label class="mo-sw"><input type="checkbox" data-mo-prod="${_esc(p.id)}" ${MENU_CONFIG.hiddenProducts.includes(p.id) ? '' : 'checked'} aria-label="${_esc(p.name)} visible"><span></span></label>
+        ${showImgs ? `<div class="mo-thumb">${img ? `<img src="${_esc(img)}" alt="">` : _esc((p.name || '?').trim().charAt(0).toUpperCase())}</div>` : '<span></span>'}
+        <div style="min-width:0"><div class="mo-pname">${_esc(p.name)}${p.star ? ' ⭐' : ''}${hiddenCat && !MENU_CONFIG.hiddenProducts.includes(p.id) ? ' <span style="font-size:10.5px;color:var(--accent)">(categoría oculta)</span>' : ''}</div>
+          ${warns.length ? `<div class="mo-warns">${warns.map(w => `<span class="mo-warn ${w.bad ? 'bad' : ''}">${_esc(w.t)}</span>`).join('')}</div>` : ''}</div>
+        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}</div>
+      </div>`;
+    }).join('') : '';
+    return `<section class="mo-cat ${hiddenCat ? 'off' : ''}" data-cat-block="${_esc(g.cat)}">${head}${rows}</section>`;
   }).join('');
+  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta y Menú: acá aparecen solos.'}</div>`;
 }
 
+function _moRenderPreview() {
+  const el = document.getElementById('mo-side'); if (!el) return;
+  const m = _moMenu();
+  if (!m) { el.innerHTML = ''; return; }
+  const th = m.theme || {}; const prim = th.primary || '#235328';
+  const imgs = (typeof SAHTEN_IMAGES !== 'undefined') ? SAHTEN_IMAGES : {};
+  const cats = m.config.categories.slice(); const loose = m.products.filter(p => !p.category);
+  const sec = (name, items) => items.length ? `<div class="mo-ph-cat" style="color:${_esc(prim)}">${_esc(name)}</div>` + items.map(p => `<div class="mo-ph-item"><div class="t">${p.image && imgs[p.id] ? `<img src="${_esc(imgs[p.id])}" alt="">` : _esc((p.name || '?').charAt(0).toUpperCase())}</div><div class="n">${_esc(p.name)}</div>${m.config.showPrices ? `<div class="p">$${_fmtN(p.price)}</div>` : ''}</div>`).join('') : '';
+  const body = m.config.enabled === false
+    ? '<div class="mo-ph-off">El menú está desactivado: los clientes ven un aviso en lugar de la carta.</div>'
+    : (m.products.length ? cats.map(c => sec(c, m.products.filter(p => p.category === c))).join('') + sec('Otros', loose) : '<div class="mo-ph-off">Todavía no hay productos visibles.</div>');
+  el.innerHTML = `<div class="mo-phone">
+      <div class="mo-ph-head" style="background:${_esc(prim)}"><b>${_esc(m.config.title || 'Nuestro Menú')}</b><span>${_esc(m.config.subtitle || '')}</span></div>
+      <div class="mo-ph-body">${body}</div>
+      <div class="mo-ph-foot">Pedir por WhatsApp</div>
+    </div><div class="mo-side-cap">Así lo ve el cliente. Se actualiza solo.</div>`;
+}
+
+// ─── Acciones ──────────────────────────────────────────
+function _moPersist() { _saveMenuConfig(); _moRefresh(); }
 function _moToggleProduct(id, show) {
-  if (show) {
-    MENU_CONFIG.hiddenProducts = MENU_CONFIG.hiddenProducts.filter(x => x !== id);
-  } else {
-    if (!MENU_CONFIG.hiddenProducts.includes(id)) MENU_CONFIG.hiddenProducts.push(id);
-  }
-  _saveMenuConfig();
-  renderMenuOnline();
+  const h = MENU_CONFIG.hiddenProducts.filter(x => x !== id);
+  MENU_CONFIG.hiddenProducts = show ? h : [...h, id]; _moPersist();
 }
-
-function _moToggleAll(show) {
-  if (show) {
-    MENU_CONFIG.hiddenProducts = [];
-  } else {
-    const allProducts = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : [];
-    MENU_CONFIG.hiddenProducts = allProducts.map(p => p.id);
-  }
-  _saveMenuConfig();
-  renderMenuOnline();
-}
-
-// ─── Categories tab ───────────────────────────────────
-function _renderMoCategorias(orderedCats, allProducts) {
-  const c = document.getElementById('mo-content');
-  if (!c) return;
-
-  c.innerHTML = `
-    <div class="info-banner" style="margin-bottom:14px">
-      <strong>Orden de categorías:</strong> Usá ▲ ▼ para ordenar cómo se muestran en el menú público. Las categorías ocultas no aparecen.
-    </div>
-    <div id="mo-cat-list" style="display:flex;flex-direction:column;gap:6px">
-      ${orderedCats.map((cat, i) => {
-        const hidden = MENU_CONFIG.hiddenCategories.includes(cat);
-        const count = allProducts.filter(p => p.category === cat && !MENU_CONFIG.hiddenProducts.includes(p.id)).length;
-        return `<div class="mo-cat-item" data-cat="${_esc(cat)}" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card,white);border:1px solid var(--border);border-radius:12px;${hidden ? 'opacity:0.5;' : ''}">
-          
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:14px;color:var(--ink)">${_esc(cat)}</div>
-            <div style="font-size:12px;color:var(--muted)">${count} producto${count !== 1 ? 's' : ''} visible${count !== 1 ? 's' : ''}</div>
-          </div>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer">
-            <input type="checkbox" ${!hidden ? 'checked' : ''} onchange="_moCatToggle('${_esc(cat)}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)">
-            Visible
-          </label>
-          <div style="display:flex;gap:4px">
-            <button class="btn" style="padding:4px 8px;font-size:14px" onclick="_moCatMove('${_esc(cat)}',-1)" ${i === 0 ? 'disabled' : ''}>▲</button>
-            <button class="btn" style="padding:4px 8px;font-size:14px" onclick="_moCatMove('${_esc(cat)}',1)" ${i === orderedCats.length - 1 ? 'disabled' : ''}>▼</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-    ${orderedCats.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--muted)">No hay categorías. Asigná categorías a tus productos desde Menú o Costo Receta.</div>' : ''}
-  `;
-}
-
+function _moToggleAll(show) { MENU_CONFIG.hiddenProducts = show ? [] : _moProducts().map(p => p.id); if (show) MENU_CONFIG.hiddenCategories = []; _moPersist(); }
 function _moCatToggle(cat, show) {
-  if (show) {
-    MENU_CONFIG.hiddenCategories = MENU_CONFIG.hiddenCategories.filter(x => x !== cat);
-  } else {
-    if (!MENU_CONFIG.hiddenCategories.includes(cat)) MENU_CONFIG.hiddenCategories.push(cat);
-  }
-  _saveMenuConfig();
-  renderMenuOnline();
+  const h = MENU_CONFIG.hiddenCategories.filter(x => x !== cat);
+  MENU_CONFIG.hiddenCategories = show ? h : [...h, cat]; _moPersist();
 }
-
 function _moCatMove(cat, direction) {
-  const cats = _getOrderedCategories(_getAllCategories(
-    (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : []
-  ));
-  const idx = cats.indexOf(cat);
-  if (idx < 0) return;
-  const newIdx = idx + direction;
-  if (newIdx < 0 || newIdx >= cats.length) return;
-  cats.splice(idx, 1);
-  cats.splice(newIdx, 0, cat);
-  MENU_CONFIG.categoryOrder = cats;
-  _saveMenuConfig();
-  renderMenuOnline();
+  const cats = _getOrderedCategories(_getAllCategories(_moProducts()));
+  const idx = cats.indexOf(cat); const to = idx + direction;
+  if (idx < 0 || to < 0 || to >= cats.length) return;
+  cats.splice(idx, 1); cats.splice(to, 0, cat); MENU_CONFIG.categoryOrder = cats; _moPersist();
+}
+function _moCatMoveTo(cat, target) {   // arrastrar y soltar: la categoría queda en el lugar de la de destino
+  const cats = _getOrderedCategories(_getAllCategories(_moProducts()));
+  const from = cats.indexOf(cat), to = cats.indexOf(target); if (from < 0 || to < 0 || from === to) return;
+  cats.splice(from, 1); cats.splice(to, 0, cat); MENU_CONFIG.categoryOrder = cats; _moPersist();
+}
+async function _moPublish() {
+  try {
+    const r = await SAHTEN.online.publish.publish();
+    if (r) { MENU_CONFIG.lastPublished = { at: new Date().toISOString(), hash: _moHash() }; _saveMenuConfig(); _moRefresh(); }
+  } catch (e) { alert('No se pudo publicar: ' + e.message); }
+}
+function _moPreview() { try { SAHTEN.online.publish.preview(); } catch (e) { alert('La vista previa no está disponible: ' + e.message); } }
+
+// Un solo juego de listeners para toda la pantalla (se re-dibuja seguido; no se acumulan)
+function _moBind(panel) {
+  if (_moUi.bound) return; _moUi.bound = true;
+  panel.addEventListener('click', e => {
+    const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove]'); if (!t || !panel.contains(t)) return;
+    if (t.dataset.mo === 'publish') _moPublish();
+    else if (t.dataset.mo === 'preview') _moPreview();
+    else if (t.dataset.mo === 'all-on') _moToggleAll(true);
+    else if (t.dataset.mo === 'all-off') _moToggleAll(false);
+    else if (t.dataset.mo === 'open-settings') { const d = document.getElementById('mo-settings'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); const i = d.querySelector('[data-mo-set=whatsappNumber]'); i && i.focus(); } }
+    else if (t.dataset.moFilter) { _moUi.filter = t.dataset.moFilter; _moRefresh(); }
+    else if (t.dataset.moCollapse) { const k = t.dataset.moCollapse; _moUi.collapsed[k] = !_moUi.collapsed[k]; _moRenderList(); }
+    else if (t.dataset.moCatmove) _moCatMove(t.dataset.cat, +t.dataset.moCatmove);
+  });
+  panel.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.moProd) _moToggleProduct(t.dataset.moProd, t.checked);
+    else if (t.dataset.moCat) _moCatToggle(t.dataset.moCat, t.checked);
+    else if (t.dataset.moCheck) { MENU_CONFIG[t.dataset.moCheck] = t.checked; _moPersist(); }
+  });
+  panel.addEventListener('input', e => {
+    const t = e.target;
+    if (t.id === 'mo-search') { _moUi.q = t.value; _moRenderList(); }
+    else if (t.dataset.moSet) { MENU_CONFIG[t.dataset.moSet] = t.value; _saveMenuConfig(); _moRenderStatus(); _moRenderPreview(); }
+  });
+  let dragged = null;
+  panel.addEventListener('dragstart', e => { const h = e.target.closest && e.target.closest('[data-drag-cat]'); if (!h) return; dragged = h.dataset.dragCat; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragged); } catch (x) { /* */ } });
+  panel.addEventListener('dragover', e => { const b = e.target.closest && e.target.closest('[data-cat-block]'); if (!b || dragged == null || !b.dataset.catBlock) return; e.preventDefault(); b.classList.add('dragover'); });
+  panel.addEventListener('dragleave', e => { const b = e.target.closest && e.target.closest('[data-cat-block]'); b && b.classList.remove('dragover'); });
+  panel.addEventListener('drop', e => { const b = e.target.closest && e.target.closest('[data-cat-block]'); if (!b || dragged == null) return; e.preventDefault(); const from = dragged; dragged = null; _moCatMoveTo(from, b.dataset.catBlock); });
+  panel.addEventListener('dragend', () => { dragged = null; panel.querySelectorAll('.dragover').forEach(x => x.classList.remove('dragover')); });
 }
 
-// ─── Config tab ───────────────────────────────────────
-function _renderMoConfig() {
-  const c = document.getElementById('mo-content');
-  if (!c) return;
-  setTimeout(() => { try { const el = document.getElementById('mo-publish-problems'); const pr = SAHTEN.online.publish.publishProblems(SAHTEN.online.publish.currentMenu()); if (el) el.innerHTML = pr.map(t => `<div class="info-banner" style="margin-bottom:10px;background:rgba(242,140,0,.1);border-color:rgba(242,140,0,.35)">⚠ ${_esc(t)}</div>`).join(''); } catch (e) {} }, 0);
-
-  c.innerHTML = `
-    <div class="card" style="padding:20px;margin-bottom:16px">
-      <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px">Configuración del menú público</div>
-      <div style="display:grid;gap:14px">
-        <div class="checkout-field">
-          <label>Título del menú</label>
-          <input type="text" class="custom-input" value="${_esc(MENU_CONFIG.title)}" oninput="MENU_CONFIG.title=this.value;_saveMenuConfig()">
-        </div>
-        <div class="checkout-field">
-          <label>Subtítulo</label>
-          <input type="text" class="custom-input" value="${_esc(MENU_CONFIG.subtitle)}" oninput="MENU_CONFIG.subtitle=this.value;_saveMenuConfig()">
-        </div>
-        <div class="checkout-field">
-          <label>Nota de delivery (aparece en el checkout)</label>
-          <textarea class="custom-input" rows="2" style="resize:vertical" oninput="MENU_CONFIG.deliveryNote=this.value;_saveMenuConfig()">${_esc(MENU_CONFIG.deliveryNote)}</textarea>
-        </div>
-        <div class="checkout-field">
-          <label>WhatsApp (para notificaciones de pedido)</label>
-          <input type="tel" class="custom-input" placeholder="+54 9 11 1234-5678" value="${_esc(MENU_CONFIG.whatsappNumber)}" oninput="MENU_CONFIG.whatsappNumber=this.value;_saveMenuConfig()">
-        </div>
-        <div style="display:flex;gap:20px;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-            <input type="checkbox" ${MENU_CONFIG.showPrices ? 'checked' : ''} onchange="MENU_CONFIG.showPrices=this.checked;_saveMenuConfig()" style="width:18px;height:18px;accent-color:var(--accent)">
-            Mostrar precios
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-            <input type="checkbox" ${MENU_CONFIG.showImages ? 'checked' : ''} onchange="MENU_CONFIG.showImages=this.checked;_saveMenuConfig()" style="width:18px;height:18px;accent-color:var(--accent)">
-            Mostrar imágenes
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-            <input type="checkbox" ${MENU_CONFIG.enabled ? 'checked' : ''} onchange="MENU_CONFIG.enabled=this.checked;_saveMenuConfig()" style="width:18px;height:18px;accent-color:var(--accent)">
-            Menú activo
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="padding:20px" id="mo-publish">
-      <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:10px">Publicar menú</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.55">
-        Genera una carpeta lista para subir a un hosting gratis (Cloudflare Pages, GitHub Pages o Netlify): <strong>index.html</strong>, <strong>menu.json</strong> y las imágenes optimizadas.
-        El pedido sale por <strong>WhatsApp</strong> con el detalle, el total, el envío calculado por zona y los datos del cliente. No lleva costos ni márgenes.
-      </div>
-      <div id="mo-publish-problems"></div>
-      <button class="btn btn-accent" onclick="SAHTEN.online.publish.publish().catch(e=>alert('No se pudo publicar: '+e.message))" style="padding:10px 20px;font-size:14px">📤 Publicar menú</button>
-      <button class="btn" onclick="SAHTEN.online.publish.preview()" style="padding:10px 20px;font-size:14px;margin-left:8px">👁 Vista previa</button>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px">Paso a paso para publicar: docs/PUBLICAR.md. Cada vez que cambies precios o productos, volvé a publicar.</div>
-    </div>
-  `;
-}
 
 // ─── Helpers ──────────────────────────────────────────
 
