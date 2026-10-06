@@ -1,0 +1,214 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-06T03:21:46.766Z",
+ "store": {
+  "name": "Pizzería La Esquina (ejemplo)",
+  "slug": "",
+  "whatsapp": "+54 9 11 5555-0123",
+  "address": "",
+  "lat": -34.6037,
+  "lng": -58.3816,
+  "currency": {
+   "symbol": "$",
+   "locale": "es-AR"
+  }
+ },
+ "config": {
+  "enabled": true,
+  "title": "Pizzería La Esquina",
+  "subtitle": "Pedí online y te lo preparamos",
+  "showPrices": true,
+  "showImages": true,
+  "deliveryNote": "",
+  "categories": [
+   "Bebidas",
+   "Empanadas",
+   "Pizzas"
+  ]
+ },
+ "products": [
+  {
+   "id": "pizza_muzza",
+   "name": "Pizza Muzzarella",
+   "category": "Pizzas",
+   "star": true,
+   "price": 9550,
+   "image": null,
+   "tags": [],
+   "description": "Clásica de muzzarella con aceitunas, masa de fermentación lenta."
+  },
+  {
+   "id": "pizza_napo",
+   "name": "Pizza Napolitana",
+   "category": "Pizzas",
+   "star": false,
+   "price": 9650,
+   "image": null,
+   "tags": [],
+   "description": "Muzzarella, rodajas de tomate fresco y albahaca."
+  },
+  {
+   "id": "pizza_fuga",
+   "name": "Pizza Fugazzeta",
+   "category": "Pizzas",
+   "star": true,
+   "price": 10800,
+   "image": null,
+   "tags": [],
+   "description": "Muzzarella y mucha cebolla caramelizada sobre masa gruesa."
+  },
+  {
+   "id": "pizza_jamon",
+   "name": "Pizza Jamón y Morrones",
+   "category": "Pizzas",
+   "star": false,
+   "price": 12800,
+   "image": null,
+   "tags": [],
+   "description": "Jamón cocido y morrones asados."
+  },
+  {
+   "id": "empanada_jyq",
+   "name": "Empanadas Jamón y Queso (x6)",
+   "category": "Empanadas",
+   "star": false,
+   "price": 8300,
+   "image": null,
+   "tags": [],
+   "description": "Media docena de empanadas de jamón y queso, al horno."
+  },
+  {
+   "id": "gaseosa",
+   "name": "Gaseosa 1,5 L",
+   "category": "Bebidas",
+   "star": false,
+   "price": 5250,
+   "image": null,
+   "tags": [],
+   "description": "Para acompañar: botella de 1,5 L."
+  }
+ ],
+ "site": {
+  "enabled": true,
+  "heroTitle": "Pizza de barrio, hecha al momento",
+  "heroSubtitle": "Masa de fermentación lenta, ingredientes frescos y delivery en el día.",
+  "ctaLabel": "Armá tu pedido",
+  "highlights": [
+   {
+    "icon": "🍕",
+    "title": "Masa de 48 horas",
+    "text": "Más liviana y crocante."
+   },
+   {
+    "icon": "🔥",
+    "title": "Al horno de piedra",
+    "text": "Siempre recién salida."
+   },
+   {
+    "icon": "🛵",
+    "title": "Delivery",
+    "text": "Envío gratis desde $45.000."
+   },
+   {
+    "icon": "🥟",
+    "title": "Empanadas",
+    "text": "Al horno, por media docena."
+   }
+  ],
+  "favoritesTitle": "Nuestros favoritos",
+  "aboutTitle": "Nuestra historia",
+  "aboutText": "La Esquina nació como un horno de barrio: una masa, una salsa y ganas de hacer bien las cosas.\n\nHoy seguimos con las mismas recetas y los mismos ingredientes frescos, cocinados al momento.",
+  "reviews": [
+   {
+    "text": "La masa es increíble y llegó caliente.",
+    "author": "Ana",
+    "source": "Google"
+   },
+   {
+    "text": "La fugazzeta es la mejor que probé.",
+    "author": "Martín",
+    "source": "Instagram"
+   },
+   {
+    "text": "Rápidos y muy amables.",
+    "author": "Lucía",
+    "source": "Google"
+   }
+  ],
+  "catering": {
+   "title": "Pizza para tus eventos",
+   "text": "Armamos tablas de pizza y empanadas para cumpleaños, reuniones y eventos de empresa.",
+   "zone": "Capital y zona norte",
+   "notice": "Mínimo 48 horas de anticipación"
+  },
+  "hours": "Lun a Jue: 18:00 a 22:00\nVie y Sáb: 18:00 a 23:30",
+  "instagram": "pizzeria_la_esquina_demo",
+  "faq": [
+   {
+    "q": "¿Cómo hago mi pedido?",
+    "a": "Armalo desde esta página y se envía por WhatsApp, o escribinos directo."
+   },
+   {
+    "q": "¿Puedo pedir para el mismo día?",
+    "a": "Sí, hasta una hora antes del cierre. Para eventos, con 48 horas."
+   },
+   {
+    "q": "¿Qué medios de pago aceptan?",
+    "a": "Efectivo y transferencia."
+   }
+  ]
+ },
+ "delivery": {
+  "lat": -34.6037,
+  "lng": -58.3816,
+  "zones": [
+   {
+    "id": "z1",
+    "name": "Zona A",
+    "type": "circle",
+    "radiusKm": 2,
+    "points": [],
+    "baseCost": 1500
+   },
+   {
+    "id": "z2",
+    "name": "Zona B",
+    "type": "circle",
+    "radiusKm": 4,
+    "points": [],
+    "baseCost": 3000
+   },
+   {
+    "id": "z3",
+    "name": "Zona C",
+    "type": "circle",
+    "radiusKm": 6,
+    "points": [],
+    "baseCost": 4500
+   }
+  ],
+  "freeShippingMin": 45000,
+  "deliveryMinOrder": 15000,
+  "costPerKm": 1500
+ },
+ "payments": {
+  "methods": {
+   "efectivo": true,
+   "transferencia": true,
+   "mercadopago": false,
+   "tarjeta": false
+  },
+  "bank": {
+   "bankName": "",
+   "accountHolder": "",
+   "cbu": "",
+   "alias": "",
+   "notes": ""
+  }
+ },
+ "supabase": null,
+ "theme": {
+  "primary": "#235328",
+  "accent": "#F28C00"
+ }
+}

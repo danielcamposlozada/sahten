@@ -130,6 +130,7 @@ function _moRenderStatus() {
     <span class="mo-st-dot" aria-hidden="true"></span>
     <div class="mo-st-main"><div class="mo-st-title">${title}</div><div class="mo-st-sub">${_esc(sub)}</div></div>
     <div class="mo-st-actions">
+      <button class="btn" data-mo="open-site">${_moSite().enabled ? 'Editar portada y secciones' : 'Activar portada y secciones'}</button>
       <button class="btn" data-mo="preview">Vista previa en pestaña</button>
       <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Publicar menú</button>
     </div>
@@ -275,6 +276,7 @@ function _moBind(panel) {
     else if (t.dataset.mo === 'preview') _moPreview();
     else if (t.dataset.mo === 'all-on') _moToggleAll(true);
     else if (t.dataset.mo === 'all-off') _moToggleAll(false);
+    else if (t.dataset.mo === 'open-site') { const d = document.getElementById('mo-site'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); const i = d.querySelector('input,textarea'); i && i.focus({ preventScroll: true }); } }
     else if (t.dataset.mo === 'open-settings') { const d = document.getElementById('mo-settings'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); const i = d.querySelector('[data-mo-set=whatsappNumber]'); i && i.focus(); } }
     else if (t.dataset.moFilter) { _moUi.filter = t.dataset.moFilter; _moRefresh(); }
     else if (t.dataset.moCollapse) { const k = t.dataset.moCollapse; _moUi.collapsed[k] = !_moUi.collapsed[k]; _moRenderList(); }
