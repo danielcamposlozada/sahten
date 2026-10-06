@@ -70,7 +70,7 @@ function renderMenuOnline() {
   panel.innerHTML = `
     <div class="mo">
       <div id="mo-status"></div>
-      <div class="mo-tabs" role="tablist"><button class="mo-tab ${_moUi.tab === 'menu' ? 'on' : ''}" role="tab" data-mo-tab="menu" aria-selected="${_moUi.tab === 'menu'}">🍽 Menú</button><button class="mo-tab ${_moUi.tab === 'site' ? 'on' : ''}" role="tab" data-mo-tab="site" aria-selected="${_moUi.tab === 'site'}">🌐 Sitio web</button></div>
+      <div class="mo-tabs" role="tablist"><button class="mo-tab ${_moUi.tab === 'menu' ? 'on' : ''}" role="tab" data-mo-tab="menu" aria-selected="${_moUi.tab === 'menu'}">Menú</button><button class="mo-tab ${_moUi.tab === 'site' ? 'on' : ''}" role="tab" data-mo-tab="site" aria-selected="${_moUi.tab === 'site'}">Sitio web</button></div>
       <div id="mo-tab-site" ${_moUi.tab === 'site' ? '' : 'hidden'}></div>
       <div class="mo-body" id="mo-tab-menu" ${_moUi.tab === 'menu' ? '' : 'hidden'}>
         <div class="mo-main">

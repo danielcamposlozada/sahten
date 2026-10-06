@@ -20,4 +20,4 @@
 .pj-dlg-t { font-weight: 800; font-size: 17px; margin-bottom: 10px; }
 .pj-dlg-p { font-size: 13.5px; line-height: 1.5; color: var(--ink); }
 .pj-dlg-b { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
-@media (max-width: 520px) { .pj-card { width: 130px; } .pj-av { width: 80px; height: 80px; font-size: 36px; } }
+@media (max-width: 520px) { .pj-box { padding: 28px 12px 20px; } .pj-title { font-size: 21px; margin-bottom: 18px; } .pj-grid { gap: 8px; } .pj-card { width: calc(50% - 8px); padding: 12px 4px; } .pj-av { width: 76px; height: 76px; font-size: 34px; } }
