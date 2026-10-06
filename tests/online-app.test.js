@@ -232,3 +232,28 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     expect(a.on.publish.currentMenu().site).toBeNull(); a.window.close();
   }, 60000);
 });
+
+describe('Menú Online (admin): reseñas de Google e importar/exportar contenido', () => {
+  let A; const $ = sel => A.window.document.querySelector(sel);
+  const open = async () => { A = await app(); await A.p.openDemo(); A.window.sahtenTour && A.window.sahtenTour.close(); A.ev("showPanel('menuonline'); renderMenuOnline(); _moTab('site'); _sbUi.open='resenas'; _sbRenderList();"); return A; };
+  it('trae las reseñas de Google con el ID y la clave del equipo, y quedan editables; los errores se explican', async () => {
+    await open(); const calls = [];
+    A.window.fetch = async (url, o) => { calls.push({ url, o }); return calls.length === 1 ? { ok: false, status: 403, json: async () => ({}) } : { ok: true, status: 200, json: async () => ({ rating: 4.7, userRatingCount: 88, reviews: [{ text: { text: 'Excelente' }, authorAttribution: { displayName: 'Ana' } }, { text: { text: 'Muy rico' }, authorAttribution: { displayName: 'Beto' } }] }) }; };
+    await A.window._sbGoogle(); expect($('#sb-google-msg').textContent).toMatch(/Completá/);                                  // sin ID ni clave
+    const set = (sel, v) => { const el = $(sel); el.value = v; el.dispatchEvent(new A.window.Event('input', { bubbles: true })); };
+    set('[data-sb="resenas.placeId"]', 'places/ChIJ-test'); set('[data-sb-gkey]', 'KEY123');
+    await A.window._sbGoogle(); expect($('#sb-google-msg').textContent).toMatch(/Google rechazó la clave/);
+    await A.window._sbGoogle(); expect(calls[1].url).toContain('/places/ChIJ-test'); expect(calls[1].o.headers['X-Goog-Api-Key']).toBe('KEY123');
+    const m = A.on.publish.currentMenu().site.resenas; expect(m.items.map(i => i.author)).toEqual(['Ana', 'Beto']); expect(m.lead).toBe('★ 4,7 · 88 reseñas en Google');
+    expect(A.ev('JSON.stringify(SAHTEN.project.collect())')).not.toContain('KEY123');                                          // la clave no viaja en el proyecto
+    expect(A.window.localStorage.getItem('sahten-google-key')).toBe('KEY123');
+    A.window.close();
+  }, 60000);
+  it('exportar e importar contenido entre proyectos', async () => {
+    await open(); const txt = A.window.SAHTEN_SITE.exportSiteContent(A.ev('MENU_CONFIG.site'));
+    A.ev("showConfirm = (t, x, cb) => cb();"); const file = new A.window.File([JSON.stringify({ format: 'sahten-sitio', version: 1, site: { faq: { on: true, title: 'FAQ nueva', items: [{ q: '¿P?', a: 'R' }] } } })], 'sitio.json');
+    A.window._sbImport(file); await wait(80);
+    expect(A.ev('MENU_CONFIG.site.faq.title')).toBe('FAQ nueva'); expect(A.ev('MENU_CONFIG.site.historia.title')).toBeTruthy();   // lo demás sigue
+    expect(JSON.parse(txt).format).toBe('sahten-sitio'); A.window.close();
+  }, 60000);
+});

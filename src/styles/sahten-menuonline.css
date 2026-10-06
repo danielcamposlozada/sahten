@@ -102,3 +102,7 @@
 .sb-frame { background: #e9e6df; border-radius: 16px; padding: 10px; display: flex; justify-content: center; }
 .sb-frame iframe { width: 100%; height: 76vh; min-height: 480px; border: 0; border-radius: 10px; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.15); transition: width .2s; }
 .sb-frame.mobile iframe { width: 390px; max-width: 100%; }
+
+.sb-file { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.sb-google { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--border); border-radius: 12px; background: var(--card, #fff); font-size: 12.5px; }
+.sb-google b { color: var(--ink); font-size: 13px; } .sb-google small { color: var(--muted); line-height: 1.45; } .sb-gmsg { font-size: 12.5px; color: var(--muted); }

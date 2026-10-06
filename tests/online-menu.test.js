@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
 import * as C from '../src/core/index.js';
 import { buildMenuJson, orderedCategories } from '../src/online/menuJson.js';
-import { normalizeSite, SITE_ORDER } from '../src/online/site.js';
+import { normalizeSite, SITE_ORDER, reviewsFromGoogle, normalizePlaceId, exportSiteContent, parseSiteContent, applySiteContent } from '../src/online/site.js';
 import { buildWaMessage, waUrl, normalizePhone } from '../src/online/orderMessage.js';
 import { buildPublishFiles, buildIndexHtml, dataUrlToBytes } from '../src/online/publish.js';
 import { createZip, crc32 } from '../src/online/zip.js';
@@ -302,5 +302,25 @@ describe('sitio web: módulos (secciones) junto al menú', () => {
     const x = st(); x.products[0].description = 'Con aceitunas'; const m = buildMenuJson(x, { menuConfig: { whatsappNumber: '+54 9 11 5555-0123' }, tienda: TIENDA, store: { name: 'Mi local' } });
     expect(m.products.find(p => p.id === x.products[0].id).description).toBe('Con aceitunas');
     const a = await web({ menu: m }); expect(a.d.querySelector('.desc').textContent).toBe('Con aceitunas');
+  });
+});
+
+describe('sitio web: reseñas de Google y contenido exportable', () => {
+  it('convierte la respuesta de Places API en reseñas editables (máx. 5) y un resumen', () => {
+    const place = { rating: 4.8, userRatingCount: 120, reviews: [1, 2, 3, 4, 5, 6].map(i => ({ rating: 5, text: { text: 'Muy rico ' + i }, authorAttribution: { displayName: 'Cliente ' + i } })).concat([{ rating: 5 }]) };
+    const r = reviewsFromGoogle(place);
+    expect(r.items).toHaveLength(5); expect(r.items[0]).toEqual({ text: 'Muy rico 1', author: 'Cliente 1', source: 'Google' }); expect(r.lead).toBe('★ 4,8 · 120 reseñas en Google');
+    expect(reviewsFromGoogle({}).items).toEqual([]); expect(normalizePlaceId(' places/ChIJ-abc_1 ')).toBe('ChIJ-abc_1');
+  });
+  it('exporta e importa el contenido: solo pisa las secciones que trae el archivo y valida el formato', () => {
+    const origen = normalizeSite({ enabled: true, historia: { on: true, title: 'Mi historia', text: 'Texto' }, faq: { on: true, items: [{ q: 'P', a: 'R' }] } });
+    const txt = exportSiteContent(origen); const parsed = parseSiteContent(txt);
+    expect(parsed.modules).toContain('historia');
+    const destino = normalizeSite({ enabled: false, hero: { on: true, title: 'Otra portada' } });
+    const r = applySiteContent(destino, parsed);
+    expect(r.historia.title).toBe('Mi historia'); expect(r.faq.items).toHaveLength(1); expect(r.enabled).toBe(false);
+    const parcial = parseSiteContent(JSON.stringify({ format: 'sahten-sitio', version: 1, site: { catering: { on: true, title: 'Eventos' } } }));
+    const r2 = applySiteContent(r, parcial); expect(r2.catering.title).toBe('Eventos'); expect(r2.historia.title).toBe('Mi historia');   // lo demás no se toca
+    expect(() => parseSiteContent('no json')).toThrow(/válido/); expect(() => parseSiteContent('{"a":1}')).toThrow(/contenido de sitio/);
   });
 });

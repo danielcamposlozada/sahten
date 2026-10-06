@@ -34,7 +34,7 @@ export function siteDefaults() {
       { title: 'Disfrutalo', text: 'Lo preparamos al momento y te lo llevamos o lo retirás en el local.' }] },
     historia: { on: false, eyebrow: 'Nuestra historia', title: '', text: '', badgeWord: '', badgeMeaning: '', badgeQuote: '' },
     banda: { on: false, text: '' },
-    resenas: { on: false, title: 'Lo que dicen nuestros clientes', lead: '', items: [] },
+    resenas: { on: false, title: 'Lo que dicen nuestros clientes', lead: '', placeId: '', items: [] },
     catering: { on: false, eyebrow: 'Catering y eventos', title: '', text: '', cta: 'Consultar por WhatsApp', info: [] },
     delivery: { on: true, title: 'Delivery y retiro', hours: '', extra: '' },
     faq: { on: false, title: 'Preguntas frecuentes', items: [] },
@@ -85,4 +85,43 @@ export function buildSite(raw, images = {}) {
     items: list(s.faq.items, SITE_LIMITS.faq, f => { const q = txt(f && f.q, 140), a = txt(f && f.a, 500); return q && a ? { q, a } : null; }) };
   if (on('contacto')) out.contacto = { instagram: txt(s.contacto.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''), note: txt(s.contacto.note, 200) };
   return out;
+}
+
+// ── Reseñas de Google ─────────────────────────────────────
+/** Id de lugar a partir de lo que pegue el dueño («ChIJ…» o «places/ChIJ…»). */
+export const normalizePlaceId = v => String(v || '').trim().replace(/^places\//i, '').replace(/[^A-Za-z0-9_-]/g, '');
+
+/** Respuesta de Places API (New) → { lead, items } para la sección Reseñas. Máximo 5: es lo que entrega Google. */
+export function reviewsFromGoogle(place, max = 5) {
+  const p = place || {};
+  const items = (Array.isArray(p.reviews) ? p.reviews : []).map(r => {
+    const text = txt(r && ((r.text && r.text.text) || (r.originalText && r.originalText.text)), 300);
+    return text ? { text, author: txt(r.authorAttribution && r.authorAttribution.displayName, 50), source: 'Google' } : null;
+  }).filter(Boolean).slice(0, max);
+  const rating = Number(p.rating), n = Number(p.userRatingCount);
+  const lead = rating > 0 ? `★ ${rating.toFixed(1).replace('.', ',')}${n > 0 ? ` · ${n} reseñas` : ''} en Google` : '';
+  return { lead, items };
+}
+
+// ── Exportar / importar el contenido del sitio (entre proyectos o como respaldo) ──
+export const SITE_FILE_FORMAT = 'sahten-sitio';
+export function exportSiteContent(site) {
+  const s = normalizeSite(site); const out = { format: SITE_FILE_FORMAT, version: 1, site: { order: s.order } };
+  for (const m of SITE_MODULES) out.site[m.id] = s[m.id];
+  return JSON.stringify(out, null, 1);
+}
+/** Lee un archivo de contenido. Devuelve { modules: [ids presentes], site } para aplicar con applySiteContent. */
+export function parseSiteContent(text) {
+  let o; try { o = JSON.parse(text); } catch (e) { throw new Error('Ese archivo no es válido.'); }
+  if (!o || o.format !== SITE_FORMAT_CHECK || !isObj(o.site)) throw new Error('Ese archivo no es un contenido de sitio de Sahten.');
+  const modules = SITE_ORDER.filter(id => isObj(o.site[id]));
+  return { modules, site: o.site };
+}
+const SITE_FORMAT_CHECK = SITE_FILE_FORMAT;
+/** Pisa solo las secciones que trae el archivo (y el orden, si lo trae). No toca el interruptor general ni las fotos. */
+export function applySiteContent(current, parsed) {
+  const s = normalizeSite(current);
+  for (const id of parsed.modules) s[id] = { ...s[id], ...parsed.site[id] };
+  if (Array.isArray(parsed.site.order)) s.order = parsed.site.order;
+  return normalizeSite(s);
 }
