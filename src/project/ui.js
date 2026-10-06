@@ -44,7 +44,7 @@ function renderMenu() {
 
 // ── Pantalla de proyectos (tipo perfiles) y bienvenida de la primera vez ──────────────
 const AV_COLORS = [[18, 55, 32], [28, 80, 42], [205, 55, 40], [340, 50, 42], [265, 40, 46], [165, 45, 33], [8, 62, 44], [45, 70, 40]];
-function avatarStyle(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; const [a, s, l] = AV_COLORS[h % AV_COLORS.length]; return `background:hsl(${a} ${s}% ${l}%)`; }
+function avatarStyle(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h = (h ^ (h >>> 13)) >>> 0; const [a, s, l] = AV_COLORS[h % AV_COLORS.length]; return `background:hsl(${a} ${s}% ${l}%)`; }
 function when(iso) {
   const t = new Date(iso); if (isNaN(t)) return '';
   const days = Math.floor((Date.now() - t.getTime()) / 86400000);
