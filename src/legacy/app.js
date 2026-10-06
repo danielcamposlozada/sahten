@@ -3589,50 +3589,52 @@ function addTier(){if(TIERS.filter(t=>t.id.startsWith('TC')).length>=4) return a
 // ═══════════════════════════════════════════════════════
 // UNIFIED AJUSTES TABS (lightweight — no content moving)
 // ═══════════════════════════════════════════════════════
+// Tres grupos con sus pestañas: Negocio (cómo vendés y cobrás) · Proyecto (el archivo y sus datos) · Esta app (versión y ayuda)
+const AJ_GROUPS = [
+  { id: 'negocio', label: 'Negocio', tabs: [
+    { id: 'personal', label: 'Marca y apariencia', panel: 'personalizacion' },
+    { id: 'canales', label: 'Canales de venta', panel: 'canales' },
+    { id: 'tiers', label: 'Niveles de ganancia', panel: 'ajustes' },
+    { id: 'tienda', label: 'Tienda online y delivery', panel: 'ajustes' } ] },
+  { id: 'proyecto', label: 'Proyecto', tabs: [
+    { id: 'archivo', label: 'Archivo y proyectos', panel: 'ajustes' },
+    { id: 'respaldos', label: 'Respaldos e importación', panel: 'ajustes' },
+    { id: 'datos', label: 'Zona peligrosa', panel: 'ajustes' } ] },
+  { id: 'app', label: 'Esta app', tabs: [
+    { id: 'app', label: 'Versión y actualizaciones', panel: 'ajustes' },
+    { id: 'ayuda', label: 'Ayuda y tour', panel: 'ajustes' } ] },
+];
+const AJ_TABS = AJ_GROUPS.flatMap(g => g.tabs.map(t => ({ ...t, group: g.id })));
+const AJ_ALIAS = { backup: 'archivo' };   // nombres viejos guardados en el navegador
+const _ajTab = id => AJ_TABS.find(t => t.id === (AJ_ALIAS[id] || id)) || AJ_TABS[0];
+
 function _renderAjustesTabs(activeTab) {
-  // Tab definitions: id → panel name for showPanel
-  const tabs = [
-    {id:'personal', label:'🎨 Personalización', panel:'personalizacion'},
-    {id:'canales', label:'🏪 Canales', panel:'canales'},
-    {id:'tienda', label:'🛒 Tienda Online', panel:'ajustes'},
-    {id:'tiers', label:'📊 Tiers', panel:'ajustes'},
-    {id:'backup', label:'💾 Archivo y respaldo', panel:'ajustes'},
-    {id:'datos', label:'⚠️ Datos', panel:'ajustes'},
-  ];
-  const tabBarHTML = '<div class="rep-tabs" style="margin-bottom:18px">' +
-    tabs.map(t => `<button class="rep-tab ${t.id===activeTab?'active':''}" onclick="_ajNavTab('${t.id}')">${t.label}</button>`).join('') +
-    '</div>';
+  const act = _ajTab(activeTab); const grp = AJ_GROUPS.find(g => g.id === act.group);
+  const bar = document.createElement('div');
+  bar.className = 'aj-injected-tabs';
+  bar.innerHTML = '<div class="aj-nav">' +
+    '<div class="aj-groups" role="tablist" aria-label="Ajustes">' + AJ_GROUPS.map(g => `<button class="aj-group ${g.id===grp.id?'on':''}" role="tab" aria-selected="${g.id===grp.id}" onclick="_ajNavTab('${(window._ajLast && window._ajLast[g.id]) || g.tabs[0].id}')">${g.label}</button>`).join('') + '</div>' +
+    '<div class="rep-tabs aj-subtabs">' + grp.tabs.map(t => `<button class="rep-tab ${t.id===act.id?'active':''}" onclick="_ajNavTab('${t.id}')">${t.label}</button>`).join('') + '</div></div>';
 
-  // Inject tab bar at top of the CURRENT active panel
-  const panelName = tabs.find(t=>t.id===activeTab)?.panel || 'ajustes';
-  const panel = document.getElementById('panel-' + panelName);
+  // Inyectar la barra arriba del panel activo (quitando la de los demás paneles de ajustes)
+  const panel = document.getElementById('panel-' + act.panel);
   if (!panel) return;
-
-  // Remove any existing injected tab bar from ALL ajustes-related panels
   ['ajustes','canales','personalizacion'].forEach(pn => {
     const p = document.getElementById('panel-' + pn);
     if (p) { const old = p.querySelector('.aj-injected-tabs'); if (old) old.remove(); }
   });
-
-  // Insert tab bar
-  const bar = document.createElement('div');
-  bar.className = 'aj-injected-tabs';
-  bar.innerHTML = tabBarHTML;
   panel.insertBefore(bar, panel.firstChild);
 
-  // For ajustes panel: toggle sub-tab content visibility
-  if (panelName === 'ajustes') {
-    ['tiers','backup','datos','tienda'].forEach(tid => {
-      const el = document.getElementById('aj-tab-' + tid);
-      if (el) el.style.display = (tid === activeTab) ? '' : 'none';
+  // Panel «ajustes»: mostrar solo el contenido de la pestaña activa
+  if (act.panel === 'ajustes') {
+    AJ_TABS.filter(t => t.panel === 'ajustes').forEach(t => {
+      const el = document.getElementById('aj-tab-' + t.id);
+      if (el) el.style.display = (t.id === act.id) ? '' : 'none';
     });
   }
 
-  // Override page title
   const titleEl = document.getElementById('page-title');
   if (titleEl) titleEl.textContent = 'Ajustes';
-
-  // Highlight ajustes nav item
   document.querySelectorAll('.nav-item').forEach(n => {
     const onclick = n.getAttribute('onclick') || '';
     n.classList.toggle('active', onclick.includes("'ajustes'"));
@@ -3640,23 +3642,18 @@ function _renderAjustesTabs(activeTab) {
 }
 
 function _ajNavTab(tabId) {
-  const tabMap = {personal:'personalizacion', canales:'canales', tienda:'ajustes', tiers:'ajustes', backup:'ajustes', datos:'ajustes'};
-  const targetPanel = tabMap[tabId] || 'ajustes';
-
-  // Save tab state
+  const t = _ajTab(tabId); tabId = t.id;
+  window._ajLast = Object.assign(window._ajLast || {}, { [t.group]: tabId });
   if (typeof _saveTabState === 'function') _saveTabState('ajustes', tabId);
 
-  // Navigate to the target panel (without recursion)
+  // Ir al panel de la pestaña (sin recursión) y dibujar la barra con la pestaña activa
   window._ajSkipTabs = true;
-  showPanel(targetPanel);
+  showPanel(t.panel);
   window._ajSkipTabs = false;
-
-  // Then render tabs with correct active state
   _renderAjustesTabs(tabId);
 
-  // Trigger specific renders
   if (tabId === 'tienda' && typeof _renderTiendaOnline === 'function') _renderTiendaOnline();
-  if (tabId === 'backup' && SAHTEN.projectUi) SAHTEN.projectUi.renderBackupPanel();
+  if (['archivo','respaldos','app','ayuda'].includes(tabId) && SAHTEN.projectUi) SAHTEN.projectUi.renderBackupPanel();
   if (tabId === 'tiers') renderTiers();
   if (tabId === 'canales') renderChannels();
   if (tabId === 'personal' && typeof renderCustPanel === 'function') setTimeout(renderCustPanel, 100);

@@ -30,7 +30,7 @@ export function publishProblems(menu) {
   const out = [];
   if (!menu.products.length) out.push('No hay productos para publicar. Revisá cuáles están visibles en Productos y Categorías.');
   if (!menu.store.whatsapp) out.push('Falta el número de WhatsApp: sin eso los clientes no pueden mandar el pedido (Configuración).');
-  if (!menu.delivery.zones.length) out.push('No hay zonas de delivery cargadas: el menú solo va a permitir retiro en el local (Ajustes › Tienda Online).');
+  if (!menu.delivery.zones.length) out.push('No hay zonas de delivery cargadas: el menú solo va a permitir retiro en el local (Ajustes › Negocio › Tienda online y delivery).');
   return out;
 }
 

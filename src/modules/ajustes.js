@@ -6,8 +6,8 @@ const skipTabs = () => !!window._ajSkipTabs;
 export function register() {
   onPanelShow('ajustes', () => {
     if (skipTabs()) return;
-    if (typeof window._ajNavTab === 'function') window._ajNavTab(window._getSavedTab('ajustes', 'tiers'));
-    else { window._renderAjustesTabs('tiers'); window.renderTiers(); }
+    if (typeof window._ajNavTab === 'function') window._ajNavTab(window._getSavedTab('ajustes', 'personal'));
+    else { window._renderAjustesTabs('personal'); }
   });
   onPanelShow('canales', () => {
     if (skipTabs()) return;

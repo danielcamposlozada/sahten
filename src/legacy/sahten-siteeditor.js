@@ -18,9 +18,9 @@ const _SB_FIELDS = {
   resenas: [['text', 'title', 'Título'], ['text', 'lead', 'Bajada', 'Ej: ★★★★★ en Google'], ['google'], ['list', 'items', 'Reseñas (hasta 9)', { add: 'Agregar reseña', max: 9, fields: [['text', 'Lo que dijo el cliente', 'area'], ['author', 'Nombre'], ['source', 'Dónde (Google, Instagram…)']] }]],
   catering: [['text', 'eyebrow', 'Etiqueta chica'], ['text', 'title', 'Título'], ['area', 'text', 'Descripción', 4], ['text', 'cta', 'Texto del botón (abre WhatsApp)'],
     ['list', 'info', 'Datos (hasta 4)', { add: 'Agregar dato', max: 4, fields: [['label', 'Dato (ej. Zona)', 'sm'], ['value', 'Valor']] }]],
-  delivery: [['text', 'title', 'Título'], ['area', 'hours', 'Horarios', 3], ['text', 'extra', 'Aclaración (opcional)'], ['note', 'Las zonas, el pedido mínimo y el envío gratis salen de Ajustes › Tienda Online.']],
+  delivery: [['text', 'title', 'Título'], ['area', 'hours', 'Horarios', 3], ['text', 'extra', 'Aclaración (opcional)'], ['note', 'Las zonas, el pedido mínimo y el envío gratis salen de Ajustes › Negocio › Tienda online y delivery.']],
   faq: [['text', 'title', 'Título'], ['list', 'items', 'Preguntas (hasta 12)', { add: 'Agregar pregunta', max: 12, fields: [['q', 'Pregunta'], ['a', 'Respuesta', 'area']] }]],
-  contacto: [['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Tienda Online y de Menú › Ajustes.']],
+  contacto: [['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Negocio › Tienda online y delivery y de Menú › Ajustes.']],
 };
 const _SB_ANCHOR = { hero: 's-hero', favoritos: 's-fav', menu: 's-menuhd', como: 's-how', historia: 's-about', resenas: 's-reviews', catering: 's-catering', delivery: 's-delivery', faq: 's-faq', contacto: 's-contact' };
 

@@ -2265,3 +2265,12 @@
   .kpi-value { font-size: 16px; }
   .btn { padding: 8px 12px; font-size: 12px; }
 }
+
+/* Ajustes: grupos (Negocio · Proyecto · Esta app) con sus pestañas */
+.aj-nav { margin-bottom: 18px; }
+.aj-groups { display: inline-flex; gap: 4px; padding: 4px; background: var(--sand2, #ece6db); border-radius: 12px; margin-bottom: 12px; }
+.aj-group { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 13.5px; padding: 8px 18px; border-radius: 9px; cursor: pointer; }
+.aj-group.on { background: var(--card, #fff); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.aj-group:focus-visible { outline: 2px solid var(--accent, #F28C00); outline-offset: 1px; }
+.aj-subtabs { margin-bottom: 0 !important; }
+@media (max-width: 600px) { .aj-groups { display: flex; } .aj-group { flex: 1; padding: 8px 6px; } }

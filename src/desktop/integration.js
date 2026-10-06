@@ -13,6 +13,7 @@ const HOUR = 3600 * 1000;
 export function installDesktop({ apis, project, config, w = window, now = () => Date.now() }) {
   const { dialog, fs, opener, updater, process: proc, event, core, path } = apis;
   const toast = m => (typeof w._posToast === 'function' ? w._posToast(m) : null);
+  let pending = null;   // versión nueva encontrada
   const api = {
     apis,
 
@@ -36,17 +37,29 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
       } catch (e) { w.alert('No se pudo abrir el archivo: ' + (e && e.message || e)); }
     },
 
+    /** Busca una versión nueva. En silencio (al abrir la app) deja un aviso en las notificaciones; a pedido, pregunta en el momento. */
     async checkForUpdates({ silent = false } = {}) {
       try {
         const update = await updater.check();
         config.set('last-update-check', now());
-        if (!update) { if (!silent) toast('Estás usando la última versión.'); return null; }
-        w.showConfirm('Nueva versión ' + update.version, 'Hay una versión nueva de Sahten. ¿Instalarla ahora? La app se reinicia y tus proyectos no se tocan.' + (update.body ? '\n\n' + update.body : ''), async () => {
-          try { toast('Descargando la actualización…'); await update.downloadAndInstall(); await proc.relaunch(); }
-          catch (e) { w.alert('No se pudo actualizar: ' + (e && e.message || e)); }
-        }, null, 'Actualizar', 'Más tarde');
+        if (!update) { pending = null; try { w.dropNotifications && w.dropNotifications('update:'); } catch (e) { /* */ } if (!silent) toast('Estás usando la última versión.'); return null; }
+        pending = update;
+        if (silent) {
+          if (w.pushNotification) w.pushNotification({ type: 'update', scope: 'app', key: 'update:' + update.version, source: 'sistema', title: 'Nueva versión ' + update.version + ' disponible',
+            body: 'Instalala cuando quieras: la app se reinicia y tus proyectos no se tocan.', action: { label: 'Actualizar ahora', call: 'update' } });
+          return update;
+        }
+        w.showConfirm('Nueva versión ' + update.version, 'Hay una versión nueva de Sahten. ¿Instalarla ahora? La app se reinicia y tus proyectos no se tocan.' + (update.body ? '\n\n' + update.body : ''), () => api.installUpdate(), null, 'Actualizar', 'Más tarde');
         return update;
       } catch (e) { if (!silent) w.alert('No se pudo buscar actualizaciones (¿hay internet?).'); return null; }
+    },
+    /** Descarga e instala la versión encontrada (la guarda antes) y reinicia la app. */
+    async installUpdate() {
+      try {
+        const update = pending || await updater.check(); if (!update) { toast('Estás usando la última versión.'); return null; }
+        try { if (project.session && project.session.isOpen) await project.session.saveNow({ force: true }); } catch (e) { /* se guarda solo igual */ }
+        toast('Descargando la actualización…'); await update.downloadAndInstall(); await proc.relaunch(); return update;
+      } catch (e) { w.alert('No se pudo actualizar: ' + (e && e.message || e)); return null; }
     },
 
     /** Carpeta del menú publicado: elegir carpeta y escribir index.html, menu.json e img/. */

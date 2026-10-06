@@ -5,7 +5,7 @@ export function sahtenAsk(message, defaultValue = '', { multiline = false, confi
   return new Promise(resolve => {
     const d = document;
     const ov = d.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:20000;background:rgba(10,20,12,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:30000;background:rgba(10,20,12,.55);display:flex;align-items:center;justify-content:center;padding:16px';
     const box = d.createElement('div');
     box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
     box.style.cssText = 'background:var(--card,#fff);color:var(--ink,#1e2c1f);border-radius:16px;width:100%;max-width:440px;padding:20px 22px;box-shadow:0 24px 80px rgba(0,0,0,.35);font-family:inherit';

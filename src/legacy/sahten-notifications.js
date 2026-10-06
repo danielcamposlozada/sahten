@@ -6,11 +6,18 @@
 const NOTIF_KEY = 'sahten_notifications';
 let _notifDrawerOpen = false;
 
+// Dos listas: las del PROYECTO (pedidos, errores; viajan en el archivo y cambian con el proyecto) y las de la APP
+// (scope:'app', por ejemplo «hay una versión nueva»: no dependen del proyecto abierto y no se guardan en él).
+const APP_NOTIF_KEY = 'sahten-app-notifs';
+function _readList(key) { try { const l = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(l) ? l : []; } catch(e) { return []; } }
 function _loadNotifications() {
-  try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]'); } catch(e) { return []; }
+  return _readList(NOTIF_KEY).concat(_readList(APP_NOTIF_KEY)).sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
 }
 function _saveNotifications(list) {
-  localStorage.setItem(NOTIF_KEY, JSON.stringify(list));
+  try {
+    localStorage.setItem(NOTIF_KEY, JSON.stringify(list.filter(n => n.scope !== 'app')));
+    localStorage.setItem(APP_NOTIF_KEY, JSON.stringify(list.filter(n => n.scope === 'app')));
+  } catch(e) { /* sin almacenamiento */ }
 }
 
 // ─── Add notification ────────────────────────────────
@@ -23,9 +30,13 @@ function pushNotification(opts) {
     body: opts.body || '',
     source: opts.source || 'sistema',
     timestamp: new Date().toISOString(),
-    read: false
+    read: false,
+    ...(opts.scope === 'app' ? { scope: 'app' } : {}),
+    ...(opts.key ? { key: opts.key } : {}),
+    ...(opts.action ? { action: opts.action } : {})   // { label, call }: botón dentro de la notificación
   };
   const list = _loadNotifications();
+  if (notif.key && list.some(n => n.key === notif.key)) return list.find(n => n.key === notif.key);   // el mismo aviso no se repite
   list.unshift(notif);
   if (list.length > 50) list.splice(50);
   _saveNotifications(list);
@@ -217,8 +228,8 @@ function openNotifDrawer() {
     border-left:1px solid ${borderC};
   `;
 
-  const icons = { order:'🛒', delivery:'🛵', error:'⚠️', info:'ℹ️', success:'✅' };
-  const colors = { order:'#235328', delivery:'#F28C00', error:'#e04040', info:'#3b82f6', success:'#27ae60' };
+  const icons = { order:'🛒', delivery:'🛵', error:'⚠️', info:'ℹ️', success:'✅', update:'⬆️' };
+  const colors = { order:'#235328', delivery:'#F28C00', error:'#e04040', info:'#3b82f6', success:'#27ae60', update:'#7c3aed' };
 
   drawer.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid ${borderC}">
@@ -252,6 +263,7 @@ function openNotifDrawer() {
                 <button onclick="deleteNotification('${n.id}')" style="background:none;border:none;font-size:14px;color:var(--muted,#ccc);cursor:pointer;padding:0;flex-shrink:0">✕</button>
               </div>
               <div style="font-size:12px;color:var(--muted,#7a8a7c);margin-top:2px;line-height:1.4">${_escNotif(n.body)}</div>
+              ${n.action ? `<button onclick="notifAction('${n.id}')" style="margin-top:8px;padding:7px 14px;border:0;border-radius:9px;background:${colors[n.type]||colors.info};color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">${_escNotif(n.action.label)}</button>` : ''}
               <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
                 <span style="font-size:10px;padding:2px 7px;border-radius:5px;background:${colors[n.type]||colors.info}12;color:${colors[n.type]||colors.info};font-weight:600;text-transform:uppercase;letter-spacing:0.3px">${_escNotif(n.source)}</span>
                 <span style="font-size:10px;color:var(--muted,#aaa)">${date} · ${time}</span>
@@ -283,6 +295,18 @@ function clearAllNotifications() {
   closeNotifDrawer();
   if (window._posToast) _posToast('Notificaciones limpiadas');
 }
+
+// Botón de una notificación: hoy solo «update» (instalar la versión nueva, app de escritorio)
+function notifAction(id) {
+  const n = _loadNotifications().find(x => x.id === id); if (!n || !n.action) return;
+  if (n.action.call === 'update' && window.SAHTEN && window.SAHTEN.desktop && window.SAHTEN.desktop.installUpdate) { closeNotifDrawer(); window.SAHTEN.desktop.installUpdate(); }
+}
+// Quita avisos por prefijo de clave (por ejemplo los de «versión nueva» cuando ya se actualizó)
+function dropNotifications(prefix) {
+  const list = _loadNotifications(); const keep = list.filter(n => !(n.key && n.key.startsWith(prefix)));
+  if (keep.length !== list.length) { _saveNotifications(keep); _updateBellBadge(); }
+}
+window.notifAction = notifAction; window.dropNotifications = dropNotifications;
 
 function deleteNotification(id) {
   const list = _loadNotifications().filter(n => n.id !== id);

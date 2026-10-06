@@ -6,7 +6,7 @@ el total, el envío calculado según la zona y sus datos. No hace falta servidor
 ## 1. Generar la carpeta
 
 1. En Sahten: **Menú Online › Configuración**. Cargá tu número de **WhatsApp** (con código de país) y revisá qué productos y categorías se muestran.
-2. En **Ajustes › Tienda Online** dejá cargada la dirección del local, las **zonas de delivery**, el envío gratis desde cierto monto y los medios de pago.
+2. En **Ajustes › Negocio › Tienda online y delivery** dejá cargada la dirección del local, las **zonas de delivery**, el envío gratis desde cierto monto y los medios de pago.
 3. **Menú Online › Configuración › Publicar menú**.
    - En Chrome/Edge te pide elegir una carpeta y escribe los archivos ahí.
    - En otros navegadores descarga un `.zip`: descomprimilo.
@@ -69,7 +69,7 @@ apagar**, **mover** (arrastrando ⋮⋮ o con ▲▼) y **editar**; a la derecha
 | Cinta de texto | una franja con tu lema que se desplaza |
 | Reseñas | hasta 9 |
 | Catering y eventos | texto y datos de cobertura (zona, anticipación…) |
-| Delivery y retiro | horarios; zonas, mínimo y envío gratis salen de Ajustes › Tienda Online |
+| Delivery y retiro | horarios; zonas, mínimo y envío gratis salen de Ajustes › Negocio › Tienda online y delivery |
 | Preguntas frecuentes | hasta 12 |
 | Contacto y pie | dirección, WhatsApp, Instagram |
 

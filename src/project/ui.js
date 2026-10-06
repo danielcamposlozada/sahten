@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Interfaz del proyecto: menú de archivo, indicador de guardado, bienvenida y Ajustes › Archivo y respaldo
+// Interfaz del proyecto: menú de archivo, indicador de guardado, bienvenida y Ajustes › Proyecto y Esta app
 // ═══════════════════════════════════════════════════════════
 import { project } from './app.js';
 import { ago, indicatorText } from './indicator.js';
@@ -122,13 +122,13 @@ function askRemove(id, name) {
     const r = e.target.closest('[data-r]'); if (!r && e.target !== m) return; const k = r && r.dataset.r;
     if (!k || k === 'cancel') return m.remove();
     let opts = {};
+    m.remove();   // se cierra ANTES de pedir el nombre: si no, quedaba delante y tapaba el cuadro de escribir
     if (k === 'file') {
       const typed = await w.sahtenAsk(`Para borrar el archivo escribí el nombre del proyecto:\n${name}`, '', { confirmLabel: 'Borrar' });
-      if (typed == null) return;
-      if (typed.trim().toLowerCase() !== String(name).trim().toLowerCase()) return w.alert('El nombre no coincide: no se borró nada.');
+      if (typed == null) return askRemove(id, name);
+      if (typed.trim().toLowerCase() !== String(name).trim().toLowerCase()) { w.alert('El nombre no coincide: no se borró nada.'); return askRemove(id, name); }
       opts = { deleteFile: true };
     }
-    m.remove();
     await project.removeProject(id, opts);
     showProjects({ manage: true });
   });
@@ -144,14 +144,15 @@ export async function startup() {
 }
 const closeWelcome = () => d.getElementById('proj-welcome')?.remove();
 
-// ── Ajustes › Archivo y respaldo ─────────────────────────
+// ── Ajustes › Proyecto · Esta app ─────────────────────────
+/** Ajustes › Proyecto y Esta app: cada pestaña (archivo, respaldos, app, ayuda) tiene su contenedor. */
 export async function renderBackupPanel() {
-  const host = d.getElementById('aj-tab-backup'); if (!host) return;
-  const i = session.info();
-  if (i.status === 'closed') { host.innerHTML = '<div class="card"><div class="card-body">Abrí un proyecto para ver sus respaldos.</div></div>'; return; }
-  const b = await session.backups(); const loc = project.location();
+  const el = id => d.getElementById(id);
+  const i = session.info(); const closed = i.status === 'closed';
+  const noProject = '<div class="card"><div class="card-body">Abrí un proyecto para ver esto.</div></div>';
+  const b = closed ? null : await session.backups(); const loc = project.location();
   const when = k => k ? new Date(k).toLocaleDateString('es-AR') : '';
-  host.innerHTML = `
+  if (el('aj-tab-archivo')) el('aj-tab-archivo').innerHTML = closed ? noProject : `
     <div class="card" style="margin-top:0"><div class="card-header"><div class="card-title">💾 Archivo del proyecto</div></div><div class="card-body">
       <div class="backup-row"><div><div class="backup-row-title">${esc(i.name)}</div>
         <div class="backup-row-desc">${i.hasFile ? 'Se guarda solo en el archivo a los 2 segundos de cada cambio.' : 'Todavía no tiene archivo en disco: elegí dónde guardarlo con «Cambiar ubicación…».'} ${i.savedAt ? 'Último guardado: ' + i.savedAt.toLocaleString('es-AR') + '.' : ''}</div></div>
@@ -162,14 +163,8 @@ export async function renderBackupPanel() {
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">${loc.desktop && i.path ? '<button class="btn" onclick="SAHTEN.projectUi.run(\'reveal\')">Mostrar en carpeta</button>' : ''}<button class="btn" onclick="SAHTEN.projectUi.run('changeLocation')">Cambiar ubicación…</button></div></div>
       ${loc.desktop ? `<div class="backup-divider"></div><div class="backup-row"><div><div class="backup-row-title">Carpeta de proyectos</div><div class="backup-row-desc">Donde se proponen los proyectos nuevos. Los respaldos quedan junto a cada proyecto.<br><span id="proj-dir" style="font-family:'DM Mono',monospace;font-size:12px;word-break:break-all">${esc(loc.projectsDir || 'Sin definir')}</span></div></div><button class="btn" onclick="SAHTEN.projectUi.run('chooseDir')">Cambiar carpeta…</button></div>` : ''}
     </div></div>
-    <div class="card"><div class="card-header"><div class="card-title">📥 Importar datos</div></div><div class="card-body">
-      <div class="backup-row"><div><div class="backup-row-title">Importar una copia de seguridad (.json) como proyecto nuevo</div><div class="backup-row-desc">Para recuperar un negocio de Sahten v2/v3. Se convierte al formato .sahten y elegís dónde guardarlo; el proyecto actual no se toca.</div></div><button class="btn" onclick="SAHTEN.projectUi.run('importJson')">Importar .json…</button></div>
-      <div class="backup-divider"></div>
-      <div class="backup-row"><div><div class="backup-row-title">Reemplazar los datos de este proyecto</div><div class="backup-row-desc">Carga el contenido de otro archivo (.json o .sahten) dentro de este proyecto, que conserva su archivo y su lugar. Antes se guarda un respaldo para deshacerlo.</div></div><button class="btn" onclick="SAHTEN.projectUi.run('replace')">Reemplazar…</button></div>
-    </div></div>
-    <div class="card"><div class="card-header"><div class="card-title">📁 Proyectos</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Cambiar o eliminar proyectos</div><div class="backup-row-desc">Ver todos tus negocios, abrir otro o eliminar los que ya no uses (podés quitarlos de la lista o borrar también el archivo).</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" onclick="SAHTEN.projectUi.showProjects()">Cambiar de proyecto</button><button class="btn" onclick="SAHTEN.projectUi.showProjects({manage:true})">Administrar</button></div></div></div></div>
-    <div class="card"><div class="card-header"><div class="card-title">🧭 Tour guiado</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Recorrido por la app</div><div class="backup-row-desc">Te explica en un minuto qué hace cada sección y cómo se conectan. Podés verlo cuando quieras, con tus datos o con el ejemplo.</div></div><button class="btn" onclick="sahtenTour.start()">Ver el tour</button></div></div></div>
-    ${w.SAHTEN.desktop ? `<div class="card"><div class="card-header"><div class="card-title">⬆ Actualizaciones</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Buscar una versión nueva</div><div class="backup-row-desc">Sahten se actualiza desde las versiones publicadas en GitHub. Tus proyectos no se tocan.</div></div><button class="btn" onclick="SAHTEN.desktop.checkForUpdates()">Buscar actualizaciones</button></div></div></div>` : ''}
+    <div class="card"><div class="card-header"><div class="card-title">📁 Proyectos</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Cambiar o eliminar proyectos</div><div class="backup-row-desc">Ver todos tus negocios, abrir otro o eliminar los que ya no uses (podés quitarlos de la lista o borrar también el archivo).</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" onclick="SAHTEN.projectUi.showProjects()">Cambiar de proyecto</button><button class="btn" onclick="SAHTEN.projectUi.showProjects({manage:true})">Administrar</button></div></div></div></div>`;
+  if (el('aj-tab-respaldos')) el('aj-tab-respaldos').innerHTML = closed ? noProject : `
     <div class="card"><div class="card-header"><div class="card-title">🛟 Respaldos</div></div><div class="card-body">
       <div class="backup-row"><div><div class="backup-row-title">Respaldo de ayer</div>
         <div class="backup-row-desc">${b.daily ? 'Copia automática del ' + b.daily.date + ' (se hace al abrir el proyecto por primera vez en el día; se guarda en la misma carpeta que el proyecto y se conservan las de los últimos 14 días).' : 'Todavía no hay una copia diaria.'}</div></div>
@@ -179,7 +174,21 @@ export async function renderBackupPanel() {
         <div class="backup-row-desc">${b.preStrategy ? 'Hay una copia de cómo estaba el proyecto antes de aplicar la última estrategia o importar datos.' : 'No hay estrategias para deshacer.'}</div></div>
         <button class="btn" ${b.preStrategy ? '' : 'disabled'} onclick="SAHTEN.projectUi.restore('preStrategy')">Deshacer última estrategia</button></div>
       ${b.preRestore ? `<div class="backup-divider"></div><div class="backup-row"><div><div class="backup-row-title">Antes de la última restauración</div><div class="backup-row-desc">Si restauraste algo y te arrepentís, acá está lo que tenías.</div></div><button class="btn" onclick="SAHTEN.projectUi.restore('preRestore')">Volver a eso</button></div>` : ''}
+    </div></div>
+    <div class="card"><div class="card-header"><div class="card-title">📥 Importar datos</div></div><div class="card-body">
+      <div class="backup-row"><div><div class="backup-row-title">Importar una copia de seguridad (.json) como proyecto nuevo</div><div class="backup-row-desc">Para recuperar un negocio de Sahten v2/v3. Se convierte al formato .sahten y elegís dónde guardarlo; el proyecto actual no se toca.</div></div><button class="btn" onclick="SAHTEN.projectUi.run('importJson')">Importar .json…</button></div>
+      <div class="backup-divider"></div>
+      <div class="backup-row"><div><div class="backup-row-title">Reemplazar los datos de este proyecto</div><div class="backup-row-desc">Carga el contenido de otro archivo (.json o .sahten) dentro de este proyecto, que conserva su archivo y su lugar. Antes se guarda un respaldo para deshacerlo.</div></div><button class="btn" onclick="SAHTEN.projectUi.run('replace')">Reemplazar…</button></div>
     </div></div>`;
+  if (el('aj-tab-app')) el('aj-tab-app').innerHTML = `
+    <div class="card" style="margin-top:0"><div class="card-header"><div class="card-title">Sahten</div></div><div class="card-body">
+      <div class="backup-row"><div><div class="backup-row-title">Versión ${esc(w.SAHTEN_VERSION || '')}</div><div class="backup-row-desc">${w.SAHTEN.desktop ? 'App de escritorio. Al abrirla busca versiones nuevas y, si hay una, te avisa en las notificaciones 🔔.' : 'Estás usando la versión web: siempre es la última publicada.'}</div></div></div>
+      ${w.SAHTEN.desktop ? `<div class="backup-divider"></div><div class="backup-row"><div><div class="backup-row-title">Buscar una versión nueva</div><div class="backup-row-desc">Sahten se actualiza desde las versiones publicadas en GitHub. Tus proyectos no se tocan.</div></div><button class="btn" onclick="SAHTEN.desktop.checkForUpdates()">Buscar actualizaciones</button></div>` : ''}
+      <div class="backup-divider"></div><div class="backup-row"><div><div class="backup-row-title">Licencia y código</div><div class="backup-row-desc">Software libre bajo licencia AGPL-3.0. El código y las versiones están en GitHub.</div></div><a class="btn" href="https://github.com/danielcamposlozada/sahten" target="_blank" rel="noopener">Ver en GitHub</a></div>
+    </div></div>`;
+  if (el('aj-tab-ayuda')) el('aj-tab-ayuda').innerHTML = `
+    <div class="card"><div class="card-header"><div class="card-title">🧭 Tour guiado</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Recorrido por la app</div><div class="backup-row-desc">Te explica en un minuto qué hace cada sección y cómo se conectan. Podés verlo cuando quieras, con tus datos o con el ejemplo.</div></div><button class="btn" onclick="sahtenTour.start()">Ver el tour</button></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">💬 ¿Algo no funciona?</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Contanos qué pasó</div><div class="backup-row-desc">Si encontrás un error o tenés una idea, dejala en GitHub (hace falta una cuenta gratis). Incluí qué estabas haciendo y la versión de la app.</div></div><a class="btn" href="https://github.com/danielcamposlozada/sahten/issues" target="_blank" rel="noopener">Reportar un problema</a></div></div></div>`;
 }
 
 const LABEL = { daily: 'Restaurar respaldo de ayer', preStrategy: 'Deshacer última estrategia', preRestore: 'Volver a lo anterior a la restauración' };
@@ -218,7 +227,7 @@ export function mountProjectUi() {
     d.addEventListener('click', e => { const m = d.getElementById('workspace-menu'); if (m && m.classList.contains('open') && !wrap.contains(e.target)) m.classList.remove('open'); });
   }
   renderMenu(); paintIndicator();
-  session.onChange(() => { paintIndicator(); renderMenu(); if (d.getElementById('aj-tab-backup')?.offsetParent) renderBackupPanel(); });
+  session.onChange(() => { paintIndicator(); renderMenu(); if (d.getElementById('panel-ajustes')?.offsetParent) renderBackupPanel(); });
   setInterval(paintIndicator, 1000);
   w.addEventListener('beforeunload', e => { if (session.isDirty()) { e.preventDefault(); e.returnValue = ''; } });
   d.addEventListener('visibilitychange', () => { if (d.visibilityState === 'hidden' && session.info().status === 'dirty' && session.info().canAutosave) session.saveNow().catch(() => {}); });

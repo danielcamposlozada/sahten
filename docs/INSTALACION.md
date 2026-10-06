@@ -40,7 +40,7 @@ Firmar las apps cuesta dinero (Apple) o es un trámite (Windows). Sahten viene *
 
 ## Actualizaciones automáticas
 
-La app busca versiones nuevas al abrir (como mucho una vez por día) y en **Ajustes › Archivo y respaldo › Buscar actualizaciones**. Pregunta antes de instalar y
+La app busca versiones nuevas al abrir (como mucho una vez por día) y en **Ajustes › Esta app › Buscar actualizaciones** (y, al abrir la app, un aviso en las notificaciones 🔔). Pregunta antes de instalar y
 se reinicia; los proyectos no se tocan. Las actualizaciones vienen de GitHub Releases y **van firmadas** (clave propia, distinta de la firma de Apple/Windows).
 
 ### Dejarlo listo en tu repositorio (una sola vez)
@@ -82,9 +82,9 @@ En navegadores sin acceso a archivos (Safari, Firefox) se guarda descargando el 
 
 ## ¿Dónde se guardan mis proyectos?
 
-- **Escritorio**: en la carpeta que elijas al crear/guardar. Por defecto se propone `Documentos/Sahten`. Se cambia en Ajustes › Archivo y respaldo › «Carpeta de proyectos». Los respaldos automáticos están al lado del archivo, ocultos (`.<nombre>.backup-AAAA-MM-DD.sahten`).
+- **Escritorio**: en la carpeta que elijas al crear/guardar. Por defecto se propone `Documentos/Sahten`. Se cambia en Ajustes › Proyecto › Archivo y proyectos › «Carpeta de proyectos». Los respaldos automáticos están al lado del archivo, ocultos (`.<nombre>.backup-AAAA-MM-DD.sahten`).
 - **Navegador (Chrome/Edge)**: en el archivo que elijas; respaldos en el almacenamiento del navegador.
-- Para ver o mover un proyecto: Ajustes › Archivo y respaldo › «Dónde está guardado» (Mostrar en carpeta / Cambiar ubicación).
+- Para ver o mover un proyecto: Ajustes › Proyecto › Archivo y proyectos › «Dónde está guardado» (Mostrar en carpeta / Cambiar ubicación).
 
 ## Recuperar datos de un `.json` antiguo
 

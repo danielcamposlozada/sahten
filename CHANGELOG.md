@@ -1,5 +1,11 @@
 # Changelog
 
+## Sin publicar
+
+- **Corrección al eliminar proyectos**: al elegir «Borrar el archivo…», el cuadro para escribir el nombre quedaba detrás del anterior y la pantalla se oscurecía sin poder continuar.
+- **Actualizaciones en las notificaciones 🔔**: al abrir la app de escritorio, si hay una versión nueva queda un aviso con el botón «Actualizar ahora» (ya no interrumpe con un cuadro). Los avisos de la app no dependen del proyecto abierto.
+- **Ajustes reorganizado** en tres grupos: **Negocio** (marca y apariencia, canales, niveles de ganancia, tienda online y delivery), **Proyecto** (archivo y proyectos, respaldos e importación, zona peligrosa) y **Esta app** (versión y actualizaciones, ayuda y tour).
+
 ## 0.4.3
 
 - **Sitio web por módulos** (Menú Online › Sitio web): portada, favoritos, menú, cómo funciona, historia, cinta de texto, reseñas, catering, delivery, preguntas frecuentes y contacto. Cada sección se enciende, se mueve y se edita, con vista previa real al lado y fotos para portada e historia. Página publicada rediseñada. Descripción corta por producto.

@@ -217,6 +217,16 @@ describe('integración con el sistema', () => {
     const c = apis(); c.updater.check = async () => { throw new Error('offline'); }; const pg = page();
     expect(await installDesktop({ apis: c, project: {}, config: createMemoryConfig(), w: pg.w }).checkForUpdates({ silent: true })).toBeNull(); expect(pg.w.__alerts).toBeUndefined();
   });
+  it('actualizaciones al abrir la app: dejan un aviso en las notificaciones (una sola vez), con botón para instalar; sin novedades limpia el aviso', async () => {
+    const { w } = page(); const pushed = [], dropped = []; w.pushNotification = n => { pushed.push(n); }; w.dropNotifications = p => { dropped.push(p); };
+    const installs = []; const a = apis({ update: { version: '4.2.0', downloadAndInstall: async () => { installs.push(1); } } });
+    const d = installDesktop({ apis: a, project: {}, config: createMemoryConfig(), w, now: () => 1e12 });
+    await d.checkForUpdates({ silent: true });
+    expect(w.__confirm).toBeUndefined();                                                                    // no interrumpe con un cuadro
+    expect(pushed).toHaveLength(1); expect(pushed[0]).toMatchObject({ type: 'update', scope: 'app', key: 'update:4.2.0', action: { call: 'update' } }); expect(pushed[0].title).toMatch(/4\.2\.0/);
+    await d.installUpdate(); expect(installs).toEqual([1]); expect(a.process.relaunched).toBe(1);               // el botón de la notificación instala y reinicia
+    const none = installDesktop({ apis: apis(), project: {}, config: createMemoryConfig(), w }); await none.checkForUpdates({ silent: true }); expect(dropped).toContain('update:');
+  });
   it('carpeta del menú publicado y vista previa', async () => {
     const { w } = page(); const a = apis({ dialog: { open: 'C:\\Menu' } });
     const d = installDesktop({ apis: a, project: {}, config: createMemoryConfig(), w });

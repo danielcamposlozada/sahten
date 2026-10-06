@@ -144,12 +144,12 @@ describe('el proyecto es un archivo', () => {
     a.window.close();
   }, 60000);
 
-  it('Ajustes › Archivo y respaldo se dibuja con los respaldos disponibles', async () => {
+  it('Ajustes › Proyecto › Respaldos e importación se dibuja con los respaldos disponibles', async () => {
     const disk = {}; const a = await app(disk);
     await a.p.openDemo(); a.mem.queueSaveAs('R.sahten'); await a.s.saveAs();
     await a.s.backupBeforeStrategy();
     await a.window.SAHTEN.projectUi.renderBackupPanel();
-    const html = a.window.document.getElementById('aj-tab-backup').innerHTML;
+    const html = a.window.document.getElementById('aj-tab-respaldos').innerHTML;
     expect(html).toMatch(/Restaurar respaldo de ayer/);
     expect(html).toMatch(/Deshacer última estrategia/);
     expect(html).not.toMatch(/Backup completo/);
@@ -247,13 +247,13 @@ describe('abrir un .json de versiones anteriores y dónde se guarda', () => {
     await a.s.saveNow(); expect(JSON.parse(disk['Mio.sahten']).catalog.productos).toHaveLength(legacy.PRODUCTS.length);
     a.window.close();
   }, 60000);
-  it('Ajustes › Archivo y respaldo muestra dónde está el archivo y las opciones de importar', async () => {
+  it('Ajustes › Proyecto: «Archivo y proyectos» muestra dónde está el archivo; «Respaldos e importación» trae importar', async () => {
     const disk = {}; const a = await app(disk);
     await a.p.openDemo(); a.mem.queueSaveAs('Mi local.sahten'); await a.s.saveAs();
     await a.window.SAHTEN.projectUi.renderBackupPanel();
-    const html = a.window.document.getElementById('aj-tab-backup').innerHTML;
-    expect(html).toMatch(/Dónde está guardado/); expect(html).toMatch(/Mi local\.sahten/); expect(html).toMatch(/Cambiar ubicación/);
-    expect(html).toMatch(/Importar una copia de seguridad/); expect(html).toMatch(/Reemplazar los datos de este proyecto/);
+    const html = a.window.document.getElementById('aj-tab-archivo').innerHTML, rsp = a.window.document.getElementById('aj-tab-respaldos').innerHTML;
+    expect(html).toMatch(/Dónde está guardado/); expect(html).toMatch(/Mi local\.sahten/); expect(html).toMatch(/Cambiar ubicación/); expect(html).not.toMatch(/Importar una copia/);
+    expect(rsp).toMatch(/Importar una copia de seguridad/); expect(rsp).toMatch(/Reemplazar los datos de este proyecto/);
     a.window.close();
   }, 60000);
   it('el indicador «Sin guardar» se puede tocar para guardar', async () => {
@@ -299,7 +299,7 @@ describe('demo de la pizzería y tour guiado', () => {
     d.querySelector('[data-t=next]').click(); expect(d.querySelector('[role=dialog][aria-label="Tour guiado"]').textContent).toMatch(/Paso 2/);
     d.querySelector('[data-t=skip]').click(); expect(a.window.sahtenTour.isOpen()).toBe(false);
     await a.window.SAHTEN.projectUi.renderBackupPanel();
-    const btn = Array.from(d.querySelectorAll('#aj-tab-backup button')).find(b => /Ver el tour/.test(b.textContent)); expect(btn).toBeTruthy();
+    const btn = Array.from(d.querySelectorAll('#aj-tab-ayuda button')).find(b => /Ver el tour/.test(b.textContent)); expect(btn).toBeTruthy();
     btn.click(); expect(a.window.sahtenTour.isOpen()).toBe(true);
     for (let i = 0; i < 20 && a.window.sahtenTour.isOpen(); i++) d.querySelector('[data-t=next]').click();
     expect(a.window.sahtenTour.isOpen()).toBe(false); expect(a.window.sahtenTour.seen()).toBe(true);
@@ -369,10 +369,44 @@ describe('proyectos: entrar al último, pantalla tipo perfiles y eliminar', () =
     expect(a.disk['Café Centro.sahten']).toBeUndefined(); expect(a.s.recents()).toEqual([]); expect(a.s.info().status).toBe('closed'); expect(a.ev('PRODUCTS.length')).toBe(0);
     a.window.close();
   }, 60000);
-  it('el menú trae «Cambiar de proyecto…» y Ajustes › Archivo y respaldo la opción de administrar', async () => {
+  it('el menú trae «Cambiar de proyecto…» y Ajustes › Proyecto › Archivo y proyectos la opción de administrar', async () => {
     const a = await app({}); await crear(a, 'Pizzería Norte');
     expect(doc(a).getElementById('workspace-menu').textContent).toMatch(/Cambiar de proyecto/);
-    await a.window.SAHTEN.projectUi.renderBackupPanel(); expect(doc(a).getElementById('aj-tab-backup').textContent).toMatch(/Administrar/);
+    await a.window.SAHTEN.projectUi.renderBackupPanel(); expect(doc(a).getElementById('aj-tab-archivo').textContent).toMatch(/Administrar/);
     a.window.SAHTEN.projectUi.showProjects({ manage: true }); expect(doc(a).querySelectorAll('.pj-del').length).toBe(1); a.window.close();
+  }, 60000);
+});
+
+describe('notificaciones de la app (no del proyecto)', () => {
+  it('un aviso de la app sobrevive al cambiar de proyecto, no viaja en el archivo y no se repite', async () => {
+    const a = await app({}); const w = a.window;
+    w.pushNotification({ type: 'update', scope: 'app', key: 'update:9.9.9', title: 'Nueva versión 9.9.9', action: { label: 'Actualizar ahora', call: 'update' } });
+    w.pushNotification({ type: 'update', scope: 'app', key: 'update:9.9.9', title: 'repetida' });
+    w.pushNotification({ type: 'info', title: 'Del proyecto' });
+    expect(a.ev('_loadNotifications().filter(n=>n.key==="update:9.9.9").length')).toBe(1);
+    await a.p.openDemo();                                                                              // al abrir otro proyecto se limpian las del proyecto…
+    const titles = Array.from(a.ev('_loadNotifications().map(n=>n.title)')); expect(titles).toContain('Nueva versión 9.9.9'); expect(titles).not.toContain('Del proyecto');   // …no las de la app
+    expect(JSON.stringify(a.p.collect().notifications || [])).not.toContain('9.9.9');
+    a.ev('openNotifDrawer()'); expect(w.document.getElementById('notif-drawer').textContent).toMatch(/Actualizar ahora/);
+    w.dropNotifications('update:'); expect(a.ev('_loadNotifications().filter(n=>n.scope==="app").length')).toBe(0); w.close();
+  }, 60000);
+});
+
+describe('Ajustes: tres grupos con sus pestañas', () => {
+  it('Negocio · Proyecto · Esta app; cada pestaña muestra solo lo suyo y el grupo recuerda la última pestaña', async () => {
+    const a = await app({}); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close(); const d = a.window.document;
+    a.ev("showPanel('ajustes')");
+    const groups = () => Array.from(d.querySelectorAll('.aj-injected-tabs .aj-group')).map(b => b.textContent);
+    expect(groups()).toEqual(['Negocio', 'Proyecto', 'Esta app']);
+    expect(Array.from(d.querySelectorAll('.aj-injected-tabs .aj-subtabs .rep-tab')).map(b => b.textContent)).toEqual(['Marca y apariencia', 'Canales de venta', 'Niveles de ganancia', 'Tienda online y delivery']);   // abre en Negocio
+    a.ev("_ajNavTab('respaldos')"); await wait(80);
+    expect(d.querySelector('.aj-group.on').textContent).toBe('Proyecto'); expect(d.getElementById('aj-tab-respaldos').style.display).toBe(''); expect(d.getElementById('aj-tab-archivo').style.display).toBe('none');
+    expect(d.getElementById('aj-tab-respaldos').textContent).toMatch(/Respaldo de ayer/);
+    a.ev("_ajNavTab('app')"); await wait(80); expect(d.getElementById('aj-tab-app').textContent).toMatch(/Versión 0\.4/); expect(d.getElementById('aj-tab-app').textContent).toMatch(/AGPL/);
+    a.ev("_ajNavTab('datos')"); expect(d.querySelector('#aj-tab-datos').textContent).toMatch(/Eliminar un proyecto/);
+    a.ev("_ajNavTab('backup')"); await wait(80); expect(d.querySelector('.aj-group.on').textContent).toBe('Proyecto'); expect(d.getElementById('aj-tab-archivo').style.display).toBe('');                  // nombre viejo guardado → Archivo
+    // al volver a un grupo vuelve a su última pestaña
+    a.ev("_ajNavTab('tiers')"); a.ev("_ajNavTab('respaldos')"); const negocio = d.querySelectorAll('.aj-injected-tabs .aj-group')[0]; expect(negocio.getAttribute('onclick')).toContain("'tiers'");
+    a.window.close();
   }, 60000);
 });

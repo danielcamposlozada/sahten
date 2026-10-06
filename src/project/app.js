@@ -142,8 +142,8 @@ export const project = {
       const lines = describeDiff(summarizeDiff(collect(), other.file));
       const el = w.document.getElementById('confirm-text'); if (el) el.style.whiteSpace = 'pre-line';
       return await new Promise(resolve => w.showConfirm('Reemplazar los datos de este proyecto',
-        'Se reemplaza TODO el contenido de «' + session.name + '» por el de «' + r.name + '». Antes se guarda un respaldo para deshacerlo (Ajustes › Archivo y respaldo).\n\nCambios:\n' + lines.join('\n'),
-        async () => { try { await session.replaceWith(r.text); toast('Datos reemplazados · podés deshacerlo desde Ajustes › Archivo y respaldo'); resolve(true); } catch (e) { fail(e); resolve(false); } },
+        'Se reemplaza TODO el contenido de «' + session.name + '» por el de «' + r.name + '». Antes se guarda un respaldo para deshacerlo (Ajustes › Proyecto › Respaldos e importación).\n\nCambios:\n' + lines.join('\n'),
+        async () => { try { await session.replaceWith(r.text); toast('Datos reemplazados · podés deshacerlo desde Ajustes › Proyecto › Respaldos e importación'); resolve(true); } catch (e) { fail(e); resolve(false); } },
         () => resolve(false), 'Reemplazar', 'Cancelar'));
     } catch (e) { fail(e); }
   },

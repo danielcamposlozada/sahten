@@ -1,5 +1,5 @@
 // Tour guiado: recorre las secciones con un recuadro que resalta el menú y explica qué hace cada una.
-// Se abre solo en el proyecto de ejemplo y se puede repetir cuando quieras: Ajustes › Archivo y respaldo › «Tour guiado».
+// Se abre solo en el proyecto de ejemplo y se puede repetir cuando quieras: Ajustes › Esta app › Ayuda y tour.
 // Los textos están juntos acá para poder traducirlos (i18n) sin tocar la lógica.
 export const TOUR_STEPS = [
   { panel: 'dashboard', title: 'Bienvenido a Sahten', text: 'Este es el resumen de tu negocio: precios promedio, márgenes y gastos fijos. Te muestro en 1 minuto cómo se conecta todo. Podés salir cuando quieras.' },
@@ -13,7 +13,7 @@ export const TOUR_STEPS = [
   { panel: 'proyeccion', title: '8 · Proyección', text: 'Simulá un mes: unidades, reparto por canal (mostrador, delivery, apps), ganancia y punto de equilibrio.' },
   { panel: 'mostrador', title: '9 · Mostrador', text: 'Cargás pedidos de retiro o delivery. Las órdenes alimentan los reportes.' },
   { panel: 'menuonline', title: '10 · Menú online', text: 'Tu carta para compartir con clientes, con pedido por WhatsApp. Opcional y sin costo.' },
-  { panel: 'ajustes', title: 'Listo. Tu turno', text: 'Para empezar con tu negocio: Archivo › Nuevo proyecto. Este tour queda siempre disponible en Ajustes › Archivo y respaldo › «Tour guiado».' },
+  { panel: 'ajustes', title: 'Listo. Tu turno', text: 'Para empezar con tu negocio: Archivo › Nuevo proyecto. Este tour queda siempre disponible en Ajustes › Esta app › Ayuda y tour.' },
 ];
 
 const KEY = 'sahten-tour';

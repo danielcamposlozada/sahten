@@ -71,5 +71,5 @@ Se guardan por proyecto (carpeta del `id`) con estos nombres; en escritorio van 
 | `.<nombre>.pre-estrategia.sahten` | antes de aplicar una estrategia o importar una proyección | solo el último |
 | `.<nombre>.pre-restauracion.sahten` | antes de restaurar un respaldo | solo el último |
 
-En **Ajustes › Archivo y respaldo**: «Restaurar respaldo de ayer» y «Deshacer última estrategia», con un resumen de diferencias (precios, costos y
+En **Ajustes › Proyecto › Respaldos e importación**: «Restaurar respaldo de ayer» y «Deshacer última estrategia», con un resumen de diferencias (precios, costos y
 gastos fijos) antes de confirmar. Restaurar escribe el respaldo **tal cual**: aplicar una estrategia y deshacerla deja el archivo idéntico, byte a byte.

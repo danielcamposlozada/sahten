@@ -822,10 +822,11 @@
           <div class="card"><div class="card-header"><div class="card-title">Tiers de ajuste</div></div><div class="card-body"><div class="tier-grid" id="tier-grid"></div><button class="add-tier-btn" onclick="addTier()">+ Agregar tier personalizado</button></div></div>
         </div>
 
-        <!-- TAB: BACKUP -->
-        <div id="aj-tab-backup" class="aj-tab-panel" style="display:none">
-        <!-- se dibuja desde src/project/ui.js (renderBackupPanel) -->
-        </div><!-- /aj-tab-backup -->
+        <!-- Proyecto y Esta app: se dibujan desde src/project/ui.js (renderBackupPanel) -->
+        <div id="aj-tab-archivo" class="aj-tab-panel" style="display:none"></div>
+        <div id="aj-tab-respaldos" class="aj-tab-panel" style="display:none"></div>
+        <div id="aj-tab-app" class="aj-tab-panel" style="display:none"></div>
+        <div id="aj-tab-ayuda" class="aj-tab-panel" style="display:none"></div>
 
         <!-- TAB: DATOS (Zona peligrosa) -->
         <div id="aj-tab-datos" class="aj-tab-panel" style="display:none">
@@ -839,7 +840,7 @@
           <div class="card-body">
             <div class="danger-row">
               <div>
-                <div class="danger-row-title">Eliminar toda la información</div>
+                <div class="danger-row-title">Borrar todos los datos de este proyecto</div>
                 <div class="danger-row-desc">
                   Borra <strong>todos los productos del menú, recetas, envases, gastos fijos, descuentos, proyecciones guardadas y unidades manuales</strong>.
                   La aplicación queda vacía y lista desde cero. Los canales, tiers y la personalización se conservan.
@@ -850,6 +851,13 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 Borrar todo
               </button>
+            </div>
+            <div class="danger-row" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px">
+              <div>
+                <div class="danger-row-title">Eliminar un proyecto</div>
+                <div class="danger-row-desc">Quitalo de tu lista o borrá también su archivo del disco. Elegís cuál en la pantalla de proyectos.</div>
+              </div>
+              <button class="btn btn-danger" onclick="SAHTEN.projectUi.showProjects({manage:true})">Administrar proyectos</button>
             </div>
           </div>
         </div>
