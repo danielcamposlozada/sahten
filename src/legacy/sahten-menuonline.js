@@ -15,17 +15,12 @@ function _menuConfigDefaults() {
     showImages: true,
     whatsappNumber: '',
     deliveryNote: '',
-    site: _menuSiteDefaults(),
+    site: SAHTEN_SITE.siteDefaults(),
   };
 }
-// Portada y secciones del sitio publicado (opcional: apagado, se publica solo el menú)
-function _menuSiteDefaults() {
-  return { enabled: false, heroTitle: '', heroSubtitle: '', ctaLabel: 'Armá tu pedido', highlights: [], favoritesTitle: 'Nuestros favoritos', aboutTitle: '', aboutText: '', hours: '', instagram: '', reviews: [], catering: { enabled: false, title: '', text: '', zone: '', notice: '' }, faq: [] };
-}
-window._menuConfigDefaults = _menuConfigDefaults;
 function _loadMenuConfig() {
   const defaults = _menuConfigDefaults();
-  try { const r = localStorage.getItem('sahten_menu_config'); if (r) { const c = {...defaults, ...JSON.parse(r)}; c.site = {..._menuSiteDefaults(), ...(c.site || {})}; c.site.catering = {..._menuSiteDefaults().catering, ...(c.site.catering || {})}; ['hiddenProducts','hiddenCategories','categoryOrder'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; }); return c; } } catch (e) {}
+  try { const r = localStorage.getItem('sahten_menu_config'); if (r) { const c = {...defaults, ...JSON.parse(r)}; c.site = SAHTEN_SITE.normalizeSite(c.site); ['hiddenProducts','hiddenCategories','categoryOrder'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; }); return c; } } catch (e) {}
   return defaults;
 }
 function _saveMenuConfig() {
@@ -37,13 +32,15 @@ let MENU_CONFIG = _loadMenuConfig();
 // ═══════════════════════════════════════════════════════════
 // MENÚ ONLINE — una sola pantalla: estado de publicación, lista por categoría y vista previa en vivo
 // ═══════════════════════════════════════════════════════════
-const _moUi = { q: '', filter: 'all', collapsed: {}, desc: {}, bound: false };
-
-function _moSite() {
-  const d = _menuSiteDefaults(); const c = MENU_CONFIG.site = { ...d, ...(MENU_CONFIG.site || {}) }; c.catering = { ...d.catering, ...(c.catering || {}) };
-  ['highlights', 'reviews', 'faq'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; });
-  return c;
+const _moUi = { q: '', filter: 'all', collapsed: {}, desc: {}, tab: 'menu', bound: false };
+function _moTab(tab) {
+  _moUi.tab = tab;
+  document.querySelectorAll('.mo-tab').forEach(b => { const on = b.dataset.moTab === tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  const a = document.getElementById('mo-tab-menu'), b = document.getElementById('mo-tab-site'); if (a) a.hidden = tab !== 'menu'; if (b) b.hidden = tab !== 'site';
+  if (tab === 'site') _sbRender(); else _moRefresh();
 }
+
+function _moSite() { return (MENU_CONFIG.site = SAHTEN_SITE.normalizeSite(MENU_CONFIG.site)); }
 function _moProducts() { return (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly && p.name) : []; }
 function _moIsHiddenCat(cat) { return !!cat && MENU_CONFIG.hiddenCategories.includes(cat); }
 function _moIsVisible(p) { return !MENU_CONFIG.hiddenProducts.includes(p.id) && !_moIsHiddenCat(p.category); }
@@ -73,7 +70,9 @@ function renderMenuOnline() {
   panel.innerHTML = `
     <div class="mo">
       <div id="mo-status"></div>
-      <div class="mo-body">
+      <div class="mo-tabs" role="tablist"><button class="mo-tab ${_moUi.tab === 'menu' ? 'on' : ''}" role="tab" data-mo-tab="menu" aria-selected="${_moUi.tab === 'menu'}">🍽 Menú</button><button class="mo-tab ${_moUi.tab === 'site' ? 'on' : ''}" role="tab" data-mo-tab="site" aria-selected="${_moUi.tab === 'site'}">🌐 Sitio web</button></div>
+      <div id="mo-tab-site" ${_moUi.tab === 'site' ? '' : 'hidden'}></div>
+      <div class="mo-body" id="mo-tab-menu" ${_moUi.tab === 'menu' ? '' : 'hidden'}>
         <div class="mo-main">
           <div class="mo-toolbar">
             <div class="mo-search">
@@ -100,14 +99,13 @@ function renderMenuOnline() {
               <div style="font-size:11.5px;color:var(--muted)">Publicar paso a paso: docs/PUBLICAR.md. El pedido sale por WhatsApp con el precio de Mostrador; no lleva costos ni márgenes.</div>
             </div>
           </details>
-          <details class="mo-settings" id="mo-site"><summary>Sitio web: portada y secciones</summary><div class="mo-fields" id="mo-site-body"></div></details>
         </div>
         <aside class="mo-side" id="mo-side" aria-label="Vista previa del menú"></aside>
       </div>
     </div>`;
   _moBind(panel);
-  _moRenderSite();
   _moRefresh();
+  if (_moUi.tab === 'site') _sbRender();
 }
 
 // Estado + lista + vista previa (la barra de búsqueda y los ajustes no se redibujan: se conserva el foco)
@@ -130,7 +128,7 @@ function _moRenderStatus() {
     <span class="mo-st-dot" aria-hidden="true"></span>
     <div class="mo-st-main"><div class="mo-st-title">${title}</div><div class="mo-st-sub">${_esc(sub)}</div></div>
     <div class="mo-st-actions">
-      <button class="btn" data-mo="open-site">${_moSite().enabled ? 'Editar portada y secciones' : 'Activar portada y secciones'}</button>
+      <button class="btn" data-mo="open-site">${_moSite().enabled ? 'Editar el sitio web' : 'Armar el sitio web'}</button>
       <button class="btn" data-mo="preview">Vista previa en pestaña</button>
       <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Publicar menú</button>
     </div>
@@ -206,30 +204,6 @@ function _moRenderPreview() {
     </div><div class="mo-side-cap">Así lo ve el cliente. Se actualiza solo.</div>`;
 }
 
-function _moRenderSite() {
-  const el = document.getElementById('mo-site-body'); if (!el) return;
-  const S = _moSite();
-  const f = (label, key, ph, area) => `<label class="f">${label}${area ? `<textarea class="custom-input" rows="${area}" style="resize:vertical" data-mo-site="${key}" placeholder="${_esc(ph || '')}">${_esc(S[key])}</textarea>` : `<input type="text" class="custom-input" data-mo-site="${key}" placeholder="${_esc(ph || '')}" value="${_esc(S[key])}">`}</label>`;
-  const hl = [0, 1, 2, 3].map(i => { const h = S.highlights[i] || {}; return `<div style="display:grid;grid-template-columns:56px 1fr 1.4fr;gap:8px"><input class="custom-input" placeholder="🍕" aria-label="Ícono ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="icon" value="${_esc(h.icon)}"><input class="custom-input" placeholder="Título" aria-label="Título ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="title" value="${_esc(h.title)}"><input class="custom-input" placeholder="Detalle" aria-label="Detalle ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="text" value="${_esc(h.text)}"></div>`; }).join('');
-  const rows = (key, fields, ph) => S[key].map((it, i) => `<div style="display:grid;gap:6px;padding:10px;border:1px solid var(--border);border-radius:10px">${fields.map(([fk, label, area]) => area ? `<textarea class="custom-input" rows="2" style="resize:vertical" placeholder="${_esc(label)}" aria-label="${_esc(label)}" data-mo-list="${key}" data-i="${i}" data-f="${fk}">${_esc(it[fk])}</textarea>` : `<input class="custom-input" placeholder="${_esc(label)}" aria-label="${_esc(label)}" data-mo-list="${key}" data-i="${i}" data-f="${fk}" value="${_esc(it[fk])}">`).join('')}<div><button class="btn" data-mo-del="${key}" data-i="${i}">Quitar</button></div></div>`).join('');
-  el.innerHTML = `
-    <div class="mo-checks"><label><span class="mo-sw"><input type="checkbox" data-mo-site-check="enabled" ${S.enabled ? 'checked' : ''}><span></span></span>Publicar portada y secciones junto al menú</label></div>
-    <div style="font-size:12px;color:var(--muted)">Apagado, se publica solo el menú de productos. Encendido, tu página suma portada, favoritos (los productos con ⭐), cómo funciona, tu historia, reseñas, catering, delivery y preguntas.</div>
-    ${f('Título de la portada', 'heroTitle', 'Ej: Las mejores pizzas del barrio')}
-    ${f('Subtítulo', 'heroSubtitle', 'Ej: Masa madre, ingredientes frescos y delivery en el día')}
-    <div style="font-size:12px;font-weight:700;color:var(--muted)">Destacados de la portada (hasta 4)</div>${hl}
-    ${f('Título de tu historia', 'aboutTitle', 'Ej: Nuestra historia')}
-    ${f('Tu historia (separá los párrafos con una línea en blanco)', 'aboutText', '', 5)}
-    ${f('Horarios de delivery', 'hours', 'Lun a Jue 18:00 a 22:00\nVie y Sáb 18:00 a 23:00', 3)}
-    ${f('Instagram (usuario)', 'instagram', 'tu_usuario')}
-    <div class="mo-checks"><label><span class="mo-sw"><input type="checkbox" data-mo-cat-check="enabled" ${S.catering.enabled ? 'checked' : ''}><span></span></span>Mostrar catering y eventos</label></div>
-    ${S.catering.enabled ? ['title:Título:Catering y eventos', 'text:Descripción', 'zone:Zona de cobertura', 'notice:Anticipación (ej. mínimo 48 horas)'].map(x => { const [k, l, ph] = x.split(':'); return `<label class="f">${l}<input type="text" class="custom-input" data-mo-cat="${k}" placeholder="${_esc(ph || '')}" value="${_esc(S.catering[k])}"></label>`; }).join('') : ''}
-    <div style="font-size:12px;font-weight:700;color:var(--muted)">Reseñas (hasta 9)</div>${rows('reviews', [['text', 'Lo que dijo el cliente', 1], ['author', 'Nombre'], ['source', 'Dónde lo dijo (Google, Instagram…)']])}
-    <div><button class="btn" data-mo-add="reviews" ${S.reviews.length >= 9 ? 'disabled' : ''}>+ Agregar reseña</button></div>
-    <div style="font-size:12px;font-weight:700;color:var(--muted)">Preguntas frecuentes (hasta 12)</div>${rows('faq', [['q', 'Pregunta'], ['a', 'Respuesta', 1]])}
-    <div><button class="btn" data-mo-add="faq" ${S.faq.length >= 12 ? 'disabled' : ''}>+ Agregar pregunta</button></div>`;
-}
-
 // ─── Acciones ──────────────────────────────────────────
 function _moPersist() { _saveMenuConfig(); _moRefresh(); }
 function _moToggleProduct(id, show) {
@@ -264,19 +238,15 @@ function _moPreview() { try { SAHTEN.online.publish.preview(); } catch (e) { ale
 function _moBind(panel) {
   if (_moUi.bound) return; _moUi.bound = true;
   panel.addEventListener('click', e => {
-    const ad = e.target.closest('[data-mo-add],[data-mo-del],[data-mo-desc]');
-    if (ad && panel.contains(ad)) {
-      if (ad.dataset.moDesc) { _moUi.desc[ad.dataset.moDesc] = !_moUi.desc[ad.dataset.moDesc]; _moRenderList(); const i = panel.querySelector(`[data-mo-pdesc="${CSS.escape(ad.dataset.moDesc)}"]`); i && i.focus(); return; }
-      const S = _moSite(); const k = ad.dataset.moAdd || ad.dataset.moDel;
-      if (ad.dataset.moAdd) S[k].push(k === 'reviews' ? { text: '', author: '', source: '' } : { q: '', a: '' }); else S[k].splice(+ad.dataset.i, 1);
-      _saveMenuConfig(); _moRenderSite(); _moRenderStatus(); return;
-    }
-    const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove]'); if (!t || !panel.contains(t)) return;
+    const ad = e.target.closest('[data-mo-desc]');
+    if (ad && panel.contains(ad)) { _moUi.desc[ad.dataset.moDesc] = !_moUi.desc[ad.dataset.moDesc]; _moRenderList(); const i = panel.querySelector(`[data-mo-pdesc="${CSS.escape(ad.dataset.moDesc)}"]`); i && i.focus(); return; }
+    const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove],[data-mo-tab]'); if (!t || !panel.contains(t)) return;
     if (t.dataset.mo === 'publish') _moPublish();
     else if (t.dataset.mo === 'preview') _moPreview();
     else if (t.dataset.mo === 'all-on') _moToggleAll(true);
     else if (t.dataset.mo === 'all-off') _moToggleAll(false);
-    else if (t.dataset.mo === 'open-site') { const d = document.getElementById('mo-site'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); const i = d.querySelector('input,textarea'); i && i.focus({ preventScroll: true }); } }
+    else if (t.dataset.mo === 'open-site') _moTab('site');
+    else if (t.dataset.moTab) _moTab(t.dataset.moTab);
     else if (t.dataset.mo === 'open-settings') { const d = document.getElementById('mo-settings'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); const i = d.querySelector('[data-mo-set=whatsappNumber]'); i && i.focus(); } }
     else if (t.dataset.moFilter) { _moUi.filter = t.dataset.moFilter; _moRefresh(); }
     else if (t.dataset.moCollapse) { const k = t.dataset.moCollapse; _moUi.collapsed[k] = !_moUi.collapsed[k]; _moRenderList(); }
@@ -285,18 +255,13 @@ function _moBind(panel) {
   panel.addEventListener('change', e => {
     const t = e.target;
     if (t.dataset.moProd) _moToggleProduct(t.dataset.moProd, t.checked);
-    else if (t.dataset.moCat) _moCatToggle(t.dataset.moCat, t.checked);
     else if (t.dataset.moCheck) { MENU_CONFIG[t.dataset.moCheck] = t.checked; _moPersist(); }
-    else if (t.dataset.moSiteCheck) { _moSite()[t.dataset.moSiteCheck] = t.checked; _saveMenuConfig(); _moRenderStatus(); }
-    else if (t.dataset.moCatCheck) { _moSite().catering[t.dataset.moCatCheck] = t.checked; _saveMenuConfig(); _moRenderSite(); _moRenderStatus(); }
   });
   panel.addEventListener('input', e => {
     const t = e.target;
     if (t.id === 'mo-search') { _moUi.q = t.value; _moRenderList(); }
     else if (t.dataset.moSet) { MENU_CONFIG[t.dataset.moSet] = t.value; _saveMenuConfig(); _moRenderStatus(); _moRenderPreview(); }
-    else if (t.dataset.moSite) { _moSite()[t.dataset.moSite] = t.value; _saveMenuConfig(); _moRenderStatus(); }
     else if (t.dataset.moCat) { _moSite().catering[t.dataset.moCat] = t.value; _saveMenuConfig(); _moRenderStatus(); }
-    else if (t.dataset.moList) { const L = _moSite()[t.dataset.moList]; const i = +t.dataset.i; while (L.length <= i) L.push({}); L[i][t.dataset.f] = t.value; _saveMenuConfig(); _moRenderStatus(); }
     else if (t.dataset.moPdesc) { const p = _moProducts().find(x => x.id === t.dataset.moPdesc); if (p) { p.description = t.value; if (typeof scheduleSave === 'function') scheduleSave(); _moRenderStatus(); } }
   });
   let dragged = null;

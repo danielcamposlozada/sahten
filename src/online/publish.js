@@ -49,6 +49,11 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
     const bytes = await optimize(images[p.id]);
     if (bytes) files.push({ path: 'img/' + imageFileName(p.id), data: bytes });
   }
+  for (const k of ['hero', 'historia']) {
+    if (!(menu.site && menu.site.images && menu.site.images[k]) || !images['site_' + k]) continue;
+    const bytes = await optimize(images['site_' + k], { maxDim: 1600, quality: 0.82 });
+    if (bytes) files.push({ path: 'img/site_' + k + '.jpg', data: bytes });
+  }
   return files;
 }
 

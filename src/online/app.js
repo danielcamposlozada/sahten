@@ -38,13 +38,19 @@ const toast = m => (typeof w._posToast === 'function' ? w._posToast(m) : null);
 
 export const onlinePublish = {
   currentMenu, publishProblems,
-  /** Vista previa en otra pestaña (imágenes incrustadas, sin publicar nada). */
-  preview() {
+  /** HTML de la página tal como se publicaría, con las fotos incrustadas (sirve para la vista previa y para el editor). */
+  previewHtml() {
     const m = currentMenu(); const imgs = w.SAHTEN_IMAGES || {};
     m.products.forEach(p => { if (p.image && imgs[p.id]) p.image = imgs[p.id]; });
-    if (w.SAHTEN.desktop) return w.SAHTEN.desktop.openPreview(buildIndexHtml(m));
+    if (m.site && m.site.images) ['hero', 'historia'].forEach(k => { if (m.site.images[k] && imgs['site_' + k]) m.site.images[k] = imgs['site_' + k]; });
+    return buildIndexHtml(m);
+  },
+  /** Vista previa en otra pestaña (imágenes incrustadas, sin publicar nada). */
+  preview() {
+    const html = onlinePublish.previewHtml();
+    if (w.SAHTEN.desktop) return w.SAHTEN.desktop.openPreview(html);
     const win = w.open('', '_blank'); if (!win) return alert('El navegador bloqueó la ventana. Permitila para ver la vista previa.');
-    win.document.open(); win.document.write(buildIndexHtml(m)); win.document.close();
+    win.document.open(); win.document.write(html); win.document.close();
   },
   /** Archivos de la carpeta publicada, sin escribirlos (para probar y para el escritorio). */
   async buildFiles() { return buildPublishFiles(currentMenu(), w.SAHTEN_IMAGES || {}, optimizeImage); },

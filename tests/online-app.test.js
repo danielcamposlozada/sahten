@@ -194,19 +194,41 @@ describe('Menú Online (admin): una sola pantalla con estado, lista por categor�
   }, 60000);
 });
 
-describe('Menú Online (admin): sitio web y descripciones se guardan en el proyecto', () => {
-  it('editar portada, reseñas y descripciones; guardar y volver a abrir conserva todo', async () => {
-    const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close();
-    a.ev("showPanel('menuonline'); renderMenuOnline();"); const doc = a.window.document;
-    expect(doc.querySelector('[data-mo-site-check=enabled]').checked).toBe(true);                       // el demo ya trae portada
-    const set = (sel, v) => { const el = doc.querySelector(sel); el.value = v; el.dispatchEvent(new a.window.Event('input', { bubbles: true })); };
-    set('[data-mo-site=heroTitle]', 'Mi portada nueva');
-    doc.querySelector('[data-mo-add=reviews]').click(); const nrev = doc.querySelectorAll('[data-mo-list=reviews][data-f=text]').length;
-    set(`[data-mo-list=reviews][data-i="${nrev - 1}"][data-f=text]`, 'Excelente');
-    doc.querySelector('[data-mo-desc]').click(); const pid = doc.querySelector('[data-mo-pdesc]').dataset.moPdesc; set('[data-mo-pdesc]', 'Descripción nueva');
-    const m = a.on.publish.currentMenu(); expect(m.site.heroTitle).toBe('Mi portada nueva'); expect(m.site.reviews.at(-1).text).toBe('Excelente'); expect(m.products.find(p => p.id === pid).description).toBe('Descripción nueva');
-    expect(a.ev('SAHTEN.project.collect().catalog.productos.find(p=>p.id===' + JSON.stringify(pid) + ').description')).toBe('Descripción nueva');   // sobrevive al guardar
-    expect(a.ev('SAHTEN.project.collect().online.menuConfig.site.heroTitle')).toBe('Mi portada nueva');
+describe('Menú Online (admin): constructor modular del sitio web', () => {
+  let A;
+  const open = async () => { A = await app(); await A.p.openDemo(); A.window.sahtenTour && A.window.sahtenTour.close(); A.ev("showPanel('menuonline'); renderMenuOnline(); _moTab('site');"); return A; };
+  const $ = sel => A.window.document.querySelector(sel); const $$ = (a, sel) => Array.from(A.window.document.querySelectorAll(sel));
+  const type = (a, sel, v) => { const el = $(sel); el.value = v; el.dispatchEvent(new A.window.Event('input', { bubbles: true })); };
+  it('hay una tarjeta por sección; el demo las trae encendidas y se puede apagar, mover y abrir', async () => {
+    const a = await open();
+    expect($$(a, '.sb-mod').map(m => m.dataset.mod)).toEqual(a.ev('SAHTEN_SITE.normalizeSite(MENU_CONFIG.site).order'));
+    expect($('#mo-tab-menu').hidden).toBe(true); expect($('[data-sb-enabled]').checked).toBe(true);
+    expect($('[data-mod=menu] [data-sb-on]')).toBeNull();                                             // el menú no se apaga
+    $('[data-sb-on=banda]').click(); $('[data-sb-on=banda]').dispatchEvent(new a.window.Event('change', { bubbles: true }));
+    const off = a.ev('MENU_CONFIG.site.banda.on'); a.ev("_moSite().banda.on = true");
+    const first = $$(a, '.sb-mod')[0].dataset.mod; $(`[data-sb-move=${first}][data-d="1"]`).click(); expect($$(a, '.sb-mod')[1].dataset.mod).toBe(first);
+    $('[data-sb-open=faq]').click(); expect($('[data-mod=faq] .sb-edit')).toBeTruthy(); expect($('[data-mod=hero] .sb-edit')).toBeNull(); expect(off).toBeDefined();
     a.window.close();
+  }, 60000);
+  it('editar un campo cambia el menú publicado y la vista previa; agregar y quitar reseñas; todo se guarda en el proyecto', async () => {
+    const a = await open(); const win = a.window;
+    expect($('[data-mod=hero]').classList.contains('open')).toBe(true); type(a, '[data-sb="hero.title"]', 'Mi portada nueva');   // la portada viene abierta
+    $('[data-sb-open=resenas]').click(); const n0 = $$(a, '[data-sb-l="resenas.items"][data-k=text]').length; $('[data-sb-add="resenas.items"]').click();
+    type(a, `[data-sb-l="resenas.items"][data-i="${n0}"][data-k=text]`, 'Excelente');
+    const m = a.on.publish.currentMenu(); expect(m.site.hero.title).toBe('Mi portada nueva'); expect(m.site.resenas.items.at(-1).text).toBe('Excelente');
+    $(`[data-sb-del="resenas.items"][data-i="${n0}"]`).click(); expect(a.on.publish.currentMenu().site.resenas.items).toHaveLength(n0);
+    expect(a.on.publish.previewHtml()).toContain('Mi portada nueva');                                  // la vista previa es la página real
+    expect(a.ev('SAHTEN.project.collect().online.menuConfig.site.hero.title')).toBe('Mi portada nueva');
+    // la descripción de producto se edita en la pestaña Menú y también se guarda
+    a.ev("_moTab('menu')"); $('[data-mo-desc]').click(); const pid = $('[data-mo-pdesc]').dataset.moPdesc; type(a, '[data-mo-pdesc]', 'Descripción nueva');
+    expect(a.ev('SAHTEN.project.collect().catalog.productos.find(p=>p.id===' + JSON.stringify(pid) + ').description')).toBe('Descripción nueva');
+    win.close();
+  }, 60000);
+  it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
+    const a = await open();
+    a.ev("SAHTEN_IMAGES.site_hero='data:image/png;base64,iVBORw0KGgo='"); expect(a.on.publish.currentMenu().site.images.hero).toBe('img/site_hero.jpg');
+    expect(a.on.publish.previewHtml()).toContain('data:image/png;base64,iVBORw0KGgo=');                 // en la vista previa la foto va incrustada
+    $('[data-sb-enabled]').checked = false; $('[data-sb-enabled]').dispatchEvent(new a.window.Event('change', { bubbles: true }));
+    expect(a.on.publish.currentMenu().site).toBeNull(); a.window.close();
   }, 60000);
 });

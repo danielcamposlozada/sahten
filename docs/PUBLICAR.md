@@ -54,12 +54,27 @@ Con **Supabase** (plan gratis) los pedidos entran en tiempo real a Mostrador ›
 Ver [SUPABASE.md](SUPABASE.md). Publicás igual la carpeta, pero con la conexión cargada: si el cliente no tiene internet, la web se lo avisa.
 
 
-## Un solo sitio: portada + menú
+## Un solo sitio: portada + menú (editor por secciones)
 
-En **Menú Online › Sitio web: portada y secciones** podés encender una portada completa para el mismo sitio del menú: título y subtítulo,
-destacados, **favoritos** (los productos con ⭐), cómo funciona, tu historia, reseñas, catering, horarios y zona de delivery, preguntas
-frecuentes e Instagram. Cada producto puede llevar una **descripción corta** (el lápiz ✎ de su fila). Apagado, se publica solo el menú.
-Todo sale de lo que cargues en la app: al volver a **Publicar**, el sitio se actualiza.
+En **Menú Online › Sitio web** armás la página completa de tu negocio **por módulos**. Cada sección es una tarjeta que podés **encender o
+apagar**, **mover** (arrastrando ⋮⋮ o con ▲▼) y **editar**; a la derecha ves la **vista previa real** de la página (escritorio o celular).
+
+| Sección | Qué lleva |
+|---|---|
+| Portada | título, bajada, botón, hasta 4 destacados y foto de fondo opcional |
+| Favoritos | tus productos con ⭐ (con foto y descripción) |
+| Menú y pedido | la carta con categorías y el carrito (siempre está) |
+| Cómo funciona | hasta 4 pasos |
+| Nuestra historia | texto, foto y un destacado opcional (una palabra y su significado) |
+| Cinta de texto | una franja con tu lema que se desplaza |
+| Reseñas | hasta 9 |
+| Catering y eventos | texto y datos de cobertura (zona, anticipación…) |
+| Delivery y retiro | horarios; zonas, mínimo y envío gratis salen de Ajustes › Tienda Online |
+| Preguntas frecuentes | hasta 12 |
+| Contacto y pie | dirección, WhatsApp, Instagram |
+
+Cada producto puede llevar una **descripción corta** (el lápiz ✎ en Menú Online › Menú). Con el interruptor general apagado se publica
+solo el menú. Cada negocio (proyecto) tiene su propio sitio: al volver a **Publicar**, se actualiza.
 
 ## Dónde alojarlo: opciones
 

@@ -25,6 +25,7 @@ import { project } from './project/app.js';
 import { APP_VERSION } from './project/schema.js';
 import { projectUi } from './project/ui.js';
 import { onlinePublish } from './online/app.js';
+import * as siteModule from './online/site.js';
 import { createOnline } from './online/index.js';
 import { events } from './events.js';
 
@@ -35,6 +36,7 @@ import enhancementsJs from './legacy/sahten-enhancements.js?raw';
 import mostradorJs from './legacy/sahten-mostrador.js?raw';
 import tiendaJs from './legacy/sahten-tienda.js?raw';
 import menuonlineJs from './legacy/sahten-menuonline.js?raw';
+import siteEditorJs from './legacy/sahten-siteeditor.js?raw';
 import categoriesJs from './legacy/sahten-categories.js?raw';
 import reportesJs from './legacy/sahten-reportes.js?raw';
 import setupJs from './legacy/sahten-setup.js?raw';
@@ -61,6 +63,7 @@ window.sahtenOfflineNotice = () => (navigator.onLine === false ? '<div style="fo
 window.addEventListener('online', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.addEventListener('offline', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.SAHTEN.projectUi = projectUi;
+window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;
@@ -79,7 +82,7 @@ document.querySelectorAll('[data-app-version]').forEach(el => { el.textContent =
 bindSettingInputs();
 
 [['sahten-notifications.js', notificationsJs], ['sahten-enhancements.js', enhancementsJs], ['sahten-mostrador.js', mostradorJs],
-  ['sahten-tienda.js', tiendaJs], ['sahten-menuonline.js', menuonlineJs], ['sahten-categories.js', categoriesJs],
+  ['sahten-tienda.js', tiendaJs], ['sahten-menuonline.js', menuonlineJs], ['sahten-siteeditor.js', siteEditorJs], ['sahten-categories.js', categoriesJs],
   ['sahten-reportes.js', reportesJs], ['sahten-setup.js', setupJs], ['sahten-estrategia.js', estrategiaJs], ['sahten-ux.js', uxJs]]
   .forEach(([n, c]) => { runClassic(n, c); instrument(RENDERS); });
 

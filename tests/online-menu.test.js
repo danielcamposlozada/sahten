@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
 import * as C from '../src/core/index.js';
 import { buildMenuJson, orderedCategories } from '../src/online/menuJson.js';
+import { normalizeSite, SITE_ORDER } from '../src/online/site.js';
 import { buildWaMessage, waUrl, normalizePhone } from '../src/online/orderMessage.js';
 import { buildPublishFiles, buildIndexHtml, dataUrlToBytes } from '../src/online/publish.js';
 import { createZip, crc32 } from '../src/online/zip.js';
@@ -252,36 +253,50 @@ describe('web publicada', () => {
   });
 });
 
-describe('sitio web: portada y secciones junto al menú', () => {
-  const SITE = { enabled: true, heroTitle: 'Pizza <b>de barrio</b>', heroSubtitle: 'Hecha al momento', highlights: [{ icon: '🍕', title: 'Masa de 48 h', text: 'Liviana' }, { title: '' }, { title: 'B' }, { title: 'C' }, { title: 'D' }, { title: 'E' }],
-    aboutTitle: 'Historia', aboutText: 'Primer párrafo.\n\nSegundo párrafo.', hours: 'Lun a Jue 18 a 22', instagram: '@mi.local!<x>',
-    reviews: Array.from({ length: 12 }, (_, i) => ({ text: 'Muy rica ' + i, author: 'Ana', source: 'Google' })).concat([{ text: '   ' }]),
-    catering: { enabled: true, title: 'Eventos', text: 'Para tu fiesta', zone: 'Zona norte', notice: '48 horas' },
-    faq: [{ q: '¿Cómo pido?', a: 'Desde acá.' }, { q: '', a: 'sin pregunta' }] };
+describe('sitio web: módulos (secciones) junto al menú', () => {
+  const SITE = { enabled: true, order: ['historia', 'hero', 'menu', 'favoritos', 'faq', 'contacto'],
+    hero: { on: true, title: 'Pizza <b>de barrio</b>', subtitle: 'Hecha al momento', cta: 'Pedí', highlights: [{ icon: '🍕', title: 'Masa de 48 h', text: 'Liviana' }, { title: '' }, { title: 'B' }, { title: 'C' }, { title: 'D' }, { title: 'E' }] },
+    favoritos: { on: true, title: 'Favoritos', text: '' }, como: { on: false },
+    historia: { on: true, title: 'Historia', text: 'Primer párrafo.\n\nSegundo párrafo.', badgeWord: 'Sahten', badgeMeaning: 'buen provecho' },
+    banda: { on: false }, resenas: { on: true, items: Array.from({ length: 12 }, (_, i) => ({ text: 'Muy rica ' + i, author: 'Ana' })).concat([{ text: '   ' }]) },
+    catering: { on: false }, delivery: { on: true, hours: 'Lun a Jue 18 a 22' },
+    faq: { on: true, items: [{ q: '¿Cómo pido?', a: 'Desde acá.' }, { q: '', a: 'sin pregunta' }] }, contacto: { on: true, instagram: '@mi.local!<x>' } };
   const st = () => { const x = demoState(); x.project.currencySymbol = '$'; return x; };
-  const menuCon = site => buildMenuJson(st(), { menuConfig: { whatsappNumber: '+54 9 11 5555-0123', title: 'Mi local', site }, tienda: TIENDA, store: { name: 'Mi local' } });
+  const menuCon = (site, images) => buildMenuJson(st(), { menuConfig: { whatsappNumber: '+54 9 11 5555-0123', title: 'Mi local', site }, tienda: TIENDA, store: { name: 'Mi local' }, images });
 
-  it('apagado no agrega nada; encendido recorta y limpia lo que escribe el dueño', () => {
+  it('apagado no agrega nada; encendido deja solo las secciones encendidas, en orden, con el texto recortado', () => {
     expect(menuCon({ ...SITE, enabled: false }).site).toBeNull(); expect(menuCon(undefined).site).toBeNull();
     const m = menuCon(SITE).site;
-    expect(m.highlights.map(h => h.title)).toEqual(['Masa de 48 h', 'B', 'C', 'D']);          // sin vacíos, máximo 4
-    expect(m.reviews).toHaveLength(9); expect(m.faq).toEqual([{ q: '¿Cómo pido?', a: 'Desde acá.' }]);
-    expect(m.instagram).toBe('mi.localx'); expect(m.catering).toMatchObject({ title: 'Eventos', zone: 'Zona norte' });
+    expect(m.order).toEqual(['historia', 'hero', 'menu', 'favoritos', 'faq', 'contacto', 'resenas', 'delivery']);       // apagadas fuera (como, banda, catering); menú siempre
+    expect(m.como).toBeUndefined(); expect(m.hero.highlights.map(h => h.title)).toEqual(['Masa de 48 h', 'B', 'C', 'D']);
+    expect(m.faq.items).toEqual([{ q: '¿Cómo pido?', a: 'Desde acá.' }]); expect(m.contacto.instagram).toBe('mi.localx');
+    expect(menuCon({ ...SITE, resenas: { on: true, items: SITE.resenas.items } }).site.resenas.items).toHaveLength(9);
+    expect(menuCon(SITE, { site_hero: 'data:image/png;base64,AA' }).site.images).toEqual({ hero: 'img/site_hero.jpg', historia: null });
   });
-  it('la página muestra portada, favoritos (solo ⭐), historia, reseñas, catering, preguntas y escapa el texto', async () => {
+  it('normalizeSite completa lo que falta y repara el orden', () => {
+    const n = normalizeSite({ enabled: true, order: ['faq', 'faq', 'inventada', 'hero'] });
+    expect(n.order.slice(0, 2)).toEqual(['faq', 'hero']); expect(n.order).toHaveLength(SITE_ORDER.length); expect(new Set(n.order).size).toBe(SITE_ORDER.length);
+    expect(n.como.steps).toHaveLength(3); expect(n.menu.title).toBe('Nuestro menú');
+  });
+  it('la página dibuja las secciones en el orden elegido, escapa el texto y sigue vendiendo', async () => {
     const m = menuCon(SITE); const a = await web({ menu: m }); const d = a.d;
-    expect(d.querySelector('.hero h1').textContent).toBe('Pizza <b>de barrio</b>'); expect(d.querySelector('.hero h1 b')).toBeNull();   // nada de HTML
+    expect(d.querySelector('.hero h1').textContent).toBe('Pizza <b>de barrio</b>'); expect(d.querySelector('.hero h1 b')).toBeNull();      // nada de HTML
     expect(d.querySelectorAll('.hl > div').length).toBe(4);
-    const stars = m.products.filter(p => p.star).length; expect(d.querySelectorAll('#s-top .grid .card').length).toBe(stars);
-    expect(d.querySelectorAll('#s-about p').length).toBe(2); expect(d.querySelectorAll('.rev').length).toBe(9);
-    expect(d.querySelector('#s-catering').textContent).toMatch(/Para tu fiesta/); expect(d.querySelectorAll('.faq details').length).toBe(1);
+    const html = d.body.innerHTML; expect(html.indexOf('id="s-about"')).toBeLessThan(html.indexOf('id="s-hero"')); expect(html.indexOf('id="s-hero"')).toBeLessThan(html.indexOf('id="menu"'));
+    expect(d.querySelector('.badge .w').textContent).toBe('Sahten'); expect(d.querySelectorAll('#s-about p').length).toBe(2);
+    expect(d.querySelectorAll('#s-fav .card').length).toBe(m.products.filter(p => p.star).length);
+    expect(d.querySelectorAll('.faq details').length).toBe(1); expect(d.querySelector('#s-how')).toBeNull(); expect(d.querySelector('.band')).toBeNull();
     expect(d.querySelector('.sfoot a[href^="https://instagram.com/"]').getAttribute('href')).toBe('https://instagram.com/mi.localx');
-    expect(d.querySelector('header').offsetParent === null || getComputedStyle(d.querySelector('header')).display === 'none' || d.body.classList.contains('has-site')).toBe(true);
-    a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Pedido (1)');                                   // el carrito sigue funcionando
+    expect(d.querySelector('.fab').getAttribute('href')).toContain('wa.me/');
+    a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Pedido (1)');
   });
   it('sin sitio, la página es la de siempre (encabezado simple, sin portada)', async () => {
     const a = await web({ menu: menuCon({ ...SITE, enabled: false }) });
-    expect(a.d.body.classList.contains('has-site')).toBe(false); expect(a.d.querySelector('.hero')).toBeNull(); expect(a.d.querySelector('#h-title').textContent).toBe('Mi local');
+    expect(a.d.body.classList.contains('has-site')).toBe(false); expect(a.d.querySelector('.hero')).toBeNull(); expect(a.d.querySelector('#h-title').textContent).toBe('Mi local'); expect(a.d.querySelector('.fab')).toBeNull();
+  });
+  it('las fotos del sitio viajan en la carpeta publicada', async () => {
+    const m = menuCon(SITE, { site_hero: 'data:image/png;base64,iVBORw0KGgo=' }); const files = await buildPublishFiles(m, { site_hero: 'data:image/png;base64,iVBORw0KGgo=' });
+    expect(files.map(f => f.path)).toContain('img/site_hero.jpg');
   });
   it('la descripción corta de cada producto sale en el menú', async () => {
     const x = st(); x.products[0].description = 'Con aceitunas'; const m = buildMenuJson(x, { menuConfig: { whatsappNumber: '+54 9 11 5555-0123' }, tienda: TIENDA, store: { name: 'Mi local' } });

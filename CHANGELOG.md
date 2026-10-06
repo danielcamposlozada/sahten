@@ -2,7 +2,7 @@
 
 ## Sin publicar
 
-- **Sitio web con portada**: el menú publicado puede incluir portada, favoritos, cómo funciona, historia, reseñas, catering, delivery, preguntas frecuentes e Instagram (Menú Online › Sitio web). Descripción corta por producto.
+- **Sitio web por módulos** (Menú Online › Sitio web): portada, favoritos, menú, cómo funciona, historia, cinta de texto, reseñas, catering, delivery, preguntas frecuentes y contacto. Cada sección se enciende, se mueve y se edita, con vista previa real al lado y fotos para portada e historia. Página publicada rediseñada. Descripción corta por producto.
 - **Proyectos**: la app entra directo al último proyecto; pantalla de proyectos tipo perfiles; bienvenida más simple; eliminar proyectos (quitar de la lista o borrar el archivo).
 
 ## 0.4.2

@@ -2,29 +2,11 @@
 // menu.json: lo que ve el menú publicado. Puro (sin DOM). Nunca incluye costos, márgenes ni datos de clientes.
 // ═══════════════════════════════════════════════════════════
 import { mostradorFinalPrice } from '../core/pricing.js';
+import { buildSite } from './site.js';
 
 export const MENU_VERSION = 1;
 
 const txt = (v, max) => String(v == null ? '' : v).replace(/\r/g, '').trim().slice(0, max);
-const list = (v, max, fn) => (Array.isArray(v) ? v : []).map(fn).filter(Boolean).slice(0, max);
-
-/** Portada y secciones del sitio (opcional). Devuelve null si está apagado. Todo texto se recorta: es contenido que escribe el dueño. */
-export function buildSite(site) {
-  if (!site || !site.enabled) return null;
-  const cat = site.catering || {};
-  return {
-    enabled: true,
-    heroTitle: txt(site.heroTitle, 80), heroSubtitle: txt(site.heroSubtitle, 220), ctaLabel: txt(site.ctaLabel, 30) || 'Armá tu pedido',
-    highlights: list(site.highlights, 4, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }),
-    favoritesTitle: txt(site.favoritesTitle, 60) || 'Nuestros favoritos',
-    aboutTitle: txt(site.aboutTitle, 80), aboutText: txt(site.aboutText, 1500),
-    reviews: list(site.reviews, 9, r => { const text = txt(r && r.text, 300); return text ? { text, author: txt(r.author, 50), source: txt(r.source, 40) } : null; }),
-    catering: cat.enabled ? { title: txt(cat.title, 80) || 'Catering y eventos', text: txt(cat.text, 600), zone: txt(cat.zone, 120), notice: txt(cat.notice, 120) } : null,
-    hours: txt(site.hours, 300),
-    instagram: txt(site.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''),
-    faq: list(site.faq, 12, f => { const q = txt(f && f.q, 140), a = txt(f && f.a, 500); return q && a ? { q, a } : null; }),
-  };
-}
 
 /** Categorías con el orden elegido; las nuevas van al final (alfabético). */
 export function orderedCategories(products, config = {}) {
@@ -67,7 +49,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       categories: orderedCategories(items, menuConfig),
     },
     products: items,
-    site: buildSite(menuConfig.site),
+    site: buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia }),
     delivery: {
       lat: tienda.lat ?? null, lng: tienda.lng ?? null, zones: (tienda.zones || []).map(z => ({ id: z.id, name: z.name, type: z.type || 'circle', radiusKm: z.radiusKm || 0, points: z.points || [], baseCost: z.baseCost || 0 })),
       freeShippingMin: tienda.freeShippingMin || 0, deliveryMinOrder: tienda.deliveryMinOrder || 0, costPerKm: tienda.costPerKm || 0,

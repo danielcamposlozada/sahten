@@ -1000,74 +1000,159 @@
    "deliveryNote": "",
    "site": {
     "enabled": true,
-    "heroTitle": "Pizza de barrio, hecha al momento",
-    "heroSubtitle": "Masa de fermentación lenta, ingredientes frescos y delivery en el día.",
-    "ctaLabel": "Armá tu pedido",
-    "highlights": [
-     {
-      "icon": "🍕",
-      "title": "Masa de 48 horas",
-      "text": "Más liviana y crocante."
-     },
-     {
-      "icon": "🔥",
-      "title": "Al horno de piedra",
-      "text": "Siempre recién salida."
-     },
-     {
-      "icon": "🛵",
-      "title": "Delivery",
-      "text": "Envío gratis desde $45.000."
-     },
-     {
-      "icon": "🥟",
-      "title": "Empanadas",
-      "text": "Al horno, por media docena."
-     }
+    "order": [
+     "hero",
+     "favoritos",
+     "menu",
+     "como",
+     "historia",
+     "banda",
+     "resenas",
+     "catering",
+     "delivery",
+     "faq",
+     "contacto"
     ],
-    "favoritesTitle": "Nuestros favoritos",
-    "aboutTitle": "Nuestra historia",
-    "aboutText": "La Esquina nació como un horno de barrio: una masa, una salsa y ganas de hacer bien las cosas.\n\nHoy seguimos con las mismas recetas y los mismos ingredientes frescos, cocinados al momento.",
-    "hours": "Lun a Jue: 18:00 a 22:00\nVie y Sáb: 18:00 a 23:30",
-    "instagram": "pizzeria_la_esquina_demo",
-    "reviews": [
-     {
-      "text": "La masa es increíble y llegó caliente.",
-      "author": "Ana",
-      "source": "Google"
-     },
-     {
-      "text": "La fugazzeta es la mejor que probé.",
-      "author": "Martín",
-      "source": "Instagram"
-     },
-     {
-      "text": "Rápidos y muy amables.",
-      "author": "Lucía",
-      "source": "Google"
-     }
-    ],
-    "catering": {
-     "enabled": true,
-     "title": "Pizza para tus eventos",
-     "text": "Armamos tablas de pizza y empanadas para cumpleaños, reuniones y eventos de empresa.",
-     "zone": "Capital y zona norte",
-     "notice": "Mínimo 48 horas de anticipación"
+    "hero": {
+     "on": true,
+     "title": "Pizza de barrio, hecha al momento",
+     "subtitle": "Masa de fermentación lenta, ingredientes frescos y delivery en el día.",
+     "cta": "Armá tu pedido",
+     "highlights": [
+      {
+       "icon": "🍕",
+       "title": "Masa de 48 horas",
+       "text": "Más liviana y crocante."
+      },
+      {
+       "icon": "🔥",
+       "title": "Al horno de piedra",
+       "text": "Siempre recién salida."
+      },
+      {
+       "icon": "🛵",
+       "title": "Delivery",
+       "text": "Envío gratis desde $45.000."
+      },
+      {
+       "icon": "🥟",
+       "title": "Empanadas",
+       "text": "Al horno, por media docena."
+      }
+     ]
     },
-    "faq": [
-     {
-      "q": "¿Cómo hago mi pedido?",
-      "a": "Armalo desde esta página y se envía por WhatsApp, o escribinos directo."
-     },
-     {
-      "q": "¿Puedo pedir para el mismo día?",
-      "a": "Sí, hasta una hora antes del cierre. Para eventos, con 48 horas."
-     },
-     {
-      "q": "¿Qué medios de pago aceptan?",
-      "a": "Efectivo y transferencia."
-     }
-    ]
+    "favoritos": {
+     "on": true,
+     "title": "Nuestros favoritos",
+     "text": "Las que más se piden en la esquina."
+    },
+    "menu": {
+     "title": "Nuestro menú"
+    },
+    "como": {
+     "on": true,
+     "title": "¿Cómo funciona?",
+     "lead": "En 3 pasos tenés tu pedido.",
+     "steps": [
+      {
+       "title": "Elegí",
+       "text": "Armá tu pedido desde el menú o escribinos por WhatsApp."
+      },
+      {
+       "title": "Confirmamos",
+       "text": "Te contactamos para confirmar el pedido y coordinar."
+      },
+      {
+       "title": "Disfrutalo",
+       "text": "Lo preparamos al momento y te lo llevamos o lo retirás en el local."
+      }
+     ]
+    },
+    "historia": {
+     "on": true,
+     "eyebrow": "Nuestra historia",
+     "title": "Un horno de barrio",
+     "text": "La Esquina nació como un horno de barrio: una masa, una salsa y ganas de hacer bien las cosas.\n\nHoy seguimos con las mismas recetas y los mismos ingredientes frescos, cocinados al momento.",
+     "badgeWord": "Buon appetito",
+     "badgeMeaning": "que lo disfrutes",
+     "badgeQuote": "Como decía la abuela: que la comida te dé alegría."
+    },
+    "banda": {
+     "on": true,
+     "text": "PIZZA · EMPANADAS · DELIVERY · CATERING"
+    },
+    "resenas": {
+     "on": true,
+     "title": "Lo que dicen nuestros clientes",
+     "lead": "★★★★★ en Google",
+     "items": [
+      {
+       "text": "La masa es increíble y llegó caliente.",
+       "author": "Ana",
+       "source": "Google"
+      },
+      {
+       "text": "La fugazzeta es la mejor que probé.",
+       "author": "Martín",
+       "source": "Instagram"
+      },
+      {
+       "text": "Rápidos y muy amables.",
+       "author": "Lucía",
+       "source": "Google"
+      }
+     ]
+    },
+    "catering": {
+     "on": true,
+     "eyebrow": "Catering y eventos",
+     "title": "Llevá la pizza a tu evento",
+     "text": "Armamos tablas de pizza y empanadas para cumpleaños, reuniones y eventos de empresa.\n\nCocinamos todo al momento con ingredientes frescos.",
+     "cta": "Consultar por WhatsApp",
+     "info": [
+      {
+       "label": "Zona",
+       "value": "Capital y zona norte"
+      },
+      {
+       "label": "Anticipación",
+       "value": "Mínimo 48 horas"
+      },
+      {
+       "label": "Ideal para",
+       "value": "Cumpleaños, reuniones y eventos de empresa"
+      }
+     ]
+    },
+    "delivery": {
+     "on": true,
+     "title": "Delivery y retiro",
+     "hours": "Lun a Jue: 18:00 a 22:00\nVie y Sáb: 18:00 a 23:30",
+     "extra": ""
+    },
+    "faq": {
+     "on": true,
+     "title": "Preguntas frecuentes",
+     "items": [
+      {
+       "q": "¿Cómo hago mi pedido?",
+       "a": "Armalo desde esta página y se envía por WhatsApp, o escribinos directo."
+      },
+      {
+       "q": "¿Puedo pedir para el mismo día?",
+       "a": "Sí, hasta una hora antes del cierre. Para eventos, con 48 horas."
+      },
+      {
+       "q": "¿Qué medios de pago aceptan?",
+       "a": "Efectivo y transferencia."
+      }
+     ]
+    },
+    "contacto": {
+     "on": true,
+     "instagram": "pizzeria_la_esquina_demo",
+     "note": "Pizza de barrio desde 2020."
+    }
    }
   },
   "tiendaConfig": {},
