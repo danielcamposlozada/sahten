@@ -326,3 +326,53 @@ describe('la app arranca siempre limpia', () => {
     expect(dist).not.toMatch(/Shawarma|Choukri|kibbe|2393-7295|Roca 1489/i);   // solo queda el ejemplo ficticio de la pizzería
   });
 });
+
+describe('proyectos: entrar al último, pantalla tipo perfiles y eliminar', () => {
+  const doc = a => a.window.document;
+  const crear = async (a, nombre) => { a.mem.queueSaveAs(nombre + '.sahten'); await a.s.newProject(nombre); };
+  it('primera vez: bienvenida simple con dos caminos y sin lista de recientes', async () => {
+    const a = await app({}); const html = doc(a).getElementById('proj-welcome').textContent;
+    expect(html).toMatch(/Crear mi negocio/); expect(html).toMatch(/Explorar con un ejemplo/); expect(html).not.toMatch(/Recientes/);
+    expect(doc(a).querySelectorAll('#proj-welcome .sw-card').length).toBe(2);
+    a.window.close();
+  }, 60000);
+  it('con proyectos: la pantalla muestra una tarjeta por negocio (Último / Abierto ahora) y «Nuevo proyecto»', async () => {
+    const a = await app({}); await crear(a, 'Pizzería Norte'); await crear(a, 'Café Centro');
+    a.window.SAHTEN.projectUi.showProjects();
+    const cards = Array.from(doc(a).querySelectorAll('#proj-welcome .pj-card:not(.pj-new)')); expect(cards.map(c => c.querySelector('.pj-name').textContent)).toEqual(['Café Centro', 'Pizzería Norte']);
+    expect(cards[0].querySelector('.pj-av').textContent).toBe('C'); expect(cards[0].textContent).toMatch(/Abierto ahora/);
+    expect(doc(a).querySelector('.pj-new')).toBeTruthy(); expect(doc(a).querySelector('.pj-del')).toBeNull();   // el tacho solo en «Administrar»
+    a.window.close();
+  }, 60000);
+  it('al abrir la app entra directo al último proyecto', async () => {
+    const a = await app({}); await crear(a, 'Pizzería Norte'); a.ev("PRODUCTS.push({id:'x1',name:'Marca',tier:'T3',avgMes:1,ingredients:[],packaging:[],combos:[]}); scheduleSave()");
+    await a.s.saveNow({ force: true }); const disk = a.disk, ls = JSON.stringify(Object.fromEntries(Object.entries(a.window.localStorage)));
+    a.window.close();
+    const b = await openApp({ storage: JSON.parse(ls) }); const mem = createMemoryAdapter({ files: disk });
+    Object.assign(b.window.SAHTEN.project.adapter, { ...mem, store: disk });
+    await b.window.SAHTEN.projectUi.startup();
+    expect(b.window.SAHTEN.project.session.info()).toMatchObject({ status: 'saved', name: 'Pizzería Norte' });
+    expect(b.window.document.getElementById('proj-welcome')).toBeNull(); b.window.close();
+  }, 60000);
+  it('si el último archivo no está, muestra la pantalla de proyectos en vez de fallar', async () => {
+    const a = await app({}); await crear(a, 'Pizzería Norte'); const ls = JSON.stringify(Object.fromEntries(Object.entries(a.window.localStorage))); a.window.close();
+    const b = await openApp({ storage: JSON.parse(ls) }); const mem = createMemoryAdapter({ files: {} });
+    Object.assign(b.window.SAHTEN.project.adapter, { ...mem, store: {} });
+    await b.window.SAHTEN.projectUi.startup();
+    expect(b.window.SAHTEN.project.session.info().status).toBe('closed'); expect(b.window.document.querySelector('#proj-welcome .pj-card')).toBeTruthy(); b.window.close();
+  }, 60000);
+  it('eliminar: quitar de la lista deja el archivo; borrar el archivo lo elimina; si era el abierto, la app queda en blanco', async () => {
+    const a = await app({}); await crear(a, 'Pizzería Norte'); const idNorte = a.s.id; await crear(a, 'Café Centro'); const idCafe = a.s.id;
+    expect(await a.p.removeProject(idNorte)).toBe(true);
+    expect(a.s.recents().map(r => r.name)).toEqual(['Café Centro']); expect(a.disk['Pizzería Norte.sahten']).toBeTruthy();       // el archivo sigue
+    expect(await a.p.removeProject(idCafe, { deleteFile: true })).toBe(true);                                                     // era el abierto
+    expect(a.disk['Café Centro.sahten']).toBeUndefined(); expect(a.s.recents()).toEqual([]); expect(a.s.info().status).toBe('closed'); expect(a.ev('PRODUCTS.length')).toBe(0);
+    a.window.close();
+  }, 60000);
+  it('el menú trae «Cambiar de proyecto…» y Ajustes › Archivo y respaldo la opción de administrar', async () => {
+    const a = await app({}); await crear(a, 'Pizzería Norte');
+    expect(doc(a).getElementById('workspace-menu').textContent).toMatch(/Cambiar de proyecto/);
+    await a.window.SAHTEN.projectUi.renderBackupPanel(); expect(doc(a).getElementById('aj-tab-backup').textContent).toMatch(/Administrar/);
+    a.window.SAHTEN.projectUi.showProjects({ manage: true }); expect(doc(a).querySelectorAll('.pj-del').length).toBe(1); a.window.close();
+  }, 60000);
+});

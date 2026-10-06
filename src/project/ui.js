@@ -30,36 +30,117 @@ function renderMenu() {
   const i = session.info();
   btn.innerHTML = `<span class="workspace-switcher-dot"></span><span class="ws-name" id="proj-menu-name">${esc(i.name || 'Sin proyecto')}</span>
     <svg class="workspace-switcher-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
-  const recents = session.recents().filter(r => r.id !== i.id).slice(0, 5);
   const act = (fn, label, hint = '') => `<button class="workspace-action-btn" onclick="SAHTEN.projectUi.run('${fn}')">${label}${hint ? `<span style="margin-left:auto;font-size:11px;color:var(--muted)">${hint}</span>` : ''}</button>`;
   menu.innerHTML = `
     <div class="workspace-menu-header">Proyecto${i.hasFile ? '' : ' · sin archivo'}</div>
     <div class="workspace-actions" style="border-top:0">
-      ${act('open', 'Abrir…')}
+      ${act('switch', 'Cambiar de proyecto…')}
+      ${act('open', 'Abrir un archivo…')}
       ${act('new', 'Nuevo proyecto…')}
       ${act('importJson', 'Importar copia (.json)…')}
       ${i.status !== 'closed' ? act('save', 'Guardar', i.canAutosave ? 'automático' : '') + act('saveAs', 'Guardar como…') + act('duplicate', 'Duplicar…') + act('exportCopy', 'Exportar copia…') + act('rename', 'Renombrar…') : ''}
-    </div>
-    ${recents.length ? `<div class="workspace-menu-header">Recientes</div><div class="workspace-list">${recents.map(r => `
-      <div class="workspace-item"><div class="workspace-item-name" style="cursor:pointer" onclick="SAHTEN.projectUi.openRecent('${r.id}')">${esc(r.name)}<div class="workspace-item-meta">${new Date(r.openedAt).toLocaleDateString('es-AR')}</div></div></div>`).join('')}</div>` : ''}`;
+    </div>`;
 }
 
-// ── Bienvenida ───────────────────────────────────────────
+// ── Pantalla de proyectos (tipo perfiles) y bienvenida de la primera vez ──────────────
+const AV_COLORS = [[18, 55, 32], [28, 80, 42], [205, 55, 40], [340, 50, 42], [265, 40, 46], [165, 45, 33], [8, 62, 44], [45, 70, 40]];
+function avatarStyle(id) { let h = 2166136261; for (const c of String(id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; const [a, s, l] = AV_COLORS[h % AV_COLORS.length]; return `background:hsl(${a} ${s}% ${l}%)`; }
+function when(iso) {
+  const t = new Date(iso); if (isNaN(t)) return '';
+  const days = Math.floor((Date.now() - t.getTime()) / 86400000);
+  return days <= 0 ? 'Abierto hoy' : days === 1 ? 'Abierto ayer' : days < 30 ? `Abierto hace ${days} días` : 'Abierto el ' + t.toLocaleDateString('es-AR');
+}
+
+/** Primera vez (todavía no hay proyectos): solo dos caminos claros. */
 export function showWelcome() {
   d.getElementById('proj-welcome')?.remove();
-  const recents = session.recents().slice(0, 5);
   const canPick = project.adapter.canAutosave;
   const ov = d.createElement('div'); ov.id = 'proj-welcome'; ov.className = 'sw-ov';
-  ov.innerHTML = `<div class="sw-box"><div class="sw-head"><div class="sw-title">Sahten</div><div class="sw-sub">Cada negocio es un archivo <b>.sahten</b>. Abrí uno, creá uno nuevo o recorré la app con un ejemplo.</div></div>
+  ov.innerHTML = `<div class="sw-box"><div class="sw-head"><div class="sw-title">Bienvenido a Sahten</div><div class="sw-sub">Costos, precios y pedidos de tu negocio, en un solo lugar.</div></div>
     <div class="sw-body">
-      <button class="sw-card" onclick="SAHTEN.projectUi.run('open',true)"><b>Abrir proyecto…</b><span>Elegí un archivo .sahten (o una copia de seguridad .json de versiones anteriores).</span></button>
-      <button class="sw-card" onclick="SAHTEN.projectUi.run('new',true)"><b>Nuevo proyecto</b><span>Te pido dónde guardarlo y armamos el negocio con unas preguntas cortas.</span></button>
-      <button class="sw-card" onclick="SAHTEN.projectUi.run('importJson',true)"><b>Importar copia de seguridad (.json)</b><span>Recuperá todo tu negocio desde un archivo de Sahten v2/v3: se convierte en un proyecto nuevo y elegís dónde guardarlo.</span></button>
-      <button class="sw-card" onclick="SAHTEN.projectUi.run('demo',true)"><b>Explorar con datos de ejemplo</b><span>Una pizzería de muestra con recetas, gastos y canales. Después podés guardarlo como tuyo.</span></button>
-      ${recents.length ? `<div class="sw-lbl" style="margin:6px 0 0">Recientes</div>${recents.map(r => `<button class="sw-card" style="padding:10px 14px" onclick="SAHTEN.projectUi.openRecent('${r.id}',true)"><b style="font-size:14px">${esc(r.name)}</b><span>Abierto el ${new Date(r.openedAt).toLocaleDateString('es-AR')}</span></button>`).join('')}` : ''}
-      ${canPick ? '' : `<div class="sw-note">Este navegador no puede guardar directamente en el archivo. Vas a trabajar y descargar el .sahten con «Guardar». Para guardado automático usá Chrome o Edge, o la app de escritorio.</div>`}
+      <button class="sw-card" onclick="SAHTEN.projectUi.run('new',true)"><b>Crear mi negocio</b><span>Unas preguntas cortas y listo.</span></button>
+      <button class="sw-card" onclick="SAHTEN.projectUi.run('demo',true)"><b>Explorar con un ejemplo</b><span>Una pizzería de muestra, con un recorrido guiado.</span></button>
+      <div class="pj-links"><button class="sw-link" onclick="SAHTEN.projectUi.run('open',true)">Abrir un archivo…</button><span aria-hidden="true">·</span><button class="sw-link" onclick="SAHTEN.projectUi.run('importJson',true)">Importar una copia (.json)</button></div>
+      ${canPick ? '' : `<div class="sw-note">Este navegador no puede guardar directamente en el archivo: vas a descargar el .sahten con «Guardar». Para guardado automático usá Chrome, Edge o la app de escritorio.</div>`}
     </div></div>`;
   d.body.appendChild(ov);
+}
+
+/** Elegir negocio: una tarjeta por proyecto. «Administrar» muestra el tacho para eliminar. */
+export function showProjects({ manage = false } = {}) {
+  d.getElementById('proj-welcome')?.remove();
+  const recents = session.recents();
+  if (!recents.length && !session.isOpen) return showWelcome();
+  const cur = session.info().id;
+  const ov = d.createElement('div'); ov.id = 'proj-welcome'; ov.className = 'sw-ov pj-ov'; ov.dataset.manage = manage ? '1' : '';
+  const card = (r, i) => `<div class="pj-card" role="button" tabindex="0" data-open="${esc(r.id)}" aria-label="Abrir ${esc(r.name)}">
+      <span class="pj-av" style="${avatarStyle(r.id)}">${esc((r.name || '?').trim().charAt(0).toUpperCase())}</span>
+      <span class="pj-name">${esc(r.name)}</span><span class="pj-sub">${when(r.openedAt)}</span>
+      ${r.id === cur ? '<span class="pj-badge on">Abierto ahora</span>' : i === 0 ? '<span class="pj-badge">Último</span>' : ''}
+      ${manage ? `<button class="pj-del" data-del="${esc(r.id)}" data-name="${esc(r.name)}" aria-label="Eliminar ${esc(r.name)}" title="Eliminar">🗑</button>` : ''}
+    </div>`;
+  ov.innerHTML = `<div class="pj-box">
+      ${session.isOpen ? '<button class="pj-x" data-close aria-label="Cerrar">✕</button>' : ''}
+      <div class="pj-title">${manage ? 'Administrar proyectos' : '¿Qué negocio vas a gestionar?'}</div>
+      <div class="pj-grid">
+        ${recents.map(card).join('')}
+        ${manage ? '' : `<div class="pj-card pj-new" role="button" tabindex="0" data-act="new"><span class="pj-av plus">+</span><span class="pj-name">Nuevo proyecto</span><span class="pj-sub">Crear un negocio</span></div>`}
+      </div>
+      <div class="pj-foot">
+        <button class="sw-btn" data-manage="${manage ? '' : '1'}">${manage ? 'Listo' : 'Administrar'}</button>
+        ${manage ? '' : `<div class="pj-links"><button class="sw-link" data-act="open">Abrir un archivo…</button><span aria-hidden="true">·</span><button class="sw-link" data-act="importJson">Importar una copia (.json)</button><span aria-hidden="true">·</span><button class="sw-link" data-act="demo">Ver el ejemplo</button></div>`}
+      </div>
+    </div>`;
+  ov.addEventListener('click', async e => {
+    const t = e.target.closest('[data-del],[data-open],[data-act],[data-manage],[data-close]'); if (!t) return;
+    if (t.dataset.del !== undefined) return askRemove(t.dataset.del, t.dataset.name);
+    if (t.dataset.close !== undefined) return ov.remove();
+    if (t.dataset.manage !== undefined) return showProjects({ manage: !!t.dataset.manage });
+    if (manage) return;
+    if (t.dataset.open) { const ok = await openFromGrid(t.dataset.open); if (!ok) showProjects(); return; }
+    if (t.dataset.act) { ov.remove(); await actions[t.dataset.act](); if (!session.isOpen) showProjects(); }
+  });
+  ov.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.pj-card')) { e.preventDefault(); e.target.click(); } if (e.key === 'Escape' && session.isOpen) ov.remove(); });
+  d.body.appendChild(ov);
+  const first = ov.querySelector('.pj-card'); first && first.focus();
+}
+async function openFromGrid(id) {
+  if (id === session.info().id && session.isOpen) { closeWelcome(); return true; }
+  closeWelcome();
+  try { await session.openRecent(id); return true; } catch (e) { w.alert(e && e.message ? e.message : String(e)); return false; }
+}
+
+// Eliminar: «Quitar de la lista» (el archivo queda) o «Borrar también el archivo» (solo escritorio; pide escribir el nombre)
+function askRemove(id, name) {
+  const canDelete = session.canDeleteFiles;
+  const m = d.createElement('div'); m.className = 'pj-modal';
+  m.innerHTML = `<div class="pj-dlg" role="dialog" aria-modal="true" aria-label="Eliminar ${esc(name)}">
+      <div class="pj-dlg-t">Eliminar «${esc(name)}»</div>
+      <div class="pj-dlg-p"><b>Quitar de la lista</b>: el archivo .sahten queda en tu carpeta y lo podés volver a abrir cuando quieras.${canDelete ? '<br><br><b>Borrar también el archivo</b>: se elimina el proyecto y sus respaldos del disco. No se puede deshacer.' : '<br><br>Este navegador no puede borrar archivos: si querés eliminarlo del todo, borralo desde tu carpeta.'}</div>
+      <div class="pj-dlg-b"><button class="sw-btn" data-r="cancel">Cancelar</button><button class="sw-btn" data-r="list">Quitar de la lista</button>${canDelete ? '<button class="sw-btn pri" style="background:#c0392b;border-color:#c0392b" data-r="file">Borrar el archivo…</button>' : ''}</div></div>`;
+  m.addEventListener('click', async e => {
+    const r = e.target.closest('[data-r]'); if (!r && e.target !== m) return; const k = r && r.dataset.r;
+    if (!k || k === 'cancel') return m.remove();
+    let opts = {};
+    if (k === 'file') {
+      const typed = await w.sahtenAsk(`Para borrar el archivo escribí el nombre del proyecto:\n${name}`, '', { confirmLabel: 'Borrar' });
+      if (typed == null) return;
+      if (typed.trim().toLowerCase() !== String(name).trim().toLowerCase()) return w.alert('El nombre no coincide: no se borró nada.');
+      opts = { deleteFile: true };
+    }
+    m.remove();
+    await project.removeProject(id, opts);
+    showProjects({ manage: true });
+  });
+  d.body.appendChild(m);
+}
+
+/** Al abrir la app: entra directo al último proyecto; si no se puede (el navegador pide permiso, falta el archivo), muestra la pantalla de proyectos. */
+export async function startup() {
+  const last = session.recents()[0];
+  if (!last) return showWelcome();
+  try { await session.openRecent(last.id); d.getElementById('proj-welcome')?.remove(); }
+  catch (e) { console.warn('No se pudo abrir el último proyecto', e); showProjects(); }
 }
 const closeWelcome = () => d.getElementById('proj-welcome')?.remove();
 
@@ -86,6 +167,7 @@ export async function renderBackupPanel() {
       <div class="backup-divider"></div>
       <div class="backup-row"><div><div class="backup-row-title">Reemplazar los datos de este proyecto</div><div class="backup-row-desc">Carga el contenido de otro archivo (.json o .sahten) dentro de este proyecto, que conserva su archivo y su lugar. Antes se guarda un respaldo para deshacerlo.</div></div><button class="btn" onclick="SAHTEN.projectUi.run('replace')">Reemplazar…</button></div>
     </div></div>
+    <div class="card"><div class="card-header"><div class="card-title">📁 Proyectos</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Cambiar o eliminar proyectos</div><div class="backup-row-desc">Ver todos tus negocios, abrir otro o eliminar los que ya no uses (podés quitarlos de la lista o borrar también el archivo).</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" onclick="SAHTEN.projectUi.showProjects()">Cambiar de proyecto</button><button class="btn" onclick="SAHTEN.projectUi.showProjects({manage:true})">Administrar</button></div></div></div></div>
     <div class="card"><div class="card-header"><div class="card-title">🧭 Tour guiado</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Recorrido por la app</div><div class="backup-row-desc">Te explica en un minuto qué hace cada sección y cómo se conectan. Podés verlo cuando quieras, con tus datos o con el ejemplo.</div></div><button class="btn" onclick="sahtenTour.start()">Ver el tour</button></div></div></div>
     ${w.SAHTEN.desktop ? `<div class="card"><div class="card-header"><div class="card-title">⬆ Actualizaciones</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Buscar una versión nueva</div><div class="backup-row-desc">Sahten se actualiza desde las versiones publicadas en GitHub. Tus proyectos no se tocan.</div></div><button class="btn" onclick="SAHTEN.desktop.checkForUpdates()">Buscar actualizaciones</button></div></div></div>` : ''}
     <div class="card"><div class="card-header"><div class="card-title">🛟 Respaldos</div></div><div class="card-body">
@@ -115,6 +197,7 @@ async function restore(kind) {
 }
 
 const actions = {
+  switch: async () => showProjects(),
   open: () => project.open(), new: async () => { const n = await w.sahtenAsk('Nombre del negocio:', 'Mi negocio'); if (n) await project.newProject(n.trim()); },
   save: () => project.save(), saveAs: () => project.saveAs(), duplicate: () => project.duplicate(),
   exportCopy: () => project.exportCopy(), rename: () => project.rename(), demo: () => project.openDemo(),
@@ -142,7 +225,7 @@ export function mountProjectUi() {
 }
 
 export const projectUi = {
-  mount: mountProjectUi, showWelcome, renderBackupPanel, restore, ago, indicatorText,
+  mount: mountProjectUi, showWelcome, showProjects, startup, renderBackupPanel, restore, ago, indicatorText,
   async run(name, fromWelcome) {
     d.getElementById('workspace-menu')?.classList.remove('open');
     if (fromWelcome) closeWelcome();

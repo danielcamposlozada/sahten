@@ -147,6 +147,33 @@ export function createSession(deps) {
       return session.openText(text, ref, ref.name || '');
     },
 
+    /** Cierra el proyecto abierto (la app vuelve a quedar en blanco; el archivo no se toca). */
+    close() {
+      timers.clear(s.timer);
+      Object.assign(s, { status: 'closed', name: '', ref: null, id: null, savedAt: null, error: null, lastHash: null, lastText: null, modifiedAt: null, prevFile: null, timer: null, saving: false, pending: false, readOnly: false });
+      emit(); if (deps.onClosed) deps.onClosed();
+    },
+
+    /** ¿Se puede borrar el archivo del disco desde acá? (solo la app de escritorio) */
+    get canDeleteFiles() { return typeof deps.adapter.remove === 'function'; },
+
+    /** Quita un proyecto de la lista. Con deleteFile también borra el .sahten y sus respaldos de la carpeta. */
+    async removeProject(id, { deleteFile = false } = {}) {
+      const ref = await deps.adapter.recall(id);
+      if (deleteFile) {
+        if (!ref || typeof deps.adapter.remove !== 'function') throw new Error('Este navegador no puede borrar archivos. Quitá el proyecto de la lista y borralo desde tu carpeta.');
+        if (deps.backupStore && deps.backupStore.bind) {
+          deps.backupStore.bind(id, ref);
+          for (const n of await deps.backupStore.list(id)) await deps.backupStore.remove(id, n);
+        }
+        await deps.adapter.remove(ref);
+      }
+      deps.config.set('recents', recents().filter(r => r.id !== id));
+      try { await deps.adapter.forget(id); } catch (e) { /* opcional */ }
+      if (s.id === id) session.close();
+      return true;
+    },
+
     /** Proyecto nuevo y vacío. Con `pickFile` pide dónde guardarlo (gesto del usuario). */
     async newProject(name = 'Proyecto nuevo', { pickFile = true } = {}) {
       const f = emptyFile(name); f.project.id = uid();

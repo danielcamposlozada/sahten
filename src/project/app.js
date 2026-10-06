@@ -99,7 +99,7 @@ const adapter = lazy('adapter'), backupStore = lazy('backupStore'), config = laz
 // Al abrir un proyecto: cierra los meses pasados de gastos fijos, crea el mes en curso y recuerda revisarlo
 function onOpened() { try { w.gfmEnsureMonths(); w.gfmRemindToast(); } catch (e) { console.warn(e); } try { w.SAHTEN.online && w.SAHTEN.online.onProjectOpened && w.SAHTEN.online.onProjectOpened(); } catch (e) { console.warn(e); } }
 
-export const session = createSession({ adapter, backupStore, config, collect, apply, importProjection, onOpened });
+export const session = createSession({ adapter, backupStore, config, collect, apply, importProjection, onOpened, onClosed: () => { resetApp(); try { w.renderDashboard(); w.initStock(); } catch (e) { /* */ } } });
 
 /** Pizzería de ejemplo (generado con `npm run demo`: punto fijo de guardar → cargar, ver scripts/make-demo.mjs). */
 function demoFile() {
@@ -154,6 +154,7 @@ export const project = {
   async changeLocation() { try { const ok = await session.saveAs(); if (ok) toast('Ahora el proyecto se guarda en: ' + (session.info().path || session.info().fileName)); return ok; } catch (e) { fail(e); } },
   async chooseProjectsDir() { try { if (!adapter.pickFolder) return null; const dir = await adapter.pickFolder(); if (dir) { adapter.setProjectsDir(dir); toast('Los proyectos nuevos se proponen en: ' + dir); } return dir; } catch (e) { fail(e); } },
   async openRecent(id) { try { return await session.openRecent(id); } catch (e) { fail(e); } },
+  async removeProject(id, opts) { try { return await session.removeProject(id, opts); } catch (e) { fail(e); return false; } },
   async newProject(name) {
     try {
       await session.newProject(name || 'Proyecto nuevo');

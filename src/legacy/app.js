@@ -5005,7 +5005,7 @@ function wkTab(btn, sectionId) {
   SAHTEN.project.resetApp();
   SAHTEN.projectUi.mount();
   renderDashboard();
-  SAHTEN.projectUi.showWelcome();
+  await SAHTEN.projectUi.startup();   // entra directo al último proyecto (o muestra la pantalla de proyectos)
 
   // Autosave en cualquier cambio de input
   document.addEventListener('input', scheduleSave);

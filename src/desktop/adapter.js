@@ -46,6 +46,7 @@ export function createTauriAdapter({ dialog, fs }, config, rand = () => Math.ran
     async remember(id, ref) { config.set('paths', { ...paths(), [id]: { path: ref.path, name: ref.name } }); },
     async recall(id) { return paths()[id] || null; },
     async forget(id) { const p = { ...paths() }; delete p[id]; config.set('paths', p); },
+    async remove(ref) { await fs.remove(ref.path); },
   };
   return adapter;
 }

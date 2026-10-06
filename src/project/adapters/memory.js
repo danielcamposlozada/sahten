@@ -12,6 +12,7 @@ export function createMemoryAdapter({ files = {}, canAutosave = true } = {}) {
     async remember(id, ref) { store['__ref:' + id] = JSON.stringify(ref); },
     async recall(id) { const r = store['__ref:' + id]; return r ? JSON.parse(r) : null; },
     async forget(id) { delete store['__ref:' + id]; },
+    async remove(ref) { delete store[ref.name]; },
     n: () => ++n,
   };
 }
