@@ -1,5 +1,10 @@
 # Changelog
 
+## Sin publicar
+
+- **Sitio web con portada**: el menú publicado puede incluir portada, favoritos, cómo funciona, historia, reseñas, catering, delivery, preguntas frecuentes e Instagram (Menú Online › Sitio web). Descripción corta por producto.
+- **Proyectos**: la app entra directo al último proyecto; pantalla de proyectos tipo perfiles; bienvenida más simple; eliminar proyectos (quitar de la lista o borrar el archivo).
+
 ## 0.4.2
 
 - **Menú Online rediseñado** en una sola pantalla: estado de publicación (sin publicar / al día / cambios sin publicar / falta completar), lista agrupada por categoría con interruptores, arrastrar para ordenar, fotos, avisos por producto (precio $0, sin categoría, sin foto), filtros y búsqueda, ajustes plegables y **vista previa del celular en vivo**.

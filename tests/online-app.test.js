@@ -193,3 +193,20 @@ describe('Menú Online (admin): una sola pantalla con estado, lista por categor�
     a.window.close();
   }, 60000);
 });
+
+describe('Menú Online (admin): sitio web y descripciones se guardan en el proyecto', () => {
+  it('editar portada, reseñas y descripciones; guardar y volver a abrir conserva todo', async () => {
+    const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close();
+    a.ev("showPanel('menuonline'); renderMenuOnline();"); const doc = a.window.document;
+    expect(doc.querySelector('[data-mo-site-check=enabled]').checked).toBe(true);                       // el demo ya trae portada
+    const set = (sel, v) => { const el = doc.querySelector(sel); el.value = v; el.dispatchEvent(new a.window.Event('input', { bubbles: true })); };
+    set('[data-mo-site=heroTitle]', 'Mi portada nueva');
+    doc.querySelector('[data-mo-add=reviews]').click(); const nrev = doc.querySelectorAll('[data-mo-list=reviews][data-f=text]').length;
+    set(`[data-mo-list=reviews][data-i="${nrev - 1}"][data-f=text]`, 'Excelente');
+    doc.querySelector('[data-mo-desc]').click(); const pid = doc.querySelector('[data-mo-pdesc]').dataset.moPdesc; set('[data-mo-pdesc]', 'Descripción nueva');
+    const m = a.on.publish.currentMenu(); expect(m.site.heroTitle).toBe('Mi portada nueva'); expect(m.site.reviews.at(-1).text).toBe('Excelente'); expect(m.products.find(p => p.id === pid).description).toBe('Descripción nueva');
+    expect(a.ev('SAHTEN.project.collect().catalog.productos.find(p=>p.id===' + JSON.stringify(pid) + ').description')).toBe('Descripción nueva');   // sobrevive al guardar
+    expect(a.ev('SAHTEN.project.collect().online.menuConfig.site.heroTitle')).toBe('Mi portada nueva');
+    a.window.close();
+  }, 60000);
+});

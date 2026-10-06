@@ -4530,6 +4530,7 @@ function collectState() {
     channelDiscounts: p.channelDiscounts ?? {},
     absorbeGF:        p.absorbeGF ?? null,
     priceAdj:         p.priceAdj ?? 1,
+    ...(p.description ? { description: p.description } : {}),   // descripción corta para el menú publicado
   }));
 
   // Clon profundo de INGREDIENTES con todos sus campos

@@ -15,12 +15,17 @@ function _menuConfigDefaults() {
     showImages: true,
     whatsappNumber: '',
     deliveryNote: '',
+    site: _menuSiteDefaults(),
   };
+}
+// Portada y secciones del sitio publicado (opcional: apagado, se publica solo el menú)
+function _menuSiteDefaults() {
+  return { enabled: false, heroTitle: '', heroSubtitle: '', ctaLabel: 'Armá tu pedido', highlights: [], favoritesTitle: 'Nuestros favoritos', aboutTitle: '', aboutText: '', hours: '', instagram: '', reviews: [], catering: { enabled: false, title: '', text: '', zone: '', notice: '' }, faq: [] };
 }
 window._menuConfigDefaults = _menuConfigDefaults;
 function _loadMenuConfig() {
   const defaults = _menuConfigDefaults();
-  try { const r = localStorage.getItem('sahten_menu_config'); if (r) { const c = {...defaults, ...JSON.parse(r)}; ['hiddenProducts','hiddenCategories','categoryOrder'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; }); return c; } } catch (e) {}
+  try { const r = localStorage.getItem('sahten_menu_config'); if (r) { const c = {...defaults, ...JSON.parse(r)}; c.site = {..._menuSiteDefaults(), ...(c.site || {})}; c.site.catering = {..._menuSiteDefaults().catering, ...(c.site.catering || {})}; ['hiddenProducts','hiddenCategories','categoryOrder'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; }); return c; } } catch (e) {}
   return defaults;
 }
 function _saveMenuConfig() {
@@ -32,8 +37,13 @@ let MENU_CONFIG = _loadMenuConfig();
 // ═══════════════════════════════════════════════════════════
 // MENÚ ONLINE — una sola pantalla: estado de publicación, lista por categoría y vista previa en vivo
 // ═══════════════════════════════════════════════════════════
-const _moUi = { q: '', filter: 'all', collapsed: {}, bound: false };
+const _moUi = { q: '', filter: 'all', collapsed: {}, desc: {}, bound: false };
 
+function _moSite() {
+  const d = _menuSiteDefaults(); const c = MENU_CONFIG.site = { ...d, ...(MENU_CONFIG.site || {}) }; c.catering = { ...d.catering, ...(c.catering || {}) };
+  ['highlights', 'reviews', 'faq'].forEach(k => { if (!Array.isArray(c[k])) c[k] = []; });
+  return c;
+}
 function _moProducts() { return (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly && p.name) : []; }
 function _moIsHiddenCat(cat) { return !!cat && MENU_CONFIG.hiddenCategories.includes(cat); }
 function _moIsVisible(p) { return !MENU_CONFIG.hiddenProducts.includes(p.id) && !_moIsHiddenCat(p.category); }
@@ -90,11 +100,13 @@ function renderMenuOnline() {
               <div style="font-size:11.5px;color:var(--muted)">Publicar paso a paso: docs/PUBLICAR.md. El pedido sale por WhatsApp con el precio de Mostrador; no lleva costos ni márgenes.</div>
             </div>
           </details>
+          <details class="mo-settings" id="mo-site"><summary>Sitio web: portada y secciones</summary><div class="mo-fields" id="mo-site-body"></div></details>
         </div>
         <aside class="mo-side" id="mo-side" aria-label="Vista previa del menú"></aside>
       </div>
     </div>`;
   _moBind(panel);
+  _moRenderSite();
   _moRefresh();
 }
 
@@ -166,7 +178,8 @@ function _moRenderList() {
         ${showImgs ? `<div class="mo-thumb">${img ? `<img src="${_esc(img)}" alt="">` : _esc((p.name || '?').trim().charAt(0).toUpperCase())}</div>` : '<span></span>'}
         <div style="min-width:0"><div class="mo-pname">${_esc(p.name)}${p.star ? ' ⭐' : ''}${hiddenCat && !MENU_CONFIG.hiddenProducts.includes(p.id) ? ' <span style="font-size:10.5px;color:var(--accent)">(categoría oculta)</span>' : ''}</div>
           ${warns.length ? `<div class="mo-warns">${warns.map(w => `<span class="mo-warn ${w.bad ? 'bad' : ''}">${_esc(w.t)}</span>`).join('')}</div>` : ''}</div>
-        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}</div>
+        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}<button class="mo-iconbtn" style="margin-left:8px" data-mo-desc="${_esc(p.id)}" aria-label="Descripción de ${_esc(p.name)}" title="Descripción corta">✎</button></div>
+        ${_moUi.desc[p.id] || p.description ? `<div style="grid-column:2/-1">${_moUi.desc[p.id] ? `<input class="custom-input" style="width:100%" maxlength="220" placeholder="Descripción corta (se muestra en el menú)" data-mo-pdesc="${_esc(p.id)}" value="${_esc(p.description || '')}">` : `<div class="desc" style="font-size:12px;color:var(--muted)">${_esc(p.description)}</div>`}</div>` : ''}
       </div>`;
     }).join('') : '';
     return `<section class="mo-cat ${hiddenCat ? 'off' : ''}" data-cat-block="${_esc(g.cat)}">${head}${rows}</section>`;
@@ -190,6 +203,30 @@ function _moRenderPreview() {
       <div class="mo-ph-body">${body}</div>
       <div class="mo-ph-foot">Pedir por WhatsApp</div>
     </div><div class="mo-side-cap">Así lo ve el cliente. Se actualiza solo.</div>`;
+}
+
+function _moRenderSite() {
+  const el = document.getElementById('mo-site-body'); if (!el) return;
+  const S = _moSite();
+  const f = (label, key, ph, area) => `<label class="f">${label}${area ? `<textarea class="custom-input" rows="${area}" style="resize:vertical" data-mo-site="${key}" placeholder="${_esc(ph || '')}">${_esc(S[key])}</textarea>` : `<input type="text" class="custom-input" data-mo-site="${key}" placeholder="${_esc(ph || '')}" value="${_esc(S[key])}">`}</label>`;
+  const hl = [0, 1, 2, 3].map(i => { const h = S.highlights[i] || {}; return `<div style="display:grid;grid-template-columns:56px 1fr 1.4fr;gap:8px"><input class="custom-input" placeholder="🍕" aria-label="Ícono ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="icon" value="${_esc(h.icon)}"><input class="custom-input" placeholder="Título" aria-label="Título ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="title" value="${_esc(h.title)}"><input class="custom-input" placeholder="Detalle" aria-label="Detalle ${i + 1}" data-mo-list="highlights" data-i="${i}" data-f="text" value="${_esc(h.text)}"></div>`; }).join('');
+  const rows = (key, fields, ph) => S[key].map((it, i) => `<div style="display:grid;gap:6px;padding:10px;border:1px solid var(--border);border-radius:10px">${fields.map(([fk, label, area]) => area ? `<textarea class="custom-input" rows="2" style="resize:vertical" placeholder="${_esc(label)}" aria-label="${_esc(label)}" data-mo-list="${key}" data-i="${i}" data-f="${fk}">${_esc(it[fk])}</textarea>` : `<input class="custom-input" placeholder="${_esc(label)}" aria-label="${_esc(label)}" data-mo-list="${key}" data-i="${i}" data-f="${fk}" value="${_esc(it[fk])}">`).join('')}<div><button class="btn" data-mo-del="${key}" data-i="${i}">Quitar</button></div></div>`).join('');
+  el.innerHTML = `
+    <div class="mo-checks"><label><span class="mo-sw"><input type="checkbox" data-mo-site-check="enabled" ${S.enabled ? 'checked' : ''}><span></span></span>Publicar portada y secciones junto al menú</label></div>
+    <div style="font-size:12px;color:var(--muted)">Apagado, se publica solo el menú de productos. Encendido, tu página suma portada, favoritos (los productos con ⭐), cómo funciona, tu historia, reseñas, catering, delivery y preguntas.</div>
+    ${f('Título de la portada', 'heroTitle', 'Ej: Las mejores pizzas del barrio')}
+    ${f('Subtítulo', 'heroSubtitle', 'Ej: Masa madre, ingredientes frescos y delivery en el día')}
+    <div style="font-size:12px;font-weight:700;color:var(--muted)">Destacados de la portada (hasta 4)</div>${hl}
+    ${f('Título de tu historia', 'aboutTitle', 'Ej: Nuestra historia')}
+    ${f('Tu historia (separá los párrafos con una línea en blanco)', 'aboutText', '', 5)}
+    ${f('Horarios de delivery', 'hours', 'Lun a Jue 18:00 a 22:00\nVie y Sáb 18:00 a 23:00', 3)}
+    ${f('Instagram (usuario)', 'instagram', 'tu_usuario')}
+    <div class="mo-checks"><label><span class="mo-sw"><input type="checkbox" data-mo-cat-check="enabled" ${S.catering.enabled ? 'checked' : ''}><span></span></span>Mostrar catering y eventos</label></div>
+    ${S.catering.enabled ? ['title:Título:Catering y eventos', 'text:Descripción', 'zone:Zona de cobertura', 'notice:Anticipación (ej. mínimo 48 horas)'].map(x => { const [k, l, ph] = x.split(':'); return `<label class="f">${l}<input type="text" class="custom-input" data-mo-cat="${k}" placeholder="${_esc(ph || '')}" value="${_esc(S.catering[k])}"></label>`; }).join('') : ''}
+    <div style="font-size:12px;font-weight:700;color:var(--muted)">Reseñas (hasta 9)</div>${rows('reviews', [['text', 'Lo que dijo el cliente', 1], ['author', 'Nombre'], ['source', 'Dónde lo dijo (Google, Instagram…)']])}
+    <div><button class="btn" data-mo-add="reviews" ${S.reviews.length >= 9 ? 'disabled' : ''}>+ Agregar reseña</button></div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted)">Preguntas frecuentes (hasta 12)</div>${rows('faq', [['q', 'Pregunta'], ['a', 'Respuesta', 1]])}
+    <div><button class="btn" data-mo-add="faq" ${S.faq.length >= 12 ? 'disabled' : ''}>+ Agregar pregunta</button></div>`;
 }
 
 // ─── Acciones ──────────────────────────────────────────
@@ -226,6 +263,13 @@ function _moPreview() { try { SAHTEN.online.publish.preview(); } catch (e) { ale
 function _moBind(panel) {
   if (_moUi.bound) return; _moUi.bound = true;
   panel.addEventListener('click', e => {
+    const ad = e.target.closest('[data-mo-add],[data-mo-del],[data-mo-desc]');
+    if (ad && panel.contains(ad)) {
+      if (ad.dataset.moDesc) { _moUi.desc[ad.dataset.moDesc] = !_moUi.desc[ad.dataset.moDesc]; _moRenderList(); const i = panel.querySelector(`[data-mo-pdesc="${CSS.escape(ad.dataset.moDesc)}"]`); i && i.focus(); return; }
+      const S = _moSite(); const k = ad.dataset.moAdd || ad.dataset.moDel;
+      if (ad.dataset.moAdd) S[k].push(k === 'reviews' ? { text: '', author: '', source: '' } : { q: '', a: '' }); else S[k].splice(+ad.dataset.i, 1);
+      _saveMenuConfig(); _moRenderSite(); _moRenderStatus(); return;
+    }
     const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove]'); if (!t || !panel.contains(t)) return;
     if (t.dataset.mo === 'publish') _moPublish();
     else if (t.dataset.mo === 'preview') _moPreview();
@@ -241,11 +285,17 @@ function _moBind(panel) {
     if (t.dataset.moProd) _moToggleProduct(t.dataset.moProd, t.checked);
     else if (t.dataset.moCat) _moCatToggle(t.dataset.moCat, t.checked);
     else if (t.dataset.moCheck) { MENU_CONFIG[t.dataset.moCheck] = t.checked; _moPersist(); }
+    else if (t.dataset.moSiteCheck) { _moSite()[t.dataset.moSiteCheck] = t.checked; _saveMenuConfig(); _moRenderStatus(); }
+    else if (t.dataset.moCatCheck) { _moSite().catering[t.dataset.moCatCheck] = t.checked; _saveMenuConfig(); _moRenderSite(); _moRenderStatus(); }
   });
   panel.addEventListener('input', e => {
     const t = e.target;
     if (t.id === 'mo-search') { _moUi.q = t.value; _moRenderList(); }
     else if (t.dataset.moSet) { MENU_CONFIG[t.dataset.moSet] = t.value; _saveMenuConfig(); _moRenderStatus(); _moRenderPreview(); }
+    else if (t.dataset.moSite) { _moSite()[t.dataset.moSite] = t.value; _saveMenuConfig(); _moRenderStatus(); }
+    else if (t.dataset.moCat) { _moSite().catering[t.dataset.moCat] = t.value; _saveMenuConfig(); _moRenderStatus(); }
+    else if (t.dataset.moList) { const L = _moSite()[t.dataset.moList]; const i = +t.dataset.i; while (L.length <= i) L.push({}); L[i][t.dataset.f] = t.value; _saveMenuConfig(); _moRenderStatus(); }
+    else if (t.dataset.moPdesc) { const p = _moProducts().find(x => x.id === t.dataset.moPdesc); if (p) { p.description = t.value; if (typeof scheduleSave === 'function') scheduleSave(); _moRenderStatus(); } }
   });
   let dragged = null;
   panel.addEventListener('dragstart', e => { const h = e.target.closest && e.target.closest('[data-drag-cat]'); if (!h) return; dragged = h.dataset.dragCat; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragged); } catch (x) { /* */ } });

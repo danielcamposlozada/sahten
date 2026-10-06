@@ -251,3 +251,41 @@ describe('web publicada', () => {
     expect(srcs).toEqual(['img/a.jpg']);
   });
 });
+
+describe('sitio web: portada y secciones junto al menú', () => {
+  const SITE = { enabled: true, heroTitle: 'Pizza <b>de barrio</b>', heroSubtitle: 'Hecha al momento', highlights: [{ icon: '🍕', title: 'Masa de 48 h', text: 'Liviana' }, { title: '' }, { title: 'B' }, { title: 'C' }, { title: 'D' }, { title: 'E' }],
+    aboutTitle: 'Historia', aboutText: 'Primer párrafo.\n\nSegundo párrafo.', hours: 'Lun a Jue 18 a 22', instagram: '@mi.local!<x>',
+    reviews: Array.from({ length: 12 }, (_, i) => ({ text: 'Muy rica ' + i, author: 'Ana', source: 'Google' })).concat([{ text: '   ' }]),
+    catering: { enabled: true, title: 'Eventos', text: 'Para tu fiesta', zone: 'Zona norte', notice: '48 horas' },
+    faq: [{ q: '¿Cómo pido?', a: 'Desde acá.' }, { q: '', a: 'sin pregunta' }] };
+  const st = () => { const x = demoState(); x.project.currencySymbol = '$'; return x; };
+  const menuCon = site => buildMenuJson(st(), { menuConfig: { whatsappNumber: '+54 9 11 5555-0123', title: 'Mi local', site }, tienda: TIENDA, store: { name: 'Mi local' } });
+
+  it('apagado no agrega nada; encendido recorta y limpia lo que escribe el dueño', () => {
+    expect(menuCon({ ...SITE, enabled: false }).site).toBeNull(); expect(menuCon(undefined).site).toBeNull();
+    const m = menuCon(SITE).site;
+    expect(m.highlights.map(h => h.title)).toEqual(['Masa de 48 h', 'B', 'C', 'D']);          // sin vacíos, máximo 4
+    expect(m.reviews).toHaveLength(9); expect(m.faq).toEqual([{ q: '¿Cómo pido?', a: 'Desde acá.' }]);
+    expect(m.instagram).toBe('mi.localx'); expect(m.catering).toMatchObject({ title: 'Eventos', zone: 'Zona norte' });
+  });
+  it('la página muestra portada, favoritos (solo ⭐), historia, reseñas, catering, preguntas y escapa el texto', async () => {
+    const m = menuCon(SITE); const a = await web({ menu: m }); const d = a.d;
+    expect(d.querySelector('.hero h1').textContent).toBe('Pizza <b>de barrio</b>'); expect(d.querySelector('.hero h1 b')).toBeNull();   // nada de HTML
+    expect(d.querySelectorAll('.hl > div').length).toBe(4);
+    const stars = m.products.filter(p => p.star).length; expect(d.querySelectorAll('#s-top .grid .card').length).toBe(stars);
+    expect(d.querySelectorAll('#s-about p').length).toBe(2); expect(d.querySelectorAll('.rev').length).toBe(9);
+    expect(d.querySelector('#s-catering').textContent).toMatch(/Para tu fiesta/); expect(d.querySelectorAll('.faq details').length).toBe(1);
+    expect(d.querySelector('.sfoot a[href^="https://instagram.com/"]').getAttribute('href')).toBe('https://instagram.com/mi.localx');
+    expect(d.querySelector('header').offsetParent === null || getComputedStyle(d.querySelector('header')).display === 'none' || d.body.classList.contains('has-site')).toBe(true);
+    a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Pedido (1)');                                   // el carrito sigue funcionando
+  });
+  it('sin sitio, la página es la de siempre (encabezado simple, sin portada)', async () => {
+    const a = await web({ menu: menuCon({ ...SITE, enabled: false }) });
+    expect(a.d.body.classList.contains('has-site')).toBe(false); expect(a.d.querySelector('.hero')).toBeNull(); expect(a.d.querySelector('#h-title').textContent).toBe('Mi local');
+  });
+  it('la descripción corta de cada producto sale en el menú', async () => {
+    const x = st(); x.products[0].description = 'Con aceitunas'; const m = buildMenuJson(x, { menuConfig: { whatsappNumber: '+54 9 11 5555-0123' }, tienda: TIENDA, store: { name: 'Mi local' } });
+    expect(m.products.find(p => p.id === x.products[0].id).description).toBe('Con aceitunas');
+    const a = await web({ menu: m }); expect(a.d.querySelector('.desc').textContent).toBe('Con aceitunas');
+  });
+});

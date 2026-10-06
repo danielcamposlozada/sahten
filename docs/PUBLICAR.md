@@ -52,3 +52,25 @@ Los tres hostings permiten conectar un dominio (`menu.tulocal.com`) desde su pan
 
 Con **Supabase** (plan gratis) los pedidos entran en tiempo real a Mostrador › Delivery y el menú se actualiza solo, sin volver a subir archivos.
 Ver [SUPABASE.md](SUPABASE.md). Publicás igual la carpeta, pero con la conexión cargada: si el cliente no tiene internet, la web se lo avisa.
+
+
+## Un solo sitio: portada + menú
+
+En **Menú Online › Sitio web: portada y secciones** podés encender una portada completa para el mismo sitio del menú: título y subtítulo,
+destacados, **favoritos** (los productos con ⭐), cómo funciona, tu historia, reseñas, catering, horarios y zona de delivery, preguntas
+frecuentes e Instagram. Cada producto puede llevar una **descripción corta** (el lápiz ✎ de su fila). Apagado, se publica solo el menú.
+Todo sale de lo que cargues en la app: al volver a **Publicar**, el sitio se actualiza.
+
+## Dónde alojarlo: opciones
+
+| Opción | Costo | Notas |
+|---|---|---|
+| **Cloudflare Pages** (recomendada) | Gratis | Ancho de banda sin límite, rápido, dominio propio fácil |
+| **Netlify** | Gratis | Arrastrar y soltar; 100 GB/mes en el plan gratis |
+| **GitHub Pages** | Gratis | Se actualiza desde un repositorio; solo sitios estáticos |
+| **Firebase Hosting** | Gratis hasta cierto uso | Requiere instalar su herramienta |
+| **Vercel** | Gratis | El plan gratis es solo para uso **no comercial**: no sirve para un negocio |
+| **Hosting tradicional** | ~US$2-5/mes | Subís por FTP; a veces incluye dominio y correo |
+
+Un **dominio propio** (por ejemplo `tunegocio.com`) cuesta ~US$10 al año; en Cloudflare se compra al costo. Con Cloudflare Pages podés
+usar una dirección gratis `algo.pages.dev` y sumar el dominio después.

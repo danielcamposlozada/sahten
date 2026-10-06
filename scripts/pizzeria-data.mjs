@@ -22,15 +22,15 @@ const row = ([ingId, qty, unit]) => ({ ingId, qty, unit, v: 0 });
 const prod = (id, name, category, tier, avgMes, lines, packaging, extra = {}) => ({
   id, name, star: !!extra.star, tier, gfPct: 15, gfPctOverride: null, avgMes, discount: 0, discountType: 'pct', receta_cost: 0, porciones: 1, merma: 0,
   porcionesOverride: null, porcionLabel: 'porciones', recetaOnly: false, category, pesoTotal: String(extra.peso || ''), pesoUnit: 'g', porcionCant: '', porcionUnit: 'g',
-  pesoTotalManual: false, weeks: [25, 25, 25, 25], tags: extra.tags || [], ingredients: lines.map(row), packaging: packaging.map(([envId, qty]) => ({ envId, qty, unit: 'u', v: 0 })), combos: [], channelDiscounts: {},
+  pesoTotalManual: false, weeks: [25, 25, 25, 25], tags: extra.tags || [], description: extra.desc || '', ingredients: lines.map(row), packaging: packaging.map(([envId, qty]) => ({ envId, qty, unit: 'u', v: 0 })), combos: [], channelDiscounts: {},
 });
 export const PRODUCTS = [
-  prod('pizza_muzza', 'Pizza Muzzarella', 'Pizzas', 'T3', 420, [...masa, ...salsa, ['muzza', 300, 'g'], ['aceituna', 30, 'g']], [['caja', 1], ['servilleta', 2]], { star: true, peso: 800 }),
-  prod('pizza_napo', 'Pizza Napolitana', 'Pizzas', 'T3', 260, [...masa, ...salsa, ['muzza', 280, 'g'], ['tomate_f', 120, 'g'], ['albahaca', 5, 'g']], [['caja', 1], ['servilleta', 2]], { peso: 850 }),
-  prod('pizza_fuga', 'Pizza Fugazzeta', 'Pizzas', 'T2', 200, [...masa, ['muzza', 350, 'g'], ['cebolla', 250, 'g'], ['aceituna', 30, 'g']], [['caja', 1], ['servilleta', 2]], { star: true, peso: 950 }),
-  prod('pizza_jamon', 'Pizza Jamón y Morrones', 'Pizzas', 'T2', 180, [...masa, ...salsa, ['muzza', 280, 'g'], ['jamon', 120, 'g'], ['morron', 100, 'g']], [['caja', 1], ['servilleta', 2]], { peso: 900 }),
-  prod('empanada_jyq', 'Empanadas Jamón y Queso (x6)', 'Empanadas', 'T4', 150, [['harina', 250, 'g'], ['aceite', 30, 'g'], ['muzza', 180, 'g'], ['jamon', 120, 'g'], ['cebolla', 60, 'g']], [['caja_emp', 1], ['servilleta', 2]], { peso: 700 }),
-  prod('gaseosa', 'Gaseosa 1,5 L', 'Bebidas', 'T5', 330, [['gaseosa', 1, 'u']], [['bolsa', 1]], { tags: ['reventa'] }),
+  prod('pizza_muzza', 'Pizza Muzzarella', 'Pizzas', 'T3', 420, [...masa, ...salsa, ['muzza', 300, 'g'], ['aceituna', 30, 'g']], [['caja', 1], ['servilleta', 2]], { desc: 'Clásica de muzzarella con aceitunas, masa de fermentación lenta.', star: true, peso: 800 }),
+  prod('pizza_napo', 'Pizza Napolitana', 'Pizzas', 'T3', 260, [...masa, ...salsa, ['muzza', 280, 'g'], ['tomate_f', 120, 'g'], ['albahaca', 5, 'g']], [['caja', 1], ['servilleta', 2]], { desc: 'Muzzarella, rodajas de tomate fresco y albahaca.', peso: 850 }),
+  prod('pizza_fuga', 'Pizza Fugazzeta', 'Pizzas', 'T2', 200, [...masa, ['muzza', 350, 'g'], ['cebolla', 250, 'g'], ['aceituna', 30, 'g']], [['caja', 1], ['servilleta', 2]], { desc: 'Muzzarella y mucha cebolla caramelizada sobre masa gruesa.', star: true, peso: 950 }),
+  prod('pizza_jamon', 'Pizza Jamón y Morrones', 'Pizzas', 'T2', 180, [...masa, ...salsa, ['muzza', 280, 'g'], ['jamon', 120, 'g'], ['morron', 100, 'g']], [['caja', 1], ['servilleta', 2]], { desc: 'Jamón cocido y morrones asados.', peso: 900 }),
+  prod('empanada_jyq', 'Empanadas Jamón y Queso (x6)', 'Empanadas', 'T4', 150, [['harina', 250, 'g'], ['aceite', 30, 'g'], ['muzza', 180, 'g'], ['jamon', 120, 'g'], ['cebolla', 60, 'g']], [['caja_emp', 1], ['servilleta', 2]], { desc: 'Media docena de empanadas de jamón y queso, al horno.', peso: 700 }),
+  prod('gaseosa', 'Gaseosa 1,5 L', 'Bebidas', 'T5', 330, [['gaseosa', 1, 'u']], [['bolsa', 1]], { desc: 'Para acompañar: botella de 1,5 L.', tags: ['reventa'] }),
 ];
 export const STOCK_LEVELS = {   // [actual, mínimo]; lo que no figura queda en el valor por defecto
   harina: [18000, 10000], levadura: [450, 500], sal: [3000, 1000], aceite: [4200, 2000], tomate: [9000, 5000], muzza: [14000, 8000], jamon: [3500, 3000],
@@ -47,7 +47,19 @@ export const CHANNELS_PATCH = {   // id → cambios sobre los canales de fábric
   pedidosya: { enabled: true, commission: 0.28 }, fudo: { enabled: false }, mercadopago: { enabled: false },
 };
 export const DIST = { mostrador: 45, whatsapp: 25, rappi: 15, pedidosya: 15, fudo: 0, mercadopago: 0 };
-export const MENU_CONFIG = { title: 'Pizzería La Esquina', subtitle: 'Pedí online y te lo preparamos', whatsappNumber: '+54 9 11 5555-0123' };
+export const MENU_CONFIG = {
+  title: 'Pizzería La Esquina', subtitle: 'Pedí online y te lo preparamos', whatsappNumber: '+54 9 11 5555-0123',
+  site: {
+    enabled: true, heroTitle: 'Pizza de barrio, hecha al momento', heroSubtitle: 'Masa de fermentación lenta, ingredientes frescos y delivery en el día.', ctaLabel: 'Armá tu pedido',
+    highlights: [{ icon: '🍕', title: 'Masa de 48 horas', text: 'Más liviana y crocante.' }, { icon: '🔥', title: 'Al horno de piedra', text: 'Siempre recién salida.' }, { icon: '🛵', title: 'Delivery', text: 'Envío gratis desde $45.000.' }, { icon: '🥟', title: 'Empanadas', text: 'Al horno, por media docena.' }],
+    favoritesTitle: 'Nuestros favoritos', aboutTitle: 'Nuestra historia',
+    aboutText: 'La Esquina nació como un horno de barrio: una masa, una salsa y ganas de hacer bien las cosas.\n\nHoy seguimos con las mismas recetas y los mismos ingredientes frescos, cocinados al momento.',
+    hours: 'Lun a Jue: 18:00 a 22:00\nVie y Sáb: 18:00 a 23:30', instagram: 'pizzeria_la_esquina_demo',
+    reviews: [{ text: 'La masa es increíble y llegó caliente.', author: 'Ana', source: 'Google' }, { text: 'La fugazzeta es la mejor que probé.', author: 'Martín', source: 'Instagram' }, { text: 'Rápidos y muy amables.', author: 'Lucía', source: 'Google' }],
+    catering: { enabled: true, title: 'Pizza para tus eventos', text: 'Armamos tablas de pizza y empanadas para cumpleaños, reuniones y eventos de empresa.', zone: 'Capital y zona norte', notice: 'Mínimo 48 horas de anticipación' },
+    faq: [{ q: '¿Cómo hago mi pedido?', a: 'Armalo desde esta página y se envía por WhatsApp, o escribinos directo.' }, { q: '¿Puedo pedir para el mismo día?', a: 'Sí, hasta una hora antes del cierre. Para eventos, con 48 horas.' }, { q: '¿Qué medios de pago aceptan?', a: 'Efectivo y transferencia.' }],
+  },
+};
 export const PROJECT = { name: 'Pizzería La Esquina (ejemplo)', setupDone: true, demo: true, checklistDismissed: true };
 
 // ── Formato crudo de v3 (filas {n, v} y filas de combo «Pizza x4», «Pizza 1/2») ─────────────────────────────────────────────
