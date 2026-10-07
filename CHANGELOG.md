@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.4
 
 - **Corrección al eliminar proyectos**: al elegir «Borrar el archivo…», el cuadro para escribir el nombre quedaba detrás del anterior y la pantalla se oscurecía sin poder continuar.
 - **Actualizaciones en las notificaciones 🔔**: al abrir la app de escritorio, si hay una versión nueva queda un aviso con el botón «Actualizar ahora» (ya no interrumpe con un cuadro). Los avisos de la app no dependen del proyecto abierto.

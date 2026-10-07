@@ -19,7 +19,7 @@
 
 export const SAHTEN_FORMAT = 'sahten';
 export const SCHEMA_VERSION = 2;
-export const APP_VERSION = '0.4.3';
+export const APP_VERSION = '0.4.4';
 
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
