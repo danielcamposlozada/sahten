@@ -20,7 +20,8 @@ async function getProductImageCached(pid) { const k=_imgKey(pid); if(_imgCache.h
 function _invalidateImgCache(pid) { _imgCache.delete(_imgKey(pid)); }
 
 // ─── Image upload — direct (for CR cards) ────────────────
-async function directUploadImage(productId) {
+async function directUploadImage(productId) { return SAHTEN.photos.pick(productId); }
+async function _directUploadImageOld(productId) {
   const input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
   input.onchange = async () => {
@@ -53,9 +54,7 @@ async function _renderProductImageRow() {
   if (existing) existing.remove();
   const row = document.createElement('div'); row.className = 'prod-img-row';
   row.innerHTML = `
-    <div class="prod-img-thumb empty" id="prod-img-thumb" onclick="document.getElementById('prod-img-input').click()">
-      <div class="prod-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Sin foto</div>
-    </div>
+    ${SAHTEN.photos.thumb(p.id, p.name, { size: 96 })}
     <div class="prod-img-meta">
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         <div><label style="font-size:11px;text-transform:uppercase;letter-spacing:0.4px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">Nombre de la receta</label>
@@ -64,15 +63,9 @@ async function _renderProductImageRow() {
         <input type="text" class="custom-input" value="${_esc(p.category||'')}" placeholder="ej. Sandwiches, Bebidas..." list="cat-datalist" style="font-size:13px" oninput="PRODUCTS[recipeIdx].category=this.value.trim();if(typeof scheduleSave==='function')scheduleSave()" id="recipe-cat-input">
         <datalist id="cat-datalist">${_getProductCategories().map(c=>'<option value="'+_esc(c)+'">').join('')}</datalist></div>
       </div>
-      <div class="prod-img-actions">
-        <button class="btn" onclick="document.getElementById('prod-img-input').click()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Subir foto</button>
-        <button class="btn" id="prod-img-remove-btn" style="display:none" onclick="_removeProductImage()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> Quitar</button>
-        <input type="file" id="prod-img-input" accept="image/*" style="display:none" onchange="_handleProductImageUpload(event,'${p.id}')">
-      </div>
+      <div class="prod-img-actions"><button class="btn" data-photo-pick="${p.id}">📷 Subir o cambiar foto</button><span style="font-size:11px;color:var(--muted)">También podés arrastrar una imagen sobre la foto.</span></div>
     </div>`;
   body.insertBefore(row, body.firstChild);
-  const data = await getProductImage(p.id);
-  if (data) { const thumb=document.getElementById('prod-img-thumb'); if(thumb){thumb.classList.remove('empty');thumb.innerHTML='<img src="'+data+'" alt="">';} const rm=document.getElementById('prod-img-remove-btn'); if(rm) rm.style.display='inline-flex'; }
 }
 async function _handleProductImageUpload(ev, pid) {
   const file = ev.target.files?.[0]; ev.target.value = '';
@@ -928,3 +921,9 @@ function orderRestoreStock(orderId, silent){
   if(typeof scheduleSave==='function') scheduleSave();
   if(!silent && typeof _posToast==='function') _posToast('Stock devuelto · #'+String(o.num).padStart(4,'0'));
 }
+
+// Una foto cambió: el Mostrador (que guarda fotos en caché) y Costo Receta se vuelven a dibujar.
+window.addEventListener('sahten:photo', ev => {
+  const k = ev.detail && ev.detail.key; if (k) _invalidateImgCache(k);
+  try { if (window.currentPanel === 'mostrador' && typeof renderMostrador === 'function') renderMostrador(); } catch (e) { /* */ }
+});

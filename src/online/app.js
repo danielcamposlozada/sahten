@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // Integración online con la app: publicar el menú (sin backend). Supabase y roles se suman en src/online/*.
 // ═══════════════════════════════════════════════════════════
-import { buildMenuJson } from './menuJson.js';
+import { buildMenuJson, categoryPhotoKey } from './menuJson.js';
 import { buildPublishFiles, buildPublishZip, writeToDirectory, optimizeImage, buildIndexHtml } from './publish.js';
 
 const w = window;
@@ -43,6 +43,7 @@ export const onlinePublish = {
   previewHtml(opts = {}) {
     const m = currentMenu({ forceSite: !!opts.forceSite }); const imgs = w.SAHTEN_IMAGES || {};
     m.products.forEach(p => { if (p.image && imgs[p.id]) p.image = imgs[p.id]; });
+    const ci = m.config && m.config.categoryImages; if (ci) Object.keys(ci).forEach(c => { const k = categoryPhotoKey(c); if (imgs[k]) ci[c] = imgs[k]; });   // en la vista previa las fotos de categoría van incrustadas
     if (m.site && m.site.images) ['hero', 'historia'].forEach(k => { if (m.site.images[k] && imgs['site_' + k]) m.site.images[k] = imgs['site_' + k]; });
     return buildIndexHtml(m);
   },

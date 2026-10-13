@@ -164,7 +164,7 @@ function _moRenderList() {
       ? `<div class="mo-cat-head" draggable="true" data-drag-cat="${_esc(g.cat)}">
           <span class="mo-grip" aria-hidden="true">⋮⋮</span>
           <button class="mo-iconbtn" data-mo-collapse="${_esc(g.cat)}" aria-expanded="${open}" aria-label="${open ? 'Plegar' : 'Desplegar'} ${_esc(g.cat)}">${open ? '▾' : '▸'}</button>
-          <span class="mo-cat-name">${_esc(g.cat)}</span><span class="mo-cat-count">${vis} de ${g.items.length} visibles</span>
+          ${showImgs ? SAHTEN.photos.thumb(SAHTEN.photos.categoryKey(g.cat), 'la categoría ' + g.cat, { size: 32 }) : ''}<span class="mo-cat-name">${_esc(g.cat)}</span><span class="mo-cat-count">${vis} de ${g.items.length} visibles</span>
           <button class="mo-iconbtn" data-mo-catmove="-1" data-cat="${_esc(g.cat)}" aria-label="Subir ${_esc(g.cat)}" ${gi === 0 ? 'disabled' : ''}>▲</button>
           <button class="mo-iconbtn" data-mo-catmove="1" data-cat="${_esc(g.cat)}" aria-label="Bajar ${_esc(g.cat)}" ${gi >= cats.length - 1 ? 'disabled' : ''}>▼</button>
           <label class="mo-sw" title="${hiddenCat ? 'Mostrar' : 'Ocultar'} la categoría"><input type="checkbox" data-mo-cat="${_esc(g.cat)}" ${hiddenCat ? '' : 'checked'} aria-label="Categoría ${_esc(g.cat)} visible"><span></span></label>
@@ -174,10 +174,12 @@ function _moRenderList() {
       const vis = _moIsVisible(p), price = _moPrice(p), img = _moImg(p), warns = _moWarnings(p);
       return `<div class="mo-prod ${vis ? '' : 'off'}">
         <label class="mo-sw"><input type="checkbox" data-mo-prod="${_esc(p.id)}" ${MENU_CONFIG.hiddenProducts.includes(p.id) ? '' : 'checked'} aria-label="${_esc(p.name)} visible"><span></span></label>
-        ${showImgs ? `<div class="mo-thumb">${img ? `<img src="${_esc(img)}" alt="">` : _esc((p.name || '?').trim().charAt(0).toUpperCase())}</div>` : '<span></span>'}
+        ${showImgs ? SAHTEN.photos.thumb(p.id, p.name) : '<span></span>'}
         <div style="min-width:0"><div class="mo-pname">${_esc(p.name)}${p.star ? ' ⭐' : ''}${hiddenCat && !MENU_CONFIG.hiddenProducts.includes(p.id) ? ' <span style="font-size:10.5px;color:var(--accent)">(categoría oculta)</span>' : ''}</div>
           ${warns.length ? `<div class="mo-warns">${warns.map(w => `<span class="mo-warn ${w.bad ? 'bad' : ''}">${_esc(w.t)}</span>`).join('')}</div>` : ''}</div>
-        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}<button class="mo-iconbtn" style="margin-left:8px" data-mo-desc="${_esc(p.id)}" aria-label="Descripción de ${_esc(p.name)}" title="Descripción corta">✎</button></div>
+        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}<button class="mo-iconbtn" style="margin-left:8px" data-mo-desc="${_esc(p.id)}" aria-label="Descripción de ${_esc(p.name)}" title="Descripción corta">✎</button>
+          <button class="mo-mini" data-mo-recipe="${_esc(p.id)}" aria-label="Editar la receta de ${_esc(p.name)}" title="Editar receta (nombre, categoría, ingredientes y foto)">Receta</button>
+          <button class="mo-mini" data-mo-menu="${_esc(p.id)}" aria-label="Ver ${_esc(p.name)} en Menú" title="Ver en Menú (precio, tier y etiquetas)">Precio</button></div>
         ${_moUi.desc[p.id] || p.description ? `<div style="grid-column:2/-1">${_moUi.desc[p.id] ? `<input class="custom-input" style="width:100%" maxlength="220" placeholder="Descripción corta (se muestra en el menú)" data-mo-pdesc="${_esc(p.id)}" value="${_esc(p.description || '')}">` : `<div class="desc" style="font-size:12px;color:var(--muted)">${_esc(p.description)}</div>`}</div>` : ''}
       </div>`;
     }).join('') : '';
@@ -287,6 +289,10 @@ function _moBind(panel) {
   panel.addEventListener('click', e => {
     const ad = e.target.closest('[data-mo-desc]');
     if (ad && panel.contains(ad)) { _moUi.desc[ad.dataset.moDesc] = !_moUi.desc[ad.dataset.moDesc]; _moRenderList(); const i = panel.querySelector(`[data-mo-pdesc="${CSS.escape(ad.dataset.moDesc)}"]`); i && i.focus(); return; }
+    const rc = e.target.closest('[data-mo-recipe]');   // de acá se salta a la receta (nombre, categoría, ingredientes y foto) y al volver se actualiza la lista
+    if (rc && panel.contains(rc)) { const i = PRODUCTS.findIndex(x => x.id === rc.dataset.moRecipe); if (i >= 0 && typeof openRecipe === 'function') openRecipe(i); return; }
+    const mn = e.target.closest('[data-mo-menu]');    // y de acá al Menú (precio, tier, etiquetas), ya filtrado por ese producto
+    if (mn && panel.contains(mn)) { const pr = PRODUCTS.find(x => x.id === mn.dataset.moMenu); if (!pr) return; showPanel('productos'); const q = document.getElementById('prod-search'); if (q) { q.value = pr.name; if (typeof renderProductos === 'function') renderProductos(); } return; }
     const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove],[data-mo-tab]'); if (!t || !panel.contains(t)) return;
     if (t.dataset.mo === 'publish') _moPublish();
     else if (t.dataset.mo === 'preview') _moPreview();
@@ -518,3 +524,8 @@ Object.assign(window, {
   _moToggleProduct, _moToggleAll, _moCatToggle, _moCatMove,
   _renderDeliveryTab, _refreshDelivery,
 });
+
+// Una foto cambió (de donde sea: Menú, Receta, Costo Receta o acá): se actualizan avisos «sin foto», contadores y vista previa.
+function _moAfterChange() { if (!document.getElementById('mo-list')) return; _moRenderList(); _moRenderStatus(); _moRenderPreview(); }
+window.addEventListener('sahten:photo', _moAfterChange);
+window._moAfterRecipe = _moAfterChange;   // al cerrar el modal de receta

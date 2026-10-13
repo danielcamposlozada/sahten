@@ -152,9 +152,10 @@ function renderCostReceta() {
 
     return `<div class="cr-product-card ${isExp?'expanded':''}" style="border-left-color:${isExp?tierObj.color:'var(--border)'}">
       <div class="cr-product-header" onclick="crToggle('${p.id}')">
-        <div>
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">${SAHTEN.photos.thumb(p.id,p.name,{size:48,del:false})}<div>
           <div class="cr-product-name">${p.star?'\u2b50 ':''}<span class="cr-name-text">${p.name}</span> <span class="cr-cat-badge" style="background:${tierObj.color}22;color:${tierObj.color}">${p.tier} \u00d7${tierObj.factor}</span>${p.category?'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:600;cursor:pointer">'+p.category+'</span>':'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:rgba(150,150,150,0.15);color:var(--muted);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500;cursor:pointer">+ categoría</span>'}${p.recetaOnly?'<span style="font-size:10px;background:rgba(107,124,108,0.12);color:var(--muted);border:1px solid rgba(107,124,108,0.25);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">🔒 interna</span>':'<span style="font-size:10px;background:rgba(42,125,46,0.12);color:var(--green);border:1px solid rgba(42,125,46,0.3);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">📋 menú</span>'}</div>
           <div class="cr-meta"><span class="cr-meta-item">${p.ingredients.length} ing. \u00b7 ${p.packaging.length} env.${(p.combos||[]).length?' \u00b7 '+(p.combos||[]).length+' combo':''}</span></div>
+        </div>
         </div>
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
           ${getPorc(p)>1?`<div style="font-size:10px;background:rgba(242,140,0,0.15);color:var(--accent);padding:2px 8px;border-radius:99px;font-weight:600;margin-bottom:2px">✂ ÷${getPorc(p).toFixed(getPorc(p)%1===0?0:2)} ${p.porcionLabel||'porciones'}</div>
@@ -171,7 +172,7 @@ function renderCostReceta() {
       <div class="cr-expand-body">
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <button class="btn btn-accent" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openRecipe(${idx})">\u270f\ufe0f Editar receta</button>
-          <button class="btn" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();directUploadImage('${p.id}')">📷 Foto</button>
+          <button class="btn" style="font-size:11px;padding:4px 12px" data-photo-pick="${p.id}">📷 Foto</button>
           <button class="btn" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openProductDetail(${idx})">\ud83d\udcca Ver detalle precios</button>
           <button class="btn" style="font-size:11px;padding:4px 12px;${p.recetaOnly?'border-color:var(--muted);color:var(--muted)':'border-color:var(--green);color:var(--green);background:var(--green-pale)'}" 
             onclick="event.stopPropagation();PRODUCTS[${idx}].recetaOnly=!PRODUCTS[${idx}].recetaOnly;renderCostReceta();renderProductos()"
@@ -779,7 +780,7 @@ function renderProductos() {
     const commPesos = Math.round(commBase * commRate);
     tr.innerHTML=`
       <td><input type="checkbox" class="prod-cb" ${selectedSet.has(i)?'checked':''} onchange="toggleProd(${i},this.checked)"></td>
-      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:4px"><input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}</div></td>
+      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:8px">${SAHTEN.photos.thumb(p.id,p.name,{size:36,del:false})}<input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}</div></td>
       <td data-col="etiquetas"><div class="prod-tags-wrap">${tagsHtml}${addTagBtn}</div></td>
       <td data-col="categoria"><span class="cat-pill" onclick="editCategoryInline(${i},this)" style="display:inline-block;background:var(--accent);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${p.category||'Sin categoría'}</span></td>
       <td data-col="estrella" style="text-align:center"><button class="star-toggle-btn${p.star?' active':''}" onclick="PRODUCTS[${i}].star=!PRODUCTS[${i}].star;renderProductos();renderDashboard()" title="${p.star?'Quitar estrella':'Marcar como estrella'}">${p.star?'⭐':'☆'}</button></td>
@@ -942,6 +943,7 @@ function renderProdGrid(indices) {
       + '</div>'
       // Header: name + star
       + '<div class="prod-card-header">'
+      +   SAHTEN.photos.thumb(p.id, p.name, { size: 52, del: false })
       +   '<div style="flex:1;min-width:0">'
       +     '<div class="prod-card-name">' + p.name + discBadge + '</div>'
       +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center">' + tagsHtml + addTagBtnGrid + '</div>'
@@ -1354,7 +1356,7 @@ function openRecipe(i) {
   document.getElementById('recipe-title').textContent='Editar receta: '+PRODUCTS[i].name;
   document.getElementById('recipe-overlay').classList.add('open');
 }
-function closeRecipe() { document.getElementById('recipe-overlay').classList.remove('open'); recipeIdx=-1; }
+function closeRecipe() { document.getElementById('recipe-overlay').classList.remove('open'); recipeIdx=-1; if(typeof window._moAfterRecipe==='function') window._moAfterRecipe(); }
 
 function duplicateProduct(i) {
   const src = PRODUCTS[i];

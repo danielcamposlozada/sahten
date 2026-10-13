@@ -125,3 +125,8 @@
 .mo-pv-stage.mobile iframe { width: 390px; max-width: 100%; }
 .mo-pv-note { font-size: 12px; color: var(--muted, #6b7a6c); text-align: center; padding: 8px 12px; }
 @media (max-width: 700px) { .mo-pv { padding: 0; } .mo-pv-box { border-radius: 0; height: 100%; } .mo-pv-stage iframe { height: 100%; } }
+
+.mo-mini { margin-left: 6px; min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card, #fff); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.mo-mini:hover { border-color: var(--accent); color: var(--accent); }
+.mo-mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (pointer: coarse) { .mo-mini { min-height: 44px; } }
