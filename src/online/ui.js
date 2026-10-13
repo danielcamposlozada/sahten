@@ -2,6 +2,7 @@
 // Panel «Nube y usuarios»: conexión con Supabase, sincronización, usuarios, auditoría y vista remota.
 // ═══════════════════════════════════════════════════════════
 import { ROLE_LABEL, ROLE_DESC, INVITABLE, canManageUsers } from './roles.js';
+import { publishMenuConfirmed } from './menuConfirm.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
 const ACTION = { create: 'Creó el proyecto', save: 'Guardó cambios', invite: 'Invitó a', join: 'Se unió como', role: 'Cambió un rol a', remove: 'Quitó a un usuario' };
@@ -32,15 +33,22 @@ export function createOnlineUi({ online, w = window }) {
       await run('nube-msg', () => online.connect({ url: val('nb-url'), anonKey: val('nb-key'), slug: val('nb-slug'), email: val('nb-mail'), password: $('nb-pass').value, signUp: $('nb-new').checked }),
         r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Delivery.');
     },
-    async signIn() { await run('nube-msg', () => online.controller.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
-    disconnect() { if (w.confirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.')) { online.controller.disconnect(); ui.render(); } },
-    async syncMenu() { await run('nube-msg', () => online.controller.syncMenu(), n => `Menú actualizado en línea (${n} productos).`); },
+    async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
+    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.controller.disconnect(); ui.render(); } },
+    async syncMenu() { await run('nube-msg', () => publishMenuConfirmed(online, w), n => (n == null ? 'No se cambió nada: el menú publicado sigue igual.' : `Menú actualizado en línea (${n} productos).`)); },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },
     async resolve(choice) { await run('nube-msg', () => online.resolve(choice), 'Conflicto resuelto.'); },
     async openRemote(id, roleName) { await run('nube-msg', () => online.openRemote(id, roleName), 'Proyecto abierto.'); },
+    /** Lista los proyectos de la nube. No usa run(): run() borra el espacio al terminar y la lista nunca se veía. */
     async listRemote() {
-      await run('nube-remote', async () => { const rows = await online.listRemote(); $('nube-remote').innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role)} · versión ${r.version}</div></div><button class="btn" onclick="SAHTEN.online.ui.openRemote('${r.id}','${r.role}')">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>'; });
+      const slot = $('nube-remote'); if (!slot) return;
+      say('nube-remote', 'Un momento…');
+      try {
+        const rows = await online.listRemote();
+        slot.innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role || '')} · versión ${r.version}</div></div><button class="btn" data-remote="${esc(r.id)}" data-role="${esc(r.role || '')}">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>';
+        slot.querySelectorAll('[data-remote]').forEach(btn => btn.addEventListener('click', () => ui.openRemote(btn.dataset.remote, btn.dataset.role)));
+      } catch (e) { say('nube-remote', e.message || String(e), true); }
     },
     async renderUsers() {
       const host = $('nube-users'); if (!host) return;
@@ -56,7 +64,7 @@ export function createOnlineUi({ online, w = window }) {
     },
     async invite() { await run('nube-users-msg', () => online.invite(val('nb-inv-mail'), val('nb-inv-role')), 'Invitación creada. Avisale a la persona que cree su cuenta con ese email.'); ui.renderUsers(); },
     async setRole(uid, role) { try { await online.setMemberRole(uid, role); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
-    async removeMember(uid) { if (!w.confirm('¿Quitar a este usuario del proyecto?')) return; try { await online.removeMember(uid); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
+    async removeMember(uid) { if (!(await w.sahtenConfirm('¿Quitar a este usuario del proyecto?', { okLabel: 'Quitar', danger: true }))) return; try { await online.removeMember(uid); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
     async renderAudit() {
       const host = $('nube-audit'); if (!host) return;
       try {

@@ -343,6 +343,11 @@ function custApply() {
   applyPaletteColors(_cust);
   // 3. Theme mode
   applyThemeMode(_cust);
+  try {   // la pestaña/ventana y el color del navegador también identifican la tienda
+    const bn = (_cust.brandName || '').trim(); document.title = bn ? bn + ' · Sahten' : 'Sahten';
+    const tc = document.querySelector('meta[name="theme-color"]'); const pv = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); if (tc && pv) tc.setAttribute('content', pv);
+  } catch (e) { /* */ }
+  try { window.dispatchEvent(new Event('sahten:brand')); } catch (e) { /* */ }   // la barra superior muestra la marca de la tienda
 }
 
 function applyBrandIdentity(c) {
@@ -744,10 +749,16 @@ function custSetMode(mode) {
   applyThemeMode(_cust);
   renderCustPanel();
 }
-function custReset() {
+// Al abrir otro proyecto: la marca (nombre, logo, colores) es de cada tienda, así que se vuelve a leer lo que trae el proyecto.
+function custReload() {
+  _cust = custLoad();
+  custApply();
+  try { if (typeof renderCustPanel === 'function') renderCustPanel(); } catch (e) { /* el panel no está abierto */ }
+}
+async function custReset() {
   // Also clear B&W logo
   _cust.bwLogoData = null;
-  if (!confirm('¿Restablecer toda la personalización? Volverás al tema Sahten original.')) return;
+  if (!(await sahtenConfirm('¿Restablecer toda la personalización? Volverás al tema Sahten original.', { okLabel: 'Restablecer', danger: true }))) return;
   _cust = { ...DEFAULT_CUST };
   custSave(_cust);
   custApply();
@@ -987,7 +998,7 @@ function gridCardDuplicate(idx) {
     if (typeof scheduleSave === 'function') scheduleSave();
   }
 }
-function gridCardDelete(idx) {
+async function gridCardDelete(idx) {
   closeGridCardMenu();
   const p = PRODUCTS[idx];
   if (!p) return;
@@ -1002,7 +1013,7 @@ function gridCardDelete(idx) {
         if (typeof scheduleSave === 'function') scheduleSave();
       }
     );
-  } else if (confirm(`¿Eliminar "${p.name}"? Esta acción no se puede deshacer.`)) {
+  } else if (await sahtenConfirm(`¿Eliminar "${p.name}"? Esta acción no se puede deshacer.`, { okLabel: 'Eliminar', danger: true })) {
     PRODUCTS.splice(idx, 1);
     if (typeof renderProductos === 'function') renderProductos();
     if (typeof scheduleSave === 'function') scheduleSave();

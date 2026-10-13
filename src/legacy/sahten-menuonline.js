@@ -129,7 +129,7 @@ function _moRenderStatus() {
     <div class="mo-st-main"><div class="mo-st-title">${title}</div><div class="mo-st-sub">${_esc(sub)}</div></div>
     <div class="mo-st-actions">
       <button class="btn" data-mo="open-site">${_moSite().enabled ? 'Editar el sitio web' : 'Armar el sitio web'}</button>
-      <button class="btn" data-mo="preview">Vista previa en pestaña</button>
+      <button class="btn" data-mo="preview">Ver vista previa</button>
       <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Publicar menú</button>
     </div>
     ${problems.length ? `<div class="mo-problems">${problems.map(t => `<div class="mo-problem">${_esc(t)}${/WhatsApp/.test(t) ? '<button class="btn" data-mo="open-settings">Cargar número</button>' : ''}</div>`).join('')}</div>` : ''}
@@ -183,7 +183,7 @@ function _moRenderList() {
     }).join('') : '';
     return `<section class="mo-cat ${hiddenCat ? 'off' : ''}" data-cat-block="${_esc(g.cat)}">${head}${rows}</section>`;
   }).join('');
-  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta y Menú: acá aparecen solos.'}</div>`;
+  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta o Menú y acá aparecen solos.<br><button class="btn btn-accent empty-action" data-panel="costreceta">Ir a Costo Receta</button>'}</div>`;
 }
 
 function _moRenderPreview() {
@@ -232,7 +232,54 @@ async function _moPublish() {
     if (r) { MENU_CONFIG.lastPublished = { at: new Date().toISOString(), hash: _moHash() }; _saveMenuConfig(); _moRefresh(); }
   } catch (e) { alert('No se pudo publicar: ' + e.message); }
 }
-function _moPreview() { try { SAHTEN.online.publish.preview(); } catch (e) { alert('La vista previa no está disponible: ' + e.message); } }
+// Vista previa dentro de la app (no depende del navegador ni de permisos del sistema)
+let _moPv = { device: 'mobile', prevFocus: null };
+function _moPreview() {
+  let html; try { html = SAHTEN.online.publish.previewHtml(); } catch (e) { alert('La vista previa no está disponible: ' + e.message); return; }
+  _moClosePreview();
+  _moPv.prevFocus = document.activeElement;
+  const ov = document.createElement('div'); ov.className = 'mo-pv'; ov.id = 'mo-pv';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Vista previa del menú online');
+  ov.innerHTML = `<div class="mo-pv-box">
+    <div class="mo-pv-bar">
+      <b>Vista previa del menú</b>
+      <div class="mo-chips" role="group" aria-label="Dispositivo">
+        <button class="mo-chip ${_moPv.device === 'mobile' ? 'on' : ''}" data-pv-dev="mobile" aria-pressed="${_moPv.device === 'mobile'}">Celular</button>
+        <button class="mo-chip ${_moPv.device === 'desktop' ? 'on' : ''}" data-pv-dev="desktop" aria-pressed="${_moPv.device === 'desktop'}">Escritorio</button>
+      </div>
+      <span style="flex:1"></span>
+      <button class="btn" data-pv="external">Abrir en el navegador</button>
+      <button class="btn btn-accent" data-pv="close" autofocus>Cerrar</button>
+    </div>
+    <div class="mo-pv-stage ${_moPv.device}"><iframe id="mo-pv-frame" title="Vista previa del menú online" sandbox="allow-scripts allow-same-origin"></iframe></div>
+    <div class="mo-pv-note">Así se ve la página publicada. Es una vista previa: no se publica nada ni se envían pedidos.</div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('mo-pv-frame').srcdoc = html;
+  ov.addEventListener('click', e => {
+    if (e.target === ov) return _moClosePreview();
+    const t = e.target.closest('[data-pv],[data-pv-dev]'); if (!t) return;
+    if (t.dataset.pv === 'close') _moClosePreview();
+    else if (t.dataset.pv === 'external') _moPreviewExternal();
+    else if (t.dataset.pvDev) {
+      _moPv.device = t.dataset.pvDev;
+      ov.querySelector('.mo-pv-stage').className = 'mo-pv-stage ' + _moPv.device;
+      ov.querySelectorAll('[data-pv-dev]').forEach(b => { const on = b.dataset.pvDev === _moPv.device; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    }
+  });
+  ov.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); _moClosePreview(); } });
+  const first = ov.querySelector('[data-pv="close"]'); first && first.focus();
+}
+function _moClosePreview() {
+  const ov = document.getElementById('mo-pv'); if (!ov) return;
+  ov.remove();
+  try { _moPv.prevFocus && _moPv.prevFocus.focus && _moPv.prevFocus.focus(); } catch (e) { /* */ }
+}
+// Abrir en el navegador del sistema (escritorio) o en pestaña nueva (web); si falla, se avisa en vez de quedar mudo
+async function _moPreviewExternal() {
+  try { await SAHTEN.online.publish.preview(); }
+  catch (e) { alert('No se pudo abrir en el navegador: ' + (e && e.message || e) + '\nPodés usar la vista previa dentro de la app.'); }
+}
 
 // Un solo juego de listeners para toda la pantalla (se re-dibuja seguido; no se acumulan)
 function _moBind(panel) {
@@ -243,6 +290,7 @@ function _moBind(panel) {
     const t = e.target.closest('[data-mo],[data-mo-filter],[data-mo-collapse],[data-mo-catmove],[data-mo-tab]'); if (!t || !panel.contains(t)) return;
     if (t.dataset.mo === 'publish') _moPublish();
     else if (t.dataset.mo === 'preview') _moPreview();
+    else if (t.dataset.mo === 'preview-ext') _moPreviewExternal();
     else if (t.dataset.mo === 'all-on') _moToggleAll(true);
     else if (t.dataset.mo === 'all-off') _moToggleAll(false);
     else if (t.dataset.mo === 'open-site') _moTab('site');

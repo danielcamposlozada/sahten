@@ -18,7 +18,7 @@
   filter: grayscale(1) contrast(1.2);
 }
 .bw-logo-empty {
-  font-size: 10px; color: var(--muted);
+  font-size: 12px; color: var(--muted);
   text-align: center; font-weight: 500;
 }
 [data-theme="dark"] .bw-logo-preview {
@@ -29,7 +29,7 @@
 /* ── NAV ITEM with ALPHA pill ─────────────────────────────── */
 .nav-item .nav-badge {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.6px;
   padding: 2px 7px;
@@ -74,7 +74,7 @@
 }
 .prod-img-thumb.empty .prod-img-placeholder {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
   font-weight: 600;
   text-transform: uppercase;
@@ -139,7 +139,7 @@
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   font-weight: 700;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.5px;
 }
 .most-alpha-text {
@@ -400,7 +400,7 @@
 .most-cart-count {
   background: var(--accent);
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
@@ -718,7 +718,7 @@
   display: flex; flex-direction: column; gap: 4px;
 }
 .disc-form-field label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -794,7 +794,7 @@
 [data-theme="dark"] .most-tab.active { background: var(--dark-surface2, #1e2b22); color: var(--dark-text, #e8ede9); }
 [data-theme="dark"] .most-tab:hover { color: var(--dark-text, #e8ede9); background: rgba(255,255,255,0.03); }
 .most-tab-badge {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   background: var(--sand2);
   color: var(--muted);
@@ -813,7 +813,7 @@
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(8px);
   color: white;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
@@ -873,7 +873,7 @@
 .hist-card-num { font-size: 16px; font-weight: 700; color: var(--ink); font-family: 'DM Mono', monospace; letter-spacing: -0.02em; }
 [data-theme="dark"] .hist-card-num { color: var(--dark-text, #e8ede9); }
 .hist-status {
-  font-size: 11px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   padding: 4px 10px; border-radius: 8px;
   letter-spacing: 0.2px;
 }
@@ -902,7 +902,7 @@
 
 /* Order detail table */
 .order-detail-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-.order-detail-table th { background: var(--sand); padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); text-align: left; }
+.order-detail-table th { background: var(--sand); padding: 8px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); text-align: left; }
 .order-detail-table td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--ink); }
 [data-theme="dark"] .order-detail-table th { background: var(--dark-surface2, #1e2b22); border-color: var(--dark-border, rgba(80,140,85,0.1)); }
 [data-theme="dark"] .order-detail-table td { border-color: var(--dark-border-soft, rgba(80,140,85,0.06)); color: var(--dark-text, #e8ede9); }

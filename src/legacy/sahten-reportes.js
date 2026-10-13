@@ -989,8 +989,8 @@ function _parseFudoProductos(wb,fileName){
   renderReportes();
 }
 
-function repClear(type){
-  if(!confirm('¿Limpiar datos de '+type+'?'))return;
+async function repClear(type){
+  if(!(await sahtenConfirm('¿Limpiar datos de '+type+'?', { okLabel: 'Limpiar', danger: true })))return;
   if(type==='ventas')REP.ventasRaw=[];else REP.productosRaw=[];
   _saveRepData();renderReportes();
 }

@@ -37,6 +37,15 @@ export function createController(host) {
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
   }
   let lastFeed = '';
+  /** El nombre de la tienda en Supabase sigue al nombre del negocio de este proyecto (best-effort: si falla no molesta). */
+  async function syncStoreName() {
+    try {
+      if (!client || !host.conn.storeId) return false;
+      const name = String((host.menuJson().store || {}).name || '').trim(); if (!name) return false;
+      await client.raw('/rest/v1/stores?id=eq.' + host.conn.storeId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { name }, token: await client.auth.token() });
+      return true;
+    } catch (e) { return false; }
+  }
   const stopFeed = () => { if (feed) { feed.close(); feed = null; } lastFeed = ''; };
 
   const api = {
@@ -57,7 +66,7 @@ export function createController(host) {
         if (!store) store = await client.store.create({ slug, name: host.menuJson().store.name, projectId });
         Object.assign(host.conn, { url: v.url, anonKey: v.anonKey, storeId: store.id, slug });
         host.markDirty();
-        set('conectado'); await startFeed(); return { store };
+        set('conectado'); await startFeed(); syncStoreName(); return { store };
       } catch (e) { client = null; set('desconectado', e.message); throw e; }
     },
 
@@ -74,16 +83,39 @@ export function createController(host) {
 
     async signIn(email, password) {
       if (!host.conn.url) throw new SupabaseError('Primero conectá el proyecto.');
-      client = mk(host.conn, null); await client.auth.signIn(email, password); set('conectado'); await startFeed();
+      client = mk(host.conn, null); await client.auth.signIn(email, password); set('conectado'); await startFeed(); syncStoreName();
+    },
+
+    /** Cerrar sesión SIN perder la conexión del proyecto (URL, clave y tienda quedan guardadas para volver a entrar con email y contraseña). */
+    signOut() {
+      stopFeed(); if (client) client.auth.signOut(); host.storage.set(sessKey(), null);
+      client = mk(host.conn, null); set('sin sesión');
+    },
+    async recover(email) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      const c = client || mk(host.conn, null); return c.auth.recover(email);
     },
 
     disconnect() { stopFeed(); if (client) client.auth.signOut(); client = null; Object.keys(host.conn).forEach(k => delete host.conn[k]); Object.assign(host.conn, { url: '', anonKey: '', storeId: '' }); host.markDirty(); set('desconectado'); },
 
+    /** Cuántos productos tiene el menú del proyecto y cuántos el publicado (para confirmar antes de reemplazarlo). */
+    async previewMenu() {
+      if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
+      const m = host.menuJson(); let remote = null; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* no se pudo leer */ }
+      return { local: m.products.length, remote, name: (m.store && m.store.name) || '', slug: host.conn.slug || '' };
+    },
+
     /** Sube el menú actual para que la web lo lea en vivo (sin republicar archivos). */
-    async syncMenu() {
+    async syncMenu({ force = false } = {}) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
       const m = host.menuJson(); delete m.supabase;
-      await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); emit(); return m.products.length;
+      // Protección: un menú vacío (o mucho más chico) no pisa el publicado sin avisar.
+      if (!m.products.length) throw new SupabaseError('Este proyecto no tiene productos para publicar, así que no se sube: vaciaría el menú publicado de la tienda' + (host.conn.slug ? ' «' + host.conn.slug + '»' : '') + '. Revisá que tengas abierto el proyecto correcto («Abrir proyecto de la nube…») y volvé a sincronizar.', { code: 'empty_menu' });
+      if (!force) {
+        let remote = 0; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* si no se puede leer, no se bloquea */ }
+        if (remote > 0 && m.products.length < remote * 0.5) { const e = new SupabaseError(`El menú publicado tiene ${remote} productos y este proyecto solo ${m.products.length}. Si seguís, el menú de la web se reemplaza.`, { code: 'menu_shrinks' }); e.remote = remote; e.local = m.products.length; throw e; }
+      }
+      await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
     },
 
     /** Cuando cambia el estado de un pedido importado, se avisa a la web/otros dispositivos. */

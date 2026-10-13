@@ -27,7 +27,7 @@ export function installTour(w = window) {
   let i = 0, ov = null, hl = null, box = null;
 
   function target(step) {
-    return d.querySelector(`.sidebar .nav-item[onclick*="showPanel('${step.panel}')"], .nav-item[onclick*="showPanel('${step.panel}')"]`);
+    return d.querySelector(`.sidebar .nav-item[data-panel="${step.panel}"], .nav-item[data-panel="${step.panel}"]`);
   }
   function close(done) {
     ov && ov.remove(); hl && hl.remove(); box && box.remove(); ov = hl = box = null;

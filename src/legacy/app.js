@@ -287,18 +287,25 @@ const PANEL_NAMES={dashboard:'Dashboard',productos:'Menú',proyeccion:'Proyecci�
 // ── APP DRAWER + BOTTOM NAV ──────────────────────────────────
 const BOTTOM_NAV_PANELS = ['dashboard','productos','ingredientes','proyeccion'];
 
-function toggleTopbarMenu() {
-  const menu = document.getElementById('topbar-menu');
-  if (menu) menu.classList.toggle('open');
+function toggleTopbarMenu(id, btn) {
+  const menu = document.getElementById(id || 'topbar-menu'); if (!menu) return;
+  const open = !menu.classList.contains('open');
+  document.querySelectorAll('.topbar-menu.open').forEach(m => m.classList.remove('open'));
+  menu.classList.toggle('open', open);
+  document.querySelectorAll('[aria-controls][aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) { const first = menu.querySelector('[role="menuitem"]'); if (first) first.focus(); }
 }
 function closeTopbarMenu() {
-  const menu = document.getElementById('topbar-menu');
-  if (menu) menu.classList.remove('open');
+  document.querySelectorAll('.topbar-menu.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('[aria-controls][aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
 }
-// Close topbar menu when clicking outside
+// Close topbar menu when clicking outside / with Escape
 document.addEventListener('click', e => {
-  const wrap = document.getElementById('topbar-more-btn')?.closest('.topbar-menu-wrap');
-  if (wrap && !wrap.contains(e.target)) closeTopbarMenu();
+  if (!e.target.closest || !e.target.closest('.topbar-menu-wrap')) closeTopbarMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.querySelector('.topbar-menu.open')) { closeTopbarMenu(); }
 });
 
 let _openRowMenu = null;
@@ -425,23 +432,25 @@ function _getSavedTab(section, fallback) {
 }
 
 function showPanel(name) {
-  currentPanel = name;
+  currentPanel = name; window.currentPanel = name;   // `let` global no es propiedad de window: los módulos la leen de acá
   // Save last visited panel
   _saveTabState('_panel', name);
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>{n.classList.toggle('active',(n.getAttribute('onclick')||'').includes("'"+name+"'"));});
+  document.querySelectorAll('.nav-item').forEach(n=>{const on=n.dataset.panel===name;n.classList.toggle('active',on);if(on)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');});
+  // URL por panel (#/menuonline): el botón Atrás de la web y los enlaces funcionan
+  if(!window._navFromHistory){try{const h='#/'+name;if(location.hash!==h){if(location.hash)history.pushState({panel:name},'',h);else history.replaceState({panel:name},'',h);}}catch(e){}}
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('page-title').textContent=PANEL_NAMES[name]||name;
 
   // Sync bottom nav active state
   BOTTOM_NAV_PANELS.forEach(id => {
     const btn = document.getElementById('bn-' + id);
-    if (btn) btn.classList.toggle('active', id === name);
+    if (btn) { btn.classList.toggle('active', id === name); if (id === name) btn.setAttribute('aria-current', 'page'); else btn.removeAttribute('aria-current'); }
   });
   // Sync app drawer active state
-  document.querySelectorAll('.app-drawer-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.app-drawer-item').forEach(el => { el.classList.remove('active'); el.removeAttribute('aria-current'); });
   const ad = document.getElementById('ad-' + name);
-  if (ad) ad.classList.add('active');
+  if (ad) { ad.classList.add('active'); ad.setAttribute('aria-current', 'page'); }
 
   // Restore last sub-tab for sections with tabs
   const savedAjTab = _getSavedTab('ajustes', 'tiers');
@@ -3636,8 +3645,8 @@ function _renderAjustesTabs(activeTab) {
   const titleEl = document.getElementById('page-title');
   if (titleEl) titleEl.textContent = 'Ajustes';
   document.querySelectorAll('.nav-item').forEach(n => {
-    const onclick = n.getAttribute('onclick') || '';
-    n.classList.toggle('active', onclick.includes("'ajustes'"));
+    const on = n.dataset.panel === 'ajustes'; n.classList.toggle('active', on);
+    if (on) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current');
   });
 }
 

@@ -93,6 +93,21 @@ describe('el proyecto es un archivo', () => {
     a.window.close();
   }, 60000);
 
+  it('cada proyecto/tienda conserva su nombre y colores: al abrir otro, la marca cambia (no queda la anterior)', async () => {
+    const disk = {}; const a = await app(disk);
+    const casa = emptyFile('Casapan'); casa.project.id = 'pc'; casa.settings.customization = { brandName: 'Casapan', logoStyle: 'text', paletteId: 'wine' };
+    const sah = emptyFile('Sahten'); sah.project.id = 'ps'; sah.settings.customization = { brandName: 'Sahten Store', logoStyle: 'text', paletteId: 'forest' };
+    const slot = () => a.window.document.getElementById('brand-logo-slot').textContent;
+    const primary = () => a.window.document.documentElement.style.getPropertyValue('--primary').trim().toLowerCase();
+    a.mem.queueOpen('Casapan.sahten', serialize(casa)); await a.s.openFromPicker();
+    expect(slot()).toContain('Casapan'); expect(primary()).toBe('#5c1d2e');
+    a.mem.queueOpen('Sahten.sahten', serialize(sah)); await a.s.openFromPicker();
+    expect(slot()).toContain('Sahten Store'); expect(slot()).not.toContain('Casapan'); expect(primary()).toBe('#1f4636');
+    a.mem.queueOpen('Casapan.sahten', serialize(casa)); await a.s.openFromPicker();
+    expect(slot()).toContain('Casapan'); expect(primary()).toBe('#5c1d2e');
+    a.window.close();
+  }, 60000);
+
   it('abre un collectState() de v3 (.json), lo convierte y exige guardarlo como .sahten', async () => {
     const disk = {}; const a = await app(disk);
     const legacy = readJSON('tests/fixtures/legacy/v3-pizzeria.json');

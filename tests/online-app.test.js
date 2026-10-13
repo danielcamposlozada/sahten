@@ -47,7 +47,7 @@ describe('publicar menú desde la app', () => {
 });
 
 describe('roles en pantalla', () => {
-  const visibleNav = a => [...a.window.document.querySelectorAll('.nav-item')].filter(e => e.style.display !== 'none').map(e => /showPanel\('([a-z]+)'\)/.exec(e.getAttribute('onclick'))[1]);
+  const visibleNav = a => [...a.window.document.querySelectorAll('.nav-item')].filter(e => e.style.display !== 'none').map(e => e.dataset.panel);
   it('cajero: solo Mostrador (y no puede navegar a otra sección)', async () => {
     const a = await app(); await a.p.openDemo(); a.on.setRole('cajero');
     expect(visibleNav(a).filter(p => p !== 'nube')).toEqual(['mostrador']);
@@ -83,7 +83,7 @@ describe('pedidos en tiempo real y conexión', () => {
     expect(a.p.collect().online.supabase).toMatchObject({ url: URL_OK, storeId: 'st-1', slug: 'mi-local' });    // viaja en el archivo .sahten
     expect(JSON.stringify(a.p.collect())).not.toMatch(/secreta/);
     await a.on.controller.syncMenu();
-    const up = calls.find(c => c.url.includes('/rest/v1/menus')); expect(up.body.json.products.length).toBeGreaterThan(4);
+    const up = calls.find(c => c.url.includes('/rest/v1/menus') && c.body); expect(up.body.json.products.length).toBeGreaterThan(4);
     // llega un pedido por Realtime
     const ws = FakeWS.last; await ws.onopen();
     ws.onmessage({ data: JSON.stringify({ topic: ws.sent[0].topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'web-9', status: 'pendiente', created_at: new Date().toISOString(),
@@ -96,6 +96,23 @@ describe('pedidos en tiempo real y conexión', () => {
     // cambia el estado en el Mostrador → PATCH a la nube
     a.ev("orderSetStatus(SAHTEN_ORDERS.find(o=>o.remoteId==='web-9').id,'en_preparacion')"); await wait(20);
     const patch = calls.find(c => c.method === 'PATCH' && c.url.includes('id=eq.web-9')); expect(patch.body).toEqual({ status: 'preparando' });
+    w.close();
+  }, 60000);
+  it('«Abrir proyecto de la nube…» muestra la lista y «Abrir» carga el proyecto elegido', async () => {
+    const a = await app(); await a.p.openDemo(); const w = a.window;
+    backend(w, {
+      '/auth/v1/token': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1', email: 'dueña@x.com' } } },
+      '/rest/v1/stores?select': { body: [] }, '/rest/v1/stores': { status: 201, body: [{ id: 'st-1', slug: 'mi-local' }] },
+      '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 },
+      '/rest/v1/project_members': { body: [{ project_id: 'pr-1', role: 'owner' }] },
+      '/rest/v1/projects': { body: [{ id: 'pr-1', name: 'SAHTEN Gastronomia Arabe', version: 2 }] },
+    });
+    await a.on.connect({ url: URL_OK, anonKey: ANON, slug: 'mi-local', email: 'dueña@x.com', password: 'secreta' });
+    a.ev("showPanel('nube')"); await wait(30);
+    await a.on.ui.listRemote(); await wait(20);
+    const slot = w.document.getElementById('nube-remote');
+    expect(slot.textContent).toMatch(/SAHTEN Gastronomia Arabe/); expect(slot.textContent).toMatch(/versión 2/);
+    const btn = slot.querySelector('button[data-remote="pr-1"]'); expect(btn).toBeTruthy(); expect(btn.dataset.role).toBe('owner');
     w.close();
   }, 60000);
   it('el panel «Nube y usuarios» muestra la conexión y rechaza la service_role', async () => {
