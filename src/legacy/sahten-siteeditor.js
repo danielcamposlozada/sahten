@@ -87,13 +87,13 @@ function _sbRenderList() {
 function _sbRenderTop() {
   const el = document.getElementById('sb-top'); if (!el) return; const S = _moSite();
   el.innerHTML = `<div class="sb-file"><button class="btn" data-sb-export>Exportar contenido</button><label class="btn" style="cursor:pointer">Importar contenido<input type="file" accept=".json,application/json" hidden data-sb-import></label></div><label class="sb-master"><span class="mo-sw"><input type="checkbox" data-sb-enabled ${S.enabled ? 'checked' : ''}><span></span></span>
-    <span><b>${S.enabled ? 'Sitio completo activado' : 'Sitio apagado: se publica solo el menú'}</b><small>${S.enabled ? 'Se publica tu menú con las secciones encendidas.' : 'Encendelo para publicar portada, historia, reseñas y más.'}</small></span></label>`;
+    <span><b>${S.enabled ? 'Sitio completo activado' : 'Sitio apagado: se publica solo el menú'}</b><small>${S.enabled ? 'Se publica tu menú con las secciones encendidas.' : 'Encendelo para publicar portada, historia, reseñas y más.'}</small></span></label>${S.enabled ? '' : '<p class="sb-offnote">La vista previa de la derecha muestra cómo quedaría el sitio. Mientras esté apagado, en la web publicada solo se ve el menú.</p>'}`;
 }
 
 function _sbSchedulePreview(delay = 300) { clearTimeout(_sbUi.timer); _sbUi.timer = setTimeout(_sbPreview, delay); }
 function _sbPreview() {
   const fr = document.getElementById('sb-frame'); if (!fr) return;
-  let html; try { html = SAHTEN.online.publish.previewHtml(); } catch (e) { fr.srcdoc = '<p style="font:14px sans-serif;padding:20px">La vista previa no está disponible: ' + _esc(e.message) + '</p>'; return; }
+  let html; try { html = SAHTEN.online.publish.previewHtml({ forceSite: true }); } catch (e) { fr.srcdoc = '<p style="font:14px sans-serif;padding:20px">La vista previa no está disponible: ' + _esc(e.message) + '</p>'; return; }
   try { _sbUi.scroll = fr.contentWindow ? fr.contentWindow.scrollY : 0; } catch (e) { _sbUi.scroll = 0; }
   const want = _sbUi.focus; _sbUi.focus = null; const keep = _sbUi.scroll;
   fr.onload = () => {   // la página dibuja su contenido un instante después de cargar: se espera a que esté lista

@@ -290,6 +290,25 @@ describe('sitio web: módulos (secciones) junto al menú', () => {
     expect(d.querySelector('.fab').getAttribute('href')).toContain('wa.me/');
     a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Pedido (1)');
   });
+  it('con sitio: el inicio muestra tarjetas por categoría y «Pedir online»; la carta completa se abre en su propia vista (#pedido) y «Atrás» vuelve', async () => {
+    const m = menuCon(SITE); const a = await web({ menu: m }); const { d, w } = a;
+    const cats = [...new Set(m.products.map(p => p.category).filter(Boolean))];
+    expect(d.body.classList.contains('view-order')).toBe(false);
+    expect(d.querySelectorAll('.ctile').length).toBeGreaterThan(0); expect(d.querySelectorAll('.ctile').length).toBeLessThanOrEqual(cats.length);
+    expect(d.querySelector('.pedir-cta').getAttribute('href')).toBe('#pedido');
+    const first = d.querySelector('.ctile'); const k = decodeURIComponent(first.getAttribute('href').replace('#pedido/', ''));
+    w.location.hash = first.getAttribute('href'); await a.wait(40);
+    expect(d.body.classList.contains('view-order')).toBe(true); expect(d.querySelector('.cat.on').textContent).toBe(k);
+    expect(d.querySelectorAll('#grid .card').length).toBe(m.products.filter(p => p.category === k).length);
+    a.click('.cat[data-cat="all"]'); expect(d.querySelectorAll('#grid .card').length).toBe(m.products.length);
+    w.location.hash = ''; await a.wait(40);
+    expect(d.body.classList.contains('view-order')).toBe(false);
+  });
+  it('sin sitio, #pedido no cambia nada: la página ya es la carta', async () => {
+    const a = await web({ menu: menuCon({ ...SITE, enabled: false }) });
+    a.w.location.hash = '#pedido'; await a.wait(40);
+    expect(a.d.body.classList.contains('view-order')).toBe(false); expect(a.d.querySelectorAll('#grid .card').length).toBeGreaterThan(0);
+  });
   it('sin sitio, la página es la de siempre (encabezado simple, sin portada)', async () => {
     const a = await web({ menu: menuCon({ ...SITE, enabled: false }) });
     expect(a.d.body.classList.contains('has-site')).toBe(false); expect(a.d.querySelector('.hero')).toBeNull(); expect(a.d.querySelector('#h-title').textContent).toBe('Mi local'); expect(a.d.querySelector('.fab')).toBeNull();

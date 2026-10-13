@@ -115,6 +115,25 @@ describe('pedidos en tiempo real y conexión', () => {
     const btn = slot.querySelector('button[data-remote="pr-1"]'); expect(btn).toBeTruthy(); expect(btn.dataset.role).toBe('owner');
     w.close();
   }, 60000);
+  it('vista remota: muestra un aviso fijo con «Salir», que corta el refresco, cierra la copia y vuelve a la lista de proyectos', async () => {
+    const a = await app(); await a.p.openDemo(); const w = a.window;
+    const data = a.p.collect();
+    backend(w, {
+      '/auth/v1/token': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1', email: 'dueña@x.com' } } },
+      '/rest/v1/stores?select': { body: [] }, '/rest/v1/stores': { status: 201, body: [{ id: 'st-1', slug: 'mi-local' }] },
+      '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 },
+      '/rest/v1/rpc/get_project_data': { body: { data, version: 3 } },
+    });
+    await a.on.connect({ url: URL_OK, anonKey: ANON, slug: 'mi-local', email: 'dueña@x.com', password: 'secreta' });
+    a.ev("SAHTEN_SUPABASE.projectId='pr-1'");
+    let shown = 0; w.SAHTEN.projectUi = { ...(w.SAHTEN.projectUi || {}), showProjects: () => { shown++; } };
+    await a.on.remoteView(); await wait(30);
+    const banner = w.document.getElementById('remote-view-banner'); expect(banner).toBeTruthy();
+    expect(banner.textContent).toMatch(/solo lectura/); const exit = banner.querySelector('.rv-exit'); expect(exit.textContent).toBe('Salir de la vista remota');
+    exit.click(); await wait(30);
+    expect(w.document.getElementById('remote-view-banner')).toBeNull(); expect(shown).toBe(1); expect(a.p.session.isOpen).toBe(false);
+    w.close();
+  }, 60000);
   it('el panel «Nube y usuarios» muestra la conexión y rechaza la service_role', async () => {
     const a = await app(); await a.p.openDemo(); a.ev("showPanel('nube')"); await wait(30);
     const html = a.window.document.getElementById('panel-nube').innerHTML;
@@ -240,6 +259,15 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     a.ev("_moTab('menu')"); $('[data-mo-desc]').click(); const pid = $('[data-mo-pdesc]').dataset.moPdesc; type(a, '[data-mo-pdesc]', 'Descripción nueva');
     expect(a.ev('SAHTEN.project.collect().catalog.productos.find(p=>p.id===' + JSON.stringify(pid) + ').description')).toBe('Descripción nueva');
     win.close();
+  }, 60000);
+  it('con el sitio apagado, el editor igual muestra en la vista previa lo que se escribe (y avisa que no se publica)', async () => {
+    const a = await open(); const win = a.window;
+    $('[data-sb-enabled]').checked = false; $('[data-sb-enabled]').dispatchEvent(new win.Event('change', { bubbles: true }));
+    type(a, '[data-sb="hero.title"]', 'Portada con sitio apagado');
+    expect(a.on.publish.currentMenu().site).toBeNull();                                                  // lo publicado: solo el menú
+    expect(a.on.publish.previewHtml()).not.toContain('Portada con sitio apagado');
+    expect(a.on.publish.previewHtml({ forceSite: true })).toContain('Portada con sitio apagado');        // la vista previa del editor sí
+    expect($('.sb-offnote')).toBeTruthy(); win.close();
   }, 60000);
   it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
     const a = await open();

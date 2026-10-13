@@ -7,7 +7,7 @@
 export const SITE_MODULES = [
   { id: 'hero', name: 'Portada', icon: '🏠', desc: 'Lo primero que ve el cliente: título, bajada y destacados.' },
   { id: 'favoritos', name: 'Favoritos', icon: '⭐', desc: 'Tus productos con ⭐, con foto y descripción.' },
-  { id: 'menu', name: 'Menú y pedido', icon: '🍽', desc: 'La carta con categorías y el carrito. Siempre visible.', fixed: true },
+  { id: 'menu', name: 'Menú y pedido', icon: '🍽', desc: 'Resumen con una tarjeta por categoría y el botón «Pedir online»; la carta completa y el carrito se abren en su propia vista. Siempre visible.', fixed: true },
   { id: 'como', name: 'Cómo funciona', icon: '🧭', desc: 'Los pasos para pedir.' },
   { id: 'historia', name: 'Nuestra historia', icon: '📖', desc: 'Quiénes son, con foto y un destacado opcional.' },
   { id: 'banda', name: 'Cinta de texto', icon: '🎞', desc: 'Una franja con tu lema que se desplaza.' },

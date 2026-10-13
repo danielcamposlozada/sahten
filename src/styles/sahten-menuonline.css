@@ -81,6 +81,7 @@
 .sb { display: grid; grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (max-width: 1000px) { .sb { grid-template-columns: 1fr; } }
 .sb-master { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--card, #fff); margin-bottom: 12px; cursor: pointer; }
+.sb-offnote { margin: -4px 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg, #fff4e0); color: var(--ink); font-size: 12.5px; line-height: 1.45; }
 .sb-master b { display: block; color: var(--ink); } .sb-master small { color: var(--muted); font-size: 12.5px; }
 .sb-mod { border: 1px solid var(--border); border-radius: 14px; background: var(--card, #fff); margin-bottom: 8px; overflow: hidden; }
 .sb-mod.open { border-color: var(--accent, #F28C00); box-shadow: 0 4px 18px rgba(0,0,0,.06); }

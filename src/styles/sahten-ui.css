@@ -93,3 +93,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 
 /* Estados vacíos con acción */
 .empty-action { display: inline-flex; margin-top: var(--sp-3); }
+
+/* Vista remota: aviso fijo con la salida siempre a mano */
+.rv-banner { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 8px 14px; background: var(--accent, #F28C00); color: #1a1a1a; font-size: 13px; font-weight: 700; }
+.rv-exit { min-height: 36px; padding: 6px 14px; border: 2px solid #1a1a1a; border-radius: 8px; background: #fff; color: #1a1a1a; font: inherit; font-weight: 800; cursor: pointer; }
+.rv-exit:hover { background: #f4f4f4; }
+.rv-exit:focus-visible { outline: 3px solid #1a1a1a; outline-offset: 2px; }
+
+/* Diálogo de actualización: novedades con formato y scroll */
+.un-p { margin: 0 0 var(--sp-3, 12px); line-height: 1.5; }
+.un-notes { max-height: min(52vh, 420px); overflow-y: auto; padding: 12px 14px; border: 1px solid var(--border, rgba(0,0,0,.12)); border-radius: 10px; background: var(--bg, rgba(0,0,0,.03)); }
+.un-notes:focus-visible { outline: 2px solid var(--accent, #F28C00); outline-offset: 2px; }
+.un-h { margin: 0 0 8px; font-size: 14px; font-weight: 800; }
+.un-list { margin: 0 0 10px; padding-left: 20px; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.45; }
+.un-list strong { font-weight: 800; }
+.un-notes code { font-size: 12px; padding: 1px 5px; border-radius: 4px; background: rgba(0,0,0,.08); }
+.un-notes a { color: var(--accent, #F28C00); text-decoration: underline; }
+.un-foot { margin: 8px 0 0; font-size: 12px; color: var(--muted, #6b6b6b); }

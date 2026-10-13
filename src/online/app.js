@@ -19,7 +19,7 @@ export function currentMenu(opts = {}) {
   const S = w.SAHTEN.state;
   const sb = w.SAHTEN_SUPABASE || {};
   const m = buildMenuJson(S, {
-    menuConfig: w.MENU_CONFIG || {}, tienda: w._getTiendaConfig ? w._getTiendaConfig() : {}, images: w.SAHTEN_IMAGES || {},
+    menuConfig: opts.forceSite && w.MENU_CONFIG && w.MENU_CONFIG.site ? { ...w.MENU_CONFIG, site: { ...w.MENU_CONFIG.site, enabled: true } } : (w.MENU_CONFIG || {}), tienda: w._getTiendaConfig ? w._getTiendaConfig() : {}, images: w.SAHTEN_IMAGES || {},
     supabase: sb, store: { name: S.project.name || (w.SAHTEN_PROJECT && w.SAHTEN_PROJECT.name), slug: sb.slug || '' },
   });
   m.theme = currentTheme();
@@ -38,9 +38,10 @@ const toast = m => (typeof w._posToast === 'function' ? w._posToast(m) : null);
 
 export const onlinePublish = {
   currentMenu, publishProblems,
-  /** HTML de la página tal como se publicaría, con las fotos incrustadas (sirve para la vista previa y para el editor). */
-  previewHtml() {
-    const m = currentMenu(); const imgs = w.SAHTEN_IMAGES || {};
+  /** HTML de la página tal como se publicaría, con las fotos incrustadas (sirve para la vista previa y para el editor).
+   * `forceSite`: muestra el sitio completo aunque esté apagado (el editor lo usa para que se vea lo que se escribe). */
+  previewHtml(opts = {}) {
+    const m = currentMenu({ forceSite: !!opts.forceSite }); const imgs = w.SAHTEN_IMAGES || {};
     m.products.forEach(p => { if (p.image && imgs[p.id]) p.image = imgs[p.id]; });
     if (m.site && m.site.images) ['hero', 'historia'].forEach(k => { if (m.site.images[k] && imgs['site_' + k]) m.site.images[k] = imgs['site_' + k]; });
     return buildIndexHtml(m);
