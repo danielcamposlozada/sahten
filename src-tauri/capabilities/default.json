@@ -25,6 +25,7 @@
     "updater:default",
     "process:allow-restart",
     "opener:default",
-    "opener:allow-reveal-item-in-dir"
+    "opener:allow-reveal-item-in-dir",
+    { "identifier": "opener:allow-open-path", "allow": [{ "path": "$TEMP/sahten-menu-preview.html" }, { "path": "$TEMP/**" }] }
   ]
 }

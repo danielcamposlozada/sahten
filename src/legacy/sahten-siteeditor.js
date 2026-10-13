@@ -114,7 +114,7 @@ function _sbRender() {
       <div class="sb-help">Las secciones se muestran en este orden, de arriba hacia abajo. Arrastrá ⋮⋮ o usá ▲▼ para moverlas.</div></div>
     <div class="sb-right"><div class="sb-tools"><div class="mo-chips" role="group" aria-label="Dispositivo">
         <button class="mo-chip ${_sbUi.device === 'desktop' ? 'on' : ''}" data-sb-dev="desktop">Escritorio</button><button class="mo-chip ${_sbUi.device === 'mobile' ? 'on' : ''}" data-sb-dev="mobile">Celular</button></div>
-        <span style="flex:1"></span><button class="btn" data-mo="preview">Abrir en pestaña</button></div>
+        <span style="flex:1"></span><button class="btn" data-mo="preview-ext">Abrir en el navegador</button></div>
       <div class="sb-frame ${_sbUi.device}"><iframe id="sb-frame" title="Vista previa del sitio" sandbox="allow-scripts allow-same-origin"></iframe></div></div>
   </div>`;
   _sbRenderTop(); _sbRenderList(); _sbBind(host); _sbPreview();

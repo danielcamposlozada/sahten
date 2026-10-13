@@ -114,3 +114,13 @@
   .mo-cat-head { flex-wrap: wrap; } .sb-title small { max-width: 160px; }
   .sb-head { flex-wrap: wrap; } .sb-frame iframe { height: 70vh; }
 }
+
+/* Vista previa a pantalla completa dentro de la app */
+.mo-pv { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.mo-pv-box { background: var(--surface, #fff); color: var(--text, #1e2c1f); border-radius: 16px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; }
+.mo-pv-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border, #e3e0d8); }
+.mo-pv-stage { background: #e9e6df; padding: 12px; display: flex; justify-content: center; overflow: auto; flex: 1; min-height: 0; }
+.mo-pv-stage iframe { width: 100%; height: min(78vh, 900px); min-height: 420px; border: 0; border-radius: 10px; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.15); transition: width .2s; }
+.mo-pv-stage.mobile iframe { width: 390px; max-width: 100%; }
+.mo-pv-note { font-size: 11.5px; color: var(--muted, #6b7a6c); text-align: center; padding: 8px 12px; }
+@media (max-width: 700px) { .mo-pv { padding: 0; } .mo-pv-box { border-radius: 0; height: 100%; } .mo-pv-stage iframe { height: 100%; } }
