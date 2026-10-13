@@ -71,9 +71,25 @@ describe('menú y pedidos', () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 } } });
     expect(await s.ctl.resume()).toBe(true);
     expect(await s.ctl.syncMenu()).toBe(2);
-    const up = s.calls.find(c => c.url.includes('/rest/v1/menus'));
+    const up = s.calls.find(c => c.url.includes('/rest/v1/menus') && c.body);
     expect(up.body.store_id).toBe('st-1'); expect(up.body.json.supabase).toBeUndefined(); expect(up.body.json.products).toHaveLength(2);
     expect(s.ctl.info().lastSync).toBeTruthy();
+  });
+  it('no publica un menú vacío ni uno que achica mucho el publicado sin confirmar', async () => {
+    const big = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] },
+      '/rest/v1/menus': c => (c.method === 'GET' ? { body: [{ json: { products: new Array(10).fill({}) } }] } : { status: 204 }) } });
+    expect(await big.ctl.resume()).toBe(true);
+    await expect(big.ctl.syncMenu()).rejects.toMatchObject({ code: 'menu_shrinks', remote: 10, local: 2 });
+    expect(big.calls.some(c => c.url.includes('/rest/v1/menus') && c.body)).toBe(false);
+    expect(await big.ctl.syncMenu({ force: true })).toBe(2);
+    expect(big.calls.some(c => c.url.includes('/rest/v1/menus') && c.body)).toBe(true);
+  });
+  it('un menú sin productos nunca se publica, ni forzado', async () => {
+    const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 } } });
+    expect(await s.ctl.resume()).toBe(true);
+    s.host.menuJson = () => ({ store: { name: 'Mi Local' }, products: [] });
+    await expect(s.ctl.syncMenu({ force: true })).rejects.toMatchObject({ code: 'empty_menu' });
+    expect(s.calls.some(c => c.url.includes('/rest/v1/menus'))).toBe(false);
   });
   it('al abrir el proyecto importa los pedidos pendientes y notifica; no duplica', async () => {
     const rows = [{ id: 'r1', status: 'pendiente', created_at: '2026-10-05T10:00:00Z', payload: { source: 'delivery', customerName: 'Ana', items: [], total: 28500 } },

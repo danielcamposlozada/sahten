@@ -99,9 +99,15 @@ export function createController(host) {
     disconnect() { stopFeed(); if (client) client.auth.signOut(); client = null; Object.keys(host.conn).forEach(k => delete host.conn[k]); Object.assign(host.conn, { url: '', anonKey: '', storeId: '' }); host.markDirty(); set('desconectado'); },
 
     /** Sube el menú actual para que la web lo lea en vivo (sin republicar archivos). */
-    async syncMenu() {
+    async syncMenu({ force = false } = {}) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
       const m = host.menuJson(); delete m.supabase;
+      // Protección: un menú vacío (o mucho más chico) no pisa el publicado sin avisar.
+      if (!m.products.length) throw new SupabaseError('Este proyecto no tiene productos para publicar, así que no se sube: vaciaría el menú publicado de la tienda' + (host.conn.slug ? ' «' + host.conn.slug + '»' : '') + '. Revisá que tengas abierto el proyecto correcto («Abrir proyecto de la nube…») y volvé a sincronizar.', { code: 'empty_menu' });
+      if (!force) {
+        let remote = 0; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* si no se puede leer, no se bloquea */ }
+        if (remote > 0 && m.products.length < remote * 0.5) { const e = new SupabaseError(`El menú publicado tiene ${remote} productos y este proyecto solo ${m.products.length}. Si seguís, el menú de la web se reemplaza.`, { code: 'menu_shrinks' }); e.remote = remote; e.local = m.products.length; throw e; }
+      }
       await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
     },
 

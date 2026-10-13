@@ -34,7 +34,17 @@ export function createOnlineUi({ online, w = window }) {
     },
     async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
     async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.controller.disconnect(); ui.render(); } },
-    async syncMenu() { await run('nube-msg', () => online.controller.syncMenu(), n => `Menú actualizado en línea (${n} productos).`); },
+    async syncMenu() {
+      const ok = n => `Menú actualizado en línea (${n} productos).`;
+      await run('nube-msg', async () => {
+        try { return await online.controller.syncMenu(); }
+        catch (e) {
+          if (e && e.code === 'menu_shrinks' && await w.sahtenConfirm(e.message, { title: '¿Reemplazar el menú publicado?', okLabel: 'Reemplazar', cancelLabel: 'No, cancelar', danger: true })) return online.controller.syncMenu({ force: true });
+          if (e && e.code === 'menu_shrinks') return null;
+          throw e;
+        }
+      }, n => (n == null ? 'No se cambió nada: el menú publicado sigue igual.' : ok(n)));
+    },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },
     async resolve(choice) { await run('nube-msg', () => online.resolve(choice), 'Conflicto resuelto.'); },

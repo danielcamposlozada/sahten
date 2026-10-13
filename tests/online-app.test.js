@@ -83,7 +83,7 @@ describe('pedidos en tiempo real y conexión', () => {
     expect(a.p.collect().online.supabase).toMatchObject({ url: URL_OK, storeId: 'st-1', slug: 'mi-local' });    // viaja en el archivo .sahten
     expect(JSON.stringify(a.p.collect())).not.toMatch(/secreta/);
     await a.on.controller.syncMenu();
-    const up = calls.find(c => c.url.includes('/rest/v1/menus')); expect(up.body.json.products.length).toBeGreaterThan(4);
+    const up = calls.find(c => c.url.includes('/rest/v1/menus') && c.body); expect(up.body.json.products.length).toBeGreaterThan(4);
     // llega un pedido por Realtime
     const ws = FakeWS.last; await ws.onopen();
     ws.onmessage({ data: JSON.stringify({ topic: ws.sent[0].topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'web-9', status: 'pendiente', created_at: new Date().toISOString(),

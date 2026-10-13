@@ -90,6 +90,8 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
       const r = await authed('/rest/v1/stores', { method: 'POST', headers: { Prefer: 'return=representation' }, body: { slug, name, owner: u.id, project_id: projectId || null } });
       return r[0];
     },
+    /** Cantidad de productos del menú publicado hoy (para no pisarlo con uno vacío o mucho más chico). */
+    async menuCount(storeId) { const r = await raw('/rest/v1/menus?select=json&store_id=eq.' + encodeURIComponent(storeId)); const j = r && r[0] && r[0].json; return j && Array.isArray(j.products) ? j.products.length : 0; },
     async publishMenu(storeId, json) { await authed('/rest/v1/menus?on_conflict=store_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { store_id: storeId, json, updated_at: new Date(now()).toISOString() } }); },
   };
 

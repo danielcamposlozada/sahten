@@ -9,6 +9,7 @@
 - **Barra superior de escritorio**: Guardar y un menú «Archivo» (Abrir, Exportar a CSV, Recalcular precios).
 - **Accesibilidad**: foco visible, zonas táctiles de 44 px, texto mínimo de 12 px, «Saltar al contenido», respeto de «reducir movimiento».
 - **Avisos y confirmaciones propios** (no bloquean y se ven igual en escritorio, web y celular); una acción que falla ya no queda muda.
+- **Protección del menú publicado**: «Sincronizar menú» ya no publica un menú sin productos y, si el nuevo tiene menos de la mitad de productos que el publicado, pide confirmación antes de reemplazarlo (evita pisar el menú desde una PC con un proyecto vacío).
 - **Releases de GitHub**: las notas de cada versión salen de este archivo.
 - Documentación: `docs/AUDITORIA-UX.md` y `docs/SISTEMA-DISENO.md`.
 
