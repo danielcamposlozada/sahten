@@ -744,6 +744,12 @@ function custSetMode(mode) {
   applyThemeMode(_cust);
   renderCustPanel();
 }
+// Al abrir otro proyecto: la marca (nombre, logo, colores) es de cada tienda, así que se vuelve a leer lo que trae el proyecto.
+function custReload() {
+  _cust = custLoad();
+  custApply();
+  try { if (typeof renderCustPanel === 'function') renderCustPanel(); } catch (e) { /* el panel no está abierto */ }
+}
 function custReset() {
   // Also clear B&W logo
   _cust.bwLogoData = null;

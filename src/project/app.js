@@ -66,7 +66,7 @@ async function apply(file, { fresh } = {}) {
     w.applyData(L);
   });
   if (L.theme && w.localStorage.getItem('sahten-theme') !== L.theme) { w.localStorage.setItem('sahten-theme', L.theme); try { w.initDarkMode(); } catch (e) { /* */ } }
-  try { w.custApply(); } catch (e) { /* */ }
+  try { (w.custReload || w.custApply)(); } catch (e) { /* */ }   // la marca es de cada proyecto/tienda: se relee al abrir
   w.initStock(); w.projWeeks = w.PRODUCTS.map(p => [...(p.weeks || [0, 0, 0, 0])]);
   w._recetasApplied = true;        // las recetas del Excel de v3 no se vuelven a aplicar sobre un proyecto abierto
   w.SAHTEN.state.projection.manualMode = !!w.projManualMode;
