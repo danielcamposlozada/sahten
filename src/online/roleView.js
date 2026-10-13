@@ -1,8 +1,6 @@
 // Aplica un rol a la pantalla: oculta secciones, costos y márgenes; guarda contra navegar a lo no permitido; solo lectura.
 import { canSeePanel, canSeeCosts, canEdit, firstPanel, ROLE_LABEL, NO_COSTS_CSS } from './roles.js';
 
-const PANEL_RE = /showPanel\('([a-z]+)'\)/;
-
 export function applyRole(role, w = window) {
   const d = w.document;
   let st = d.getElementById('role-css');
@@ -11,8 +9,8 @@ export function applyRole(role, w = window) {
   d.body.classList.toggle('role-readonly', !!role && !canEdit(role));
   d.body.dataset.role = role || '';
   d.querySelectorAll('.nav-item, .bottom-nav-item, .app-drawer-item').forEach(el => {
-    const m = PANEL_RE.exec(el.getAttribute('onclick') || ''); if (!m) return;
-    const ok = canSeePanel(role, m[1]) || (role && m[1] === 'nube');       // «Nube y usuarios» queda para cerrar sesión / ver el rol
+    const panel = el.dataset.panel; if (!panel) return;
+    const ok = canSeePanel(role, panel) || (role && panel === 'nube');       // «Nube y usuarios» queda para cerrar sesión / ver el rol
     el.style.display = ok ? '' : 'none';
   });
   d.querySelectorAll('.nav-section').forEach(sec => {                        // oculta títulos de grupos que quedaron vacíos

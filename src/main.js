@@ -14,6 +14,7 @@ import { initDesktop, isTauri } from './desktop/preload.js';
 import { libs } from './libs.js';
 import { sahtenAsk } from './ui/ask.js';
 import { installTour } from './ui/tour.js';
+import { installNav } from './ui/nav.js';
 import { installDesktop } from './desktop/integration.js';
 import { state } from './core/state.js';
 import './bridge/legacy-globals.js';
@@ -76,6 +77,7 @@ function startLegacy() {
 // Cada archivo se ejecuta como script clásico; después de cada uno se envuelven (una sola vez)
 // las funciones de render que ya existan, para que los módulos puedan engancharse con eventos.
 installTour(window);
+const openFromHash = installNav(window);
 window.SAHTEN_VERSION = APP_VERSION;   // única fuente de la versión que se muestra
 document.querySelectorAll('[data-app-version]').forEach(el => { el.textContent = APP_VERSION; });
 [['app.js', appJs], ['app-late.js', appLateJs]].forEach(([n, c]) => { runClassic(n, c); instrument(RENDERS); });
@@ -87,6 +89,7 @@ bindSettingInputs();
   .forEach(([n, c]) => { runClassic(n, c); instrument(RENDERS); });
 
 window.SAHTEN_READY = true;
+openFromHash();   // enlace directo a una sección (#/menuonline)
 }
 
 // En el navegador arranca enseguida (antes de DOMContentLoaded); en escritorio espera a que carguen los archivos y la configuración.

@@ -47,7 +47,7 @@ describe('publicar menú desde la app', () => {
 });
 
 describe('roles en pantalla', () => {
-  const visibleNav = a => [...a.window.document.querySelectorAll('.nav-item')].filter(e => e.style.display !== 'none').map(e => /showPanel\('([a-z]+)'\)/.exec(e.getAttribute('onclick'))[1]);
+  const visibleNav = a => [...a.window.document.querySelectorAll('.nav-item')].filter(e => e.style.display !== 'none').map(e => e.dataset.panel);
   it('cajero: solo Mostrador (y no puede navegar a otra sección)', async () => {
     const a = await app(); await a.p.openDemo(); a.on.setRole('cajero');
     expect(visibleNav(a).filter(p => p !== 'nube')).toEqual(['mostrador']);

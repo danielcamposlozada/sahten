@@ -25,7 +25,7 @@
   .logo svg { width: 100%; height: auto; max-height: 54px; }
   .logo-sub { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
   .nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
-  .nav-item { display: flex; align-items: center; gap: 11px; padding: 10px 14px; cursor: pointer; color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 500; transition: all 0.2s ease; border-left: none; border-radius: 10px; margin-bottom: 2px; }
+  .nav-item { text-decoration: none; display: flex; align-items: center; gap: 11px; padding: 10px 14px; cursor: pointer; color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 500; transition: all 0.2s ease; border-left: none; border-radius: 10px; margin-bottom: 2px; }
   .nav-item:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.08); }
   .nav-item.active { color: white; border-left-color: transparent; background: rgba(242,140,0,0.18); font-weight: 600; }
   .nav-item.active svg { color: var(--accent); }
