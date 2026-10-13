@@ -14,7 +14,7 @@
 [data-theme="dark"] { --focus: #8ab4f8; --warn: #f0a63a; }
 
 /* Foco siempre visible con teclado (WCAG 2.4.7) */
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 2px; }
 .nav-item:focus-visible { outline-color: #fff; outline-offset: -2px; border-radius: 10px; }
 button:focus-visible, a:focus-visible, [role="button"]:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -23,7 +23,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 
 /* Diálogos */
 .sd-overlay { position: fixed; inset: 0; z-index: 30000; background: rgba(10,20,12,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: var(--sp-4); }
-.sd-box { background: var(--surface); color: var(--ink, #1c1c1e); border-radius: var(--r-xl); width: 100%; max-height: 100%; overflow: auto; padding: 20px 22px; box-shadow: 0 24px 80px rgba(0,0,0,.35); font-family: inherit; }
+.sd-box { background: var(--surface); color: var(--ink, #1c1c1e); border-radius: var(--r-xl); width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; padding: 20px 22px; box-shadow: 0 24px 80px rgba(0,0,0,.35); font-family: inherit; }
 .sd-title { font-size: var(--fs-lg); font-weight: 700; margin-bottom: var(--sp-3); letter-spacing: -.01em; }
 .sd-body { font-size: var(--fs-md); line-height: 1.5; }
 .sd-text { margin: 0 0 var(--sp-3); white-space: pre-line; }
@@ -78,4 +78,18 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
   .um-txt { display: none; } .um-btn { padding: 2px; min-width: 40px; justify-content: center; } .um-dot { left: 24px; bottom: 2px; }
   .um-menu { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; max-width: none; }
 }
-@media (prefers-reduced-motion: reduce) { .st-toast { animation: none; } * { scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Zonas táctiles de 44 px en pantallas táctiles */
+@media (pointer: coarse) {
+  .btn, .bottom-nav-item, .app-drawer-item, .topbar-menu-item, .mo-chip, .mo-iconbtn, .mo-tab, .sd-linkbtn, select.custom-input, .most-tab, .nav-item { min-height: var(--touch); }
+  .mo-iconbtn { min-width: var(--touch); }
+  .btn { padding-top: 10px; padding-bottom: 10px; }
+  input[type="checkbox"], input[type="radio"] { min-width: 20px; min-height: 20px; }
+}
+.nav-item { min-height: 40px; }
+
+/* Estados vacíos con acción */
+.empty-action { display: inline-flex; margin-top: var(--sp-3); }

@@ -18,6 +18,12 @@ export function installNav(w = window) {
     if (typeof w.showPanel === 'function') w.showPanel(el.dataset.panel);
   });
 
+  // «Saltar al contenido» (teclado / lector de pantalla) sin tocar la URL de la app
+  d.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('[data-skip]'); if (!a) return;
+    e.preventDefault(); const m = d.getElementById('main-content'); if (m) m.focus();
+  });
+
   // Atrás / Adelante / hash editado a mano
   w.addEventListener('hashchange', () => {
     const name = panelFromHash(w.location.hash, exists);

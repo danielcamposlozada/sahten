@@ -287,18 +287,25 @@ const PANEL_NAMES={dashboard:'Dashboard',productos:'Menú',proyeccion:'Proyecci�
 // ── APP DRAWER + BOTTOM NAV ──────────────────────────────────
 const BOTTOM_NAV_PANELS = ['dashboard','productos','ingredientes','proyeccion'];
 
-function toggleTopbarMenu() {
-  const menu = document.getElementById('topbar-menu');
-  if (menu) menu.classList.toggle('open');
+function toggleTopbarMenu(id, btn) {
+  const menu = document.getElementById(id || 'topbar-menu'); if (!menu) return;
+  const open = !menu.classList.contains('open');
+  document.querySelectorAll('.topbar-menu.open').forEach(m => m.classList.remove('open'));
+  menu.classList.toggle('open', open);
+  document.querySelectorAll('[aria-controls][aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) { const first = menu.querySelector('[role="menuitem"]'); if (first) first.focus(); }
 }
 function closeTopbarMenu() {
-  const menu = document.getElementById('topbar-menu');
-  if (menu) menu.classList.remove('open');
+  document.querySelectorAll('.topbar-menu.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('[aria-controls][aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
 }
-// Close topbar menu when clicking outside
+// Close topbar menu when clicking outside / with Escape
 document.addEventListener('click', e => {
-  const wrap = document.getElementById('topbar-more-btn')?.closest('.topbar-menu-wrap');
-  if (wrap && !wrap.contains(e.target)) closeTopbarMenu();
+  if (!e.target.closest || !e.target.closest('.topbar-menu-wrap')) closeTopbarMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.querySelector('.topbar-menu.open')) { closeTopbarMenu(); }
 });
 
 let _openRowMenu = null;

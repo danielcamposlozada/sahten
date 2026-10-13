@@ -183,7 +183,7 @@ function _moRenderList() {
     }).join('') : '';
     return `<section class="mo-cat ${hiddenCat ? 'off' : ''}" data-cat-block="${_esc(g.cat)}">${head}${rows}</section>`;
   }).join('');
-  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta y Menú: acá aparecen solos.'}</div>`;
+  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta o Menú y acá aparecen solos.<br><button class="btn btn-accent empty-action" data-panel="costreceta">Ir a Costo Receta</button>'}</div>`;
 }
 
 function _moRenderPreview() {
