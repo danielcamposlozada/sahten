@@ -7,6 +7,7 @@
 //  · carpeta del menú publicado y vista previa
 // ═══════════════════════════════════════════════════════════
 import { basename } from './paths.js';
+import { notesToHtml } from '../ui/notes.js';
 
 const HOUR = 3600 * 1000;
 
@@ -49,9 +50,18 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
             body: 'Instalala cuando quieras: la app se reinicia y tus proyectos no se tocan.', action: { label: 'Actualizar ahora', call: 'update' } });
           return update;
         }
-        w.showConfirm('Nueva versión ' + update.version, 'Hay una versión nueva de Sahten. ¿Instalarla ahora? La app se reinicia y tus proyectos no se tocan.' + (update.body ? '\n\n' + update.body : ''), () => api.installUpdate(), null, 'Actualizar', 'Más tarde');
+        api.askUpdate(update);
         return update;
       } catch (e) { if (!silent) w.alert('No se pudo buscar actualizaciones (¿hay internet?).'); return null; }
+    },
+    /** Diálogo de actualización: novedades con formato, en una ventana ancha con scroll. */
+    async askUpdate(update) {
+      const lead = 'Hay una versión nueva de Sahten. La app se reinicia y tus proyectos no se tocan.';
+      if (typeof w.sahtenDialog !== 'function') return w.showConfirm('Nueva versión ' + update.version, lead + (update.body ? '\n\n' + update.body : ''), () => api.installUpdate(), null, 'Actualizar', 'Más tarde');
+      const r = await w.sahtenDialog({ title: 'Nueva versión ' + update.version, width: 640,
+        body: `<p class="un-p">${lead}</p>` + (update.body ? `<div class="un-notes" tabindex="0" role="region" aria-label="Novedades">${notesToHtml(update.body)}</div>` : ''),
+        actions: [{ label: 'Más tarde', value: false }, { label: 'Actualizar', value: true, primary: true }] });
+      if (r === true) await api.installUpdate();
     },
     /** Descarga e instala la versión encontrada (la guarda antes) y reinicia la app. */
     async installUpdate() {

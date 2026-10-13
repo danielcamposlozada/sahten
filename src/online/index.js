@@ -119,12 +119,18 @@ export function createOnline({ w = window, project, events }) {
         const r = await cl.rpc('get_project_data', { pid: id }); if (r.version === version) return; version = r.version;
         const file = clone(r.data); file.online = { ...file.online, supabase: { ...conn(), projectId: id } }; file.images = {};
         remoteViewing = true; await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + ' (remoto).sahten'); remoteViewing = false;
-        session.setReadOnly(true);
+        session.setReadOnly(true); viewBanner(true);
       };
       await load(); stopView();
       viewTimer = setInterval(() => load().catch(() => {}), 10000);
     },
-    stopRemoteView() { stopView(); session.setReadOnly(false); },
+    /** Sale de la vista remota: corta el refresco, cierra la copia y vuelve a la lista de proyectos. */
+    exitRemoteView() {
+      stopView(); remoteViewing = false; viewBanner(false);
+      try { session.close(); } catch (e) { /* */ }
+      try { w.SAHTEN.projectUi.showProjects(); } catch (e) { /* */ }
+    },
+    stopRemoteView() { api.exitRemoteView(); },
 
     /** Al abrir un proyecto: retoma la conexión y el rol que tenía. */
     async onProjectOpened() {
@@ -134,6 +140,17 @@ export function createOnline({ w = window, project, events }) {
     },
   };
   function stopView() { if (viewTimer) { clearInterval(viewTimer); viewTimer = null; } }
+  /** Aviso fijo arriba mientras se mira la copia remota, con la salida a mano. */
+  function viewBanner(on) {
+    const d = w.document; let b = d.getElementById('remote-view-banner');
+    if (!on) { if (b) b.remove(); return; }
+    if (b) return;
+    const main = d.querySelector('.main'); if (!main) return;
+    b = d.createElement('div'); b.id = 'remote-view-banner'; b.className = 'rv-banner'; b.setAttribute('role', 'status');
+    b.innerHTML = '<span>Vista remota en vivo · solo lectura · se actualiza sola</span><button type="button" class="rv-exit">Salir de la vista remota</button>';
+    b.querySelector('.rv-exit').addEventListener('click', () => api.exitRemoteView());
+    main.insertBefore(b, main.firstChild);
+  }
 
   const ui = createOnlineUi({ online: api, w });
   api.ui = ui;

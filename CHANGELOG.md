@@ -1,5 +1,12 @@
 # Changelog
 
+## Sin publicar
+
+- **Vista remota en vivo**: ahora hay un aviso fijo arriba con «Salir de la vista remota», que vuelve a la lista de proyectos (antes no había forma de salir).
+- **Aviso de actualización**: ventana más ancha, con las novedades con formato y barra de desplazamiento (antes se veía el texto sin formato).
+- **Notas de la Release**: un renglón por cambio (título y primera frase) con enlace al detalle en el CHANGELOG.
+- **Menú publicado (web)**: la barra de categorías quedaba despegada del borde superior; ahora queda pegada justo debajo de la barra del sitio, que además se mantiene fija al bajar.
+
 ## 0.4.5
 
 - **Menú Online**: «Ver vista previa» abre la página publicada dentro de la app (celular / escritorio). Antes «Vista previa en pestaña» no hacía nada en la app de escritorio (faltaba un permiso y el error se perdía). «Abrir en el navegador» sigue disponible y ahora avisa si falla.

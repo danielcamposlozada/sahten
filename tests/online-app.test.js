@@ -115,6 +115,25 @@ describe('pedidos en tiempo real y conexión', () => {
     const btn = slot.querySelector('button[data-remote="pr-1"]'); expect(btn).toBeTruthy(); expect(btn.dataset.role).toBe('owner');
     w.close();
   }, 60000);
+  it('vista remota: muestra un aviso fijo con «Salir», que corta el refresco, cierra la copia y vuelve a la lista de proyectos', async () => {
+    const a = await app(); await a.p.openDemo(); const w = a.window;
+    const data = a.p.collect();
+    backend(w, {
+      '/auth/v1/token': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1', email: 'dueña@x.com' } } },
+      '/rest/v1/stores?select': { body: [] }, '/rest/v1/stores': { status: 201, body: [{ id: 'st-1', slug: 'mi-local' }] },
+      '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 },
+      '/rest/v1/rpc/get_project_data': { body: { data, version: 3 } },
+    });
+    await a.on.connect({ url: URL_OK, anonKey: ANON, slug: 'mi-local', email: 'dueña@x.com', password: 'secreta' });
+    a.ev("SAHTEN_SUPABASE.projectId='pr-1'");
+    let shown = 0; w.SAHTEN.projectUi = { ...(w.SAHTEN.projectUi || {}), showProjects: () => { shown++; } };
+    await a.on.remoteView(); await wait(30);
+    const banner = w.document.getElementById('remote-view-banner'); expect(banner).toBeTruthy();
+    expect(banner.textContent).toMatch(/solo lectura/); const exit = banner.querySelector('.rv-exit'); expect(exit.textContent).toBe('Salir de la vista remota');
+    exit.click(); await wait(30);
+    expect(w.document.getElementById('remote-view-banner')).toBeNull(); expect(shown).toBe(1); expect(a.p.session.isOpen).toBe(false);
+    w.close();
+  }, 60000);
   it('el panel «Nube y usuarios» muestra la conexión y rechaza la service_role', async () => {
     const a = await app(); await a.p.openDemo(); a.ev("showPanel('nube')"); await wait(30);
     const html = a.window.document.getElementById('panel-nube').innerHTML;

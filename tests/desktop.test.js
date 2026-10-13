@@ -205,6 +205,16 @@ describe('integración con el sistema', () => {
     const d = installDesktop({ apis: a, project, config: createMemoryConfig(), w }); await d.openPath('/x.sahten');
     expect(w.__alerts[0]).toMatch(/No se pudo abrir.*No existe/);
   });
+  it('actualizaciones: el diálogo muestra las novedades con formato en una ventana ancha y con scroll', async () => {
+    const { w } = page(); let dlg = null;
+    w.sahtenDialog = async o => { dlg = o; return false; };
+    const a = apis({ update: { version: '4.2.0', body: '## Novedades de 4.2.0\n\n- **Menú**: algo nuevo.\n\n---\nPie' } });
+    const d = installDesktop({ apis: a, project: {}, config: createMemoryConfig(), w, now: () => 1e12 });
+    await d.checkForUpdates();
+    expect(dlg.title).toMatch(/4\.2\.0/); expect(dlg.width).toBeGreaterThanOrEqual(600);
+    expect(dlg.body).toContain('class="un-notes"'); expect(dlg.body).toContain('<strong>Menú</strong>'); expect(dlg.body).not.toMatch(/\*\*|##/);
+    expect(dlg.actions.map(x => x.label)).toEqual(['Más tarde', 'Actualizar']);
+  });
   it('actualizaciones: avisa, pide confirmar, descarga e instala y reinicia; sin novedades o sin internet no molesta', async () => {
     const { w } = page(); const installs = [];
     const a = apis({ update: { version: '4.1.0', body: 'Mejoras', downloadAndInstall: async () => { installs.push(1); } } });
