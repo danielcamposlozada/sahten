@@ -37,6 +37,15 @@ export function createController(host) {
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
   }
   let lastFeed = '';
+  /** El nombre de la tienda en Supabase sigue al nombre del negocio de este proyecto (best-effort: si falla no molesta). */
+  async function syncStoreName() {
+    try {
+      if (!client || !host.conn.storeId) return false;
+      const name = String((host.menuJson().store || {}).name || '').trim(); if (!name) return false;
+      await client.raw('/rest/v1/stores?id=eq.' + host.conn.storeId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { name }, token: await client.auth.token() });
+      return true;
+    } catch (e) { return false; }
+  }
   const stopFeed = () => { if (feed) { feed.close(); feed = null; } lastFeed = ''; };
 
   const api = {
@@ -57,7 +66,7 @@ export function createController(host) {
         if (!store) store = await client.store.create({ slug, name: host.menuJson().store.name, projectId });
         Object.assign(host.conn, { url: v.url, anonKey: v.anonKey, storeId: store.id, slug });
         host.markDirty();
-        set('conectado'); await startFeed(); return { store };
+        set('conectado'); await startFeed(); syncStoreName(); return { store };
       } catch (e) { client = null; set('desconectado', e.message); throw e; }
     },
 
@@ -74,7 +83,17 @@ export function createController(host) {
 
     async signIn(email, password) {
       if (!host.conn.url) throw new SupabaseError('Primero conectá el proyecto.');
-      client = mk(host.conn, null); await client.auth.signIn(email, password); set('conectado'); await startFeed();
+      client = mk(host.conn, null); await client.auth.signIn(email, password); set('conectado'); await startFeed(); syncStoreName();
+    },
+
+    /** Cerrar sesión SIN perder la conexión del proyecto (URL, clave y tienda quedan guardadas para volver a entrar con email y contraseña). */
+    signOut() {
+      stopFeed(); if (client) client.auth.signOut(); host.storage.set(sessKey(), null);
+      client = mk(host.conn, null); set('sin sesión');
+    },
+    async recover(email) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      const c = client || mk(host.conn, null); return c.auth.recover(email);
     },
 
     disconnect() { stopFeed(); if (client) client.auth.signOut(); client = null; Object.keys(host.conn).forEach(k => delete host.conn[k]); Object.assign(host.conn, { url: '', anonKey: '', storeId: '' }); host.markDirty(); set('desconectado'); },
@@ -83,7 +102,7 @@ export function createController(host) {
     async syncMenu() {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
       const m = host.menuJson(); delete m.supabase;
-      await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); emit(); return m.products.length;
+      await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
     },
 
     /** Cuando cambia el estado de un pedido importado, se avisa a la web/otros dispositivos. */

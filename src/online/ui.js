@@ -32,7 +32,7 @@ export function createOnlineUi({ online, w = window }) {
       await run('nube-msg', () => online.connect({ url: val('nb-url'), anonKey: val('nb-key'), slug: val('nb-slug'), email: val('nb-mail'), password: $('nb-pass').value, signUp: $('nb-new').checked }),
         r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Delivery.');
     },
-    async signIn() { await run('nube-msg', () => online.controller.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
+    async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
     disconnect() { if (w.confirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.')) { online.controller.disconnect(); ui.render(); } },
     async syncMenu() { await run('nube-msg', () => online.controller.syncMenu(), n => `Menú actualizado en línea (${n} productos).`); },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },

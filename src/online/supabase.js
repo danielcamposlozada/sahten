@@ -22,6 +22,21 @@ export function validateConnection({ url, anonKey }) {
   return { ok: true, url: u, anonKey: k };
 }
 
+/** Código de conexión: URL + clave pública + tienda en una sola línea que se copia y se pega (sin contraseña, nada secreto). */
+const toB64 = str => (typeof btoa === 'function' ? btoa(unescape(encodeURIComponent(str))) : Buffer.from(str, 'utf8').toString('base64'));
+export function encodeConnection({ url, anonKey, slug }) {
+  return 'sahten:' + toB64(JSON.stringify({ u: String(url || ''), k: String(anonKey || ''), s: String(slug || '') })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+/** Acepta el código de arriba o un JSON {url, anonKey, slug}. Devuelve { url, anonKey, slug } o null. */
+export function decodeConnection(text) {
+  const t = String(text || '').trim(); if (!t) return null;
+  try {
+    if (t.startsWith('{')) { const j = JSON.parse(t); return { url: j.url || j.u || '', anonKey: j.anonKey || j.k || '', slug: j.slug || j.s || '' }; }
+    const m = /^sahten:([A-Za-z0-9_-]+)$/.exec(t); if (!m) return null;
+    const j = JSON.parse(b64urlDecode(m[1])); return { url: j.u || '', anonKey: j.k || '', slug: j.s || '' };
+  } catch (e) { return null; }
+}
+
 export const slugify = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 export const validSlug = s => /^[a-z0-9][a-z0-9-]{2,39}$/.test(s || '');
 
@@ -58,6 +73,8 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
     async signUp(email, password) { const d = await raw('/auth/v1/signup', { method: 'POST', body: { email, password } }); return d && d.access_token ? setSession(d) : { pendingConfirmation: true, user: d && (d.user || d) }; },
     async refresh() { if (!sess || !sess.refresh_token) throw new SupabaseError('Hay que volver a iniciar sesión.', { code: 'no_session' }); return setSession(await raw('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: sess.refresh_token } })); },
     signOut() { sess = null; onSession(null); },
+    /** Manda el email para elegir una contraseña nueva. */
+    async recover(email) { await raw('/auth/v1/recover', { method: 'POST', body: { email } }); return true; },
     async token() { if (!sess) return null; if (sess.expires_at - 60 <= Math.floor(now() / 1000)) await auth.refresh(); return sess.access_token; },
     get user() { return sess && sess.user; },
   };

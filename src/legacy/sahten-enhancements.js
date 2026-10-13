@@ -343,6 +343,11 @@ function custApply() {
   applyPaletteColors(_cust);
   // 3. Theme mode
   applyThemeMode(_cust);
+  try {   // la pestaña/ventana y el color del navegador también identifican la tienda
+    const bn = (_cust.brandName || '').trim(); document.title = bn ? bn + ' · Sahten' : 'Sahten';
+    const tc = document.querySelector('meta[name="theme-color"]'); const pv = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); if (tc && pv) tc.setAttribute('content', pv);
+  } catch (e) { /* */ }
+  try { window.dispatchEvent(new Event('sahten:brand')); } catch (e) { /* */ }   // la barra superior muestra la marca de la tienda
 }
 
 function applyBrandIdentity(c) {

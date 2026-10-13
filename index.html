@@ -183,6 +183,7 @@
       <!-- Desktop actions (hidden on mobile) -->
       <div class="topbar-actions topbar-desktop">
         <span id="autosave-badge" class="autosave-badge">✓ Guardado</span>
+        <div class="user-slot" data-user-slot></div>
         <button class="btn notif-bell-btn" id="notif-bell-desktop" onclick="openNotifDrawer()" title="Notificaciones" style="position:relative;padding:8px 10px">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span id="notif-bell-badge" style="position:absolute;top:2px;right:2px;min-width:16px;height:16px;border-radius:8px;background:#e04040;color:white;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 4px;line-height:1">0</span>
@@ -208,6 +209,7 @@
       <!-- Mobile actions: autosave badge + bell + ⋯ menu -->
       <div class="topbar-actions topbar-mobile">
         <span id="autosave-badge-mobile" class="autosave-badge">✓</span>
+        <div class="user-slot" data-user-slot></div>
         <button class="btn notif-bell-btn" id="notif-bell-mobile" onclick="openNotifDrawer()" title="Notificaciones" style="position:relative;padding:6px 8px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span id="notif-bell-badge-m" style="position:absolute;top:0;right:0;min-width:14px;height:14px;border-radius:7px;background:#e04040;color:white;font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>

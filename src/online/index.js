@@ -8,6 +8,7 @@ import { SupabaseError } from './supabase.js';
 import { toPublicProject, applyPublicToFile, canSeePanel, receivesFullProject, writeScope } from './roles.js';
 import { applyRole, installRoleGuard } from './roleView.js';
 import { createOnlineUi } from './ui.js';
+import { createUserMenu } from './userMenu.js';
 import { stateFromSahten } from '../core/projectFile.js';
 import { channelPrice } from '../core/index.js';
 import { emptyFile, serialize } from '../project/schema.js';
@@ -60,6 +61,14 @@ export function createOnline({ w = window, project, events }) {
   const api = {
     enabled: ONLINE_ENABLED, controller, role, setRole, conn,
     syncInfo: () => (sync ? sync.info() : { state: 'sin vincular', linked: !!conn().projectId, pending: false, conflict: null, version: null, role: role() }),
+
+    /** Iniciar sesión en una tienda ya configurada (solo email y contraseña) y retomar la sincronización. */
+    async signIn(email, password) {
+      await controller.signIn(email, password); ensureSync();
+      if (conn().projectId) sync.sync().catch(() => { /* queda en cola */ });
+    },
+    /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
+    signOut() { controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 
     async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); return r; },
 
@@ -128,6 +137,7 @@ export function createOnline({ w = window, project, events }) {
 
   const ui = createOnlineUi({ online: api, w });
   api.ui = ui;
+  if (ONLINE_ENABLED) api.userMenu = createUserMenu({ online: api, project, w });
   installRoleGuard(role, events);
   controller.onChange(() => ui.render());
 
