@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.7
 
 - **La vista previa muestra lo que tenés en la app.** Con la nube conectada, la vista previa (y «Abrir en el navegador») bajaba el menú ya publicado y lo ponía encima: por eso lo que importabas o escribías en «Sitio web» no se veía. Ahora la vista previa usa solo lo local y no puede enviar pedidos de verdad.
 - **Fotos más fáciles**: ahora hay una sola forma de cargarlas, en todos lados. Tocá la miniatura (o arrastrá una imagen encima) en **Menú Online**, **Menú**, **Costo Receta** y en la **Receta**, y la foto se actualiza en todas las pantallas. La × quita la foto.
