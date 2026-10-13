@@ -10,6 +10,7 @@
 - **Accesibilidad**: foco visible, zonas táctiles de 44 px, texto mínimo de 12 px, «Saltar al contenido», respeto de «reducir movimiento».
 - **Avisos y confirmaciones propios** (no bloquean y se ven igual en escritorio, web y celular); una acción que falla ya no queda muda.
 - **Protección del menú publicado**: «Sincronizar menú» siempre pide doble confirmación (cuántos productos se publican y cuántos hay publicados ahora; después «¿Seguro?», avisando si el menú nuevo tiene menos productos). Un proyecto sin productos nunca se publica (evita pisar el menú desde una PC con un proyecto vacío).
+- **«Abrir proyecto de la nube…»**: la lista de proyectos se armaba y se borraba al instante, así que nunca aparecía nada. Ahora se ve la lista y «Abrir» carga el proyecto elegido.
 - **Releases de GitHub**: las notas de cada versión salen de este archivo.
 - Documentación: `docs/AUDITORIA-UX.md` y `docs/SISTEMA-DISENO.md`.
 

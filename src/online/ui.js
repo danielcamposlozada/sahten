@@ -40,8 +40,15 @@ export function createOnlineUi({ online, w = window }) {
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },
     async resolve(choice) { await run('nube-msg', () => online.resolve(choice), 'Conflicto resuelto.'); },
     async openRemote(id, roleName) { await run('nube-msg', () => online.openRemote(id, roleName), 'Proyecto abierto.'); },
+    /** Lista los proyectos de la nube. No usa run(): run() borra el espacio al terminar y la lista nunca se veía. */
     async listRemote() {
-      await run('nube-remote', async () => { const rows = await online.listRemote(); $('nube-remote').innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role)} · versión ${r.version}</div></div><button class="btn" onclick="SAHTEN.online.ui.openRemote('${r.id}','${r.role}')">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>'; });
+      const slot = $('nube-remote'); if (!slot) return;
+      say('nube-remote', 'Un momento…');
+      try {
+        const rows = await online.listRemote();
+        slot.innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role || '')} · versión ${r.version}</div></div><button class="btn" data-remote="${esc(r.id)}" data-role="${esc(r.role || '')}">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>';
+        slot.querySelectorAll('[data-remote]').forEach(btn => btn.addEventListener('click', () => ui.openRemote(btn.dataset.remote, btn.dataset.role)));
+      } catch (e) { say('nube-remote', e.message || String(e), true); }
     },
     async renderUsers() {
       const host = $('nube-users'); if (!host) return;
