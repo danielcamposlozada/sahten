@@ -260,6 +260,15 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     expect(a.ev('SAHTEN.project.collect().catalog.productos.find(p=>p.id===' + JSON.stringify(pid) + ').description')).toBe('Descripción nueva');
     win.close();
   }, 60000);
+  it('con el sitio apagado, el editor igual muestra en la vista previa lo que se escribe (y avisa que no se publica)', async () => {
+    const a = await open(); const win = a.window;
+    $('[data-sb-enabled]').checked = false; $('[data-sb-enabled]').dispatchEvent(new win.Event('change', { bubbles: true }));
+    type(a, '[data-sb="hero.title"]', 'Portada con sitio apagado');
+    expect(a.on.publish.currentMenu().site).toBeNull();                                                  // lo publicado: solo el menú
+    expect(a.on.publish.previewHtml()).not.toContain('Portada con sitio apagado');
+    expect(a.on.publish.previewHtml({ forceSite: true })).toContain('Portada con sitio apagado');        // la vista previa del editor sí
+    expect($('.sb-offnote')).toBeTruthy(); win.close();
+  }, 60000);
   it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
     const a = await open();
     a.ev("SAHTEN_IMAGES.site_hero='data:image/png;base64,iVBORw0KGgo='"); expect(a.on.publish.currentMenu().site.images.hero).toBe('img/site_hero.jpg');
