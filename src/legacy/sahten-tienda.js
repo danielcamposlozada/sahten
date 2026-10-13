@@ -380,8 +380,8 @@ function _tiendaAddZone(type) {
   _renderTiendaOnline();
 }
 
-function _tiendaDeleteZone(i) {
-  if (!confirm('¿Eliminar esta zona?')) return;
+async function _tiendaDeleteZone(i) {
+  if (!(await sahtenConfirm('¿Eliminar esta zona?', { okLabel: 'Eliminar', danger: true }))) return;
   const cfg = _getTiendaConfig();
   cfg.zones.splice(i, 1);
   _saveTiendaConfig(cfg);

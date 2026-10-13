@@ -78,4 +78,13 @@ export function sahtenToast(message, { kind = 'info', ms = 4200, w = window } = 
 export function installDialogs(w = window) {
   w.sahtenDialog = (o = {}) => sahtenDialog({ ...o, w }); w.sahtenConfirm = (m, o = {}) => sahtenConfirm(m, { ...o, w }); w.sahtenAlert = (m, o = {}) => sahtenAlert(m, { ...o, w }); w.sahtenToast = (m, o = {}) => sahtenToast(m, { ...o, w });
   w.alert = m => { sahtenAlert(String(m ?? ''), { w }); };
+  // Una acción asíncrona que falla nunca queda muda: se avisa (antes un permiso denegado «no hacía nada»).
+  w.addEventListener('unhandledrejection', e => {
+    const r = e && e.reason; const msg = String((r && (r.message || r)) || '');
+    if (!msg || (r && (r.name === 'AbortError' || r.offline)) || /^(cancel|abort)/i.test(msg)) return;
+    try { console.error(r); } catch (err) { /* */ }
+    sahtenToast('Algo no salió bien: ' + msg.slice(0, 160), { kind: 'error', w });
+  });
+  /** Envuelve una acción de botón: si falla, avisa con el mensaje en lugar de quedar muda. */
+  w.safeAction = fn => async (...a) => { try { return await fn(...a); } catch (err) { sahtenToast(String((err && err.message) || err), { kind: 'error', w }); return undefined; } };
 }

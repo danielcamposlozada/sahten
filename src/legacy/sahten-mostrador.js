@@ -88,7 +88,7 @@ async function _handleProductImageUpload(ev, pid) {
 }
 async function _removeProductImage() {
   const idx=(typeof recipeIdx!=='undefined')?recipeIdx:-1; if(idx<0||!PRODUCTS[idx]) return;
-  const p=PRODUCTS[idx]; if(!confirm('¿Quitar la foto de "'+p.name+'"?')) return;
+  const p=PRODUCTS[idx]; if(!(await sahtenConfirm('¿Quitar la foto de "'+p.name+'"?', { okLabel: 'Quitar', danger: true }))) return;
   await deleteProductImage(p.id); _invalidateImgCache(p.id);
   const thumb=document.getElementById('prod-img-thumb');
   if(thumb){thumb.classList.add('empty');thumb.innerHTML='<div class="prod-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Sin foto</div>';}
@@ -550,9 +550,9 @@ function openOrderDetail(orderId) {
   document.body.appendChild(ov);
 }
 
-function orderReopen(orderId) {
+async function orderReopen(orderId) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
-  if(!confirm('¿Reabrir la orden #'+String(o.num).padStart(4,'0')+' y cargarla en el carrito? La orden original se eliminará.')) return;
+  if(!(await sahtenConfirm('¿Reabrir la orden #'+String(o.num).padStart(4,'0')+' y cargarla en el carrito? La orden original se eliminará.', { okLabel: 'Reabrir' }))) return;
   mostradorCart = o.items.map(it => ({productId:it.productId, qty:it.qty}));
   mostradorActiveDiscountId = o.discountId; mostradorActiveCustomerId = o.customerId;
   mostradorShipping = o.shipping||0; mostradorActivePaymentId = o.paymentId;
@@ -565,10 +565,10 @@ function orderReopen(orderId) {
   mostradorTab = 'pedido'; renderMostrador();
 }
 
-function orderDelete(orderId) {
+async function orderDelete(orderId) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
-  if(!confirm('¿Eliminar la orden #'+String(o.num).padStart(4,'0')+'? Esta acción no se puede deshacer.')) return;
-  if (o.stockDeducted && confirm('Esta orden descontó stock. ¿Devolver el stock?')) orderRestoreStock(orderId, true);
+  if(!(await sahtenConfirm('¿Eliminar la orden #'+String(o.num).padStart(4,'0')+'? Esta acción no se puede deshacer.', { okLabel: 'Eliminar', danger: true }))) return;
+  if (o.stockDeducted && (await sahtenConfirm('Esta orden descontó stock. ¿Devolver el stock?', { okLabel: 'Devolver stock', cancelLabel: 'No devolver' }))) orderRestoreStock(orderId, true);
   SAHTEN_ORDERS = SAHTEN_ORDERS.filter(x=>x.id!==orderId); _saveOrders();
   document.getElementById('order-detail-overlay')?.remove();
   _renderHistorialTab();
@@ -762,9 +762,9 @@ async function custEdit(id) {
   c.name = name.trim()||c.name; c.phone = phone.trim(); c.email = email.trim(); c.address = address.trim();
   _saveCustomers(); _renderCustList();
 }
-function custDeleteClient(id) {
+async function custDeleteClient(id) {
   const c = SAHTEN_CUSTOMERS.find(x=>x.id===id); if(!c) return;
-  if(!confirm('¿Eliminar el cliente "'+c.name+'"?')) return;
+  if(!(await sahtenConfirm('¿Eliminar el cliente "'+c.name+'"?', { okLabel: 'Eliminar', danger: true }))) return;
   SAHTEN_CUSTOMERS = SAHTEN_CUSTOMERS.filter(x=>x.id!==id);
   if(mostradorActiveCustomerId===id) mostradorActiveCustomerId=null;
   _saveCustomers(); _renderCustList();
@@ -794,7 +794,7 @@ function _renderDiscList() {
 }
 function discAddNew(){const n=(document.getElementById('disc-new-name')?.value||'').trim(),t=document.getElementById('disc-new-type')?.value||'pct',v=parseFloat(document.getElementById('disc-new-value')?.value);if(!n){alert('Poné un nombre.');return;}if(isNaN(v)||v<=0){alert('Valor > 0.');return;}if(t==='pct'&&v>100){alert('Máx 100%.');return;}const id='d_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);MOSTRADOR_DISCOUNTS.push({id,name:n,type:t,value:v});_saveDiscounts();document.getElementById('disc-new-name').value='';document.getElementById('disc-new-value').value='';_renderDiscList();_renderCartExtras();}
 async function discEdit(id){const d=MOSTRADOR_DISCOUNTS.find(x=>x.id===id);if(!d)return;const n=await sahtenAsk('Nombre:',d.name);if(n===null)return;const v=await sahtenAsk('Valor'+(d.type==='pct'?' (%)':' ($)')+':',d.value);if(v===null)return;const vn=parseFloat(v);if(isNaN(vn)||vn<=0){alert('Inválido.');return;}d.name=n.trim()||d.name;d.value=vn;_saveDiscounts();_renderDiscList();_renderCartExtras();}
-function discDelete(id){const d=MOSTRADOR_DISCOUNTS.find(x=>x.id===id);if(!d)return;if(!confirm('¿Eliminar "'+d.name+'"?'))return;MOSTRADOR_DISCOUNTS=MOSTRADOR_DISCOUNTS.filter(x=>x.id!==id);if(mostradorActiveDiscountId===id)mostradorActiveDiscountId=null;_saveDiscounts();_renderDiscList();_renderCartExtras();_renderCartTotals();}
+async function discDelete(id){const d=MOSTRADOR_DISCOUNTS.find(x=>x.id===id);if(!d)return;if(!(await sahtenConfirm('¿Eliminar "'+d.name+'"?', { okLabel: 'Eliminar', danger: true })))return;MOSTRADOR_DISCOUNTS=MOSTRADOR_DISCOUNTS.filter(x=>x.id!==id);if(mostradorActiveDiscountId===id)mostradorActiveDiscountId=null;_saveDiscounts();_renderDiscList();_renderCartExtras();_renderCartTotals();}
 
 // ═══════════════════════════════════════════════════════════
 // PAYMENT METHODS MANAGER MODAL
@@ -809,7 +809,7 @@ function _renderPayList(){const l=document.getElementById('pay-list');if(!l)retu
 l.innerHTML=MOSTRADOR_PAYMENTS.map(p=>'<div class="disc-list-item" style="grid-template-columns:1fr auto"><div class="disc-list-item-name">'+_esc(p.name)+'</div><div class="disc-list-item-actions"><button class="disc-action-btn" onclick="payEdit(\''+p.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="disc-action-btn danger" onclick="payDelete(\''+p.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div></div>').join('');}
 function payAddNew(){const n=(document.getElementById('pay-new-name')?.value||'').trim();if(!n){alert('Poné un nombre.');return;}const id='pay_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);MOSTRADOR_PAYMENTS.push({id,name:n});_savePayments();document.getElementById('pay-new-name').value='';_renderPayList();_renderCartExtras();}
 async function payEdit(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p)return;const n=await sahtenAsk('Nombre:',p.name);if(n===null)return;p.name=n.trim()||p.name;_savePayments();_renderPayList();_renderCartExtras();}
-function payDelete(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p)return;if(!confirm('¿Eliminar "'+p.name+'"?'))return;MOSTRADOR_PAYMENTS=MOSTRADOR_PAYMENTS.filter(x=>x.id!==id);if(mostradorActivePaymentId===id)mostradorActivePaymentId=null;_savePayments();_renderPayList();_renderCartExtras();}
+async function payDelete(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p)return;if(!(await sahtenConfirm('¿Eliminar "'+p.name+'"?', { okLabel: 'Eliminar', danger: true })))return;MOSTRADOR_PAYMENTS=MOSTRADOR_PAYMENTS.filter(x=>x.id!==id);if(mostradorActivePaymentId===id)mostradorActivePaymentId=null;_savePayments();_renderPayList();_renderCartExtras();}
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS

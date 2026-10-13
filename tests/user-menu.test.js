@@ -56,6 +56,29 @@ describe('diálogo propio', () => {
   }, 60000);
 });
 
+describe('confirmaciones y errores sin bloquear', () => {
+  it('eliminar una orden pide confirmación con el diálogo propio y respeta «Cancelar»', async () => {
+    const a = await app(); await a.p.openDemo();
+    a.ev("SAHTEN_ORDERS.push({id:'o1',num:7,items:[],status:'done',total:100}); _saveOrders();");
+    const p1 = a.ev("orderDelete('o1')"); await wait(20);
+    expect(a.d.querySelector('.sd-box').textContent).toMatch(/Eliminar la orden #0007/);
+    a.d.querySelector('.sd-btn:not(.primary)').click(); await p1;
+    expect(a.ev('SAHTEN_ORDERS.length')).toBe(1);
+    const p2 = a.ev("orderDelete('o1')"); await wait(20);
+    a.d.querySelector('.sd-btn.primary').click(); await p2;
+    expect(a.ev('SAHTEN_ORDERS.length')).toBe(0);
+    a.window.close();
+  }, 60000);
+  it('una promesa rechazada sin atender se avisa con un toast (antes la acción quedaba muda)', async () => {
+    const a = await app(); const w = a.window;
+    const ev = new w.Event('unhandledrejection'); ev.reason = new Error('Permiso denegado'); w.dispatchEvent(ev);
+    expect(a.d.querySelector('.st-toast.error').textContent).toMatch(/Permiso denegado/);
+    const ev2 = new w.Event('unhandledrejection'); ev2.reason = Object.assign(new Error('x'), { name: 'AbortError' }); const n = a.d.querySelectorAll('.st-toast').length; w.dispatchEvent(ev2);
+    expect(a.d.querySelectorAll('.st-toast').length).toBe(n);
+    w.close();
+  }, 60000);
+});
+
 describe('usuario en la barra superior', () => {
   it('sin conexión: «Conectar tienda»; el diálogo acepta el código de conexión y rellena todo', async () => {
     const a = await app(); await a.p.openDemo(); await wait(30);

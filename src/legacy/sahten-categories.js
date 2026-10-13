@@ -102,9 +102,9 @@ function crBulkToggleMenu(showInMenu) {
   if (typeof renderProductos === 'function') renderProductos();
 }
 
-function crBulkDelete() {
+async function crBulkDelete() {
   const count = crSelectedSet.size;
-  if (!confirm('¿Eliminar ' + count + ' receta' + (count > 1 ? 's' : '') + '? Esta acción no se puede deshacer.')) return;
+  if (!(await sahtenConfirm('¿Eliminar ' + count + ' receta' + (count > 1 ? 's' : '') + '? Esta acción no se puede deshacer.', { okLabel: 'Eliminar', danger: true }))) return;
   const ids = new Set(crSelectedSet);
   // Remove from PRODUCTS array (by id, backwards to avoid index shift)
   for (let i = PRODUCTS.length - 1; i >= 0; i--) {

@@ -47,6 +47,11 @@ jobs:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: swatinem/rust-cache@v2
         with: { workspaces: './src-tauri -> target' }
+      - name: Notas de la versión (desde CHANGELOG.md)
+        id: notes
+        shell: bash
+        run: |
+          { echo 'body<<EOF_NOTES'; node scripts/release-notes.mjs "${{ github.ref_name }}"; echo 'EOF_NOTES'; } >> "$GITHUB_OUTPUT"
       - run: npm ci
       # Sin firma de Apple (por defecto): no se pasan las variables APPLE_* (vacías hacen fallar la importación del certificado)
       - name: Instaladores (sin firma de Apple)
@@ -59,7 +64,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Sahten ${{ github.ref_name }}'
-          releaseBody: 'Instaladores de Sahten. Si macOS o Windows muestran un aviso al abrirla, seguí docs/INSTALACION.md.'
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
@@ -82,7 +87,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Sahten ${{ github.ref_name }}'
-          releaseBody: 'Instaladores de Sahten. Si macOS o Windows muestran un aviso al abrirla, seguí docs/INSTALACION.md.'
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true

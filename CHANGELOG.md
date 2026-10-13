@@ -1,5 +1,17 @@
 # Changelog
 
+## Sin publicar
+
+- **Menú Online**: «Ver vista previa» abre la página publicada dentro de la app (celular / escritorio). Antes «Vista previa en pestaña» no hacía nada en la app de escritorio (faltaba un permiso y el error se perdía). «Abrir en el navegador» sigue disponible y ahora avisa si falla.
+- **Cada tienda con su marca**: al abrir otro proyecto se vuelven a leer su nombre, logo y colores (antes se quedaba la marca del primero). La pestaña, el color del navegador y el nombre de la tienda en Supabase siguen la marca.
+- **Usuario en la barra superior**: muestra la tienda activa (nombre y color) y la cuenta. La tienda se configura una sola vez (se puede pegar un código de conexión) y después solo se pide email y contraseña; «Cerrar sesión» conserva la conexión; «Olvidé mi contraseña».
+- **Navegación**: menú lateral, barra inferior y cajón del celular salen de las mismas secciones (el cajón ahora incluye Mostrador, Menú Online, Reportes y Nube y usuarios). Enlaces reales con teclado y lector de pantalla, sección activa marcada, y URL por sección (`#/menuonline`) con botón Atrás.
+- **Barra superior de escritorio**: Guardar y un menú «Archivo» (Abrir, Exportar a CSV, Recalcular precios).
+- **Accesibilidad**: foco visible, zonas táctiles de 44 px, texto mínimo de 12 px, «Saltar al contenido», respeto de «reducir movimiento».
+- **Avisos y confirmaciones propios** (no bloquean y se ven igual en escritorio, web y celular); una acción que falla ya no queda muda.
+- **Releases de GitHub**: las notas de cada versión salen de este archivo.
+- Documentación: `docs/AUDITORIA-UX.md` y `docs/SISTEMA-DISENO.md`.
+
 ## 0.4.4
 
 - **Corrección al eliminar proyectos**: al elegir «Borrar el archivo…», el cuadro para escribir el nombre quedaba detrás del anterior y la pantalla se oscurecía sin poder continuar.

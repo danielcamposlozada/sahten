@@ -33,7 +33,7 @@ export function createOnlineUi({ online, w = window }) {
         r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Delivery.');
     },
     async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
-    disconnect() { if (w.confirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.')) { online.controller.disconnect(); ui.render(); } },
+    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.controller.disconnect(); ui.render(); } },
     async syncMenu() { await run('nube-msg', () => online.controller.syncMenu(), n => `Menú actualizado en línea (${n} productos).`); },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },
@@ -56,7 +56,7 @@ export function createOnlineUi({ online, w = window }) {
     },
     async invite() { await run('nube-users-msg', () => online.invite(val('nb-inv-mail'), val('nb-inv-role')), 'Invitación creada. Avisale a la persona que cree su cuenta con ese email.'); ui.renderUsers(); },
     async setRole(uid, role) { try { await online.setMemberRole(uid, role); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
-    async removeMember(uid) { if (!w.confirm('¿Quitar a este usuario del proyecto?')) return; try { await online.removeMember(uid); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
+    async removeMember(uid) { if (!(await w.sahtenConfirm('¿Quitar a este usuario del proyecto?', { okLabel: 'Quitar', danger: true }))) return; try { await online.removeMember(uid); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
     async renderAudit() {
       const host = $('nube-audit'); if (!host) return;
       try {

@@ -51,24 +51,34 @@ Las tres ideas son compatibles y se complementan; el orden recomendado es 1 → 
 
 Técnicamente: `controller.js` ya guarda la sesión por proyecto (`online-session:<projectId>`) y la conexión dentro del `.sahten`; el trabajo es de interfaz (`src/online/ui.js` + barra superior), no de backend. La contraseña sigue sin guardarse.
 
-## Cambios ya hechos (en el repo, sin commit)
+## Estado de implementación (rama `ux/vista-previa-menu-online`)
 
-- **Vista previa dentro de la app** (`sahten-menuonline.js`, `sahten-menuonline.css`): el botón "Ver vista previa" abre un diálogo a pantalla completa con la página publicada en un `iframe`, selector Celular / Escritorio, cierre con Esc, devolución del foco y aviso de que no se publica nada. Funciona en escritorio, web y celular, sin permisos del sistema.
-- **"Abrir en el navegador"** sigue disponible dentro del diálogo y en el editor de sitio; ahora si falla muestra el motivo en vez de quedarse mudo.
-- **Permiso de Tauri**: `opener:allow-open-path` limitado al directorio temporal (`$TEMP`), necesario para abrir el archivo de vista previa en el navegador del sistema. **Requiere publicar una versión nueva de la app de escritorio**; el diálogo interno no lo necesita.
-- Verificación: los 253 tests que pueden correr en este entorno pasan; los que fallan lo hacen por no poder descargar `xlsx` desde `cdn.sheetjs.com` (bloqueado en esta sesión), no por estos cambios. Falta probarlo en la app real.
+| # | Hallazgo | Estado |
+|---|---|---|
+| 1 | Vista previa del Menú Online | Hecho: diálogo dentro de la app (celular/escritorio) + «Abrir en el navegador» con permiso de Tauri y aviso de error |
+| 2 | Identidad de sesión | Hecho: botón de usuario con tienda (nombre y color), cuenta, rol y sincronización |
+| 3 | Conectar pedía 5 datos | Hecho: configurar una vez (con código de conexión) y luego solo email y contraseña; cerrar sesión conserva la conexión; recuperar contraseña |
+| 4 | Cajón del celular sin 4 secciones | Hecho: el cajón incluye Mostrador, Menú Online, Reportes y Nube y usuarios |
+| 5 | Navegación con `div onclick` | Hecho: enlaces `<a href="#/…">` con `data-panel`, `aria-current`, sin `onclick` en la navegación |
+| 6 | Sin URL ni Atrás | Hecho: hash por sección, Atrás/Adelante y enlace directo |
+| 7 | Estado activo frágil | Hecho: se calcula con `data-panel`; además `window.currentPanel` ahora se actualiza |
+| 8 | Foco invisible | Hecho: `:focus-visible` global |
+| 9 | Emoji como íconos | Parcial: botones solo-ícono con `aria-label`; los emoji de estado/⭐/▲▼ siguen |
+| 10 | Zonas táctiles y letra | Hecho en hojas de estilo (44 px táctil, mínimo 12 px); falta en estilos inline de JS |
+| 11 | Barra superior sobrecargada | Hecho: Guardar + menú «Archivo»; usuario y avisos agrupados |
+| 12 | `alert()`/`confirm()` | Hecho: diálogo/aviso propio; los `confirm()` de los módulos se pasaron a `await sahtenConfirm` |
+| 13 | Errores asíncronos mudos | Hecho: aviso para toda promesa rechazada sin atender + `safeAction` |
+| 14 | USD duplicado | Sin cambios: los tres campos se mantienen sincronizados |
+| 15–16 | Tokens y estilos inline | Parcial: tokens y `docs/SISTEMA-DISENO.md`; ~500 colores `#hex` y estilos inline por migrar |
+| 17 | Formularios | Parcial: los diálogos nuevos tienen etiqueta visible, error junto al campo y `role="alert"` |
+| 18 | Movimiento | Hecho: `prefers-reduced-motion` global |
+| 19 | Estados vacíos | Parcial: Menú Online con botón; resto por revisar |
+| 20 | Mockup oculto bajo 1100 px | Hecho: el botón abre la vista previa a pantalla completa |
+| — | Marca por tienda | Hecho: se relee al abrir otro proyecto; pestaña, `theme-color` y `stores.name` siguen la marca |
+| — | Notas de Release | Hecho: `release.yml` usa la sección de `CHANGELOG.md` de la versión |
+
+Verificación: 336 tests (suite completa, en una copia donde `xlsx` se reemplazó por un sustituto vacío porque `cdn.sheetjs.com` está bloqueado en esta sesión) y capturas de pantalla en escritorio y celular con Chromium. Falta probarlo en la app de escritorio real (Tauri) y publicar una versión nueva.
 
 ## Versiones y releases
 
-Cada versión publicada deja una página en GitHub Releases (`v0.4.1` a `v0.4.4` con 10 archivos cada una: instaladores, firmas y `latest.json`). El texto de las notas es el mismo en todas ("Instaladores de Sahten…"); el detalle de cambios está en `CHANGELOG.md` y no se copia a la Release. Propuesta: que `release.yml` use la sección de `CHANGELOG.md` de esa versión como cuerpo de la Release.
-
-## Orden de trabajo sugerido
-
-1. Navegación: lista única de secciones, `data-panel`, `<button>/<a>`, `aria-current`, cajón completo, hash routing. (#4, #5, #6, #7)
-2. Barra superior + usuario/sesión + login en dos pasos. (#2, #3, #11)
-3. Accesibilidad base: `:focus-visible`, zonas táctiles, tamaños mínimos de letra, íconos SVG. (#8, #9, #10)
-4. Avisos y confirmaciones propios; `safeAction`. (#12, #13)
-5. Tokens y componentes base; limpieza de estilos inline. (#15, #16)
-6. Release notes automáticas desde el CHANGELOG.
-
-Cada paso se puede entregar y probar por separado.
+Cada versión publicada deja una página en GitHub Releases (`v0.4.1` a `v0.4.4` con 10 archivos cada una: instaladores, firmas y `latest.json`). El texto de las notas es el mismo en todas ("Instaladores de Sahten…"); el detalle de cambios está en `CHANGELOG.md` y no se copia a la Release. Resuelto en esta rama: `release.yml` arma las notas con la sección de `CHANGELOG.md` de la versión (`scripts/release-notes.mjs`).
