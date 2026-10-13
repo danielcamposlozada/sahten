@@ -45,6 +45,8 @@ export const onlinePublish = {
     m.products.forEach(p => { if (p.image && imgs[p.id]) p.image = imgs[p.id]; });
     const ci = m.config && m.config.categoryImages; if (ci) Object.keys(ci).forEach(c => { const k = categoryPhotoKey(c); if (imgs[k]) ci[c] = imgs[k]; });   // en la vista previa las fotos de categoría van incrustadas
     if (m.site && m.site.images) ['hero', 'historia'].forEach(k => { if (m.site.images[k] && imgs['site_' + k]) m.site.images[k] = imgs['site_' + k]; });
+    // La vista previa muestra lo que tenés en la app, no lo publicado: sin conexión a la nube la página no baja el menú en vivo (lo pisaría) ni puede enviar pedidos de verdad.
+    m.supabase = null;
     return buildIndexHtml(m);
   },
   /** Vista previa en otra pestaña (imágenes incrustadas, sin publicar nada). */

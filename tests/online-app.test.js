@@ -309,7 +309,11 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     expect(a.on.publish.currentMenu().site).toBeNull();                                                  // lo publicado: solo el menú
     expect(a.on.publish.previewHtml()).not.toContain('Portada con sitio apagado');
     expect(a.on.publish.previewHtml({ forceSite: true })).toContain('Portada con sitio apagado');        // la vista previa del editor sí
-    expect($('.sb-offnote')).toBeTruthy(); win.close();
+    expect($('.sb-offnote')).toBeTruthy();
+    // con la nube conectada, la vista previa NO baja el menú publicado (pisaría lo que se escribe) ni puede enviar pedidos
+    a.ev("SAHTEN_SUPABASE.url='https://x.supabase.co';SAHTEN_SUPABASE.anonKey='k';SAHTEN_SUPABASE.storeId='s1'");
+    expect(a.on.publish.currentMenu().supabase).toBeTruthy();
+    expect(a.on.publish.previewHtml({ forceSite: true })).not.toContain('x.supabase.co'); win.close();
   }, 60000);
   it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
     const a = await open();
