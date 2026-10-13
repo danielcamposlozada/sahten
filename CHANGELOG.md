@@ -1,12 +1,11 @@
 # Changelog
 
-## Sin publicar
+## 0.4.6
 
 - **Vista remota en vivo**: ahora hay un aviso fijo arriba con «Salir de la vista remota», que vuelve a la lista de proyectos (antes no había forma de salir).
 - **Aviso de actualización**: ventana más ancha, con las novedades con formato y barra de desplazamiento (antes se veía el texto sin formato).
 - **Notas de la Release**: un renglón por cambio (título y primera frase) con enlace al detalle en el CHANGELOG.
 - **Menú publicado (web)**: la barra de categorías quedaba despegada del borde superior; ahora queda pegada justo debajo de la barra del sitio, que además se mantiene fija al bajar.
-
 - **Web del menú: «Pedir online» en su propia vista**: el inicio ya no trae toda la carta; muestra una tarjeta por categoría (con su cantidad de productos) y un botón «Pedir online». La carta completa con categorías y carrito se abre aparte (`#pedido`, o `#pedido/Categoría` para ir directo a una), y «Atrás» vuelve al inicio. Sin el sitio activado, la página sigue siendo la carta de siempre.
 - **Editor del sitio web**: con el sitio apagado (el estado inicial) la vista previa mostraba solo el menú y lo que se escribía no se veía. Ahora la vista previa del editor siempre muestra el sitio, con un aviso de que mientras esté apagado se publica solo el menú.
 
