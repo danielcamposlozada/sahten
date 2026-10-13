@@ -54,9 +54,8 @@ function _sbRenderField(S, id, f) {
   if (type === 'text') return `<label class="f">${_esc(label)}<input type="text" class="custom-input" data-sb="${id}.${key}" placeholder="${_esc(extra || '')}" value="${_esc(m[key])}"></label>`;
   if (type === 'area') return `<label class="f">${_esc(label)}<textarea class="custom-input" rows="${extra || 3}" style="resize:vertical" data-sb="${id}.${key}">${_esc(m[key])}</textarea></label>`;
   if (type === 'image') {
-    const img = (typeof SAHTEN_IMAGES !== 'undefined') && SAHTEN_IMAGES['site_' + key];
-    return `<div class="f"><span>${_esc(label)}</span><div class="sb-img">${img ? `<img src="${_esc(img)}" alt="">` : '<div class="sb-img-ph">Sin foto</div>'}
-      <div><label class="btn" style="cursor:pointer">${img ? 'Cambiar' : 'Subir foto'}<input type="file" accept="image/*" hidden data-sb-img="${key}"></label>${img ? ` <button class="btn" data-sb-imgdel="${key}">Quitar</button>` : ''}</div></div></div>`;
+    return `<div class="f"><span>${_esc(label)}</span><div class="sb-img">${SAHTEN.photos.thumb('site_' + key, label, { size: 96 })}
+      <div><button class="btn" data-photo-pick="site_${_esc(key)}">📷 Subir o cambiar foto</button><div style="font-size:11px;color:var(--muted);margin-top:6px">También podés arrastrar una imagen sobre la foto.</div></div></div></div>`;
   }
   if (type === 'list') {
     const items = m[key] || []; const o = extra;
@@ -200,3 +199,6 @@ function _sbImport(file) {
   };
   fr.readAsText(file);
 }
+
+// Foto del sitio cambiada (con el selector común de fotos): se guarda la configuración y se actualiza la vista previa.
+window.addEventListener('sahten:photo', ev => { const k = ev.detail && ev.detail.key; if (k && k.indexOf('site_') === 0 && document.getElementById('sb-frame')) _sbChanged({ list: true }); });

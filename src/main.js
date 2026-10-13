@@ -17,6 +17,7 @@ import { sahtenAsk } from './ui/ask.js';
 import { installTour } from './ui/tour.js';
 import { installNav } from './ui/nav.js';
 import { installDialogs } from './ui/dialog.js';
+import { installPhotos } from './ui/photos.js';
 import { installDesktop } from './desktop/integration.js';
 import { state } from './core/state.js';
 import './bridge/legacy-globals.js';
@@ -80,6 +81,7 @@ function startLegacy() {
 // las funciones de render que ya existan, para que los módulos puedan engancharse con eventos.
 installTour(window);
 installDialogs(window);    // alert() y los avisos nuevos usan el diálogo propio
+installPhotos(window);     // fotos: una sola forma de cargarlas en toda la app (SAHTEN.photos)
 const openFromHash = installNav(window);
 window.SAHTEN_VERSION = APP_VERSION;   // única fuente de la versión que se muestra
 document.querySelectorAll('[data-app-version]').forEach(el => { el.textContent = APP_VERSION; });

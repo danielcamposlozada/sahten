@@ -230,6 +230,48 @@ describe('Menú Online (admin): una sola pantalla con estado, lista por categor�
   }, 60000);
 });
 
+describe('Fotos: una sola forma de cargarlas (SAHTEN.photos)', () => {
+  const open = async () => { const a = await app(); await a.p.openDemo(); a.window.sahtenTour && a.window.sahtenTour.close(); a.ev("showPanel('menuonline'); renderMenuOnline();"); return a; };
+  const $$ = (a, sel) => Array.from(a.window.document.querySelectorAll(sel));
+  const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+  it('Menú Online: cada producto y cada categoría tienen su miniatura de foto, y de ahí se salta a la receta y al Menú', async () => {
+    const a = await open();
+    const pid = a.ev('PRODUCTS.find(p=>!p.recetaOnly).id'); const cat = a.ev('PRODUCTS.find(p=>!p.recetaOnly).category');
+    expect(a.window.document.querySelector(`[data-photo="${pid}"]`)).toBeTruthy();
+    expect(a.window.document.querySelector(`[data-photo="${a.window.SAHTEN.photos.categoryKey(cat)}"]`)).toBeTruthy();
+    expect(a.window.document.querySelector(`[data-photo="${pid}"]`).getAttribute('aria-label')).toMatch(/^Agregar foto a /);
+    a.ev(`SAHTEN_IMAGES['${pid}']='${PNG}'; SAHTEN.photos.refresh('${pid}')`);                             // al llegar una foto, todo se actualiza solo
+    expect(a.window.document.querySelector(`[data-photo="${pid}"] img`)).toBeTruthy();
+    expect(a.window.document.querySelector(`[data-photo-del="${pid}"]`).hidden).toBe(false);
+    $$(a, `[data-mo-recipe="${pid}"]`)[0].click();                                                          // 🍳 abre la receta de ese producto
+    expect(a.window.document.getElementById('recipe-overlay').classList.contains('open')).toBe(true);
+    expect(a.window.document.querySelector(`#recipe-body [data-photo="${pid}"] img`)).toBeTruthy();          // y ahí está la misma foto
+    a.ev('closeRecipe()');
+    $$(a, `[data-mo-menu="${pid}"]`)[0].click();                                                            // 💲 abre el Menú filtrado por ese producto
+    expect(a.ev('currentPanel')).toBe('productos'); expect(a.window.document.getElementById('prod-search').value).toBe(a.ev(`PRODUCTS.find(p=>p.id==='${pid}').name`));
+    expect(a.window.document.querySelector(`#prod-tbody [data-photo="${pid}"]`)).toBeTruthy();               // el Menú también tiene la miniatura
+    a.window.close();
+  }, 60000);
+  it('la foto de una categoría se publica: menu.json la referencia, se genera su archivo y la vista previa la lleva incrustada', async () => {
+    const a = await open();
+    const cat = a.ev('PRODUCTS.find(p=>!p.recetaOnly).category'); const key = a.window.SAHTEN.photos.categoryKey(cat);
+    expect(key).toMatch(/^cat_[a-z0-9_]+$/);
+    expect(a.on.publish.currentMenu().config.categoryImages).toEqual({});
+    a.ev(`SAHTEN_IMAGES['${key}']='${PNG}'`);
+    expect(a.on.publish.currentMenu().config.categoryImages[cat]).toBe('img/' + key + '.jpg');
+    expect(a.on.publish.previewHtml()).toContain(PNG);
+    a.window.close();
+  }, 60000);
+  it('quitar la foto (con confirmación) la borra en todas las miniaturas', async () => {
+    const a = await open(); const pid = a.ev('PRODUCTS.find(p=>!p.recetaOnly).id');
+    a.ev(`SAHTEN_IMAGES['${pid}']='${PNG}'; SAHTEN.photos.refresh('${pid}')`);
+    const done = a.window.SAHTEN.photos.remove(pid, 'Test'); await wait(20);
+    const ok = a.window.document.querySelector('.sd-actions .primary, .sd-actions button:last-child'); ok.click(); expect(await done).toBe(true);
+    expect(a.ev(`SAHTEN_IMAGES['${pid}']`)).toBeUndefined(); expect(a.window.document.querySelector(`[data-photo="${pid}"] img`)).toBeNull();
+    a.window.close();
+  }, 60000);
+});
+
 describe('Menú Online (admin): constructor modular del sitio web', () => {
   let A;
   const open = async () => { A = await app(); await A.p.openDemo(); A.window.sahtenTour && A.window.sahtenTour.close(); A.ev("showPanel('menuonline'); renderMenuOnline(); _moTab('site');"); return A; };
@@ -267,7 +309,11 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     expect(a.on.publish.currentMenu().site).toBeNull();                                                  // lo publicado: solo el menú
     expect(a.on.publish.previewHtml()).not.toContain('Portada con sitio apagado');
     expect(a.on.publish.previewHtml({ forceSite: true })).toContain('Portada con sitio apagado');        // la vista previa del editor sí
-    expect($('.sb-offnote')).toBeTruthy(); win.close();
+    expect($('.sb-offnote')).toBeTruthy();
+    // con la nube conectada, la vista previa NO baja el menú publicado (pisaría lo que se escribe) ni puede enviar pedidos
+    a.ev("SAHTEN_SUPABASE.url='https://x.supabase.co';SAHTEN_SUPABASE.anonKey='k';SAHTEN_SUPABASE.storeId='s1'");
+    expect(a.on.publish.currentMenu().supabase).toBeTruthy();
+    expect(a.on.publish.previewHtml({ forceSite: true })).not.toContain('x.supabase.co'); win.close();
   }, 60000);
   it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
     const a = await open();

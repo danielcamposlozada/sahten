@@ -5,7 +5,7 @@
 import webTemplate from './web/index.html?raw';
 import deliverySrc from '../core/delivery.js?raw';
 import messageSrc from './orderMessage.js?raw';
-import { imageFileName } from './menuJson.js';
+import { imageFileName, categoryPhotoKey } from './menuJson.js';
 import { createZip } from './zip.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
@@ -48,6 +48,11 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
     if (!p.image || !images[p.id]) continue;
     const bytes = await optimize(images[p.id]);
     if (bytes) files.push({ path: 'img/' + imageFileName(p.id), data: bytes });
+  }
+  for (const [cat, path] of Object.entries((menu.config && menu.config.categoryImages) || {})) {   // foto de cada categoría
+    const img = images[categoryPhotoKey(cat)]; if (!img) continue;
+    const bytes = await optimize(img, { maxDim: 800, quality: 0.82 });
+    if (bytes) files.push({ path, data: bytes });
   }
   for (const k of ['hero', 'historia']) {
     if (!(menu.site && menu.site.images && menu.site.images[k]) || !images['site_' + k]) continue;

@@ -35,6 +35,9 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     tags: (p.tags || []).map(t => (typeof t === 'string' ? t : t.label || t.name || '')).filter(Boolean),
     description: txt(p.description, 220),
   })).filter(p => !showPrices || p.price > 0);
+  const cats = orderedCategories(items, menuConfig);
+  const categoryImages = {};   // { categoría: 'img/cat_x.jpg' } — la foto de cada categoría, si la cargaron
+  if (showImages) for (const c of cats) { const k = categoryPhotoKey(c); if (k && images[k]) categoryImages[c] = 'img/' + k + '.jpg'; }
   const sb = supabase && supabase.url && supabase.anonKey && supabase.storeId ? { url: supabase.url, anonKey: supabase.anonKey, storeId: supabase.storeId, slug: supabase.slug || '' } : null;
   return {
     version: MENU_VERSION, generatedAt: now.toISOString(),
@@ -46,7 +49,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     config: {
       enabled: menuConfig.enabled !== false, title: menuConfig.title || 'Nuestro Menú', subtitle: menuConfig.subtitle || '',
       showPrices, showImages, deliveryNote: menuConfig.deliveryNote || '',
-      categories: orderedCategories(items, menuConfig),
+      categories: cats, categoryImages,
     },
     products: items,
     site: buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia }),
@@ -59,4 +62,9 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   };
 }
 
+/** Clave de la foto de una categoría (la misma en la app y al publicar): sin tildes ni símbolos. */
+export function categoryPhotoKey(name) {
+  const s = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return s ? 'cat_' + s : '';
+}
 export const imageFileName = id => String(id).replace(/[^a-z0-9_-]+/gi, '_') + '.jpg';

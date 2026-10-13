@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.7
+
+- **La vista previa muestra lo que tenés en la app.** Con la nube conectada, la vista previa (y «Abrir en el navegador») bajaba el menú ya publicado y lo ponía encima: por eso lo que importabas o escribías en «Sitio web» no se veía. Ahora la vista previa usa solo lo local y no puede enviar pedidos de verdad.
+- **Fotos más fáciles**: ahora hay una sola forma de cargarlas, en todos lados. Tocá la miniatura (o arrastrá una imagen encima) en **Menú Online**, **Menú**, **Costo Receta** y en la **Receta**, y la foto se actualiza en todas las pantallas. La × quita la foto.
+- **Menú Online**: cada producto tiene los botones «Receta» (abre la receta para editar nombre, categoría, ingredientes y foto) y «Precio» (salta al Menú con ese producto buscado).
+- **Fotos de categoría**: cada categoría de Menú Online tiene su foto. Se usa en las tarjetas de «Pedir online» de la web; si no tiene, se usa la foto de uno de sus productos. Hay que volver a publicar la carpeta para que se suban.
+- **Sitio web**: las fotos de portada e historia usan el mismo selector (con arrastrar y soltar).
+
 ## 0.4.6
 
 - **Vista remota en vivo**: ahora hay un aviso fijo arriba con «Salir de la vista remota», que vuelve a la lista de proyectos (antes no había forma de salir).
