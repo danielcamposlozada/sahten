@@ -7,6 +7,8 @@
 - **Notas de la Release**: un renglón por cambio (título y primera frase) con enlace al detalle en el CHANGELOG.
 - **Menú publicado (web)**: la barra de categorías quedaba despegada del borde superior; ahora queda pegada justo debajo de la barra del sitio, que además se mantiene fija al bajar.
 
+- **Web del menú: «Pedir online» en su propia vista**: el inicio ya no trae toda la carta; muestra una tarjeta por categoría (con su cantidad de productos) y un botón «Pedir online». La carta completa con categorías y carrito se abre aparte (`#pedido`, o `#pedido/Categoría` para ir directo a una), y «Atrás» vuelve al inicio. Sin el sitio activado, la página sigue siendo la carta de siempre.
+
 ## 0.4.5
 
 - **Menú Online**: «Ver vista previa» abre la página publicada dentro de la app (celular / escritorio). Antes «Vista previa en pestaña» no hacía nada en la app de escritorio (faltaba un permiso y el error se perdía). «Abrir en el navegador» sigue disponible y ahora avisa si falla.

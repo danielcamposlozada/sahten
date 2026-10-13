@@ -13,6 +13,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{background:var(--primary);color:#fff;padding:28px 16px 22px;text-align:center}
 header h1{margin:0 0 4px;font-size:26px;letter-spacing:-.02em}header p{margin:0;opacity:.85;font-size:14px}
 .cats{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--border)}
+@media(min-width:1000px){.cats{padding-left:calc((100% - 980px)/2 + 16px)}}
 .cat{flex:none;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
 .cat.on{background:var(--primary);border-color:var(--primary);color:#fff}
 main{max-width:980px;margin:0 auto;padding:16px 16px 110px}
@@ -44,6 +45,18 @@ html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-be
 .has-site header{display:none}
 .has-site [id]{scroll-margin-top:calc(var(--navh,56px) + 64px)}
 #s-nav{display:contents}
+.has-site #menuwrap{display:none}.has-site.view-order #menuwrap{display:block}.has-site.view-order #s-top,.has-site.view-order #s-rest{display:none}
+.oback{display:none;max-width:980px;margin:0 auto;padding:18px 16px 4px}
+.has-site.view-order .oback{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.oback a{color:var(--primary);font-weight:700;font-size:14px;text-decoration:none;border:1.5px solid var(--border);background:#fff;border-radius:99px;padding:8px 14px}.oback a:hover{border-color:var(--primary)}
+.oback h2{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(24px,4vw,34px);line-height:1.1}.oback h2:focus{outline:none}
+.ctiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;max-width:980px;margin:20px auto 0}
+.ctile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s}
+.ctile:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.1)}
+.ct-ph{aspect-ratio:3/2;background:#ede8df;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#b9b2a5}.ct-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ctile b{padding:10px 12px 0;font-size:15px}.ctile small{padding:2px 12px 12px;color:var(--muted);font-size:12.5px}
+.pedir-cta{display:block;max-width:980px;margin:18px auto 0;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:800;font-size:16px;border-radius:14px;padding:16px 18px}.pedir-cta:hover{filter:brightness(.95)}
+@media(prefers-reduced-motion:reduce){.ctile{transition:none}.ctile:hover{transform:none}}
 .snav{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--primary) 94%,transparent);backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;box-shadow:0 1px 0 rgba(255,255,255,.08)}
 .snav b{font-family:var(--serif);font-weight:400;font-size:21px;margin-right:auto;letter-spacing:.2px}
 .snav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;opacity:.88;padding:7px 11px;border-radius:99px;transition:background .15s}.snav a:hover{background:rgba(255,255,255,.14);opacity:1}
@@ -83,6 +96,7 @@ html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-be
 <div id="s-nav"></div>
 <div id="s-top"></div>
 <div id="menuwrap">
+<div class="oback" id="oback"><a href="#">← Volver al inicio</a><h2 id="oback-h">Pedí online</h2></div>
 <nav class="cats" id="cats"></nav>
 <main id="menu"><div id="msg"></div><div class="grid" id="grid"></div></main>
 </div>
@@ -138,24 +152,28 @@ function render(){
   $('h-title').textContent=c.title||MENU.store.name||'Menú';$('h-sub').textContent=c.subtitle||'';
   $('foot').textContent=[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   if(c.enabled===false){$('grid').innerHTML='';$('cats').innerHTML='';$('msg').innerHTML='<div class="empty"><b>Menú no disponible por ahora</b><br>Volvé a intentar más tarde.</div>';return;}
-  var cats=c.categories&&c.categories.length?c.categories:Array.from(new Set(MENU.products.map(function(p){return p.category}).filter(Boolean)));
+  var cats=catList();
   $('cats').innerHTML=['all'].concat(cats).map(function(k){return '<button class="cat '+(k===activeCat?'on':'')+'" data-cat="'+esc(k)+'">'+(k==='all'?'Todo':esc(k))+'</button>'}).join('');
   site();
   var list=MENU.products.filter(function(p){return activeCat==='all'||p.category===activeCat});
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">Todavía no hay productos para mostrar.</div>';
   bar();
 }
+function catList(){var c=MENU.config||{};return c.categories&&c.categories.length?c.categories:Array.from(new Set(MENU.products.map(function(p){return p.category}).filter(Boolean)));}
 function waHref(msg){var n=String((MENU.store&&MENU.store.whatsapp)||'').replace(/\D/g,'');return n?'https://wa.me/'+n+(msg?'?text='+encodeURIComponent(msg):''):'';}
 function paras(t){return String(t||'').split(/\n{2,}/).map(function(x){return x.trim()}).filter(Boolean).map(function(x){return '<p>'+esc(x).replace(/\n/g,'<br>')+'</p>'}).join('');}
 var NAVLBL={como:'Cómo funciona',historia:'Nosotros',resenas:'Reseñas',catering:'Catering',faq:'Preguntas',contacto:'Contacto'};
 var MOD={
   hero:function(S,m){var f=m.hero,c=MENU.config||{},name=MENU.store.name||c.title||'Menú',img=S.images&&S.images.hero;
     return '<section class="hero'+(img?' img':'')+'" id="s-hero"'+(img?' style="background-image:url(\''+esc(img)+'\')"':'')+'><span class="tag">'+esc(name)+'</span><h1>'+esc(f.title||c.title||name)+'</h1>'+((f.subtitle||c.subtitle)?'<p>'+esc(f.subtitle||c.subtitle)+'</p>':'')+
-      '<div class="btns"><a class="btn1" href="#menu">'+esc(f.cta)+' →</a>'+(waHref()?'<a class="btn2" target="_blank" rel="noopener" href="'+esc(waHref())+'">WhatsApp</a>':'')+'</div>'+
+      '<div class="btns"><a class="btn1" href="#pedido">'+esc(f.cta)+' →</a>'+(waHref()?'<a class="btn2" target="_blank" rel="noopener" href="'+esc(waHref())+'">WhatsApp</a>':'')+'</div>'+
       (f.highlights.length?'<div class="hl">'+f.highlights.map(function(x){return '<div>'+(x.icon?'<i>'+esc(x.icon)+'</i>':'')+'<b>'+esc(x.title)+'</b>'+(x.text?'<span>'+esc(x.text)+'</span>':'')+'</div>'}).join('')+'</div>':'')+'</section>';},
   favoritos:function(S,m){var favs=MENU.products.filter(function(p){return p.star}).slice(0,6);if(!favs.length)return '';
-    return '<section class="sec fav" id="s-fav"><span class="eyebrow">Del menú</span><h2>'+esc(m.favoritos.title)+'</h2>'+(m.favoritos.text?'<p class="lead">'+esc(m.favoritos.text)+'</p>':'')+'<div class="grid">'+favs.map(card).join('')+'</div><a class="more" href="#menu">Explorar todo el menú →</a></section>';},
-  menu:function(S){return '<section class="sec" style="padding-bottom:0" id="s-menuhd"><span class="eyebrow">Pedí online</span><h2 style="font-family:var(--serif);font-weight:400;font-size:clamp(28px,5vw,42px);margin:0;line-height:1.1">'+esc(S.menuTitle)+'</h2></section>';},
+    return '<section class="sec fav" id="s-fav"><span class="eyebrow">Del menú</span><h2>'+esc(m.favoritos.title)+'</h2>'+(m.favoritos.text?'<p class="lead">'+esc(m.favoritos.text)+'</p>':'')+'<div class="grid">'+favs.map(card).join('')+'</div><a class="more" href="#pedido">Explorar todo el menú →</a></section>';},
+  menu:function(S){
+    var tiles=catList().map(function(k){var ps=MENU.products.filter(function(p){return p.category===k});if(!ps.length)return '';var im=ps.filter(function(p){return p.image})[0];
+      return '<a class="ctile" href="#pedido/'+encodeURIComponent(k)+'"><span class="ct-ph">'+(im&&MENU.config.showImages!==false?'<img loading="lazy" alt="" src="'+esc(im.image)+'" onerror="this.parentNode.textContent=this.getAttribute(\'data-i\')" data-i="'+esc(k.charAt(0).toUpperCase())+'">':esc(k.charAt(0).toUpperCase()))+'</span><b>'+esc(k)+'</b><small>'+ps.length+(ps.length===1?' producto':' productos')+'</small></a>'}).join('');
+    return '<section class="sec" id="s-menuhd"><span class="eyebrow">Pedí online</span><h2 style="font-family:var(--serif);font-weight:400;font-size:clamp(28px,5vw,42px);margin:0;line-height:1.1">'+esc(S.menuTitle)+'</h2>'+(tiles?'<div class="ctiles">'+tiles+'</div>':'')+'<a class="pedir-cta" href="#pedido">Pedir online · ver toda la carta →</a></section>';},
   como:function(S,m){var f=m.como;if(!f.steps.length)return '';return '<section class="sec alt" id="s-how"><div class="in"><span class="eyebrow">Paso a paso</span><h2>'+esc(f.title)+'</h2>'+(f.lead?'<p class="lead">'+esc(f.lead)+'</p>':'')+'<div class="steps">'+f.steps.map(function(x,i){return '<div class="step"><em>'+(i+1)+'</em><b>'+esc(x.title)+'</b><div class="desc">'+esc(x.text)+'</div></div>'}).join('')+'</div></div></section>';},
   historia:function(S,m){var f=m.historia,img=S.images&&S.images.historia;if(!f.text&&!f.title)return '';
     var badge=f.badgeWord?'<div class="badge"><small>'+esc(f.badgeMeaning?'¿Qué significa?':'Destacado')+'</small><div class="w">'+esc(f.badgeWord)+'</div>'+(f.badgeMeaning?'<div class="m">'+esc(f.badgeMeaning)+'</div>':'')+(f.badgeQuote?'<div class="q">'+esc(f.badgeQuote)+'</div>':'')+'</div>':'';
@@ -177,7 +195,7 @@ function site(){
   var S=MENU.site,c=MENU.config||{},on=!!(S&&S.enabled&&c.enabled!==false),top=$('s-top'),rest=$('s-rest');
   document.body.classList.toggle('has-site',on);
   if(!on){$('s-nav').innerHTML='';top.innerHTML='';rest.innerHTML='';var fab0=$('fab');if(fab0)fab0.remove();return;}
-  var name=MENU.store.name||c.title||'Menú',wa=waHref(),order=S.order||['hero','favoritos','menu'],before='',after='',seen=false,links=[['#menu','Menú']],hasContact=false;
+  var name=MENU.store.name||c.title||'Menú',wa=waHref(),order=S.order||['hero','favoritos','menu'],before='',after='',seen=false,links=[['#pedido','Menú']],hasContact=false;
   order.forEach(function(id){
     if(id==='menu'){seen=true;before+=MOD.menu(S);return;}
     var html=MOD[id]?MOD[id](S,S):'';if(!html)return;
@@ -191,7 +209,7 @@ function site(){
   var f=$('fab');if(wa&&!f){f=document.createElement('a');f.id='fab';f.className='fab';f.target='_blank';f.rel='noopener';f.setAttribute('aria-label','Escribinos por WhatsApp');f.textContent='💬';document.body.appendChild(f);}if(f)f.href=wa;
   var nv=$('snav');if(nv){var setH=function(){document.documentElement.style.setProperty('--navh',nv.offsetHeight+'px');};setH();if(window.ResizeObserver)new ResizeObserver(setH).observe(nv);}
 }
-function idOf(h){return ({'#menu':'menu','#s-how':'como','#s-about':'historia','#s-reviews':'resenas','#s-catering':'catering','#s-faq':'faq','#s-contact':'contacto'})[h]||'';}
+function idOf(h){return ({'#pedido':'menu','#s-how':'como','#s-about':'historia','#s-reviews':'resenas','#s-catering':'catering','#s-faq':'faq','#s-contact':'contacto'})[h]||'';}
 function card(p){
   var n=cart[p.id]||0, showP=MENU.config.showPrices!==false;
   var img=p.image&&MENU.config.showImages!==false?'<img loading="lazy" src="'+esc(p.image)+'" alt="" onerror="this.parentNode.textContent=this.getAttribute(\'data-i\')" data-i="'+esc((p.name||'?').charAt(0).toUpperCase())+'">':esc((p.name||'?').charAt(0).toUpperCase());
@@ -269,9 +287,22 @@ function done(){
    '<div class="row t"><span>Total</span><span>'+fmt(o.total)+'</span></div>'+(MENU.store.whatsapp?'<a class="cta wa" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+esc(waLink(o))+'">'+(sent?'Avisar por WhatsApp':'Abrir WhatsApp de nuevo')+'</a>':'')+'<button class="cta ghost" data-close>Volver al menú</button>';
 }
 
+// ── vistas: el inicio muestra un resumen y «Pedir online» abre la carta completa (#pedido o #pedido/Categoría) ──
+function route(){
+  if(!MENU)return;
+  var h=location.hash||'',m=/^#(?:pedido|menu)(?:\/(.*))?$/.exec(h),site=document.body.classList.contains('has-site'),order=!!m&&site;
+  if(order){var k='all';if(m[1]){try{k=decodeURIComponent(m[1]);}catch(e){}}if(k!=='all'&&catList().indexOf(k)<0)k='all';activeCat=k;}
+  document.body.classList.toggle('view-order',order);
+  render();
+  if(!site)return;
+  if(order){window.scrollTo({top:0,behavior:'instant'});var hd=$('oback-h');if(hd){hd.setAttribute('tabindex','-1');try{hd.focus({preventScroll:true});}catch(e){}}}
+  else{var el=h.length>1?document.getElementById(decodeURIComponent(h.slice(1))):null;if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'instant'});else window.scrollTo({top:0,behavior:'instant'});}
+}
+window.addEventListener('hashchange',route);
+
 document.addEventListener('click',function(e){
   var t=e.target.closest('[data-cat],[data-inc],[data-dec],[data-type],[data-sug],[data-close],#send');if(!t)return;
-  if(t.dataset.cat!==undefined){activeCat=t.dataset.cat;render();}
+  if(t.dataset.cat!==undefined){activeCat=t.dataset.cat;render();if(document.body.classList.contains('view-order')){try{history.replaceState(null,'','#pedido'+(activeCat==='all'?'':'/'+encodeURIComponent(activeCat)));}catch(err){/* vista previa */}}}
   else if(t.dataset.inc!==undefined)change(t.dataset.inc,1);
   else if(t.dataset.dec!==undefined)change(t.dataset.dec,-1);
   else if(t.dataset.type!==undefined){type=t.dataset.type;if(type==='delivery'&&geo)ship=shippingFor(MENU.delivery,geo.lat,geo.lng,subtotal());sheet();}
@@ -280,7 +311,7 @@ document.addEventListener('click',function(e){
   else if(t.id==='send')send();
 });
 window.openCart=openCart;window.__menu=function(){return MENU;};
-load().then(function(){applyTheme();render();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
+load().then(function(){applyTheme();render();route();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
 })();
 </script>
 </body>
