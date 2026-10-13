@@ -9,6 +9,7 @@
 import { sahtenDialog } from '../ui/dialog.js';
 import { ROLE_LABEL } from './roles.js';
 import { encodeConnection, decodeConnection } from './supabase.js';
+import { publishMenuConfirmed } from './menuConfirm.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
 const hostOf = u => { try { return new URL(u).host; } catch (e) { return String(u || ''); } };
@@ -150,15 +151,7 @@ export function createUserMenu({ online, project, w = window }) {
   const handlers = {
     async toggle() { const st = state(); if (st.kind === 'in') { open = !open; render(); if (open) [...d.querySelectorAll('.um-menu [role="menuitem"]')].find(x => x.offsetParent !== null)?.focus(); } else if (st.kind === 'login') await login(); else if (st.kind === 'setup') await setup(); },
     async sync() { close(); try { const r = await online.syncNow(); w.sahtenToast({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: resolvelo en Nube y usuarios.' }[r && r.action || r] || 'Sincronizado.'); } catch (e) { w.sahtenAlert(e.message || String(e)); } render(); },
-    async menu() {
-      close();
-      try { const n = await online.controller.syncMenu(); w.sahtenToast(`Menú actualizado en línea (${n} productos).`); }
-      catch (e) {
-        if (e && e.code === 'menu_shrinks' && await w.sahtenConfirm(e.message, { title: '¿Reemplazar el menú publicado?', okLabel: 'Reemplazar', cancelLabel: 'No, cancelar', danger: true })) {
-          try { const n = await online.controller.syncMenu({ force: true }); w.sahtenToast(`Menú actualizado en línea (${n} productos).`); } catch (e2) { w.sahtenAlert(e2.message || String(e2)); }
-        } else if (!(e && e.code === 'menu_shrinks')) w.sahtenAlert(e.message || String(e));
-      }
-    },
+    async menu() { close(); try { const n = await publishMenuConfirmed(online, w); w.sahtenToast(n == null ? 'No se cambió nada: el menú publicado sigue igual.' : `Menú actualizado en línea (${n} productos).`); } catch (e) { w.sahtenAlert(e.message || String(e)); } },
     remote() { close(); w.showPanel('nube'); setTimeout(() => { try { online.ui.listRemote(); } catch (e) { /* */ } }, 50); },
     panel() { close(); w.showPanel('nube'); },
     switch() { close(); try { w.SAHTEN.projectUi.showProjects(); } catch (e) { /* */ } },

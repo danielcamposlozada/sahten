@@ -98,6 +98,13 @@ export function createController(host) {
 
     disconnect() { stopFeed(); if (client) client.auth.signOut(); client = null; Object.keys(host.conn).forEach(k => delete host.conn[k]); Object.assign(host.conn, { url: '', anonKey: '', storeId: '' }); host.markDirty(); set('desconectado'); },
 
+    /** Cuántos productos tiene el menú del proyecto y cuántos el publicado (para confirmar antes de reemplazarlo). */
+    async previewMenu() {
+      if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
+      const m = host.menuJson(); let remote = null; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* no se pudo leer */ }
+      return { local: m.products.length, remote, name: (m.store && m.store.name) || '', slug: host.conn.slug || '' };
+    },
+
     /** Sube el menú actual para que la web lo lea en vivo (sin republicar archivos). */
     async syncMenu({ force = false } = {}) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
