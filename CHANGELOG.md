@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.5
 
 - **Menú Online**: «Ver vista previa» abre la página publicada dentro de la app (celular / escritorio). Antes «Vista previa en pestaña» no hacía nada en la app de escritorio (faltaba un permiso y el error se perdía). «Abrir en el navegador» sigue disponible y ahora avisa si falla.
 - **Cada tienda con su marca**: al abrir otro proyecto se vuelven a leer su nombre, logo y colores (antes se quedaba la marca del primero). La pestaña, el color del navegador y el nombre de la tienda en Supabase siguen la marca.
