@@ -115,6 +115,16 @@ describe('publicación automática', () => {
     const q = createPhotoPublisher({ publish, enabled: () => enabled, context: () => ctx, timer: { set: (fn, ms) => { jobs.push({ fn, ms }); return jobs.length; }, clear: id => { if (jobs[id - 1]) jobs[id - 1].fn = null; } } });
     return { q, publish, jobs, enable: x => { enabled = x; }, context: x => { ctx = x; } };
   }
+  it('llama los temporizadores globales con el contexto correcto en WebKit', () => {
+    const originalSet = globalThis.setTimeout, originalClear = globalThis.clearTimeout;
+    let set = false, cleared = false;
+    try {
+      globalThis.setTimeout = function () { if (this && this !== globalThis) throw new TypeError('Window.setTimeout'); set = true; return 1; };
+      globalThis.clearTimeout = function () { if (this && this !== globalThis) throw new TypeError('Window.clearTimeout'); cleared = true; };
+      const q = createPhotoPublisher({ publish: async () => {}, enabled: () => true, context: () => 'a' });
+      q.schedule(); q.cancel(); expect(set && cleared).toBe(true);
+    } finally { globalThis.setTimeout = originalSet; globalThis.clearTimeout = originalClear; }
+  });
   it('es optativa; junta cambios, queda pendiente sin red y reintenta', async () => {
     const s = queue(); s.enable(false); s.q.schedule(); expect(s.jobs).toHaveLength(0);
     s.enable(true); s.q.schedule(); s.q.schedule(); expect(s.jobs.filter(j => j.fn)).toHaveLength(1);

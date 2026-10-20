@@ -1,5 +1,5 @@
 // Cola de publicación opcional: junta cambios, conserva pendientes y reintenta al volver internet.
-export function createPhotoPublisher({ publish, enabled, context, timer = { set: setTimeout, clear: clearTimeout } }) {
+export function createPhotoPublisher({ publish, enabled, context, timer = { set: (fn, ms) => setTimeout(fn, ms), clear: id => clearTimeout(id) } }) {
   let state = 'sin cambios', error = null, handle = null, busy = false, pending = false, generation = 0, attempt = 0;
   const listeners = new Set();
   const emit = () => listeners.forEach(fn => fn(api.info()));
