@@ -46,6 +46,8 @@ export function toPublicProject(file, priceOf) {
   return {
     project: { name: file.project.name, currencySymbol: file.project.currencySymbol, roundTo: file.project.roundTo, locale: file.project.locale, id: file.project.id },
     products: prods,
+    images: Object.fromEntries(Object.entries(file.images || {}).filter(([, v]) => /^https?:\/\//.test(v))),
+    cloudImagesVersion: file.cloudImagesVersion,
     channels: file.channels.map(c => ({ id: c.id, name: c.name, enabled: c.enabled, surcharge: 0, commission: 0 })),   // sin comisiones ni recargos
     sales: { discounts: file.sales.discounts, payments: file.sales.payments, customers: file.sales.customers },
     online: { menuConfig: file.online.menuConfig, tiendaConfig: file.online.tiendaConfig },
@@ -56,6 +58,7 @@ export function toPublicProject(file, priceOf) {
 export function applyPublicToFile(local, pub) {
   const f = JSON.parse(JSON.stringify(local));
   f.project = { ...f.project, ...pub.project };
+  if (pub.cloudImagesVersion) { f.images = pub.images || {}; f.cloudImagesVersion = pub.cloudImagesVersion; }
   f.catalog = { ...f.catalog, productos: pub.products, ingredientes: [], envases: [], tiers: f.catalog.tiers || [], categorias: [...new Set(pub.products.map(p => p.category).filter(Boolean))] };
   f.channels = pub.channels;
   f.costs = { ...f.costs, gastosOp: [], gastosS: [], gfMonths: {} };

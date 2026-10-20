@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.8
+
+- **Fotos en la nube**: Sincronizar menú sube las fotos de productos, categorías, portada e historia a Supabase Storage. El menú usa direcciones versionadas para mostrar las fotos nuevas sin volver a subir la carpeta.
+- **Publicación automática opcional**: en Nube y usuarios se puede activar «Actualizar fotos automáticamente en la web». Guarda primero el archivo local y publica el menú completo; informa pendientes y errores, reintenta al volver internet y permite reintentar manualmente.
+- **Fotos entre equipos**: el proyecto en la nube guarda referencias y al abrirlo se descargan las fotos dentro del .sahten, para conservarlas sin internet. Las fotos cambiadas o quitadas también cuentan como cambios del proyecto.
+- **Configuración necesaria**: ejecutar supabase/photos.sql después del esquema existente y volver a publicar la web una vez. El bucket es público y solo el dueño o administrador de la tienda puede subir fotos.
+
 ## 0.4.7
 
 - **La vista previa muestra lo que tenés en la app.** Con la nube conectada, la vista previa (y «Abrir en el navegador») bajaba el menú ya publicado y lo ponía encima: por eso lo que importabas o escribías en «Sitio web» no se veía. Ahora la vista previa usa solo lo local y no puede enviar pedidos de verdad.

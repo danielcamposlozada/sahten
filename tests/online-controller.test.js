@@ -10,10 +10,10 @@ class FakeWS { static last; constructor() { FakeWS.last = this; this.sent = []; 
 function setup({ routes = {}, conn = {}, storage = {} } = {}) {
   const calls = [];
   const fetchImpl = async (url, opts = {}) => {
-    calls.push({ url, method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : undefined });
+    calls.push({ url, method: opts.method || 'GET', body: opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : undefined });
     const k = Object.keys(routes).find(x => url.includes(x));
     let r = k ? routes[k] : { status: 404, body: { message: 'no route ' + url } };
-    if (typeof r === 'function') r = r(calls.at(-1));
+    if (typeof r === 'function') r = await r(calls.at(-1));
     if (r instanceof Error) throw r;
     return { ok: (r.status || 200) < 400, status: r.status || 200, json: async () => r.body };
   };
@@ -125,5 +125,31 @@ describe('menú y pedidos', () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] } } });
     await s.ctl.resume(); s.ctl.disconnect();
     expect(s.host.conn).toEqual({ url: '', anonKey: '', storeId: '' }); expect(s.ctl.info()).toMatchObject({ mode: 'desconectado', signedIn: false });
+  });
+});
+
+
+describe('subida de fotos antes de publicar el menú', () => {
+  const conn = { url: URL_OK, anonKey: ANON, storeId: 'st-1', slug: 'mi-local' };
+  const session = { access_token: 'T', refresh_token: 'R', expires_at: 9e9, user: { id: 'u1' } };
+  function photos(routes = {}) {
+    const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 }, ...routes } });
+    s.host.images = () => ({ a: 'data:image/png;base64,AQID' });
+    s.host.menuJson = () => ({ store: {}, products: [{ id: 'a', image: 'img/a.jpg' }], config: {} });
+    return s;
+  }
+  it('si falla la subida no reemplaza el menú publicado', async () => {
+    const s = photos({ '/storage/': { status: 403, body: { message: 'forbidden' } } }); await s.ctl.resume();
+    await expect(s.ctl.syncMenu()).rejects.toThrow(/No se pudo subir/);
+    expect(s.calls.some(c => c.url.includes('/rest/v1/menus') && c.method === 'POST')).toBe(false);
+    expect(s.host.images().a).toContain('data:image');
+  });
+  it('cambiar de proyecto durante la subida impide publicar en la tienda nueva', async () => {
+    let finish, started; const uploading = new Promise(r => { started = r; });
+    const s = photos({ '/storage/': () => { started(); return new Promise(r => { finish = r; }); } }); await s.ctl.resume();
+    const result = s.ctl.syncMenu(); await uploading;
+    s.host.conn.storeId = 'st-other'; finish({ body: {} });
+    await expect(result).rejects.toMatchObject({ code: 'project_changed' });
+    expect(s.calls.some(c => c.url.includes('/rest/v1/menus') && c.method === 'POST')).toBe(false);
   });
 });

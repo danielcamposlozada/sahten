@@ -69,7 +69,7 @@ conecta la app (misma URL y anon key, nombre de la tienda) y usa **Abrir proyect
 - **Local primero**: el `.sahten` siempre se guarda en tu equipo. Cada guardado programa una sincronización 5 s después.
 - Si no hay internet queda **pendiente** y se reintenta solo (30 s, 1 min, 2 min, 5 min) y apenas vuelve la conexión.
 - Si cambió **solo un lado**, se sube o se baja solo. Si cambiaron **los dos**, la app **avisa** y elegís: *quedarme con la mía* o *usar la de la nube*.
-- Las imágenes no viajan a la nube (pesan mucho): quedan en cada equipo.
+- Las fotos viajan como archivos de Storage; el proyecto guarda sus direcciones. Al abrirlo en otro equipo se descargan dentro del `.sahten`, que conserva la copia local. Ver la configuración de fotos más abajo.
 
 ## 6. Que Supabase no se pause (plan gratis)
 
@@ -88,3 +88,20 @@ Si se pausa igual, **Restore project** desde el panel de Supabase recupera todo.
 Si preferís no usar Supabase: Cloudflare ofrece gratis **D1** (SQLite) y **Workers**. Un Worker puede exponer `POST /orders`, `GET /menu/:slug` y
 `GET /orders?since=` sobre D1; no se pausa por inactividad. La diferencia: D1 no trae **tiempo real** ni **autenticación** listos, así que habría que
 agregar consulta periódica (o Durable Objects / WebSockets) y un login propio, y la app ya trae el cliente pensado para Supabase. Es viable, pero es más trabajo.
+
+## Fotos en la nube (desde 0.4.8)
+
+1. En SQL Editor ejecutá `supabase/photos.sql` después de `supabase/schema.sql`. Es idempotente y se puede aplicar a la instalación existente.
+2. Instalá la app actualizada y **volvé a publicar la carpeta de la web una vez**. La web anterior descartaba fotos nuevas que no existían en su carpeta.
+3. En **Nube y usuarios**, tocá **Sincronizar menú**: primero sube las fotos y luego publica los datos con sus direcciones.
+4. Opcionalmente activá **Actualizar fotos automáticamente en la web**. Al cargar o quitar una foto se guarda el archivo local (si tiene ubicación) y se publica el menú completo, incluidos precios y textos. Se mantiene la protección que impide vaciar o reducir mucho el menú publicado.
+
+Las fotos de productos, categorías, portada e historia se suben al bucket público `sahten-photos`. El proyecto sincronizado puede incluir también fotos de productos ocultos: **no uses este bucket para documentos ni imágenes privadas**. Solo dueño y administrador de la tienda pueden escribir en su carpeta; encargado, cajero, lectura y visitantes no pueden hacerlo. Nunca se necesita la clave de servicio en la app.
+
+Las fotos mantienen la compresión de la app (productos/categorías hasta 800 px, portada/historia hasta 1600 px). Se admiten JPEG, PNG y WebP hasta 5 MB por archivo. Cada contenido tiene una dirección distinta para que el navegador no siga mostrando la foto anterior. Fotos idénticas se reutilizan dentro de la misma tienda.
+
+Si falla una subida, el menú publicado no se reemplaza con referencias incompletas. La foto local sigue guardada. El estado aparece en Nube y usuarios; los errores de red se reintentan y el botón **Reintentar fotos** permite hacerlo manualmente. Al volver a abrir un proyecto con la opción activada se intenta publicar otra vez. Los errores de permisos o configuración requieren corregirlos antes de reintentar.
+
+Al abrir o sincronizar el proyecto desde otro equipo se descargan las imágenes y se verifica su contenido. Si falla una descarga no se aplica el proyecto incompleto. Los proyectos antiguos sin referencias de fotos conservan las imágenes locales.
+
+Quitar una foto elimina la referencia del menú/proyecto en la próxima sincronización. Las versiones anteriores del archivo en Storage se conservan para no romper respaldos ni menús estáticos anteriores; consumen cuota y su limpieza es manual una vez que ya no se usan.
