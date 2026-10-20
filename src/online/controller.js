@@ -12,11 +12,17 @@
 // }
 // ═══════════════════════════════════════════════════════════
 import { createClient, validateConnection, validSlug, slugify, SupabaseError } from './supabase.js';
+import { createImageStore, menuWithCloudImages } from './images.js';
 import { toLocalOrder, STATUS_TO_REMOTE } from './orders.js';
 
 export function createController(host) {
   let client = null, feed = null, mode = 'desconectado', error = null, lastSync = null;
   const listeners = new Set();
+  const imageStores = new WeakMap();
+  const imagesFor = c => { if (!imageStores.has(c)) imageStores.set(c, createImageStore(c)); return imageStores.get(c); };
+  const context = () => ({ client, storeId: host.conn.storeId, projectId: host.projectId() });
+  const check = ctx => { if (ctx.client !== client || ctx.storeId !== host.conn.storeId || ctx.projectId !== host.projectId()) throw new SupabaseError('Cambió el proyecto o la sesión. Volvé a sincronizar.', { code: 'project_changed' }); };
+  let publishing = false;
   const emit = () => listeners.forEach(fn => { try { fn(api.info()); } catch (e) { console.error(e); } });
   const set = (m, e) => { mode = m; error = e || null; emit(); };
   const sessKey = () => 'online-session:' + (host.projectId() || 'x');
@@ -105,17 +111,35 @@ export function createController(host) {
       return { local: m.products.length, remote, name: (m.store && m.store.name) || '', slug: host.conn.slug || '' };
     },
 
+    async prepareFile(file) {
+      const ctx = context();
+      if (!ctx.client) throw new SupabaseError('Iniciá sesión para sincronizar las fotos.');
+      const prepared = await imagesFor(ctx.client).prepare(file, ctx.storeId); check(ctx); return prepared;
+    },
+    async restoreFile(file, localImages = {}) {
+      const ctx = context();
+      if (!ctx.client) throw new SupabaseError('Iniciá sesión para descargar las fotos.');
+      const restored = await imagesFor(ctx.client).restore(file, localImages); check(ctx); return restored;
+    },
+
     /** Sube el menú actual para que la web lo lea en vivo (sin republicar archivos). */
-    async syncMenu({ force = false } = {}) {
+    async syncMenu({ force = false, allowed = () => true } = {}) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
-      const m = host.menuJson(); delete m.supabase;
-      // Protección: un menú vacío (o mucho más chico) no pisa el publicado sin avisar.
-      if (!m.products.length) throw new SupabaseError('Este proyecto no tiene productos para publicar, así que no se sube: vaciaría el menú publicado de la tienda' + (host.conn.slug ? ' «' + host.conn.slug + '»' : '') + '. Revisá que tengas abierto el proyecto correcto («Abrir proyecto de la nube…») y volvé a sincronizar.', { code: 'empty_menu' });
-      if (!force) {
-        let remote = 0; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* si no se puede leer, no se bloquea */ }
-        if (remote > 0 && m.products.length < remote * 0.5) { const e = new SupabaseError(`El menú publicado tiene ${remote} productos y este proyecto solo ${m.products.length}. Si seguís, el menú de la web se reemplaza.`, { code: 'menu_shrinks' }); e.remote = remote; e.local = m.products.length; throw e; }
-      }
-      await client.store.publishMenu(host.conn.storeId, m); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
+      if (publishing) throw new SupabaseError('Ya se está actualizando el menú. Esperá un momento.', { code: 'menu_busy' });
+      publishing = true; const ctx = context();
+      try {
+        let m = host.menuJson(); delete m.supabase;
+        // Protección: un menú vacío (o mucho más chico) no pisa el publicado sin avisar.
+        if (!m.products.length) throw new SupabaseError('Este proyecto no tiene productos para publicar, así que no se sube: vaciaría el menú publicado de la tienda' + (host.conn.slug ? ' «' + host.conn.slug + '»' : '') + '. Revisá que tengas abierto el proyecto correcto («Abrir proyecto de la nube…») y volvé a sincronizar.', { code: 'empty_menu' });
+        if (!force) {
+          let remote = 0; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* si no se puede leer, no se bloquea */ }
+          if (remote > 0 && m.products.length < remote * 0.5) { const e = new SupabaseError(`El menú publicado tiene ${remote} productos y este proyecto solo ${m.products.length}. Si seguís, el menú de la web se reemplaza.`, { code: 'menu_shrinks' }); e.remote = remote; e.local = m.products.length; throw e; }
+        }
+        m = await menuWithCloudImages(m, host.images ? host.images() : {}, imagesFor(ctx.client), ctx.storeId);
+        check(ctx);
+        if (!allowed()) throw new SupabaseError('Se canceló la publicación automática.', { code: 'project_changed' });
+        await ctx.client.store.publishMenu(ctx.storeId, m); check(ctx); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
+      } finally { publishing = false; }
     },
 
     /** Cuando cambia el estado de un pedido importado, se avisa a la web/otros dispositivos. */

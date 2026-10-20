@@ -9,9 +9,9 @@ import { writeScope, applyPublicToFile } from './roles.js';
 const clone = v => JSON.parse(JSON.stringify(v));
 export const BACKOFF_MS = [30000, 60000, 120000, 300000];
 
-/** Lo que viaja a la nube: el proyecto sin imágenes (pesan mucho y se quedan en cada equipo). */
-export const stripForSync = file => { const f = clone(file); f.images = {}; f.modifiedAt = null; return f; };
-export const syncHash = file => contentHash(stripForSync(file));
+/** Lo que viaja a la nube: el proyecto con referencias remotas; los binarios se suben antes a Storage. */
+export const stripForSync = file => { const f = clone(file); f.images = Object.fromEntries(Object.entries(f.images || {}).filter(([, v]) => /^https?:\/\//.test(v))); f.modifiedAt = null; return f; };
+export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; return contentHash(f); };
 
 /** Decide qué hacer según qué lado cambió desde la última sincronización. */
 export function decide({ localHash, last, remoteVersion }) {
@@ -52,6 +52,11 @@ export function createSync(deps) {
   const timer = deps.timer || { set: (f, ms) => setTimeout(f, ms), clear: id => clearTimeout(id) };
   const key = () => 'sync:' + deps.projectId();
   let state = 'sin vincular', error = null, pending = false, attempt = 0, retry = null, debounce = null, conflict = null, lastAt = null, busy = false;
+  let generation = 0;
+  const guard = () => {
+    const id = deps.projectId(), rid = deps.remoteId(), gen = generation;
+    return () => { if (gen !== generation || id !== deps.projectId() || rid !== deps.remoteId()) throw new SupabaseError('Cambió el proyecto o se canceló la sincronización.', { code: 'project_changed' }); };
+  };
   const listeners = new Set();
   const emit = () => listeners.forEach(fn => { try { fn(api.info()); } catch (e) { console.error(e); } });
   const set = (s, e) => { state = s; error = e || null; emit(); };
@@ -76,32 +81,34 @@ export function createSync(deps) {
 
     /** Primera vez: sube el proyecto y lo vincula. */
     async link() {
-      const f = deps.collect();
-      const r = await deps.client.rpc('create_project', { p_name: f.project.name || 'Proyecto', p_data: stripForSync(f), p_public: deps.publicOf(f) });
-      deps.setRemoteId(r); save({ version: 1, hash: syncHash(f), at: new Date(now()).toISOString() }); lastAt = new Date(now()); set('al día'); return r;
+      const check = guard(), f = deps.collect();
+      const prepared = deps.prepareFile ? await deps.prepareFile(f) : f;
+      check();
+      const r = await deps.client.rpc('create_project', { p_name: f.project.name || 'Proyecto', p_data: stripForSync(prepared), p_public: deps.publicOf(prepared) });
+      check(); deps.setRemoteId(r); save({ version: 1, hash: syncHash(f), at: new Date(now()).toISOString() }); lastAt = new Date(now()); set('al día'); return r;
     },
 
     /** Sincroniza ahora: sube, baja o avisa del conflicto, según cambió cada lado. */
     async sync({ resolve } = {}) {
       if (busy) { pending = true; return { state: 'ocupado' }; }
       if (!deps.remoteId()) return { state: 'sin vincular' };
-      busy = true; set('sincronizando');
+      busy = true; const check = guard(); set('sincronizando');
       try {
         const role = deps.role();
-        if (writeScope(role) !== 'project' && role !== 'lectura') return await staffSync();
-        if (role === 'lectura') return await pullOnly();
-        const meta = await fetchRemoteMeta();
+        if (writeScope(role) !== 'project' && role !== 'lectura') return await staffSync(check);
+        if (role === 'lectura') return await pullOnly(check);
+        const meta = await fetchRemoteMeta(); check();
         if (!meta) throw new SupabaseError('No encuentro el proyecto en la nube (¿te sacaron el acceso?).', { code: 'not_found' });
         const f = deps.collect(); const lh = syncHash(f);
         const act = decide({ localHash: lh, last: last(), remoteVersion: meta.version });
-        if (act === 'noop') { await mergeStaffOps(); lastAt = new Date(now()); attempt = 0; pending = false; set('al día'); return { action: 'noop' }; }
-        if (act === 'push') return await push(f, lh, last() ? last().version : meta.version);
-        if (act === 'pull') return await pull();
+        if (act === 'noop') { await mergeStaffOps(check); lastAt = new Date(now()); attempt = 0; pending = false; set('al día'); return { action: 'noop' }; }
+        if (act === 'push') return await push(f, lh, last() ? last().version : meta.version, check);
+        if (act === 'pull') return await pull(check);
         // conflicto: cambiaron los dos lados
         conflict = { remote: meta, local: { hash: lh } };
         const choice = resolve ? await resolve(conflict) : null;
-        if (choice === 'theirs') return await pull();
-        if (choice === 'mine') return await push(f, lh, meta.version);
+        if (choice === 'theirs') return await pull(check);
+        if (choice === 'mine') return await push(f, lh, meta.version, check);
         set('conflicto'); return { action: 'conflict', conflict };
       } catch (e) {
         if (offline(e)) return { action: 'offline' };
@@ -112,61 +119,71 @@ export function createSync(deps) {
     /** Resolver un conflicto pendiente: 'mine' (mi versión pisa la de la nube) o 'theirs' (descargo la de la nube). */
     async resolve(choice) {
       if (!conflict) return null;
-      busy = true; set('sincronizando');
+      busy = true; const check = guard(); set('sincronizando');
       try {
-        if (choice === 'theirs') return await pull();
-        const f = deps.collect(); return await push(f, syncHash(f), conflict.remote.version);
+        if (choice === 'theirs') return await pull(check);
+        const f = deps.collect(); return await push(f, syncHash(f), conflict.remote.version, check);
       } catch (e) { if (offline(e)) return { action: 'offline' }; set('error', e.message); throw e; } finally { busy = false; }
     },
 
     /** Programar una sincronización (se llama en cada guardado local): espera 5 s y junta los cambios. */
     schedule() { if (!deps.remoteId() || writeScope(deps.role()) === 'none') return; pending = true; timer.clear(debounce); debounce = timer.set(() => api.sync().catch(() => {}), 5000); },
-    cancel() { timer.clear(debounce); timer.clear(retry); },
+    cancel() { generation++; timer.clear(debounce); timer.clear(retry); },
   };
 
-  async function push(f, lh, baseVersion) {
-    const r = await deps.client.rpc('save_project', { pid: deps.remoteId(), p_data: stripForSync(f), p_public: deps.publicOf(f), base_version: baseVersion });
+  async function push(f, lh, baseVersion, check = guard()) {
+    const prepared = deps.prepareFile ? await deps.prepareFile(f) : f;
+    check();
+    const r = await deps.client.rpc('save_project', { pid: deps.remoteId(), p_data: stripForSync(prepared), p_public: deps.publicOf(prepared), base_version: baseVersion });
+    check();
     if (r.conflict) { conflict = { remote: r, local: { hash: lh } }; set('conflicto'); return { action: 'conflict', conflict }; }
     save({ version: r.version, hash: lh, at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
-    await mergeStaffOps();
+    await mergeStaffOps(check);
     return { action: 'push', version: r.version };
   }
 
-  async function pull() {
+  async function pull(check = guard()) {
     const r = await deps.client.rpc('get_project_data', { pid: deps.remoteId() });
-    let incoming = r.data; const local = deps.collect();
-    incoming = { ...incoming, images: local.images };                            // las imágenes no viajan: se conservan las de este equipo
+    check();
+    let incoming = r.data; const local = deps.collect(), before = syncHash(local);
+    incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images) : { ...incoming, images: local.images };
+    check();
+    if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
     await deps.apply(incoming);
     save({ version: r.version, hash: syncHash(incoming), at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
     return { action: 'pull', version: r.version };
   }
 
   // administrador/dueño: trae los pedidos y el stock que cargaron encargado y cajero
-  async function mergeStaffOps() {
+  async function mergeStaffOps(check = guard()) {
     try {
       const ops = await deps.client.rpc('get_ops', { pid: deps.remoteId() });
+      check();
       const f = deps.collect(); const merged = mergeOps(f, ops);
       if (syncHash(merged) !== syncHash(f)) { await deps.apply(merged); const l = last(); if (l) save({ ...l, hash: syncHash(merged) }); }
     } catch (e) { if (!(e instanceof SupabaseError)) throw e; }
   }
 
   // lectura: solo baja
-  async function pullOnly() {
-    const meta = await fetchRemoteMeta(); const l = last();
-    if (!l || l.version !== meta.version) await pull(); else { lastAt = new Date(now()); set('al día'); }
+  async function pullOnly(check = guard()) {
+    const meta = await fetchRemoteMeta(); check(); const l = last();
+    if (!l || l.version !== meta.version) await pull(check); else { lastAt = new Date(now()); set('al día'); }
     return { action: 'readonly' };
   }
 
   // encargado / cajero: suben pedidos (y stock el encargado) y bajan precios y pedidos de los demás
-  async function staffSync() {
+  async function staffSync(check = guard()) {
     const role = deps.role(); const f = deps.collect();
     await deps.client.rpc('save_ops', { pid: deps.remoteId(), p_sales: { orders: f.sales.orders, customers: f.sales.customers }, p_stock: role === 'encargado' ? { items: f.stock.items, movements: f.stock.movements } : null });
-    const meta = await fetchRemoteMeta(); const l = last();
+    const meta = await fetchRemoteMeta(); check(); const l = last();
     if (!l || l.version !== meta.version) {
       const r = await deps.client.rpc('get_project_public', { pid: deps.remoteId() });
-      await deps.apply(applyPublicToFile(deps.collect(), r.public)); save({ version: r.version, hash: '' });
+      let incoming = applyPublicToFile(deps.collect(), r.public);
+      if (deps.restoreFile) incoming = await deps.restoreFile(incoming, deps.collect().images);
+      check(); await deps.apply(incoming); save({ version: r.version, hash: '' });
     }
     const ops = await deps.client.rpc('get_ops', { pid: deps.remoteId() });
+    check();
     const merged = mergeOps(deps.collect(), ops); await deps.apply(merged);
     pending = false; attempt = 0; lastAt = new Date(now()); set('al día'); return { action: 'ops' };
   }

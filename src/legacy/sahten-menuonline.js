@@ -13,6 +13,7 @@ function _menuConfigDefaults() {
     hiddenCategories: [],
     showPrices: true,
     showImages: true,
+    autoSyncPhotos: false,
     whatsappNumber: '',
     deliveryNote: '',
     site: SAHTEN_SITE.siteDefaults(),

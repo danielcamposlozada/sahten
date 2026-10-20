@@ -20,7 +20,7 @@ La carpeta contiene:
 | `menu.json` | productos, precios, zonas, medios de pago y colores de tu marca. **No incluye costos ni márgenes** |
 | `img/` | imágenes optimizadas (hasta 800 px, JPEG) |
 
-Cada vez que cambies precios, productos o zonas, **volvé a publicar** y subí los archivos de nuevo.
+Sin conexión con Supabase, cada vez que cambies precios, productos, fotos o zonas, **volvé a publicar** y subí los archivos de nuevo. Con Supabase y la configuración de fotos, **Sincronizar menú** sube también las imágenes; la web debe republicarse una vez al actualizar a 0.4.8 (ver [SUPABASE.md](SUPABASE.md#fotos-en-la-nube-desde-048)).
 
 ## 2. Subirla a un hosting gratis
 

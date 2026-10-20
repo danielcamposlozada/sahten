@@ -52,10 +52,11 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
   const f = fetchImpl || ((...a) => fetch(...a));
   let sess = session;
 
-  async function raw(path, { method = 'GET', body, headers = {}, token } = {}) {
+  async function raw(path, { method = 'GET', body, headers = {}, token, binary = false, download = false } = {}) {
     let res;
-    try { res = await f(base + path, { method, headers: { apikey: key, Authorization: 'Bearer ' + (token || key), 'Content-Type': 'application/json', ...headers }, body: body === undefined ? undefined : JSON.stringify(body) }); }
+    try { res = await f(base + path, { method, headers: { apikey: key, Authorization: 'Bearer ' + (token || key), 'Content-Type': 'application/json', ...headers }, body: body === undefined ? undefined : (binary ? body : JSON.stringify(body)) }); }
     catch (e) { throw new SupabaseError('Sin conexión con Supabase. Revisá tu internet.', { offline: true }); }
+    if (download && res.ok) return new Uint8Array(await res.arrayBuffer());
     let data = null; try { data = res.status === 204 ? null : await res.json(); } catch (e) { data = null; }
     if (!res.ok) {
       const code = (data && (data.code || data.error_code || data.error)) || '';
@@ -130,5 +131,17 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
     return { get mode() { return mode; }, close() { closed = true; clearTimer(hb); clearTimer(poll); try { ws && ws.close(); } catch (e) { /* */ } } };
   }
 
-  return { url: base, anonKey: key, auth, rpc, store, orders, subscribeOrders, raw };
+  const storage = {
+    async upload(path, bytes, contentType) {
+      if (!auth.user) throw new SupabaseError('Iniciá sesión para subir fotos.', { code: 'no_session' });
+      return authed('/storage/v1/object/sahten-photos/' + path.split('/').map(encodeURIComponent).join('/'), {
+        method: 'POST', body: bytes, binary: true,
+        headers: { 'Content-Type': contentType, 'x-upsert': 'true', 'Cache-Control': 'max-age=31536000' },
+      });
+    },
+    async download(path) {
+      return raw('/storage/v1/object/public/sahten-photos/' + path.split('/').map(encodeURIComponent).join('/'), { download: true });
+    },
+  };
+  return { url: base, anonKey: key, auth, rpc, store, orders, storage, subscribeOrders, raw };
 }

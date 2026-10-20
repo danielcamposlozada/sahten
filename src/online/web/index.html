@@ -137,9 +137,9 @@ function load(){
      return fetch(url,{headers:sbHeaders()}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
        var live=rows&&rows[0]&&rows[0].menus&&(Array.isArray(rows[0].menus)?rows[0].menus[0]:rows[0].menus);
        if(live&&live.json&&live.json.products){var keep=base.supabase;MENU=live.json;
-       /* las fotos son archivos de la carpeta publicada: una foto nueva sin volver a publicar no existe todavía */
+       /* Las URL de Storage ya están subidas. Las rutas locales requieren el archivo publicado. */
        var had={};base.products.forEach(function(b){if(b.image)had[b.id+'|'+b.image]=1;});
-       MENU.products.forEach(function(p){if(p.image&&!had[p.id+'|'+p.image])p.image=null;});MENU.supabase=keep;if(rows[0].id)MENU.supabase=Object.assign({},keep,{storeId:rows[0].id});}
+       MENU.products.forEach(function(p){if(p.image&&!/^https:\/\//.test(p.image)&&!had[p.id+'|'+p.image])p.image=null;});MENU.supabase=keep;if(rows[0].id)MENU.supabase=Object.assign({},keep,{storeId:rows[0].id});}
      }).catch(function(){/* sin conexión: queda el menu.json */});
    });
 }

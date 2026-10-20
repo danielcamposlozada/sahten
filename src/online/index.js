@@ -2,6 +2,7 @@
 // Online opcional: une el controlador (pedidos en vivo), la sincronización y los roles con la app.
 // Con SAHTEN_ONLINE=false (build) todo esto queda deshabilitado y el panel dice «No disponible en esta versión».
 // ═══════════════════════════════════════════════════════════
+import { createPhotoPublisher } from './photoPublisher.js';
 import { createController } from './controller.js';
 import { createSync } from './sync.js';
 import { SupabaseError } from './supabase.js';
@@ -25,6 +26,7 @@ export function createOnline({ w = window, project, events }) {
 
   const host = {
     conn: new Proxy({}, { get: (_, k) => conn()[k], set: (_, k, v) => { conn()[k] = v; return true; }, ownKeys: () => Reflect.ownKeys(conn()), getOwnPropertyDescriptor: (_, k) => Object.getOwnPropertyDescriptor(conn(), k), deleteProperty: (_, k) => delete conn()[k] }),
+    images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
     orders: { list: () => w.sahtenOrders(), add: o => { w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
     notify: n => { try { w.pushNotification({ type: 'delivery', source: 'delivery', title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
@@ -46,6 +48,7 @@ export function createOnline({ w = window, project, events }) {
     sync = createSync({
       client: cl, remoteId: () => conn().projectId || null, setRemoteId: id => { conn().projectId = id; project.markDirty(); }, role: () => role() || 'owner', projectId: () => session.id,
       collect: () => project.collect(), publicOf,
+      prepareFile: f => controller.prepareFile(f), restoreFile: (f, images) => controller.restoreFile(f, images),
       apply: async f => { await project.apply(f); session.markDirty(); }, store: config,
     });
     sync.__client = cl; sync.onChange(() => ui.render && ui.render()); return sync;
@@ -53,24 +56,38 @@ export function createOnline({ w = window, project, events }) {
 
   // cada guardado local programa una sincronización (local primero, nube por detrás)
   session.onChange(i => { if (i.status === 'saved' && sync && !session.readOnly) sync.schedule(); });
-  w.addEventListener && w.addEventListener('online', () => { if (sync) sync.sync().catch(() => {}); });
+  w.addEventListener && w.addEventListener('online', () => { if (sync) sync.sync().catch(() => {}); if (photoPublisher.info().pending) photoPublisher.flush().catch(() => {}); });
 
   const need = () => { if (!controller.client || !controller.info().signedIn) throw new SupabaseError('Iniciá sesión en la conexión con Supabase primero.', { code: 'no_session' }); return controller.client; };
   const rid = () => { const id = conn().projectId; if (!id) throw new SupabaseError('El proyecto todavía no está en la nube.'); return id; };
 
+  const photoPublisher = createPhotoPublisher({
+    publish: async () => {
+      const id = session.id;
+      if (session.info().hasFile) await session.saveNow();
+      if (id !== session.id || !w.MENU_CONFIG?.autoSyncPhotos) throw new SupabaseError('Cambió el proyecto o se desactivó la publicación automática.');
+      return controller.syncMenu({ allowed: () => id === session.id && !!w.MENU_CONFIG?.autoSyncPhotos });
+    },
+    enabled: () => ONLINE_ENABLED && session.isOpen && !!w.MENU_CONFIG?.autoSyncPhotos && controller.info().signedIn && !session.readOnly && !remoteViewing && writeScope(role()) === 'project',
+    context: () => session.id + ':' + conn().url + ':' + conn().storeId,
+  });
+  w.addEventListener && w.addEventListener('sahten:photo', () => photoPublisher.schedule());
+  photoPublisher.onChange(() => ui.render());
+
   const api = {
-    enabled: ONLINE_ENABLED, controller, role, setRole, conn,
+    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher,
+    setAutoPhotos(on) { w.MENU_CONFIG.autoSyncPhotos = !!on; w._saveMenuConfig(); project.markDirty(); if (on) photoPublisher.schedule(); else photoPublisher.cancel(); },
     syncInfo: () => (sync ? sync.info() : { state: 'sin vincular', linked: !!conn().projectId, pending: false, conflict: null, version: null, role: role() }),
 
     /** Iniciar sesión en una tienda ya configurada (solo email y contraseña) y retomar la sincronización. */
     async signIn(email, password) {
-      await controller.signIn(email, password); ensureSync();
+      await controller.signIn(email, password); ensureSync(); photoPublisher.schedule();
       if (conn().projectId) sync.sync().catch(() => { /* queda en cola */ });
     },
     /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
-    signOut() { controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
+    signOut() { photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 
-    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); return r; },
+    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); photoPublisher.schedule(); return r; },
 
     /** Subir el proyecto: lo crea en la nube y lo vincula con la tienda (para que el personal vea sus pedidos). */
     async linkProject() {
@@ -91,14 +108,13 @@ export function createOnline({ w = window, project, events }) {
 
     /** Abrir un proyecto de la nube según el rol: completo (dueño, admin, lectura) o sin costos (encargado, cajero). */
     async openRemote(id, roleName) {
-      const cl = need(); stopView();
-      let file, images = {};
+      const cl = need(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
+      let file;
       if (receivesFullProject(roleName)) { const r = await cl.rpc('get_project_data', { pid: id }); file = clone(r.data); }
       else { const r = await cl.rpc('get_project_public', { pid: id }); file = applyPublicToFile(emptyFile(r.name || 'Proyecto'), r.public); file.project.name = r.name || file.project.name; file.project.id = (r.public.project && r.public.project.id) || undefined; }
-      file.images = images; file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
+      file = await controller.restoreFile(file); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
       remoteViewing = true;
-      await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + '.sahten');
-      remoteViewing = false;
+      try { await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + '.sahten'); } finally { remoteViewing = false; }
       Object.assign(conn(), file.online.supabase);
       setRole(roleName); session.setReadOnly(roleName === 'lectura');
       await controller.resume(); ensureSync();
@@ -114,11 +130,13 @@ export function createOnline({ w = window, project, events }) {
 
     /** Vista remota (dueño): una copia de solo lectura que se refresca sola cuando cambia la versión en la nube. */
     async remoteView() {
-      const cl = need(); const id = rid(); let version = -1;
+      const cl = need(); photoPublisher.cancel(); if (sync) sync.cancel(); const id = rid(); let version = -1;
       const load = async () => {
-        const r = await cl.rpc('get_project_data', { pid: id }); if (r.version === version) return; version = r.version;
-        const file = clone(r.data); file.online = { ...file.online, supabase: { ...conn(), projectId: id } }; file.images = {};
-        remoteViewing = true; await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + ' (remoto).sahten'); remoteViewing = false;
+        const r = await cl.rpc('get_project_data', { pid: id }); if (r.version === version) return;
+        const file = await controller.restoreFile(clone(r.data), w.SAHTEN_IMAGES || {}); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
+        remoteViewing = true;
+        try { await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + ' (remoto).sahten'); } finally { remoteViewing = false; }
+        version = r.version;
         session.setReadOnly(true); viewBanner(true);
       };
       await load(); stopView();
@@ -135,8 +153,9 @@ export function createOnline({ w = window, project, events }) {
     /** Al abrir un proyecto: retoma la conexión y el rol que tenía. */
     async onProjectOpened() {
       if (!ONLINE_ENABLED || remoteViewing) return;
+      photoPublisher.cancel(); if (sync) { sync.cancel(); sync = null; }
       stopView(); applyRole(role(), w);
-      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } } catch (e) { /* sin conexión: sigue local */ }
+      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } photoPublisher.schedule(); } catch (e) { /* sin conexión: sigue local */ }
     },
   };
   function stopView() { if (viewTimer) { clearInterval(viewTimer); viewTimer = null; } }

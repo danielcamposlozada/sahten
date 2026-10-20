@@ -50,11 +50,19 @@ export function installPhotos(w = window) {
     try { w.dispatchEvent(new w.CustomEvent('sahten:photo', { detail: { key } })); } catch (e) { /* */ }
   }
 
+  const requests = new Map();
+  const projectId = () => w.SAHTEN?.project?.session?.id;
+  const readOnly = () => w.SAHTEN?.project?.session?.readOnly || w.document.body.classList.contains('role-readonly');
+
   /** Guarda un archivo como foto de `key`. */
   async function set(key, file, opts = {}) {
-    if (!key || !file) return false;
+    if (!key || !file || readOnly()) return false;
+    const pid = projectId(), request = {}; requests.set(key, request);
     if (!/^image\//.test(file.type || '')) { toast('Elegí un archivo de imagen (JPG, PNG o WebP).', { kind: 'error' }); return false; }
-    try { images()[key] = await resize(file, opts.maxDim || (/^site_/.test(key) ? 1600 : 800)); } catch (e) { toast(e.message, { kind: 'error' }); return false; }
+    try { const value = await resize(file, opts.maxDim || (/^site_/.test(key) ? 1600 : 800));
+      if (pid !== projectId() || requests.get(key) !== request || readOnly()) return false;
+      images()[key] = value;
+    } catch (e) { toast(e.message, { kind: 'error' }); return false; }
     dirty(); refresh(key); toast('Foto guardada'); return true;
   }
 
@@ -69,9 +77,11 @@ export function installPhotos(w = window) {
   }
 
   async function remove(key, label = '') {
-    if (!get(key)) return false;
+    if (!get(key) || readOnly()) return false;
+    const pid = projectId();
     const ok = typeof w.sahtenConfirm === 'function' ? await w.sahtenConfirm('¿Quitar la foto' + (label ? ' de «' + label + '»' : '') + '?', { okLabel: 'Quitar', danger: true }) : true;
-    if (!ok) return false;
+    if (!ok || pid !== projectId() || readOnly()) return false;
+    requests.set(key, {});
     delete images()[key]; dirty(); refresh(key); return true;
   }
 

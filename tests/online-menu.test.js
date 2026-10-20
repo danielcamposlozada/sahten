@@ -242,6 +242,16 @@ describe('web publicada', () => {
     const b = await web({ menu: m, search: '?store=mi-local', fetchMap: { '/rest/v1/stores': new Error('offline') } });
     expect(b.d.querySelectorAll('.card').length).toBe(m.products.length);
   });
+  it('una foto nueva de Storage se ve en el menú en vivo sin republicar la carpeta', async () => {
+    const m = baseMenu({ supabase: { url: 'https://abc.supabase.co', anonKey: 'anon', storeId: 'store-1' } });
+    const live = JSON.parse(JSON.stringify(m)); delete live.supabase;
+    live.products[0].image = 'https://abc.supabase.co/storage/v1/object/public/sahten-photos/store-1/new.jpg';
+    const a = await web({ menu: m, fetchMap: { '/rest/v1/stores': { body: [{ id: 'store-1', menus: [{ json: live }] }] } } });
+    expect([...a.d.querySelectorAll('.card img')].map(i => i.getAttribute('src'))).toContain(live.products[0].image);
+    live.products[0].image = null;
+    const b = await web({ menu: m, fetchMap: { '/rest/v1/stores': { body: [{ id: 'store-1', menus: [{ json: live }] }] } } });
+    expect(b.d.querySelectorAll('.card img')).toHaveLength(0);
+  });
   it('fotos con el menú en vivo: solo se muestran las que existen en la carpeta publicada', async () => {
     const m = baseMenu({ supabase: { url: 'https://abc.supabase.co', anonKey: 'anon', storeId: 'store-1' } });
     m.products[0].image = 'img/a.jpg';                                   // publicada

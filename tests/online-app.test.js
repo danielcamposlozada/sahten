@@ -1,4 +1,5 @@
 // Lo online dentro de la app real (jsdom): publicar, panel, roles, pedidos en vivo, build sin online.
+import { webcrypto } from 'node:crypto';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { buildTestBundle, openApp } from './app-harness.js';
 import { createMemoryAdapter } from '../src/project/adapters/memory.js';
@@ -19,7 +20,7 @@ async function app(opts) {
 class FakeWS { static last; constructor() { FakeWS.last = this; this.sent = []; } send(s) { this.sent.push(JSON.parse(s)); } close() {} }
 function backend(w, routes) {
   const calls = [];
-  w.fetch = async (url, o = {}) => { calls.push({ url, method: o.method || 'GET', body: o.body ? JSON.parse(o.body) : undefined }); const k = Object.keys(routes).find(x => url.includes(x)); const r = k ? (typeof routes[k] === 'function' ? routes[k](calls.at(-1)) : routes[k]) : { status: 404, body: { message: 'no route ' + url } }; return { ok: (r.status || 200) < 400, status: r.status || 200, json: async () => r.body }; };
+  w.fetch = async (url, o = {}) => { calls.push({ url, method: o.method || 'GET', body: o.body ? (typeof o.body === 'string' ? JSON.parse(o.body) : o.body) : undefined }); const k = Object.keys(routes).find(x => url.includes(x)); const r = k ? (typeof routes[k] === 'function' ? routes[k](calls.at(-1)) : routes[k]) : { status: 404, body: { message: 'no route ' + url } }; return { ok: (r.status || 200) < 400, status: r.status || 200, json: async () => r.body }; };
   w.WebSocket = FakeWS; return calls;
 }
 
@@ -346,5 +347,36 @@ describe('Menú Online (admin): reseñas de Google e importar/exportar contenido
     A.window._sbImport(file); await wait(80);
     expect(A.ev('MENU_CONFIG.site.faq.title')).toBe('FAQ nueva'); expect(A.ev('MENU_CONFIG.site.historia.title')).toBeTruthy();   // lo demás sigue
     expect(JSON.parse(txt).format).toBe('sahten-sitio'); A.window.close();
+  }, 60000);
+});
+
+
+describe('fotos en la nube desde la app real', () => {
+  it('conserva las fotos locales y publica fotos nuevas y eliminadas con la opción automática', async () => {
+    const a = await app(); await a.p.openDemo(); const w = a.window;
+    Object.defineProperty(w.crypto, 'subtle', { value: webcrypto.subtle });
+    const calls = backend(w, {
+      '/auth/v1/token': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1' } } },
+      '/rest/v1/stores?select': { body: [{ id: 'st-1', slug: 'mi-local' }] }, '/rest/v1/stores': { status: 204 },
+      '/rest/v1/orders': { body: [] }, '/rest/v1/menus': { status: 204 }, '/storage/v1/object/sahten-photos/': { body: {} },
+    });
+    await a.on.connect({ url: URL_OK, anonKey: ANON, slug: 'mi-local', email: 'owner@test.com', password: 'password' });
+    const id = a.on.publish.currentMenu().products[0].id;
+    w.SAHTEN_IMAGES[id] = 'data:image/png;base64,AQID'; w.SAHTEN.photos.refresh(id);
+    expect(a.on.photoPublisher.info().pending).toBe(false); // desactivado por defecto
+    a.on.setAutoPhotos(true); await a.on.photoPublisher.flush();
+    const uploads = calls.filter(c => c.url.includes('/storage/') && c.method === 'POST');
+    expect(uploads).toHaveLength(1); expect([...uploads[0].body]).toEqual([1,2,3]);
+    let menu = calls.filter(c => c.url.includes('/rest/v1/menus') && c.method === 'POST').at(-1).body.json;
+    expect(menu.products.find(p => p.id === id).image).toMatch(/storage.*st-1\/[a-f0-9]{64}\.png/);
+    expect(a.p.collect().images[id]).toBe('data:image/png;base64,AQID');
+    expect(a.p.collect().online.menuConfig.autoSyncPhotos).toBe(true);
+    a.ev("showPanel('nube')"); await a.on.ui.render();
+    expect(w.document.getElementById('panel-nube').textContent).toMatch(/Fotos publicadas/);
+    delete w.SAHTEN_IMAGES[id]; w.SAHTEN.photos.refresh(id); await a.on.photoPublisher.flush();
+    menu = calls.filter(c => c.url.includes('/rest/v1/menus') && c.method === 'POST').at(-1).body.json;
+    expect(menu.products.find(p => p.id === id).image).toBeNull();
+    expect(calls.filter(c => c.url.includes('/storage/') && c.method === 'POST')).toHaveLength(1);
+    a.on.signOut(); w.close();
   }, 60000);
 });
