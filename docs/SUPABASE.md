@@ -104,4 +104,6 @@ Si falla una subida, el menú publicado no se reemplaza con referencias incomple
 
 Al abrir o sincronizar el proyecto desde otro equipo se descargan las imágenes y se verifica su contenido. Si falla una descarga no se aplica el proyecto incompleto. Los proyectos antiguos sin referencias de fotos conservan las imágenes locales.
 
+Si una instalación anterior guarda el proyecto sin el protocolo de fotos, Supabase conserva las referencias existentes y actualiza los demás datos. Esto evita que una app antigua deje sin fotos al resto de los equipos. Para descargar y administrar las fotos, todas las instalaciones deben usar la versión actualizada. La eliminación explícita de fotos desde una app compatible sigue funcionando. Si ya aplicaste una versión anterior de `photos.sql`, volvé a ejecutarlo para instalar esta protección.
+
 Quitar una foto elimina la referencia del menú/proyecto en la próxima sincronización. Las versiones anteriores del archivo en Storage se conservan para no romper respaldos ni menús estáticos anteriores; consumen cuota y su limpieza es manual una vez que ya no se usan.

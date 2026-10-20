@@ -53,3 +53,22 @@ describe('permisos de fotos por tienda', () => {
     expect((await db.query('select * from storage.objects')).rows).toHaveLength(1);
   });
 });
+
+describe('compatibilidad de fotos entre instalaciones', () => {
+  it('un cliente sin protocolo de fotos conserva las referencias y sí actualiza los otros datos', async () => {
+    const images = { plato: 'https://example.test/foto.jpg' };
+    const file = { project: { name: 'Tienda' }, images, cloudImagesVersion: 1 };
+    const pub = { products: [{ id: 'plato', price: 100 }], images, cloudImagesVersion: 1 };
+    const pid = (await as('owner', () => db.query('select public.create_project($1,$2,$3) id', ['Tienda', file, pub]))).rows[0].id;
+    await as('owner', () => db.query('select public.save_project($1,$2,$3,1)', [pid, { project: { name: 'Nombre nuevo' }, images: {}, costs: { total: 42 } }, { products: [{ id: 'plato', price: 120 }] }]));
+    const saved = (await db.query('select data,public,version from public.projects where id=$1', [pid])).rows[0];
+    expect(saved.data).toMatchObject({ project: { name: 'Nombre nuevo' }, costs: { total: 42 }, images, cloudImagesVersion: 1 });
+    expect(saved.public).toMatchObject({ products: [{ id: 'plato', price: 120 }], images, cloudImagesVersion: 1 });
+    expect(Number(saved.version)).toBe(2);
+    const empty = { images: {}, cloudImagesVersion: 1 };
+    await as('owner', () => db.query('select public.save_project($1,$2,$3,2)', [pid, empty, empty]));
+    const cleared = (await db.query('select data,public from public.projects where id=$1', [pid])).rows[0];
+    expect(cleared.data.images).toEqual({});
+    expect(cleared.public.images).toEqual({});
+  });
+});

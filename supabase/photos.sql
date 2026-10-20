@@ -18,6 +18,24 @@ $$;
 revoke all on function sahten_private.can_manage_store_photos(text) from public, anon;
 grant execute on function sahten_private.can_manage_store_photos(text) to authenticated;
 
+-- Clientes anteriores no envían fotos: esa ausencia no significa que se hayan eliminado.
+-- La versión 1 del protocolo sí puede publicar un mapa vacío para borrarlas a propósito.
+create or replace function sahten_private.preserve_project_photos() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if old.data->>'cloudImagesVersion' = '1' and new.data->>'cloudImagesVersion' is distinct from '1' then
+    new.data := new.data || jsonb_build_object('images', old.data->'images', 'cloudImagesVersion', 1);
+  end if;
+  if old.public->>'cloudImagesVersion' = '1' and new.public->>'cloudImagesVersion' is distinct from '1' then
+    new.public := new.public || jsonb_build_object('images', old.public->'images', 'cloudImagesVersion', 1);
+  end if;
+  return new;
+end $$;
+revoke all on function sahten_private.preserve_project_photos() from public, anon, authenticated;
+drop trigger if exists preserve_project_photos on public.projects;
+create trigger preserve_project_photos before update on public.projects
+for each row execute function sahten_private.preserve_project_photos();
+
 drop policy if exists sahten_photos_select on storage.objects;
 create policy sahten_photos_select on storage.objects for select to authenticated
 using (bucket_id = 'sahten-photos' and sahten_private.can_manage_store_photos((storage.foldername(name))[1]));
