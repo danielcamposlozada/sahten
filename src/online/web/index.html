@@ -179,6 +179,50 @@ function load(){
    });
 }
 
+// ── Checkout Pro por negocio; las credenciales privadas nunca llegan al navegador ──
+var mpAvailable=false, mpPending=null, mpResult=null, mpTimer=null, mpPolls=0, mpBusy=false, mpPaymentId=null;
+function mpEndpoint(path){return sb().url+'/functions/v1/sahten-payments/'+path;}
+function mpSessionKey(){return 'sahten-mp:'+sb().storeId;}
+function mpSavePending(p){sessionStorage.setItem(mpSessionKey(),JSON.stringify(p));mpPending=p;}
+function mpConfig(){
+  if(!sb())return Promise.resolve();
+  return fetch(mpEndpoint('config')+'?store_id='+encodeURIComponent(sb().storeId)+(q.get('mp_test')==='1'?'&test=1':''),{headers:sbHeaders()})
+    .then(function(r){return r.ok?r.json():{};}).then(function(c){mpAvailable=!!c.enabled;}).catch(function(){mpAvailable=false;});
+}
+function mpCall(path,data){return fetch(mpEndpoint(path),{method:'POST',headers:sbHeaders(),body:JSON.stringify(data)}).then(function(r){return r.json().then(function(d){if(!r.ok){var e=new Error(d.message||'No pudimos conectar con Mercado Pago.');e.code=d.code;throw e;}return d;});});}
+function mpGo(url){var u=new URL(url);if(u.protocol!=='https:'||!/^(?:(?:www|sandbox)\.)?mercadopago\.com(?:\.ar)?$/.test(u.hostname))throw new Error('El enlace de pago no es válido.');location.assign(u.href);}
+function mpStart(o){
+  if(!mpAvailable){sending=false;refreshSend();$('err').textContent='Este negocio todavía no habilitó Mercado Pago.';return;}
+  try{
+    if(mpResult&&['paid','overpaid','refunded','partially_refunded','charged_back'].includes(mpResult.paymentStatus)){mpPending=null;mpResult=null;}
+    var fingerprint=JSON.stringify(o.items.map(function(i){return [i.id,i.qty];}))+JSON.stringify([o.source,o.address,o.lat,o.lng,o.total,o.customerName,o.customerPhone,o.notes]);
+    if(!mpPending||mpPending.fingerprint!==fingerprint){var bytes=new Uint8Array(32);crypto.getRandomValues(bytes);mpSavePending({requestId:crypto.randomUUID(),proof:Array.from(bytes,function(b){return b.toString(16).padStart(2,'0');}).join(''),fingerprint:fingerprint,cart:cart,createdAt:Date.now()});}
+  }catch(e){sending=false;refreshSend();$('err').textContent='Habilitá el almacenamiento de esta página para continuar con el pago.';return;}
+  mpCall('checkout',{storeId:sb().storeId,requestId:mpPending.requestId,proof:mpPending.proof,order:o}).then(function(c){
+    mpSavePending(Object.assign({},mpPending,{id:c.id}));
+    if(!c.checkoutUrl){sending=false;mpResult=c;step='mp';sheet();showSheet();return;}
+    mpGo(c.checkoutUrl);
+  }).catch(function(e){sending=false;if(e.code==='checkout_expired'||e.code==='checkout_conflict')mpPending=null;refreshSend();$('err').textContent=e.message;});
+}
+function mpStatusText(){var s=mpResult&&mpResult.paymentStatus;if(s==='paid'&&mpResult.mode==='test')return 'Pago de prueba acreditado. No se creó una venta real.';return ({paid:'Pago acreditado. El negocio recibió tu pedido.',overpaid:'Se acreditó más de un pago. El negocio recibió un solo pedido; contactalo para revisar el cobro excedente.',in_mediation:'El pago está en revisión. Consultá al negocio por tu pedido.',pending:'Pago pendiente. El pedido se enviará al negocio cuando se acredite completo.',partial:'El pago está incompleto. Esperamos la acreditación del importe total.',rejected:'El pago no se acreditó. Podés volver a intentarlo en Mercado Pago.',refunded:'El pago fue reembolsado. Consultá al negocio por tu pedido.',partially_refunded:'El pago tiene un reembolso parcial. Consultá al negocio.',charged_back:'El pago tiene un contracargo. Consultá al negocio.'})[s]||'Estamos verificando el pago. Volver desde Mercado Pago no confirma por sí solo su acreditación.';}
+function mpSheet(){
+  var s=mpResult&&mpResult.paymentStatus;
+  setSheetContent('<h3>Pago con Mercado Pago</h3><p role="status">'+esc(mpStatusText())+'</p>'+(mpResult?'<div class="row t"><span>Total</span><span>'+fmt(mpResult.total)+'</span></div>':'')+(!mpPending?'<p>Para consultar el resultado de esta compra, volvé desde el mismo navegador donde iniciaste el pago o contactá al negocio.</p>':''),
+    (mpPending?'<button class="cta" data-mp-refresh>Verificar pago</button>':'')+((s==='rejected'||s==='pending')&&mpResult.checkoutUrl?'<button class="cta ghost" data-mp-retry>Volver a Mercado Pago</button>':'')+'<button class="cta ghost" data-close>Volver al menú</button>');
+}
+function mpRefresh(paymentId){
+  if(!mpPending||!mpPending.id||mpBusy)return Promise.resolve();mpBusy=true;
+  return mpCall('status',{id:mpPending.id,proof:mpPending.proof,paymentId:paymentId||mpPaymentId||undefined}).then(function(c){mpResult=c;if(['paid','overpaid'].includes(c.paymentStatus)){cart={};render();}if(step==='mp')sheet();
+    clearTimeout(mpTimer);if(['pending','partial'].includes(c.paymentStatus)&&mpPolls++<12)mpTimer=setTimeout(function(){mpRefresh();},10000);
+  }).catch(function(){if(step==='mp'){$('sheet').querySelector('[role=status]').textContent='Todavía no pudimos verificar el pago. Podés reintentar en unos segundos.';}}).finally(function(){mpBusy=false;});
+}
+function mpReturn(){
+  if(!sb()||!q.get('mp_checkout'))return;
+  try{var p=JSON.parse(sessionStorage.getItem(mpSessionKey())||'null');if(p&&p.id===q.get('mp_checkout')&&Date.now()-p.createdAt<86400000){mpPending=p;cart=p.cart||{};render();}}catch(e){}
+  mpPaymentId=q.get('payment_id')||q.get('collection_id');step='mp';sheet();showSheet();mpRefresh(mpPaymentId);
+}
+document.addEventListener('click',function(e){if(e.target.closest('[data-mp-refresh]'))mpRefresh();if(e.target.closest('[data-mp-retry]')&&mpResult&&mpResult.checkoutUrl)mpGo(mpResult.checkoutUrl);});
+
 // ── pantalla ──
 var activeCat='all';
 function applyTheme(){var t=MENU.theme||{},r=document.documentElement;if(t.primary)r.style.setProperty('--primary',t.primary);if(t.accent)r.style.setProperty('--accent',t.accent);r.style.setProperty('--on-primary',contrastText(t.primary||'#235328'));r.style.setProperty('--on-accent',contrastText(t.accent||'#F28C00'));}
@@ -287,13 +331,14 @@ function setSheetContent(body,footer){
   if(s.contains(active)||active===s||$('ov').classList.contains('on')){var next=id&&$(id);(next||s).focus({preventScroll:true});}
 }
 function sendStatus(){
-  if(sending)return 'Enviando pedido…';
+  if(sending)return pay==='mercadopago'?'Preparando el pago…':'Enviando pedido…';
+  if(!payMethods().length)return 'La tienda todavía no habilitó un medio de pago.';
   if(!form.name.trim())return 'Completá tu nombre para enviar el pedido.';
   if(!form.phone.trim())return 'Completá tu teléfono para enviar el pedido.';
   if(type==='delivery'&&!(geo&&ship&&ship.ok))return 'Elegí una dirección dentro de la zona de entrega o seleccioná retiro.';
   return 'Revisá el total y enviá tu pedido.';
 }
-function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]});}
+function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]&&(k!=='mercadopago'||mpAvailable)});}
 function total(){return subtotal()+(type==='delivery'&&ship&&ship.ok?ship.cost:0);}
 function shipNote(){
   if(type!=='delivery')return '';
@@ -304,11 +349,12 @@ function shipNote(){
 }
 function sheet(){
   var s=$('sheet'),ls=lines();
+  if(step==='mp'){mpSheet();return;}
   if(step==='done'){setSheetContent(done());return;}
   if(!ls.length){setSheetContent('<div class="empty">El carrito está vacío.</div>','<button class="cta ghost" data-close>Seguir viendo el menú</button>');return;}
-  pay=pay||payMethods()[0]||'efectivo';
+  if(payMethods().indexOf(pay)<0)pay=payMethods()[0]||'';
   var labels=PAY_LABELS;
-  var canSend=!sending&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok));
+  var canSend=!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok));
   var body=ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('')+
    '<div class="row"><span>Subtotal</span><span>'+fmt(subtotal())+'</span></div>'+(type==='delivery'&&ship&&ship.ok?'<div class="row"><span>Envío</span><span>'+(ship.cost?fmt(ship.cost):'Gratis')+'</span></div>':'')+'<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div>'+
    '<div class="seg"><button data-type="delivery" class="'+(type==='delivery'?'on':'')+'">🛵 Delivery</button><button data-type="pickup" class="'+(type==='pickup'?'on':'')+'">🏠 Retiro en local</button></div>'+
@@ -318,15 +364,15 @@ function sheet(){
    '<label for="f-pay">Forma de pago</label><select id="f-pay">'+payMethods().map(function(k){return '<option value="'+k+'"'+(k===pay?' selected':'')+'>'+(labels[k]||k)+'</option>'}).join('')+'</select>'+
    '<label for="f-notes">Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea>'+
    '';
-  var footer='<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div><div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="cta ghost" data-close>Seguir viendo el menú</button>';
+  var footer='<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div><div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="cta ghost" data-close>Seguir viendo el menú</button>';
   setSheetContent(body,footer);
   var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
   bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');
-  if($('f-pay'))$('f-pay').addEventListener('change',function(){pay=this.value;});
+  if($('f-pay'))$('f-pay').addEventListener('change',function(){pay=this.value;sheet();});
   if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;suggest(this.value);refreshSend();});
   renderSugs();
 }
-function refreshSend(){var b=$('send');if(!b)return;b.disabled=sending||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok)));var status=$('send-status');if(status)status.textContent=sendStatus();}
+function refreshSend(){var b=$('send');if(!b)return;b.disabled=sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok)));var status=$('send-status');if(status)status.textContent=sendStatus();}
 function suggest(v){clearTimeout(sugTimer);sugs=[];renderSugs();if(!v||v.length<5)return;sugTimer=setTimeout(function(){
   var near=MENU.delivery&&MENU.delivery.lat!=null?'&viewbox='+[MENU.delivery.lng-0.4,MENU.delivery.lat+0.4,MENU.delivery.lng+0.4,MENU.delivery.lat-0.4].join(',')+'&bounded=0':'';
   fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=es&addressdetails=1&q='+encodeURIComponent(v)+near).then(function(r){return r.json()}).then(function(rows){
@@ -344,6 +390,7 @@ function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
   if(sending)return; var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
+  if(pay==='mercadopago'){mpStart(o);return;}
   var s=sb();
   fetch(s.url+'/rest/v1/orders',{method:'POST',headers:sbHeaders({Prefer:'return=minimal'}),body:JSON.stringify({store_id:s.storeId,payload:o})})
    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);sending=false;finish(o,true);})
@@ -398,7 +445,7 @@ document.addEventListener('click',function(e){
   else if(t.id==='send')send();
 });
 window.openCart=openCart;window.__menu=function(){return MENU;};
-load().then(function(){applyTheme();render();route();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
+load().then(mpConfig).then(function(){applyTheme();render();route();mpReturn();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
 })();
 </script>
 </body>

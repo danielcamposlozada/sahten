@@ -1,6 +1,12 @@
 // Pedido que llega de la web (tabla orders de Supabase) → pedido del Mostrador. Puro.
 export const STATUS_FROM_REMOTE = { pendiente: 'pendiente', recibido: 'pendiente', preparando: 'en_preparacion', listo: 'listo', entregado: 'listo', cancelado: 'cancelado' };
 export const STATUS_TO_REMOTE = { pendiente: 'pendiente', en_preparacion: 'preparando', listo: 'listo', completada: 'entregado', cancelado: 'cancelado' };
+export const PAYMENT_LABELS = { paid: 'Pago acreditado', overpaid: 'Cobro excedente · revisar', in_mediation: 'Pago en disputa', pending: 'Pago pendiente', partial: 'Pago incompleto', rejected: 'Pago rechazado', refunded: 'Reembolsado', partially_refunded: 'Reembolso parcial', charged_back: 'Contracargo', unverified: 'Sin pago verificado' };
+export function paymentFields(row) {
+  const verified = row.payment_provider === 'mercadopago' && row.payment_ref;
+  const status = verified && PAYMENT_LABELS[row.payment_status] ? row.payment_status : row.payload?.paymentMethod === 'mercadopago' ? 'unverified' : null;
+  return { paymentProvider: verified ? 'mercadopago' : null, paymentStatus: status, paymentStatusLabel: PAYMENT_LABELS[status] || '', paymentReference: verified ? row.payment_ref : null };
+}
 
 /**
  * row = { id, payload, status, created_at }. `existing` = pedidos locales (para numerar y no duplicar).
@@ -15,6 +21,7 @@ export function toLocalOrder(row, existing = []) {
     productId: i.productId || i.id, name: String(i.name || '?'), qty: +i.qty || 0, unitPrice: +i.unitPrice || 0, lineTotal: +i.lineTotal || (+i.unitPrice || 0) * (+i.qty || 0),
   }));
   return {
+    ...paymentFields(row),
     id: 'web_' + row.id, remoteId: row.id, num, webNum: p.num || null, source: p.source === 'pickup' ? 'pickup' : 'delivery', origin: 'menu-online',
     createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: STATUS_FROM_REMOTE[row.status] || 'pendiente',
     customerName: String(p.customerName || 'Cliente online'), customerPhone: String(p.customerPhone || ''), customerEmail: String(p.customerEmail || ''), customerId: null,

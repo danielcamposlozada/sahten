@@ -570,6 +570,7 @@ function openOrderDetail(orderId) {
     (o.shipping>0?'<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(o.shipping)+'</span></div>':'') +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(o.total)+'</span></div>' +
     (o.paymentName?'<div style="font-size:12px;color:var(--muted);margin-top:6px">Pago: '+_esc(o.paymentName)+'</div>':'') +
+    (o.paymentStatusLabel?'<div style="font-size:13px;font-weight:600;margin-top:8px" role="status">Mercado Pago: '+_esc(o.paymentStatusLabel)+'</div>':'') +
     '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">' +
     (o.stockDeducted?'<button class="btn" onclick="orderRestoreStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Devuelve al stock lo descontado por esta orden">↩ Revertir stock</button>':'<button class="btn" onclick="orderDeductStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Descuenta ingredientes y envases según las recetas">📦 Descontar stock</button>') +

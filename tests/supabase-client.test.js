@@ -121,12 +121,14 @@ describe('pedidos en tiempo real', () => {
     await ws.open();
     const join = ws.sent[0];
     expect(join.event).toBe('phx_join'); expect(join.payload.access_token).toBe('TOK');
-    expect(join.payload.config.postgres_changes[0]).toEqual({ event: 'INSERT', schema: 'public', table: 'orders', filter: 'store_id=eq.store-1' });
+    expect(join.payload.config.postgres_changes[0]).toEqual({ event: '*', schema: 'public', table: 'orders', filter: 'store_id=eq.store-1' });
     ws.msg({ topic: join.topic, event: 'phx_reply', payload: { status: 'ok' } });
     expect(states).toContain('en vivo');
     ws.msg({ topic: join.topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'o1', payload: { customerName: 'Ana' }, created_at: '2026-10-05T10:00:00Z' } } } });
     ws.msg({ topic: join.topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'o1', payload: {} } } } });   // repetido
     expect(got).toHaveLength(1); expect(got[0].payload.customerName).toBe('Ana');
+    ws.msg({topic:join.topic,event:'postgres_changes',payload:{data:{type:'UPDATE',record:{id:'o1',payload:{customerName:'Ana'},payment_status:'refunded'}}}});
+    expect(got).toHaveLength(2);expect(got[1].payment_status).toBe('refunded');
     timers[0].fn();                                            // latido
     expect(ws.sent.at(-1)).toMatchObject({ topic: 'phoenix', event: 'heartbeat' });
   });
@@ -138,7 +140,8 @@ describe('pedidos en tiempo real', () => {
     f.calls.length = 0;
     const poll = timers.find(t => t.ms === 15000);
     await poll.fn();
-    expect(f.calls[0].url).toContain('/rest/v1/orders?select=id,payload,status,created_at&store_id=eq.store-1&created_at=gt.');
+    expect(f.calls[0].url).toContain('/rest/v1/orders?select=*&store_id=eq.store-1&order=created_at.desc');
+    expect(f.calls[0].url).not.toContain('created_at=gt.');
     sub.close(); expect(ws.closed).toBe(true);
   });
   it('sin WebSocket disponible usa consulta periódica desde el comienzo y entrega lo nuevo', async () => {

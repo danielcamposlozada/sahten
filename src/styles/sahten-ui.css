@@ -127,3 +127,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 .ph-del[hidden] { display: none; }
 @media (hover: none) { .ph-del { opacity: 1; } }
 .ph-thumb.round { border-radius: 50%; }
+/* Configuración de pagos: etiquetas encima de campos y ancho adaptable. */
+.mp-card { min-width: 0; line-height: 1.5; }
+#mp-account-form > div { display: grid; gap: 6px; min-width: 0; }
+#mp-account-form label { display: block; font-size: 13px; font-weight: 600; }
+#mp-account-form input, #mp-account-form select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; font-family: inherit; font-size: 14px; }
+.mp-card .btn { min-height: 44px; max-width: 100%; white-space: normal; }
+.mp-card a { color: var(--ink); text-decoration: underline; overflow-wrap: anywhere; }

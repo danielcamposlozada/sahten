@@ -98,17 +98,17 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
 
   // ── Pedidos ──────────────────────────────────────────
   const orders = {
-    async list(storeId, sinceIso) { return authed('/rest/v1/orders?select=id,payload,status,created_at&store_id=eq.' + storeId + (sinceIso ? '&created_at=gt.' + encodeURIComponent(sinceIso) : '') + '&order=created_at.asc&limit=200'); },
+    async list(storeId, sinceIso) { return authed('/rest/v1/orders?select=*&store_id=eq.' + storeId + (sinceIso ? '&created_at=gt.' + encodeURIComponent(sinceIso) : '') + '&order=created_at.desc&limit=200'); },
     async setStatus(id, status) { await authed('/rest/v1/orders?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { status } }); },
   };
 
   // ── Tiempo real (protocolo Phoenix de Supabase Realtime) con respaldo por consulta periódica ──
   function subscribeOrders(storeId, { onInsert, onStatus = () => {}, pollMs = 15000, heartbeatMs = 25000, setTimer = setInterval, clearTimer = clearInterval }) {
-    let ws = null, hb = null, poll = null, closed = false, ref = 0, last = new Date(now()).toISOString(), mode = 'conectando';
+    let ws = null, hb = null, poll = null, closed = false, ref = 0, mode = 'conectando';
     const status = s => { mode = s; onStatus(s); };
-    const seen = new Set();
-    const emit = row => { if (!row || seen.has(row.id)) return; seen.add(row.id); if (row.created_at && row.created_at > last) last = row.created_at; onInsert(row); };
-    const startPolling = () => { if (poll || closed) return; status('consulta periódica'); poll = setTimer(async () => { try { (await orders.list(storeId, last)).forEach(emit); } catch (e) { onStatus('sin conexión'); } }, pollMs); };
+    const seen = new Map();
+    const emit = (row, allowUpdate=false) => { if (!row || (seen.has(row.id)&&!allowUpdate)) return; const signature=JSON.stringify([row.payload,row.status,row.payment_provider,row.payment_status,row.payment_ref]); if(seen.get(row.id)===signature)return; seen.set(row.id,signature); onInsert(row); };
+    const startPolling = () => { if (poll || closed) return; status('consulta periódica'); poll = setTimer(async () => { try { (await orders.list(storeId)).reverse().forEach(row=>emit(row,true)); } catch (e) { onStatus('sin conexión'); } }, pollMs); };
     try {
       const WS = WebSocketImpl || (typeof WebSocket !== 'undefined' ? WebSocket : null);
       if (!WS) throw new Error('sin websocket');
@@ -117,13 +117,13 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
       const send = (topic, event, payload) => ws.send(JSON.stringify({ topic, event, payload, ref: String(++ref) }));
       ws.onopen = async () => {
         const tok = (await auth.token()) || key;
-        send('realtime:orders-' + storeId, 'phx_join', { config: { postgres_changes: [{ event: 'INSERT', schema: 'public', table: 'orders', filter: 'store_id=eq.' + storeId }] }, access_token: tok });
+        send('realtime:orders-' + storeId, 'phx_join', { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'orders', filter: 'store_id=eq.' + storeId }] }, access_token: tok });
         hb = setTimer(() => send('phoenix', 'heartbeat', {}), heartbeatMs);
       };
       ws.onmessage = ev => {
         let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
         if (m.event === 'phx_reply' && m.topic.startsWith('realtime:orders-')) { if (m.payload && m.payload.status === 'ok') status('en vivo'); else { status('error'); startPolling(); } }
-        else if (m.event === 'postgres_changes') { const d = m.payload && m.payload.data; if (d && d.type === 'INSERT') emit(d.record); }
+        else if (m.event === 'postgres_changes') { const d = m.payload && m.payload.data; if (d && ['INSERT','UPDATE'].includes(d.type)) emit(d.record,d.type==='UPDATE'); }
       };
       ws.onclose = () => { if (!closed) { clearTimer(hb); startPolling(); } };
       ws.onerror = () => { if (!closed) startPolling(); };

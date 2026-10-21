@@ -150,6 +150,8 @@ function _renderTiendaOnline() {
       </div>
     </div>
 
+    <div id="mp-account-slot"></div>
+
     <!-- DATOS BANCARIOS -->
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title" style="display:flex;align-items:center;gap:8px">
@@ -199,6 +201,7 @@ function _renderTiendaOnline() {
     </div>
   `;
 
+  SAHTEN.online.payments?.render();
   // Init Leaflet map after DOM is ready
   setTimeout(_initLeafletMap, 100);
 }

@@ -14,6 +14,7 @@ import { stateFromSahten } from '../core/projectFile.js';
 import { channelPrice } from '../core/index.js';
 import { emptyFile, serialize } from '../project/schema.js';
 import { onlinePublish } from './app.js';
+import { createPaymentUi } from '../payments/ui.js';
 
 export const ONLINE_ENABLED = typeof __SAHTEN_ONLINE__ === 'undefined' ? true : !!__SAHTEN_ONLINE__;
 const clone = v => JSON.parse(JSON.stringify(v));
@@ -28,7 +29,7 @@ export function createOnline({ w = window, project, events }) {
     conn: new Proxy({}, { get: (_, k) => conn()[k], set: (_, k, v) => { conn()[k] = v; return true; }, ownKeys: () => Reflect.ownKeys(conn()), getOwnPropertyDescriptor: (_, k) => Object.getOwnPropertyDescriptor(conn(), k), deleteProperty: (_, k) => delete conn()[k] }),
     images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
-    orders: { list: () => w.sahtenOrders(), add: o => { w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
+    orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: o => { w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
     notify: n => { try { w.pushNotification({ type: 'delivery', source: 'delivery', title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
     refresh: () => { try { if (w.currentPanel === 'mostrador') w.renderMostrador(); } catch (e) { /* */ } },
     storage: config,
@@ -152,6 +153,7 @@ export function createOnline({ w = window, project, events }) {
 
     /** Al abrir un proyecto: retoma la conexión y el rol que tenía. */
     async onProjectOpened() {
+      api.payments.clear();
       if (!ONLINE_ENABLED || remoteViewing) return;
       photoPublisher.cancel(); if (sync) { sync.cancel(); sync = null; }
       stopView(); applyRole(role(), w);
@@ -172,6 +174,7 @@ export function createOnline({ w = window, project, events }) {
   }
 
   const ui = createOnlineUi({ online: api, w });
+  api.payments = createPaymentUi({ online: api, w });
   api.ui = ui;
   if (ONLINE_ENABLED) api.userMenu = createUserMenu({ online: api, project, w });
   installRoleGuard(role, events);
