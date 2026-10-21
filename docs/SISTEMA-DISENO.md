@@ -26,6 +26,16 @@ Regla: nada de colores sueltos (`#hex`) en componentes nuevos; usar variables. N
 - **Usuario / tienda** `.um-*` (`src/online/userMenu.js`).
 - **Navegación**: cada acceso declara `data-panel="seccion"`; un solo listener (`src/ui/nav.js`) y URL `#/seccion`. Menú lateral, barra inferior y cajón del celular salen de las mismas 15 secciones.
 
+## Espacio adaptable (0.4.9)
+- `src/ui/workspace.js` y `src/styles/sahten-workspace.css` gestionan el lateral amplio (260 px), compacto (72 px) y cajón móvil (hasta 768 px). El botón permite plegarlo; la preferencia `sahten-navigation` pertenece al equipo y no se sincroniza como dato del negocio. Cada ícono conserva su nombre accesible y ayuda emergente.
+- Mostrador decide entre dos columnas y pedido superpuesto según el ancho real disponible en `.main` (900 px). El contenido ocupa la altura útil; catálogo, historial y cuerpo del pedido se desplazan dentro. Total y cobro conservan su espacio. `data-current-panel` identifica la pantalla en el root; reservar `data-panel` para controles de navegación.
+- En tamaños estrechos, «Ver pedido» abre explícitamente el panel. Escape y el botón de cierre devuelven el foco; el fondo queda inactivo mientras está abierto. Los cambios de tamaño conservan los renglones.
+- La ventana nativa calcula su tamaño inicial con el área útil y escala del monitor. El mínimo habitual es 640 × 480, limitado al espacio disponible.
+- La plantilla web reserva «Pedido» en el encabezado y agrupa las secciones en un menú desplegable. El diálogo de pedido usa cuerpo desplazable, pie de envío visible, etiquetas, foco cíclico y altura de `visualViewport` para el teclado móvil.
+- `src/ui/contrast.js` elige texto claro u oscuro sobre los colores de marca para las acciones principales. `node scripts/check-contrast.mjs` comprueba 288 combinaciones con contraste mínimo 4,5:1. Esto no certifica todos los componentes heredados.
+
+Validación: 385 pruebas automáticas, compilación web y comprobación Rust en macOS. En navegador se completaron Retiro y Delivery ficticios, y un pedido de 20 renglones a 360 × 640; cobro visible también a 1024 × 600 en claro y oscuro. La escala y el teclado nativos de Windows requieren comprobación en ese sistema.
+
 ## Accesibilidad (mínimos)
 - Foco visible siempre (`:focus-visible`), `aria-current="page"` en la sección activa, `aria-label` en botones solo-ícono, enlace «Saltar al contenido».
 - Zonas táctiles de 44 px en pantallas táctiles; `prefers-reduced-motion` respetado.

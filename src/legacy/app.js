@@ -405,18 +405,26 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('scroll', () => closeRowMenus(), true);
 
+let _drawerFocusCleanup = null;
 function toggleDrawer() {
   const overlay = document.getElementById('app-drawer-overlay');
   const btn = document.getElementById('bn-more');
   if (!overlay) return;
   if (overlay.classList.contains('open')) { closeDrawer(); }
-  else { overlay.classList.add('open'); if (btn) btn.classList.add('drawer-open'); }
+  else {
+    overlay.classList.add('open'); if (btn) { btn.classList.add('drawer-open'); btn.setAttribute('aria-expanded','true'); }
+    document.getElementById('nav-toggle')?.setAttribute('aria-expanded','true');
+    _drawerFocusCleanup = SAHTEN.bindModalFocus({ panel: overlay.querySelector('.app-drawer'), background: [document.querySelector('.main'),document.querySelector('.sidebar'),document.getElementById('bottom-nav')], close: closeDrawer });
+  }
 }
 function closeDrawer() {
   const overlay = document.getElementById('app-drawer-overlay');
   const btn = document.getElementById('bn-more');
   if (overlay) overlay.classList.remove('open');
   if (btn) btn.classList.remove('drawer-open');
+  if (btn) btn.setAttribute('aria-expanded','false');
+  if (window.innerWidth <= 768) document.getElementById('nav-toggle')?.setAttribute('aria-expanded','false');
+  if (_drawerFocusCleanup) { _drawerFocusCleanup(); _drawerFocusCleanup = null; }
 }
 // ─────────────────────────────────────────────────────────────
 
@@ -433,6 +441,8 @@ function _getSavedTab(section, fallback) {
 }
 
 function showPanel(name) {
+  if (name !== 'mostrador' && typeof mostradorSetCartOpen === 'function') mostradorSetCartOpen(false, false);
+  document.documentElement.dataset.currentPanel = name;
   currentPanel = name; window.currentPanel = name;   // `let` global no es propiedad de window: los módulos la leen de acá
   // Save last visited panel
   _saveTabState('_panel', name);
