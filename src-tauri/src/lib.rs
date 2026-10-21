@@ -44,6 +44,20 @@ pub fn run() {
         .setup(|app| {
             #[cfg(desktop)]
             app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
+            // El área de trabajo descuenta la barra de tareas y respeta la escala de Windows.
+            if let Some(window) = app.get_webview_window("main") {
+                if let Ok(Some(monitor)) = window.current_monitor() {
+                    let scale = monitor.scale_factor();
+                    let area = monitor.work_area();
+                    let size = area.size.to_logical::<f64>(scale);
+                    let origin = area.position.to_logical::<f64>(scale);
+                    let width = (size.width - 32.0).clamp(320.0, 1280.0);
+                    let height = (size.height - 64.0).clamp(320.0, 820.0);
+                    let _ = window.set_min_size(Some(tauri::LogicalSize::new(640.0_f64.min(width), 480.0_f64.min(height))));
+                    let _ = window.set_size(tauri::LogicalSize::new(width, height));
+                    let _ = window.set_position(tauri::LogicalPosition::new(origin.x + (size.width - width) / 2.0, origin.y + (size.height - height) / 2.0));
+                }
+            }
             if let Some(path) = sahten_path(std::env::args()) {
                 if let Ok(mut v) = app.state::<PendingFiles>().0.lock() {
                     v.push(path);

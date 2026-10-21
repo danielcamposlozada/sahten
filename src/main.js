@@ -10,12 +10,15 @@ import './styles/sahten-reportes.css';
 import './styles/sahten-menuonline.css';
 import './styles/sahten-projects.css';
 import './styles/sahten-ui.css';
+import './styles/sahten-workspace.css';
 
 import { initDesktop, isTauri } from './desktop/preload.js';
 import { libs } from './libs.js';
 import { sahtenAsk } from './ui/ask.js';
 import { installTour } from './ui/tour.js';
 import { installNav } from './ui/nav.js';
+import { installWorkspace, bindModalFocus } from './ui/workspace.js';
+import { contrastText } from './ui/contrast.js';
 import { installDialogs } from './ui/dialog.js';
 import { installPhotos } from './ui/photos.js';
 import { installDesktop } from './desktop/integration.js';
@@ -60,6 +63,8 @@ function runClassic(name, code) {
 // Los datos del negocio de los módulos viejos pasan a memoria (van al archivo .sahten), antes de que carguen
 installBusinessStore();
 window.SAHTEN.project = project;
+window.SAHTEN.contrastText = contrastText;
+window.SAHTEN.bindModalFocus = options => bindModalFocus(options.panel, options);
 window.SAHTEN.libs = libs;
 window.sahtenAsk = sahtenAsk;     // reemplaza al diálogo nativo de pregunta, que no existe en la app de escritorio
 // Aviso cuando no hay internet: el mapa (OpenStreetMap) y la búsqueda de direcciones (Nominatim) lo necesitan
@@ -83,6 +88,7 @@ installTour(window);
 installDialogs(window);    // alert() y los avisos nuevos usan el diálogo propio
 installPhotos(window);     // fotos: una sola forma de cargarlas en toda la app (SAHTEN.photos)
 const openFromHash = installNav(window);
+installWorkspace(window);
 window.SAHTEN_VERSION = APP_VERSION;   // única fuente de la versión que se muestra
 document.querySelectorAll('[data-app-version]').forEach(el => { el.textContent = APP_VERSION; });
 [['app.js', appJs], ['app-late.js', appLateJs]].forEach(([n, c]) => { runClassic(n, c); instrument(RENDERS); });

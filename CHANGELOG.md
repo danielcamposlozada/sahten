@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.9
+
+- **Menú retráctil**: se puede plegar y desplegar; recuerda la elección en cada equipo y se compacta en ventanas pequeñas. En el teléfono, el botón abre todas las secciones con teclado y foco controlado.
+- **Mostrador en pantallas pequeñas**: el pedido desplaza productos y datos juntos; total y cobro conservan su espacio. En ventanas estrechas se abre desde «Ver pedido», sin cerrarse automáticamente.
+- **Ventana de escritorio**: adapta su tamaño inicial al área útil y a la escala del monitor, y permite reducir la ventana hasta 640 × 480 cuando hay espacio.
+- **Web adaptable**: el encabezado conserva el acceso al pedido y agrupa las secciones en un menú desplegable. El formulario tiene etiquetas, cierre y foco accesibles; el envío conserva su espacio también con teclado móvil.
+- **Marca y contraste**: los botones eligen texto claro u oscuro según los colores configurados por cada negocio.
+
 ## 0.4.8
 
 - **Fotos en la nube**: Sincronizar menú sube las fotos de productos, categorías, portada e historia a Supabase Storage. El menú usa direcciones versionadas para mostrar las fotos nuevas sin volver a subir la carpeta.

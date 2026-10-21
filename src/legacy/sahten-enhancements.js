@@ -400,6 +400,10 @@ function applyPaletteColors(c) {
   root.style.setProperty('--primary-light', primaryLight);
   root.style.setProperty('--accent', accent);
   root.style.setProperty('--accent-light', accentLight);
+  root.style.setProperty('--on-accent', SAHTEN.contrastText(accent));
+  root.style.setProperty('--on-accent-hover', SAHTEN.contrastText(accentLight));
+  root.style.setProperty('--on-primary', SAHTEN.contrastText(primary));
+  root.style.setProperty('--on-primary-hover', SAHTEN.contrastText(primaryLight));
   // RGB triplets for rgba() chaining in CSS rules
   const primaryRgb = hexToRgb(primary);
   if (primaryRgb) {

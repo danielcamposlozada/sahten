@@ -93,6 +93,7 @@ async function _removeProductImage() {
 // STATE
 // ═══════════════════════════════════════════════════════════
 let mostradorCart = [];
+let _mostCartFocusCleanup = null;
 let mostradorSearch = '';
 let mostradorCategory = 'all';
 let mostradorTab = 'pedido'; // 'pedido' | 'historial'
@@ -141,6 +142,7 @@ function _getProductCategories() {
 // RENDER MOSTRADOR — with tabs
 // ═══════════════════════════════════════════════════════════
 function renderMostrador() {
+  mostradorSetCartOpen(false, false);
   const panel = document.getElementById('panel-mostrador');
   if (!panel) return;
   // Always rebuild to ensure tab content is fresh
@@ -188,25 +190,28 @@ function _renderPedidoTab() {
         </div>
         <div class="most-product-grid" id="most-product-grid"></div>
       </div>
-      <div class="most-cart" id="most-cart">
-        <div class="most-cart-header" onclick="mostradorToggleCart()">
-          <div class="most-cart-handle"></div>
-          <div class="most-cart-title">
+      <button type="button" class="most-cart-open" id="most-cart-open" onclick="mostradorSetCartOpen(true)" aria-controls="most-cart" aria-expanded="false"><span>Ver pedido <span id="most-cart-open-count">0</span></span><strong id="most-cart-open-total">$0</strong></button>
+      <button type="button" class="most-cart-backdrop" id="most-cart-backdrop" onclick="mostradorSetCartOpen(false)" tabindex="-1" aria-label="Cerrar pedido" hidden></button>
+      <section class="most-cart" id="most-cart" role="region" aria-labelledby="most-cart-title" tabindex="-1">
+        <div class="most-cart-header">
+          <h2 class="most-cart-title" id="most-cart-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             Pedido <span class="most-cart-count" id="most-cart-count">0</span>
-          </div>
-          <button class="most-cart-clear" onclick="event.stopPropagation();mostradorClearCart()">Vaciar</button>
+          </h2>
+          <div class="most-cart-actions"><button class="most-cart-clear" onclick="mostradorClearCart()">Vaciar</button><button type="button" class="most-cart-close" onclick="mostradorSetCartOpen(false)" aria-label="Cerrar pedido">×</button></div>
         </div>
-        <div class="most-cart-items" id="most-cart-items"></div>
-        <div class="most-cart-extras" id="most-cart-extras"></div>
+        <div class="most-cart-body"><div class="most-cart-items" id="most-cart-items"></div>
+        <div class="most-cart-extras" id="most-cart-extras"></div></div>
         <div class="most-cart-totals" id="most-cart-totals"></div>
-      </div>
+      </section>
+      <span class="sr-only" id="most-cart-announcement" role="status" aria-live="polite"></span>
     </div>`;
   _renderCats();
   _renderMostradorGrid();
   _renderCartExtras();
   _renderCartItems();
   _renderCartTotals();
+  _mostSyncCartMode();
 }
 
 function _renderCats() {
@@ -256,7 +261,7 @@ function _renderMostradorGrid() {
       catBadge + '</div>' +
       '<div class="most-product-body"><div class="most-product-name">'+_esc(p.name)+'</div>' +
       '<div class="most-product-price">$'+_fmt(price)+'</div></div>' +
-      '<button class="most-product-add" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
+      '<button class="most-product-add" aria-label="Agregar '+_esc(p.name)+' al pedido" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
   }).join('');
   visible.forEach(async p => {
     const data = await getProductImageCached(p.id);
@@ -277,13 +282,32 @@ function mostradorAddToCart(pid, cardEl) {
   if (ex) ex.qty++; else mostradorCart.push({ productId: pid, qty: 1 });
   _renderCartItems(); _renderCartTotals();
   if (cardEl) { cardEl.classList.remove('added'); void cardEl.offsetWidth; cardEl.classList.add('added'); }
-  const cart = document.getElementById('most-cart');
-  if (cart && window.innerWidth <= 980 && !cart.classList.contains('expanded')) { cart.classList.add('expanded'); setTimeout(()=>cart.classList.remove('expanded'),1800); }
+  const status = document.getElementById('most-cart-announcement');
+  if (status) status.textContent = 'Producto agregado. '+_cartItemsWithPrice().reduce((s,it)=>s+it.qty,0)+' en el pedido.';
 }
 function mostradorRemoveItem(pid) { mostradorCart = mostradorCart.filter(it=>it.productId!==pid); _renderCartItems(); _renderCartTotals(); }
 function mostradorChangeQty(pid, delta) { const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
 function mostradorClearCart() { if(!mostradorCart.length) return; mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
-function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c&&window.innerWidth<=980) c.classList.toggle('expanded'); }
+function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(!c.classList.contains('expanded')); }
+function _mostCartIsOverlay() { return document.documentElement.dataset.orderLayout === 'overlay'; }
+function mostradorSetCartOpen(open, restoreFocus=true) {
+  const cart=document.getElementById('most-cart'), trigger=document.getElementById('most-cart-open');
+  if (!cart) return;
+  open=!!open && _mostCartIsOverlay();
+  if (!open && _mostCartFocusCleanup) { _mostCartFocusCleanup({restoreFocus}); _mostCartFocusCleanup=null; }
+  cart.classList.toggle('expanded',open);
+  cart.inert=_mostCartIsOverlay()&&!open;
+  cart.setAttribute('aria-hidden',String(cart.inert));
+  cart.setAttribute('role',open?'dialog':'region');
+  if(open) cart.setAttribute('aria-modal','true'); else cart.removeAttribute('aria-modal');
+  trigger?.setAttribute('aria-expanded',String(open));
+  const backdrop=document.getElementById('most-cart-backdrop'); if(backdrop) backdrop.hidden=!open;
+  if (open && !_mostCartFocusCleanup) _mostCartFocusCleanup=SAHTEN.bindModalFocus({panel:cart,trigger,background:[document.querySelector('.topbar'),document.querySelector('.sidebar'),document.getElementById('bottom-nav'),document.querySelector('#most-tab-content .panel-content')],close:()=>mostradorSetCartOpen(false)});
+}
+function _mostSyncCartMode() {
+  const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(c.classList.contains('expanded'),false);
+}
+window.addEventListener('sahten:layout',_mostSyncCartMode);
 
 function _cartItemsWithPrice() {
   return mostradorCart.map(it => { const p=(typeof PRODUCTS!=='undefined'?PRODUCTS:[]).find(x=>x.id===it.productId); if(!p) return null; const price=_mostPrice(p); return {product:p,qty:it.qty,unitPrice:price,lineTotal:price*it.qty}; }).filter(Boolean);
@@ -302,14 +326,16 @@ function _calcCartTotals() {
 }
 
 function _renderCartItems() {
+  const focused=document.activeElement, pid=focused?.dataset.productId, action=focused?.dataset.cartAction;
   const t = _calcCartTotals();
   const cb = document.getElementById('most-cart-count'); if(cb) cb.textContent = t.items.reduce((s,it)=>s+it.qty,0);
   const list = document.getElementById('most-cart-items'); if(!list) return;
   if (t.items.length === 0) {
     list.innerHTML = '<div class="most-cart-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:0.3;margin:0 auto 12px;display:block"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Tocá un producto para agregarlo</div>';
   } else {
-    list.innerHTML = t.items.map(it => '<div class="most-cart-item"><div><div class="most-cart-item-name">'+_esc(it.product.name)+'</div><div class="most-cart-item-controls"><button class="most-cart-qty-btn" onclick="mostradorChangeQty(\''+it.product.id+'\', -1)">−</button><span class="most-cart-qty">'+it.qty+'</span><button class="most-cart-qty-btn" onclick="mostradorChangeQty(\''+it.product.id+'\', 1)">+</button><button class="most-cart-item-remove" onclick="mostradorRemoveItem(\''+it.product.id+'\')">×</button></div></div><div class="most-cart-item-price">$'+_fmt(it.lineTotal)+'</div></div>').join('');
+    list.innerHTML = t.items.map(it => '<div class="most-cart-item"><div><div class="most-cart-item-name">'+_esc(it.product.name)+'</div><div class="most-cart-item-controls"><button class="most-cart-qty-btn" data-product-id="'+_esc(it.product.id)+'" data-cart-action="decrease" aria-label="Quitar una unidad de '+_esc(it.product.name)+'" onclick="mostradorChangeQty(\''+it.product.id+'\', -1)">−</button><span class="most-cart-qty">'+it.qty+'</span><button class="most-cart-qty-btn" data-product-id="'+_esc(it.product.id)+'" data-cart-action="increase" aria-label="Agregar una unidad de '+_esc(it.product.name)+'" onclick="mostradorChangeQty(\''+it.product.id+'\', 1)">+</button><button class="most-cart-item-remove" data-product-id="'+_esc(it.product.id)+'" data-cart-action="remove" aria-label="Quitar '+_esc(it.product.name)+' del pedido" onclick="mostradorRemoveItem(\''+it.product.id+'\')">×</button></div></div><div class="most-cart-item-price">$'+_fmt(it.lineTotal)+'</div></div>').join('');
   }
+  if(pid && action) ([...list.querySelectorAll('[data-cart-action]')].find(el=>el.dataset.productId===pid&&el.dataset.cartAction===action)||list.querySelector('button')||document.querySelector('.most-cart-close'))?.focus({preventScroll:true});
 }
 
 // Extras (selectors) — rendered once, NOT on every keystroke
@@ -320,10 +346,10 @@ function _renderCartExtras() {
   const payOpts = MOSTRADOR_PAYMENTS.map(p => '<option value="'+p.id+'" '+(p.id===mostradorActivePaymentId?'selected':'')+'>'+_esc(p.name)+'</option>').join('');
   const custOpts = SAHTEN_CUSTOMERS.map(c => '<option value="'+c.id+'" '+(c.id===mostradorActiveCustomerId?'selected':'')+'>'+_esc(c.name)+(c.phone?' · '+c.phone:'')+'</option>').join('');
   f.innerHTML = '<div class="most-extras">' +
-    '<div class="most-extras-row"><label>Cliente</label><select class="most-disc-select" onchange="mostradorActiveCustomerId=this.value||null"><option value="">Consumidor Final</option>'+custOpts+'</select><button class="most-add-btn" onclick="mostQuickAddClient()" title="Nuevo cliente">+</button></div>' +
-    '<div class="most-extras-row"><label>Descuento</label><select class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
+    '<div class="most-extras-row"><label for="most-customer">Cliente</label><select id="most-customer" class="most-disc-select" onchange="mostradorActiveCustomerId=this.value||null"><option value="">Consumidor Final</option>'+custOpts+'</select><button class="most-add-btn" onclick="mostQuickAddClient()" title="Nuevo cliente">+</button></div>' +
+    '<div class="most-extras-row"><label for="most-discount">Descuento</label><select id="most-discount" class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
     _mostDeliveryExtrasHtml() +
-    '<div class="most-extras-row"><label>Pago</label><select class="most-disc-select" onchange="mostradorActivePaymentId=this.value||null">'+(MOSTRADOR_PAYMENTS.length===0?'<option value="">Crear método…</option>':'<option value="">Sin especificar</option>')+payOpts+'</select><button class="most-add-btn" onclick="openPaymentManager()" title="Gestionar métodos de pago">+</button></div>' +
+    '<div class="most-extras-row"><label for="most-payment">Pago</label><select id="most-payment" class="most-disc-select" onchange="mostradorActivePaymentId=this.value||null">'+(MOSTRADOR_PAYMENTS.length===0?'<option value="">Crear método…</option>':'<option value="">Sin especificar</option>')+payOpts+'</select><button class="most-add-btn" onclick="openPaymentManager()" title="Gestionar métodos de pago">+</button></div>' +
     '</div>';
   if (mostradorOrderType==='delivery' && mostradorDelivery && mostradorDelivery.lat!=null) setTimeout(_mostInitDelMap, 30);
 }
@@ -332,6 +358,9 @@ function _renderCartExtras() {
 function _renderCartTotals() {
   const f = document.getElementById('most-cart-totals'); if(!f) return;
   const t = _calcCartTotals();
+  const count=document.getElementById('most-cart-open-count'), total=document.getElementById('most-cart-open-total');
+  if(count) count.textContent=t.items.reduce((s,it)=>s+it.qty,0);
+  if(total) total.textContent='$'+_fmt(t.total);
   f.innerHTML =
     '<div class="most-cart-row"><span>Subtotal</span><span class="val">$'+_fmt(t.subtotal)+'</span></div>' +
     (t.discount > 0 ? '<div class="most-cart-row discount"><span>'+_esc(t.disc?.name||'Descuento')+'</span><span class="val">−$'+_fmt(t.discount)+'</span></div>' : '') +
@@ -351,7 +380,7 @@ function _mostZoneFor(lat,lng){ return SAHTEN.core.zoneFor(_mostTiendaCfg(),lat,
 function _mostShortAddr(d){ const a=d.address||{}; const street=[a.road||a.pedestrian||a.footway, a.house_number].filter(Boolean).join(' '); const area=a.suburb||a.neighbourhood||a.city_district||a.town||a.city||a.village||''; return [street||(d.display_name||'').split(',').slice(0,2).join(','), area].filter(Boolean).join(', '); }
 function mostradorSetOrderType(t){ mostradorOrderType=t; if(t!=='delivery'){ mostradorShipManual=false; mostradorShipping=0; } _renderCartExtras(); _renderCartTotals(); if(t==='delivery' && !mostradorDelivery) setTimeout(()=>document.getElementById('most-addr-input')?.focus(),50); }
 function _mostDeliveryExtrasHtml(){
-  const seg=['retiro','delivery'].map(k=>'<button type="button" onclick="mostradorSetOrderType(\''+k+'\')" style="flex:1;padding:6px 4px;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:'+(mostradorOrderType===k?'var(--accent)':'transparent')+';color:'+(mostradorOrderType===k?'#fff':'var(--ink)')+'">'+({retiro:'🛍️ Retiro',delivery:'🛵 Delivery'})[k]+'</button>').join('');
+  const seg=['retiro','delivery'].map(k=>'<button type="button" onclick="mostradorSetOrderType(\''+k+'\')" style="flex:1;padding:6px 4px;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:'+(mostradorOrderType===k?'var(--accent)':'transparent')+';color:'+(mostradorOrderType===k?'var(--on-accent)':'var(--ink)')+'">'+({retiro:'🛍️ Retiro',delivery:'🛵 Delivery'})[k]+'</button>').join('');
   let h='<div class="most-extras-row"><label>Tipo</label><div style="flex:1;display:flex;gap:2px;padding:2px;border-radius:9px;background:var(--sand2)">'+seg+'</div></div>';
   if(mostradorOrderType!=='delivery') return h;
   const d=mostradorDelivery; const cfg=_mostTiendaCfg(); const t=_calcCartTotals();
@@ -361,18 +390,24 @@ function _mostDeliveryExtrasHtml(){
   else if(d && d.out){ info='<div style="font-size:11px;margin-top:6px;color:var(--red);font-weight:600">Fuera de las zonas de envío ('+d.distKm.toFixed(1)+' km). Cargá el envío a mano.</div>'; }
   if(d && cfg.deliveryMinOrder && t.subtotal < cfg.deliveryMinOrder) info+='<div style="font-size:11px;margin-top:4px;color:var(--accent)">Pedido mínimo para delivery: $'+_fmt(cfg.deliveryMinOrder)+'</div>';
   h+='<div style="padding:4px 0 6px">' +
-    '<div style="position:relative"><input type="text" id="most-addr-input" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
+    '<div style="position:relative"><input type="text" id="most-addr-input" aria-label="Dirección de entrega" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
     '<div id="most-addr-sugs" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:40;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden"></div></div>' +
     (d?'<input type="text" placeholder="Piso, depto, referencias (opcional)" value="'+_esc(d.note||'')+'" oninput="mostradorDelivery.note=this.value" style="width:100%;margin-top:6px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:12px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">':'') +
     info +
     (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">Podés mover el pin para ajustar la ubicación.</div>':'') +
     '</div>' +
-    '<div class="most-extras-row"><label>Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>';
+    '<div class="most-extras-row"><label for="most-ship-val">Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>';
   return h;
 }
 function _mostAddrInput(v){
   clearTimeout(_mostAddrTimer);
+  // Una dirección editada nunca conserva la ubicación ni la tarifa automática de la anterior.
+  mostradorDelivery={address:String(v||'').trim(),note:mostradorDelivery?.note||'',lat:null,lng:null,zone:null};
+  _mostAddrSugs=[];
+  _renderCartTotals();
+  const shipping=document.getElementById('most-ship-val'); if(shipping&&!mostradorShipManual) shipping.placeholder='Indicá el envío manual';
   const box=document.getElementById('most-addr-sugs');
+  if(box) box.style.display='none';
   if(!v || v.trim().length<4){ if(box) box.style.display='none'; return; }
   _mostAddrTimer=setTimeout(async()=>{
     const cfg=_mostTiendaCfg(); const lat=cfg.lat||-34.6037, lng=cfg.lng||-58.3816;
@@ -380,6 +415,7 @@ function _mostAddrInput(v){
     try{
       const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&accept-language=es&viewbox='+vb+'&q='+encodeURIComponent(v));
       const data=await r.json();
+      if(document.getElementById('most-addr-input')?.value!==v) return;
       _mostAddrSugs=(data||[]).map(x=>({label:_mostShortAddr(x),full:x.display_name,lat:+x.lat,lng:+x.lon}));
       const b=document.getElementById('most-addr-sugs'); if(!b) return;
       if(!_mostAddrSugs.length){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Sin resultados. Probá con calle y altura.</div>'; b.style.display='block'; return; }
@@ -422,6 +458,7 @@ function _mostInitDelMap(){
 function mostradorCheckout() {
   const t = _calcCartTotals(); if (t.items.length === 0) return;
   if (mostradorOrderType === 'delivery' && !(mostradorDelivery && mostradorDelivery.address)) { alert('Cargá la dirección de entrega para el delivery.'); document.getElementById('most-addr-input')?.focus(); return; }
+  if (mostradorOrderType === 'delivery' && !mostradorDelivery.zone && !mostradorShipManual) { alert('Seleccioná una dirección sugerida o indicá el envío manual (0 si es gratis).'); document.getElementById('most-ship-val')?.focus(); return; }
   const pay = MOSTRADOR_PAYMENTS.find(p => p.id === mostradorActivePaymentId);
   const cust = SAHTEN_CUSTOMERS.find(c => c.id === mostradorActiveCustomerId);
   const del = mostradorOrderType === 'delivery' ? mostradorDelivery : null;

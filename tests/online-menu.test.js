@@ -163,6 +163,27 @@ describe('web publicada', () => {
   const st = demoState();
   const baseMenu = (extra = {}) => ({ ...buildMenuJson(st, { menuConfig: { whatsappNumber: '+54 9 11 5555-0123', title: 'Sahten' }, tienda: TIENDA, store: { name: 'Sahten' } }), ...extra });
 
+  it('pedido accesible: etiquetas asociadas, foco, Escape y datos conservados al reabrir', async () => {
+    const a = await web({ menu: baseMenu() });
+    a.click('[data-inc]');
+    const trigger = a.d.querySelector('#bar button'); trigger.focus(); trigger.click();
+    const sheet = a.d.getElementById('sheet');
+    expect(sheet.getAttribute('role')).toBe('dialog');
+    expect(a.d.activeElement).toBe(sheet);
+    expect(a.d.getElementById('menuwrap').inert).toBe(true);
+    expect(a.d.querySelector('label[for="f-name"]').control).toBe(a.d.getElementById('f-name'));
+    a.type('#f-name', 'Pedido de prueba'); a.type('#f-phone', '1100000000');
+    a.click('[data-type="pickup"]');
+    expect(a.d.getElementById('f-name').value).toBe('Pedido de prueba');
+    expect(a.d.getElementById('send').disabled).toBe(false);
+    sheet.dispatchEvent(new a.w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    expect(a.d.getElementById('ov').classList.contains('on')).toBe(false);
+    expect(a.d.getElementById('menuwrap').inert).toBe(false);
+    expect(a.d.activeElement).toBe(trigger);
+    trigger.click(); expect(a.d.getElementById('f-name').value).toBe('Pedido de prueba');
+    a.w.close();
+  });
+
   it('muestra categorías y productos con precio; agrega al carrito', async () => {
     const m = baseMenu(); const a = await web({ menu: m });
     expect(a.d.querySelector('#h-title').textContent).toBe('Sahten');
