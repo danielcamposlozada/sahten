@@ -115,6 +115,13 @@ describe('menú y pedidos', () => {
     const c = s.calls.find(x => x.method === 'PATCH'); expect(c.url).toContain('id=eq.r1'); expect(c.body).toEqual({ status: 'preparando' });
     expect(await s.ctl.pushStatus({ status: 'listo' })).toBe(false);
   });
+  it('actualiza un reembolso de un pedido ya entregado sin duplicarlo ni importar pedidos históricos ajenos', async () => {
+    const row={id:'old-paid',status:'entregado',payment_provider:'mercadopago',payment_ref:'ref1',payment_status:'refunded',payload:{customerName:'Ana',total:1000}};
+    const s=setup({conn,storage:{'online-session:p1':session},routes:{'/rest/v1/orders':{body:[row,{...row,id:'another-old'}]}}});
+    s.orders.push({remoteId:'old-paid',status:'listo',paymentProvider:'mercadopago',paymentStatus:'paid',paymentReference:'ref1'});
+    let saves=0;s.host.orders.save=()=>saves++;
+    await s.ctl.resume();expect(s.orders).toHaveLength(1);expect(s.orders[0]).toMatchObject({status:'listo',paymentStatus:'refunded'});expect(saves).toBe(1);expect(s.notes).toHaveLength(0);
+  });
   it('sin sesión guardada o vencida: lo informa y no escucha', async () => {
     const s = setup({ conn });
     expect(await s.ctl.resume()).toBe(false); expect(s.ctl.info().mode).toBe('sin sesión');

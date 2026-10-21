@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.10
+
+- Checkout Pro de Mercado Pago con cuenta independiente por negocio, configurada desde Tienda online y delivery. Claves cifradas en el servidor y permisos de dueño o administrador.
+- La web recalcula el total y el envío antes de crear el pago. Confirma la acreditación con Mercado Pago y crea un solo pedido cuando se cobra el total.
+- Pagos de prueba separados de las ventas reales. Seguimiento de rechazos, pagos incompletos, reembolsos, disputas y cobros excedentes.
+- Los pedidos de la app reciben actualizaciones del estado de pago, con respaldo por consulta periódica.
+
 ## 0.4.9
 
 - **Menú retráctil**: se puede plegar y desplegar; recuerda la elección en cada equipo y se compacta en ventanas pequeñas. En el teléfono, el botón abre todas las secciones con teclado y foco controlado.

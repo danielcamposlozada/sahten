@@ -374,3 +374,24 @@ describe('sitio web: reseñas de Google y contenido exportable', () => {
     expect(() => parseSiteContent('no json')).toThrow(/válido/); expect(() => parseSiteContent('{"a":1}')).toThrow(/contenido de sitio/);
   });
 });
+
+describe('Mercado Pago en la web sin claves privadas',()=>{
+  function menuMP(){const m=buildMenuJson(demoState(),{menuConfig:{whatsappNumber:'5491155550123'},tienda:TIENDA,store:{name:'Mi local'},supabase:{url:'https://abcd1234.supabase.co',anonKey:'sb_publishable_test',storeId:'store-1'}});m.payments.methods={mercadopago:true,efectivo:true};return m;}
+  it('oculta Mercado Pago cuando el servidor no está conectado y conserva efectivo',async()=>{
+    const a=await web({menu:menuMP()});a.click('[data-inc]');a.w.document.querySelector('.bar button').click();
+    expect([...a.d.querySelector('#f-pay').options].map(o=>o.value)).toEqual(['efectivo']);a.w.close();
+  });
+  it('ofrece checkout cuando la cuenta del negocio está habilitada y no inserta un pedido sin verificar pago',async()=>{
+    const a=await web({menu:menuMP(),fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'/sahten-payments/checkout':{status:503,ok:false,body:{message:'Prueba sin cobro real'}}}});
+    a.click('[data-inc]');a.w.document.querySelector('.bar button').click();a.click('[data-type="pickup"]');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
+    expect(a.d.querySelector('#send').textContent).toContain('Ir a Mercado Pago');a.click('#send');await a.wait(10);
+    expect(a.calls.some(c=>c.url.includes('/sahten-payments/checkout'))).toBe(true);
+    expect(a.calls.some(c=>c.url.includes('/rest/v1/orders')&&c.opts.method==='POST')).toBe(false);
+    expect(a.d.querySelector('#err').textContent).toContain('Prueba sin cobro real');a.w.close();
+  });
+  it('no confía en un success de la URL de regreso sin una sesión de compra válida',async()=>{
+    const a=await web({menu:menuMP(),search:'?mp_checkout=00000000-0000-4000-8000-000000000001&status=approved',fetchMap:{'/sahten-payments/config':{body:{enabled:true}}}});
+    expect(a.d.querySelector('#sheet').textContent).toContain('no confirma por sí solo');
+    expect(a.d.querySelector('#sheet').textContent).not.toContain('Pago acreditado.');a.w.close();
+  });
+});

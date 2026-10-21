@@ -13,7 +13,7 @@
 // ═══════════════════════════════════════════════════════════
 import { createClient, validateConnection, validSlug, slugify, SupabaseError } from './supabase.js';
 import { createImageStore, menuWithCloudImages } from './images.js';
-import { toLocalOrder, STATUS_TO_REMOTE } from './orders.js';
+import { toLocalOrder, STATUS_TO_REMOTE, paymentFields } from './orders.js';
 
 export function createController(host) {
   let client = null, feed = null, mode = 'desconectado', error = null, lastSync = null;
@@ -29,6 +29,13 @@ export function createController(host) {
   const mk = (conn, session) => createClient({ url: conn.url, anonKey: conn.anonKey, fetchImpl: host.fetchImpl, WebSocketImpl: host.WebSocketImpl, session, onSession: s => host.storage.set(sessKey(), s) });
 
   function importRow(row) {
+    const existing = host.orders.list().find(o => o.remoteId === row.id);
+    if (existing) {
+      const fields = paymentFields(row);
+      if (JSON.stringify(fields) !== JSON.stringify(Object.fromEntries(Object.keys(fields).map(k => [k, existing[k]])))) { Object.assign(existing, fields); host.orders.save?.(); host.markDirty(); host.refresh(); }
+      return;
+    }
+    if (!['pendiente', 'preparando'].includes(row.status)) return;
     const o = toLocalOrder(row, host.orders.list());
     if (!o) return;
     host.orders.add(o);
@@ -39,7 +46,7 @@ export function createController(host) {
   async function startFeed() {
     stopFeed();
     if (!client || !host.conn.storeId) return;
-    try { (await client.orders.list(host.conn.storeId)).filter(r => ['pendiente', 'preparando'].includes(r.status)).forEach(importRow); } catch (e) { set('conectado', e.message); }
+    try { (await client.orders.list(host.conn.storeId)).reverse().forEach(importRow); } catch (e) { set('conectado', e.message); }
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
   }
   let lastFeed = '';
