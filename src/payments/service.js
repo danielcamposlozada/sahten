@@ -99,7 +99,7 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         let c = await ownedCheckout(body); await limited('status:' + c.id, 120);
         if (body.paymentId) {
           const a = await repo.run('secrets', { account_id: c.account_id });
-          try { await reconcile(body.paymentId, a, c); } catch (e) { if (!(e instanceof PaymentError)) throw e; }
+          await reconcile(body.paymentId, a, c);
           c = await repo.run('checkout', { id: c.id });
         }
         return response(publicCheckout(c));

@@ -26,6 +26,7 @@ Con redirección directa no se necesita Public Key en la página. Se necesitarí
 - El pedido llega a la app cuando el importe completo está aprobado. Los pagos pendientes o rechazados conservan un estado separado; los reembolsos y contracargos actualizan ese estado sin duplicar pedidos.
 - Las credenciales se guardan cifradas con Supabase Vault y solo las usa el servidor. El personal de caja no puede leerlas ni cambiarlas. La web solo recibe disponibilidad y URLs públicas.
 - Los pagos con una cuenta de prueba quedan en el registro privado de pruebas; no crean ventas ni pedidos reales en el Mostrador.
+- Las cuentas ficticias actuales entregan tokens `APP_USR` y sus pagos pueden informar `live_mode=true`. Esto no cambia el modo de Sahten: el servidor verificó la etiqueta `test_user` al conectar y conserva esos pagos como pruebas. Una conexión productiva sigue exigiendo una cuenta real y pagos productivos. Un error de verificación se informa como tal, en lugar de mostrarlo como pago pendiente.
 - Pruebas primero. Sin credenciales válidas y configuración completa, el checkout permanece deshabilitado. No se enviarán pagos reales como parte de las pruebas del agente.
 
 ## Infraestructura

@@ -214,7 +214,7 @@ function mpRefresh(paymentId){
   if(!mpPending||!mpPending.id||mpBusy)return Promise.resolve();mpBusy=true;
   return mpCall('status',{id:mpPending.id,proof:mpPending.proof,paymentId:paymentId||mpPaymentId||undefined}).then(function(c){mpResult=c;if(['paid','overpaid'].includes(c.paymentStatus)){cart={};render();}if(step==='mp')sheet();
     clearTimeout(mpTimer);if(['pending','partial'].includes(c.paymentStatus)&&mpPolls++<12)mpTimer=setTimeout(function(){mpRefresh();},10000);
-  }).catch(function(){if(step==='mp'){$('sheet').querySelector('[role=status]').textContent='Todavía no pudimos verificar el pago. Podés reintentar en unos segundos.';}}).finally(function(){mpBusy=false;});
+  }).catch(function(e){if(step==='mp'){$('sheet').querySelector('[role=status]').textContent=e.message||'Todavía no pudimos verificar el pago. Podés reintentar en unos segundos.';}}).finally(function(){mpBusy=false;});
 }
 function mpReturn(){
   if(!sb()||!q.get('mp_checkout'))return;

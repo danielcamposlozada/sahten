@@ -102,7 +102,11 @@ export async function verifyWebhook(request, secret, now = Date.now()) {
 }
 
 export function verifiedPayment(payment, checkout, account) {
-  if (String(payment.external_reference) !== checkout.id || String(payment.collector_id) !== String(account.account_id) || payment.currency_id !== 'ARS' || payment.live_mode !== (account.mode === 'production')) fail('El pago no corresponde a esta compra.', 409, 'payment_mismatch');
+  if (String(payment.external_reference) !== checkout.id || String(payment.collector_id) !== String(account.account_id) || payment.currency_id !== 'ARS') fail('El pago no corresponde a esta compra.', 409, 'payment_mismatch');
+  // Las cuentas ficticias actuales usan APP_USR y pueden informar live_mode=true.
+  // El alta ya verificó test_user; el modo guardado impide crear ventas reales.
+  const testUserApi = account.mode === 'test' && account.credentials?.accessToken?.startsWith('APP_USR-');
+  if (typeof payment.live_mode !== 'boolean' || (account.mode === 'production' ? !payment.live_mode : payment.live_mode && !testUserApi)) fail('El pago y la conexión usan ambientes distintos.', 409, 'payment_environment_mismatch');
   if (payment.metadata?.sahten_store_id && payment.metadata.sahten_store_id !== checkout.store_id) fail('El pago pertenece a otra tienda.', 409);
   const amount = cents(payment.transaction_amount), refunded = payment.status === 'refunded' ? amount : cents(payment.transaction_amount_refunded || 0);
   if (amount < 1 || amount > cents(checkout.order.total) || refunded > amount || !/^\d+$/.test(String(payment.id))) fail('El importe del pago no coincide.', 409, 'payment_mismatch');
