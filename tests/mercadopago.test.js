@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { webcrypto } from 'node:crypto';
-import { quoteOrder, buildPreference, checkoutUrl, verifyWebhook, verifiedPayment } from '../src/payments/core.js';
+import { quoteOrder, buildPreference, checkoutUrl, verifyWebhook, verifiedPayment, sha256 } from '../src/payments/core.js';
 import { createPaymentService } from '../src/payments/service.js';
 
 const SID='00000000-0000-4000-8000-000000000001', AID='00000000-0000-4000-8000-000000000002', CID='00000000-0000-4000-8000-000000000003', RID='00000000-0000-4000-8000-000000000004';
@@ -51,19 +51,26 @@ describe('notificaciones y verificación del pago',()=>{
     expect(verifiedPayment({...payment,transaction_amount:1000},checkout,account).amount_cents).toBe(100000);
     expect(verifiedPayment({...payment,status:'refunded'},checkout,account).refunded_cents).toBe(200000);
   });
+  it('reconoce pagos de una cuenta ficticia validada que usa APP_USR sin admitir pagos sandbox en producción',()=>{
+    const testAccount={...account,credentials:{...account.credentials,accessToken:'APP_USR-fake-test-seller'}};
+    expect(verifiedPayment({...payment,live_mode:true},checkout,testAccount)).toMatchObject({status:'approved'});
+    expect(()=>verifiedPayment(payment,checkout,{...testAccount,mode:'production'})).toThrow(/ambientes distintos/);
+    expect(()=>verifiedPayment({...payment,live_mode:null},checkout,testAccount)).toThrow(/ambientes distintos/);
+    expect(()=>verifiedPayment({...payment,live_mode:true,collector_id:321},checkout,testAccount)).toThrow(/no corresponde/);
+  });
 });
 
 describe('API de integración sin cobros reales',()=>{
-  function setup({manage=true,preferenceFails=false,testSeller=true}={}) {
+  function setup({manage=true,preferenceFails=false,testSeller=true,paymentOverride={}}={}) {
     const calls=[], provider=[];
     const repo={menu:async()=>menu,canManage:async()=>manage,run:async(action,args)=>{
       calls.push([action,args]);if(action==='limit')return true;if(action==='account')return account;if(action==='secrets')return account;
-      if(action==='reserve')return checkout;if(action==='checkout')return checkout;if(action==='webhook_accounts')return [account];
+      if(action==='reserve')return checkout;if(action==='checkout')return {...checkout,proof_hash:await sha256('a'.repeat(64))};if(action==='webhook_accounts')return [account];
       if(action==='save_account')return {...account,account_label:'Test seller'};return {};
     }};
     const handler=createPaymentService({repo,authenticate:async req=>req.headers.has('authorization')?{id:'user'}:null,endpoint:'https://backend.test',now:()=>NOW,
       fetchImpl:async(url,opts)=>{provider.push([url,opts]);if(url.endsWith('/users/me'))return Response.json({id:123,nickname:'Test seller',site_id:'MLA',tags:testSeller?['test_user']:[]});
-      if(url.includes('/v1/payments/'))return Response.json(payment);
+      if(url.includes('/v1/payments/'))return Response.json({...payment,...paymentOverride});
       if(preferenceFails)throw new Error('network');
       return Response.json({id:'pref1',init_point:'https://www.mercadopago.com.ar/checkout/test'});}});
     const req=(route,body,method='POST',auth=false)=>handler(new Request('https://backend.test/'+route,{method,headers:{origin:account.site_url,...(auth?{authorization:'Bearer user-token'}:{})},body:body?JSON.stringify(body):undefined}));
@@ -93,6 +100,13 @@ describe('API de integración sin cobros reales',()=>{
   it('el webhook firmado consulta al proveedor antes de registrar el pago',async()=>{
     const a=setup();const r=await a.handler(await notification());expect(r.status).toBe(200);expect(a.provider[0][0]).toContain('/v1/payments/999');expect(a.calls.at(-1)).toMatchObject(['payment',{checkout_id:CID,status:'approved'}]);
     const b=setup();expect((await b.handler(await notification({secret:'bad'}))).status).toBe(401);expect(b.provider).toHaveLength(0);
+  });
+  it('no presenta como pendiente un pago que no pudo verificarse ni registra una acreditación inválida',async()=>{
+    const a=setup({paymentOverride:{live_mode:true}});
+    const r=await a.req('status',{id:CID,proof:'a'.repeat(64),paymentId:'999'});
+    expect(r.status).toBe(409);
+    expect(await r.json()).toMatchObject({code:'payment_environment_mismatch'});
+    expect(a.calls.some(([action])=>action==='payment')).toBe(false);
   });
   it('una credencial antigua vencida no impide procesar el webhook de la conexión original',async()=>{
     const calls=[];
