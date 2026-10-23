@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.17
+
 - **Nuevo aviso de pedidos**: grabación acústica de darbuka con palmas de 3 segundos, elegida por el dueño. Reemplaza el sonido sintetizado; está incluida en la app, funciona sin internet y las notificaciones simultáneas no superponen ni cortan el ritmo.
 
 ## 0.4.16
