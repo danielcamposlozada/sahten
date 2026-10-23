@@ -23,7 +23,7 @@ export function toLocalOrder(row, existing = []) {
   return {
     ...paymentFields(row),
     id: 'web_' + row.id, remoteId: row.id, num, webNum: p.num || null, source: p.source === 'pickup' ? 'pickup' : 'delivery', origin: 'menu-online',
-    createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: STATUS_FROM_REMOTE[row.status] || 'pendiente',
+    createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: STATUS_FROM_REMOTE[row.status] || 'pendiente', remoteStatus: row.status,
     customerName: String(p.customerName || 'Cliente online'), customerPhone: String(p.customerPhone || ''), customerEmail: String(p.customerEmail || ''), customerId: null,
     address: String(p.address || ''), lat: p.lat ?? null, lng: p.lng ?? null, paymentMethod: p.paymentMethod || '', paymentId: null, paymentName: p.paymentMethod || '',
     items, subtotal: +p.subtotal || items.reduce((s, i) => s + i.lineTotal, 0), discount: 0, discountId: null, discountName: null,

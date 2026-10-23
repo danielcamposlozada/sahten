@@ -1021,3 +1021,62 @@
 .online-order-filters button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary, white); border-color: var(--primary); }
 .online-order-type { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
 .most-view-switch button, .most-product-list .most-product-add { min-width: 44px; min-height: 44px; }
+
+
+/* Pedidos Online · tablero operativo (retiro / delivery) */
+.online-board { display:grid; gap:16px; color:var(--ink); }
+.online-board-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.online-board-toolbar h2 {font-size:18px;line-height:1.3;margin:0;font-weight:750}
+.online-board-toolbar p {font-size:12px;color:var(--muted);margin:3px 0 0}
+.online-board-toolbar-actions {display:flex;gap:8px;flex-wrap:wrap}
+.online-board-utility,.online-board-mobile-switch button {font:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--sand);border:1px solid var(--border);border-radius:9px;padding:9px 12px;cursor:pointer;min-height:38px}
+.online-board-utility:hover,.online-board-mobile-switch button:hover {border-color:var(--accent)}
+.online-board-columns {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.online-board-column {min-width:0;border:1px solid var(--border);border-radius:14px;background:var(--sand);padding:12px;display:grid;gap:12px}
+.online-board-column-head {display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 2px}
+.online-board-column-head h3 {font-size:15px;font-weight:750;margin:0}
+.online-board-count {display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:25px;padding:0 7px;border-radius:7px;background:var(--card-bg,white);border:1px solid var(--border);font:700 12px 'DM Mono',monospace}
+.online-board-column-cards {display:grid;gap:9px}
+.online-board-card {min-width:0;border:1px solid var(--border);border-left:4px solid var(--accent);background:var(--card-bg,white);border-radius:11px;padding:12px 13px;display:grid;gap:8px}
+.online-board-card--en_preparacion {border-left-color:#c46c30}
+.online-board-card--listo {border-left-color:var(--green)}
+.online-board-card--enviado {border-left-color:#447fa8}
+.online-board-card--entregado,.online-board-card--retirado {border-left-color:var(--green)}
+.online-board-card--cancelado {border-left-color:var(--red)}
+.online-board-card-top,.online-board-card-bottom {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.online-board-order-link {appearance:none;background:none;border:0;padding:0;color:var(--ink);font:800 16px 'DM Mono',monospace;cursor:pointer;text-decoration:underline;text-decoration-color:transparent}
+.online-board-order-link:hover {text-decoration-color:currentColor}
+.online-board-time {font:12px 'DM Mono',monospace;color:var(--muted)}
+.online-board-name {font-size:15px;line-height:1.35;font-weight:700;overflow-wrap:anywhere}
+.online-board-quantity {font-size:12px;color:var(--muted)}
+.online-board-note {font-weight:600;color:var(--ink)}
+.online-board-status {font-size:12px;font-weight:700;line-height:1.3}
+.online-board-status--pendiente {color:var(--accent)}
+.online-board-status--en_preparacion {color:#b35e24}
+.online-board-status--listo,.online-board-status--retirado,.online-board-status--entregado {color:var(--green)}
+.online-board-status--enviado {color:#447fa8}
+.online-board-next {background:var(--primary);border:1px solid var(--primary);border-radius:8px;color:#fff;font:700 12px inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:38px;cursor:pointer}
+.online-board-next:hover {filter:brightness(1.1)}
+.online-board-detail {border:1px solid var(--border);border-radius:8px;background:var(--sand);color:var(--ink);padding:8px 10px;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.online-board-empty {padding:25px 12px;text-align:center;color:var(--muted);font-size:13px}
+.online-board-recent {border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.online-board-recent-toggle {width:100%;border:0;background:var(--sand);color:var(--ink);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.online-board-recent-toggle .online-board-count {margin-left:5px}
+.online-board-recent-list {padding:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.online-board-mobile-switch {display:none}
+.online-board :is(button):focus-visible {outline:3px solid var(--accent);outline-offset:2px}
+[data-theme="dark"] .online-board-column,[data-theme="dark"] .online-board-recent-toggle,[data-theme="dark"] .online-board-utility,[data-theme="dark"] .online-board-mobile-switch button {background:var(--dark-surface2,#1e2b22);color:var(--dark-text,#e8ede9);border-color:var(--dark-border,rgba(80,140,85,.2))}
+[data-theme="dark"] .online-board-card,[data-theme="dark"] .online-board-count {background:var(--dark-surface,#162019);border-color:var(--dark-border,rgba(80,140,85,.2));color:var(--dark-text,#e8ede9)}
+[data-theme="dark"] .online-board-card {border-left-color:var(--accent)}
+[data-theme="dark"] .online-board-card--listo,[data-theme="dark"] .online-board-card--retirado,[data-theme="dark"] .online-board-card--entregado {border-left-color:#5cba62}
+[data-theme="dark"] .online-board-order-link,[data-theme="dark"] .online-board-name,[data-theme="dark"] .online-board-status--listo {color:var(--dark-text,#e8ede9)}
+@media(max-width:760px) {
+  .online-board-mobile-switch {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .online-board-mobile-switch button[aria-pressed="true"] {background:var(--primary);color:#fff;border-color:var(--primary)}
+  .online-board-columns {display:block}
+  .online-board-column {display:none}
+  .online-board-column.is-selected {display:grid}
+  .online-board-recent-list {grid-template-columns:1fr}
+  .online-board-next {min-height:44px}
+}
+@media(pointer:coarse) {.online-board :is(button) {min-height:44px}}

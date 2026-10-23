@@ -355,15 +355,17 @@ function _fmtN(n) { return Number(n || 0).toLocaleString('es-AR', { maximumFract
 // DELIVERY TAB IN MOSTRADOR
 // ═══════════════════════════════════════════════════════════
 // Pedidos online: el origen es independiente del tipo de entrega.
-let onlineOrderFilter = 'all';
-function _isOnlineOrder(o) {
-  return !!o.remoteId || o.origin === 'menu-online' || (!o.orderType && (o.source === 'delivery' || o.source === 'pickup'));
-}
-function _activeOnlineOrders() {
-  return SAHTEN_ORDERS.filter(o => _isOnlineOrder(o) && ['pendiente', 'en_preparacion', 'listo'].includes(o.status));
-}
+// Se conservan las dos columnas en escritorio. En pantallas estrechas se alternan.
+let onlineBoardMobileType = 'pickup';
+let onlineBoardRecentOpen = true;
+const _isOnlineOrder = o => SAHTEN.orderWorkflow.isOnlineOrder(o);
+const _activeOnlineOrders = () => SAHTEN.orderWorkflow.activeOnlineOrders(SAHTEN_ORDERS);
 function setOnlineOrderFilter(value) {
-  onlineOrderFilter = ['pickup','delivery'].includes(value) ? value : 'all';
+  onlineBoardMobileType = value === 'delivery' ? 'delivery' : 'pickup';
+  _renderDeliveryTab();
+}
+function toggleOnlineBoardRecent() {
+  onlineBoardRecentOpen = !onlineBoardRecentOpen;
   _renderDeliveryTab();
 }
 function _injectDeliveryTab() {
@@ -426,94 +428,106 @@ function _patchDeliveryContent() {
   if (panel) observer.observe(panel, { childList: true, subtree: true });
 }
 
+function _onlineBoardCard(o, recent = false) {
+  const workflow = SAHTEN.orderWorkflow;
+  const id = _esc(o.id);
+  const date = new Date(o.createdAt || Date.now());
+  const time = Number.isNaN(date.getTime()) ? '—' : date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const num = '#' + String(o.num || 0).padStart(4, '0');
+  const count = workflow.orderUnitCount(o);
+  const next = recent ? null : workflow.nextOnlineStatus(o);
+  const statusClass = ['pendiente', 'en_preparacion', 'listo', 'enviado', 'retirado', 'entregado', 'cancelado'].includes(o.status) ? o.status : 'pendiente';
+  const status = workflow.onlineStatusLabel(o);
+  return '<article class="online-board-card online-board-card--' + statusClass + '">' +
+    '<div class="online-board-card-top">' +
+      '<button type="button" class="online-board-order-link" data-online-action="open" data-id="' + id + '" aria-label="Abrir detalles de la orden ' + _esc(num) + '">' + _esc(num) + '</button>' +
+      '<time class="online-board-time" datetime="' + _esc(o.createdAt || '') + '">' + _esc(time) + '</time>' +
+    '</div>' +
+    '<div class="online-board-name">' + _esc(o.customerName || 'Cliente online') + '</div>' +
+    '<div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
+      (o.notes ? '<span class="online-board-note" title="El pedido tiene indicaciones"> · Con indicaciones</span>' : '') +
+    '</div>' +
+    '<div class="online-board-card-bottom">' +
+      '<span class="online-board-status online-board-status--' + statusClass + '">' + _esc(status) + '</span>' +
+      (next ? '<button type="button" class="online-board-next" data-online-action="next" data-id="' + id + '">' + _esc(next.label) + '</button>' : '') +
+      (recent ? '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Ver detalle</button>' : '') +
+    '</div>' +
+  '</article>';
+}
+
+function _onlineBoardColumn(type, orders) {
+  const isPickup = type === 'pickup';
+  const entries = orders.filter(o => SAHTEN.orderWorkflow.onlineOrderType(o) === type);
+  const label = isPickup ? 'Retiro en local' : 'Delivery';
+  return '<section class="online-board-column ' + (onlineBoardMobileType === type ? 'is-selected' : '') + '" aria-label="' + label + '">' +
+    '<header class="online-board-column-head"><h3>' + (isPickup ? 'Retiro en local' : 'Delivery') + '</h3><span class="online-board-count">' + entries.length + '</span></header>' +
+    '<div class="online-board-column-cards">' + (entries.length ? entries.map(o => _onlineBoardCard(o)).join('') :
+      '<div class="online-board-empty">No hay pedidos activos para ' + (isPickup ? 'retirar' : 'delivery') + '.</div>') + '</div>' +
+  '</section>';
+}
+
+function _onlineBoardClick(event) {
+  const button = event.target.closest('[data-online-action]');
+  if (!button) return;
+  const action = button.dataset.onlineAction;
+  if (action === 'refresh') { _refreshDelivery(); return; }
+  if (action === 'history') { mostSetTab('historial'); return; }
+  if (action === 'recent') { toggleOnlineBoardRecent(); return; }
+  if (action === 'pickup' || action === 'delivery') { setOnlineOrderFilter(action); return; }
+  const order = SAHTEN_ORDERS.find(o => String(o.id) === button.dataset.id);
+  if (!order) return;
+  if (action === 'open') { openOrderDetail(order.id); return; }
+  if (action === 'next') {
+    const next = SAHTEN.orderWorkflow.nextOnlineStatus(order);
+    if (next) orderSetStatus(order.id, next.status);
+  }
+}
+
 function _renderDeliveryTab() {
   const c = document.getElementById('most-tab-content');
   if (!c) return;
+  const workflow = SAHTEN.orderWorkflow;
+  const active = _activeOnlineOrders().sort(workflow.operationalSort);
+  const pickup = active.filter(o => workflow.onlineOrderType(o) === 'pickup').length;
+  const delivery = active.length - pickup;
+  const pending = active.filter(o => o.status === 'pendiente').length;
+  const preparing = active.filter(o => o.status === 'en_preparacion').length;
+  const recently = workflow.recentOnlineOrders(SAHTEN_ORDERS).slice(0, 8);
 
-  const orders = (typeof SAHTEN_ORDERS !== 'undefined') ? SAHTEN_ORDERS : [];
-  const allOnline = _activeOnlineOrders();
-  const deliveryOrders = allOnline.filter(o => onlineOrderFilter === 'all' || o.source === onlineOrderFilter).sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
-  const pending = deliveryOrders.filter(o => o.status === 'pendiente');
-  const prep = deliveryOrders.filter(o => o.status === 'en_preparacion');
-  const done = deliveryOrders.filter(o => o.status === 'listo');
-
-  c.innerHTML = `
-    <div class="delivery-list">
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-        <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          Pedidos online
-        </div>
-        <button class="btn" onclick="_refreshDelivery()" style="font-size:12px">🔄 Actualizar</button>
-      </div>
-
-      <div class="online-order-filters" role="group" aria-label="Tipo de entrega de pedidos online">
-        ${[['all','Todos'],['pickup','Retiro'],['delivery','Delivery']].map(([value,label]) => '<button type="button" class="most-cat-chip" aria-pressed="'+(onlineOrderFilter===value)+'" onclick="setOnlineOrderFilter(\''+value+'\')">'+label+' <span>'+allOnline.filter(o=>value==='all'||o.source===value).length+'</span></button>').join('')}
-      </div>
-      ${pending.length > 0 ? `
-        <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">⏳ Pendientes (${pending.length})</div>
-        ${pending.map(o => _deliveryCard(o)).join('')}
-      ` : ''}
-
-      ${prep.length > 0 ? `
-        <div style="font-size:12px;font-weight:700;color:#e67e22;text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px">🔥 En preparación (${prep.length})</div>
-        ${prep.map(o => _deliveryCard(o)).join('')}
-      ` : ''}
-
-      ${done.length > 0 ? `
-        <div style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 8px">✅ Listos (${done.length})</div>
-        ${done.map(o => _deliveryCard(o)).join('')}
-      ` : ''}
-
-      ${deliveryOrders.length === 0 ? `
-        <div style="text-align:center;padding:40px 20px;color:var(--muted)">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3;margin-bottom:12px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px">Sin pedidos ${onlineOrderFilter==='all'?'online activos':onlineOrderFilter==='pickup'?'para retiro':'para delivery'}</div>
-          <div style="font-size:13px">Los pedidos de la web aparecerán aquí automáticamente. Los finalizados quedan en Historial.</div>
-        </div>
-      ` : ''}
-    </div>
-  `;
-}
-
-function _deliveryCard(o) {
-  const num = '#' + String(o.num || 0).padStart(4, '0');
-  const date = o.createdAt ? new Date(o.createdAt) : new Date();
-  const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-  const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
-  const itemCount = (o.items || []).reduce((s, it) => s + (it.qty || 0), 0);
-  const statusColors = { pendiente: 'var(--accent)', en_preparacion: '#e67e22', listo: 'var(--green)' };
-  const statusLabels = { pendiente: '⏳ Pendiente', en_preparacion: '🔥 Preparando', listo: '✅ Listo' };
-
-  return `
-    <div style="background:var(--card-bg, white);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;border-left:4px solid ${statusColors[o.status] || 'var(--border)'}" onclick="openOrderDetail('${o.id}')">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-family:var(--mono,'DM Mono',monospace);font-weight:800;font-size:15px;color:var(--primary)">${num}</span>
-        <span style="font-size:11px;color:var(--muted)">${dateStr} ${timeStr}</span>
-        <span style="margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;background:${statusColors[o.status] || 'var(--sand)'}22;color:${statusColors[o.status] || 'var(--muted)'}">${statusLabels[o.status] || o.status}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="flex:1">
-          <div class="online-order-type">${o.source==='pickup'?'Retiro en local':'Delivery'}</div><div style="font-weight:600;font-size:15px;color:var(--ink)">${_esc(o.customerName || 'Cliente Online')}</div>
-          ${o.customerPhone ? '<div style="font-size:11px;color:var(--muted)">📞 ' + _esc(o.customerPhone) + '</div>' : ''}
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${itemCount} item${itemCount !== 1 ? 's' : ''}</div>
-        </div>
-        <div style="font-family:var(--mono,'DM Mono',monospace);font-weight:800;font-size:18px;color:var(--accent)">$${_fmtN(o.total)}</div>
-      </div>
-      ${o.notes ? '<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic;background:var(--sand);padding:6px 10px;border-radius:8px">"' + _esc(o.notes) + '"</div>' : ''}
-    </div>
-  `;
+  c.innerHTML = '<div class="delivery-list online-board">' +
+    '<header class="online-board-toolbar">' +
+      '<div><h2>Pedidos online</h2><p>' + active.length + ' ' + (active.length === 1 ? 'pedido activo' : 'pedidos activos') +
+      ' · ' + pending + ' pendientes · ' + preparing + ' en preparación</p></div>' +
+      '<div class="online-board-toolbar-actions">' +
+        '<button type="button" class="online-board-utility" data-online-action="refresh">Actualizar</button>' +
+        '<button type="button" class="online-board-utility" data-online-action="history">Historial</button>' +
+      '</div>' +
+    '</header>' +
+    '<nav class="online-board-mobile-switch" aria-label="Tipo de entrega">' +
+      '<button type="button" data-online-action="pickup" aria-pressed="' + (onlineBoardMobileType === 'pickup') + '">Retiro <span>' + pickup + '</span></button>' +
+      '<button type="button" data-online-action="delivery" aria-pressed="' + (onlineBoardMobileType === 'delivery') + '">Delivery <span>' + delivery + '</span></button>' +
+    '</nav>' +
+    '<div class="online-board-columns">' + _onlineBoardColumn('pickup', active) + _onlineBoardColumn('delivery', active) + '</div>' +
+    '<section class="online-board-recent" aria-label="Pedidos completados recientemente">' +
+      '<button type="button" class="online-board-recent-toggle" data-online-action="recent" aria-expanded="' + onlineBoardRecentOpen +
+        '" aria-controls="online-board-recent-list"><span>Completados recientemente <span class="online-board-count">' + recently.length +
+        '</span></span><span aria-hidden="true">' + (onlineBoardRecentOpen ? '−' : '+') + '</span></button>' +
+      '<div class="online-board-recent-list" id="online-board-recent-list"' + (onlineBoardRecentOpen ? '' : ' hidden') + '>' +
+        (recently.length ? recently.map(o => _onlineBoardCard(o, true)).join('') :
+        '<div class="online-board-empty">No hay pedidos finalizados en los últimos 30 minutos.</div>') +
+      '</div>' +
+    '</section>' +
+  '</div>';
+  c.onclick = _onlineBoardClick;
+  // Actualizar contador de la pestaña sin forzar un render completo de Mostrador.
+  const badge = document.querySelector('#panel-mostrador .most-tab-delivery .most-tab-badge');
+  if (badge) { badge.textContent = pending || active.length; badge.style.background = pending ? 'var(--red)' : ''; }
 }
 
 function _refreshDelivery() {
-  // Reload orders from localStorage (in case menu page added new ones)
-  if (typeof _loadOrders === 'function') {
-    SAHTEN_ORDERS = _loadOrders();
-  } else {
-    try { SAHTEN_ORDERS = JSON.parse(localStorage.getItem('sahten_orders') || '[]'); } catch (e) {}
-  }
+  if (typeof _loadOrders === 'function') SAHTEN_ORDERS = _loadOrders();
+  else { try { SAHTEN_ORDERS = JSON.parse(localStorage.getItem('sahten_orders') || '[]'); } catch (e) { /* no reemplazar datos ante error */ } }
   _renderDeliveryTab();
-  _addDeliveryTabBtn(); // Update badge count
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -539,7 +553,7 @@ function _refreshDelivery() {
 Object.assign(window, {
   renderMenuOnline, MENU_CONFIG, _saveMenuConfig,
   _moToggleProduct, _moToggleAll, _moCatToggle, _moCatMove,
-  setOnlineOrderFilter, _renderDeliveryTab, _refreshDelivery,
+  setOnlineOrderFilter, toggleOnlineBoardRecent, _renderDeliveryTab, _refreshDelivery,
 });
 
 // Una foto cambió (de donde sea: Menú, Receta, Costo Receta o acá): se actualizan avisos «sin foto», contadores y vista previa.

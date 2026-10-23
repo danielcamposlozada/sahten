@@ -533,7 +533,7 @@ function _renderHistorialTab() {
 }
 
 function _renderOrderCard(o) {
-  const statusMap = { pendiente: {label:'Pendiente',cls:'pending',icon:'⏳'}, en_preparacion: {label:'En preparación',cls:'prep',icon:'🔥'}, listo: {label:'Listo',cls:'done',icon:'✅'} };
+  const statusMap = { pendiente: {label:'Pendiente',cls:'pending',icon:'⏳'}, en_preparacion: {label:'En preparación',cls:'prep',icon:'🔥'}, listo: {label:'Listo',cls:'done',icon:'✅'}, enviado:{label:'En camino',cls:'prep',icon:'→'}, retirado:{label:'Retirado',cls:'done',icon:'✓'}, entregado:{label:'Entregado',cls:'done',icon:'✓'}, cancelado:{label:'Cancelado',cls:'pending',icon:'×'} };
   const s = statusMap[o.status] || statusMap.pendiente;
   const date = new Date(o.createdAt);
   const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}) + ' ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
@@ -553,8 +553,18 @@ function _renderOrderCard(o) {
 
 function orderSetStatus(orderId, status) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
-  o.status = status; o.updatedAt = new Date().toISOString();
-  _saveOrders(); _renderHistorialTab();
+  const allowed = window.SAHTEN?.orderWorkflow?.allowedStatuses(o) || ['pendiente','en_preparacion','listo','cancelado'];
+  if (!allowed.includes(status)) return;
+  const previous = o.status;
+  if (previous === status) return;
+  o.status = status;
+  o.updatedAt = new Date().toISOString();
+  const final = ['retirado', 'entregado', 'cancelado'];
+  if (final.includes(status)) o.completedAt = o.updatedAt;
+  else delete o.completedAt;
+  _saveOrders();
+  if (mostradorTab === 'delivery' && typeof _renderDeliveryTab === 'function') _renderDeliveryTab();
+  else if (mostradorTab === 'historial') _renderHistorialTab();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -565,7 +575,7 @@ function openOrderDetail(orderId) {
   let ov = document.getElementById('order-detail-overlay'); if(ov) ov.remove();
   ov = document.createElement('div'); ov.id='order-detail-overlay'; ov.className='modal-overlay open';
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
-  const statusMap = {pendiente:{label:'Pendiente',cls:'pending'},en_preparacion:{label:'En preparación',cls:'prep'},listo:{label:'Listo / Cerrado',cls:'done'}};
+  const statusMap = {pendiente:{label:'Pendiente',cls:'pending'},en_preparacion:{label:'En preparación',cls:'prep'},listo:{label:'Listo',cls:'done'},enviado:{label:'En camino',cls:'prep'},retirado:{label:'Retirado',cls:'done'},entregado:{label:'Entregado',cls:'done'},cancelado:{label:'Cancelado',cls:'pending'}};
   const s = statusMap[o.status]||statusMap.pendiente;
   const date = new Date(o.createdAt);
   const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) + ' · ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
@@ -577,7 +587,10 @@ function openOrderDetail(orderId) {
     '<select class="most-disc-select" style="width:auto" onchange="orderSetStatus(\''+o.id+'\',this.value);this.closest(\'.modal-overlay\').remove();openOrderDetail(\''+o.id+'\')">' +
     '<option value="pendiente" '+(o.status==='pendiente'?'selected':'')+'>⏳ Pendiente</option>' +
     '<option value="en_preparacion" '+(o.status==='en_preparacion'?'selected':'')+'>🔥 En preparación</option>' +
-    '<option value="listo" '+(o.status==='listo'?'selected':'')+'>✅ Listo / Cerrado</option></select></div>' +
+    '<option value="listo" '+(o.status==='listo'?'selected':'')+'>✅ '+(o.source==='pickup'?'Listo para retirar':'Listo para enviar')+'</option>' +
+    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) && o.source==='delivery' ? '<option value="enviado" '+(o.status==='enviado'?'selected':'')+'>En camino</option><option value="entregado" '+(o.status==='entregado'?'selected':'')+'>Entregado</option>' : '') +
+    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) && o.source==='pickup' ? '<option value="retirado" '+(o.status==='retirado'?'selected':'')+'>Retirado</option>' : '') +
+    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) ? '<option value="cancelado" '+(o.status==='cancelado'?'selected':'')+'>Cancelado</option>' : '') + '</select></div>' +
     '<table class="order-detail-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit.</th><th>Total</th></tr></thead><tbody>' +
     o.items.map(it => '<tr><td>'+_esc(it.name)+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right;font-family:DM Mono,monospace">$'+_fmt(it.unitPrice)+'</td><td style="text-align:right;font-family:DM Mono,monospace;font-weight:600">$'+_fmt(it.lineTotal)+'</td></tr>').join('') +
     '</tbody></table>' +
@@ -765,7 +778,7 @@ ${o.shipping>0?'<tr class="sub-row"><td>Envío</td><td style="text-align:right">
 </table>
 ${o.paymentName?'<div class="sep"></div><div class="payment">Pago: '+_esc(o.paymentName)+'</div>':''}
 <div class="sep-bold"></div>
-<div class="status">${{pendiente:'PENDIENTE',en_preparacion:'EN PREPARACIÓN',listo:'LISTO'}[o.status]||o.status}</div>
+<div class="status">${{pendiente:'PENDIENTE',en_preparacion:'EN PREPARACIÓN',listo:'LISTO',enviado:'EN CAMINO',retirado:'RETIRADO',entregado:'ENTREGADO',cancelado:'CANCELADO'}[o.status]||o.status}</div>
 <div class="footer">Gracias por tu compra</div>
 ${SAHTEN.receiptReviews.footer(_custData)}
 </body></html>`;
