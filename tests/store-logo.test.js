@@ -51,3 +51,14 @@ it('la portada y la navegación usan logos distintos y se conservan al guardar e
   expect(d.querySelector('#s-hero .brand-mask').style.getPropertyValue('--logo')).not.toContain(logo);
   dom.window.close();
 });
+
+it('publica el color propio del logo de portada y descarta valores CSS arbitrarios', () => {
+  expect(buildSite({ enabled: true, hero: { logoColor: '#FAF8F5' } }).hero.logoColor).toBe('#FAF8F5');
+  expect(buildSite({ enabled: true, hero: { logoColor: 'red;background:url(https://bad.example)' } }).hero.logoColor).toBeUndefined();
+});
+
+it('el crédito del sitio admite texto y enlace HTTPS propios, y rechaza protocolos inseguros', () => {
+  const s = buildSite({ enabled: true, contacto: { on: true, creditText: '© 2026 · Diseñado por Mi Nombre · Mi Estudio', creditUrl: 'https://estudio.example/' } });
+  expect(s.contacto).toMatchObject({ creditText: '© 2026 · Diseñado por Mi Nombre · Mi Estudio', creditUrl: 'https://estudio.example/' });
+  expect(buildSite({ enabled: true, contacto: { creditUrl: 'javascript:alert(1)' } }).contacto.creditUrl).toBe('');
+});

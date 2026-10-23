@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+- **Pie del sitio personalizable**: texto y enlace del crédito por negocio; el pie auxiliar vacío ya no agrega una franja de 36 px debajo del sitio.
+
+- **Color del símbolo de portada**: campo independiente para definir el color del logo monocromo del hero. Sahten usa `#FAF8F5`, solicitado por el dueño.
+
 - **Logo de navegación y portada separados**: la barra muestra el logo de la tienda y la portada permite cargar un símbolo independiente. Sahten usa el logo completo en navegación y solo la caligrafía árabe completa en el hero, del color del texto.
 
 - **Tienda independiente**: opción en Sitio web para generar `/pedir/`, enlazable desde cualquier web propia. La portada dirige a la tienda y el catálogo conserva el mismo carrito, retiro, delivery y conexión de pedidos. La actualización del catálogo no reemplaza el diseño publicado.

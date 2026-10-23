@@ -8,7 +8,7 @@ const _sbKey = { get: () => { try { return localStorage.getItem('sahten-google-k
 // Cómo se edita cada sección: [tipo, ruta, etiqueta, ayuda|filas, ...]. tipos: text · area · image · list
 const _SB_FIELDS = {
   seo: [['text', 'url', 'Dirección pública de la web', 'https://tudominio.com/'], ['text', 'title', 'Título para Google'], ['area', 'description', 'Descripción para buscadores', 3], ['text', 'cuisine', 'Tipo de cocina'], ['text', 'streetAddress', 'Calle y número'], ['text', 'locality', 'Localidad'], ['text', 'region', 'Provincia o región'], ['text', 'country', 'Código de país', 'AR'], ['text', 'openingHours', 'Horarios para buscadores', 'Mo-Th 18:00-22:00, Fr-Sa 18:00-23:00'], ['text', 'areaServed', 'Barrios donde reparten (separados por coma)', 'Belgrano, Núñez, Olivos'], ['text', 'sameAs', 'Otros perfiles públicos (Facebook, TripAdvisor, Google Maps; separados por coma)', 'https://www.facebook.com/tunegocio'], ['text', 'brandKit', 'Kit de imágenes de marca (íconos e imagen al compartir; hoy: sahten)', 'sahten']],
-  hero: [['logo'], ['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
+  hero: [['logo'], ['text', 'logoColor', 'Color del logo de portada (opcional)', '#FAF8F5'], ['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
     ['list', 'highlights', 'Destacados (hasta 4)', { add: 'Agregar destacado', max: 4, fields: [['icon', 'Ícono 🍕', 'sm'], ['title', 'Título'], ['text', 'Detalle']] }]],
   favoritos: [['text', 'title', 'Título'], ['area', 'text', 'Texto de introducción', 2], ['note', 'Muestra los productos marcados con ⭐ en la lista de Menú (hasta 6).']],
   menu: [['text', 'title', 'Título de la sección'], ['note', 'Es tu carta con categorías y el carrito. Siempre está; solo podés moverla de lugar.']],
@@ -21,7 +21,7 @@ const _SB_FIELDS = {
     ['list', 'info', 'Datos (hasta 4)', { add: 'Agregar dato', max: 4, fields: [['label', 'Dato (ej. Zona)', 'sm'], ['value', 'Valor']] }]],
   delivery: [['text', 'title', 'Título'], ['area', 'hours', 'Horarios', 3], ['text', 'extra', 'Aclaración (opcional)'], ['note', 'Las zonas, el pedido mínimo y el envío gratis salen de Ajustes › Negocio › Tienda online y delivery.']],
   faq: [['text', 'title', 'Título'], ['list', 'items', 'Preguntas (hasta 12)', { add: 'Agregar pregunta', max: 12, fields: [['q', 'Pregunta'], ['a', 'Respuesta', 'area']] }]],
-  contacto: [['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Negocio › Tienda online y delivery y de Menú › Ajustes.']],
+  contacto: [['text', 'creditText', 'Crédito del sitio (opcional)'], ['text', 'creditUrl', 'Enlace del crédito', 'https://tusitio.com/'], ['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Negocio › Tienda online y delivery y de Menú › Ajustes.']],
 };
 const _SB_ANCHOR = { hero: 's-hero', favoritos: 's-fav', menu: 's-menuhd', como: 's-how', historia: 's-about', resenas: 's-reviews', catering: 's-catering', delivery: 's-delivery', faq: 's-faq', contacto: 's-contact' };
 

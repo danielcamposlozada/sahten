@@ -1,5 +1,6 @@
 import { reviewUrl } from '../ui/review-link.js';
 import { normalizeStoreLogo } from './logo.js';
+import { publicWebUrl } from './seo.js';
 export { readStoreLogo } from './logo.js';
 // ═══════════════════════════════════════════════════════════
 // Sitio web del negocio: módulos (secciones) con su orden y su on/off. Puro (sin DOM).
@@ -32,7 +33,7 @@ export function siteDefaults() {
     logoUseTextColor: false,
     seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
     order: SITE_ORDER.slice(),
-    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [], logo: '', logoUseTextColor: true },
+    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [], logo: '', logoUseTextColor: true, logoColor: '' },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
     menu: { title: 'Nuestro menú' },
     como: { on: true, title: '¿Cómo funciona?', lead: 'En 3 pasos tenés tu pedido.', steps: [
@@ -45,7 +46,7 @@ export function siteDefaults() {
     catering: { on: false, eyebrow: 'Catering y eventos', title: '', text: '', cta: 'Consultar por WhatsApp', info: [] },
     delivery: { on: true, title: 'Delivery y retiro', hours: '', extra: '' },
     faq: { on: false, title: 'Preguntas frecuentes', items: [] },
-    contacto: { on: true, instagram: '', note: '' },
+    contacto: { on: true, instagram: '', note: '', creditText: '', creditUrl: '' },
   };
 }
 
@@ -83,6 +84,7 @@ export function buildSite(raw, images = {}) {
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
+  if (out.hero && /^#[0-9a-f]{6}$/i.test(s.hero.logoColor || '')) out.hero.logoColor = s.hero.logoColor;
   if (out.hero && s.hero.logo) { out.hero.logo = s.hero.logo; out.hero.logoUseTextColor = s.hero.logoUseTextColor; }
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
   if (on('como')) out.como = { title: txt(s.como.title, 60) || '¿Cómo funciona?', lead: txt(s.como.lead, 160),
@@ -97,7 +99,7 @@ export function buildSite(raw, images = {}) {
   if (on('delivery')) out.delivery = { title: txt(s.delivery.title, 60) || 'Delivery y retiro', hours: txt(s.delivery.hours, 300), extra: txt(s.delivery.extra, 200) };
   if (on('faq')) out.faq = { title: txt(s.faq.title, 60) || 'Preguntas frecuentes',
     items: list(s.faq.items, SITE_LIMITS.faq, f => { const q = txt(f && f.q, 140), a = txt(f && f.a, 500); return q && a ? { q, a } : null; }) };
-  if (on('contacto')) out.contacto = { instagram: txt(s.contacto.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''), note: txt(s.contacto.note, 200) };
+  if (on('contacto')) out.contacto = { instagram: txt(s.contacto.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''), note: txt(s.contacto.note, 200), creditText: txt(s.contacto.creditText, 160), creditUrl: publicWebUrl(s.contacto.creditUrl) };
   return out;
 }
 

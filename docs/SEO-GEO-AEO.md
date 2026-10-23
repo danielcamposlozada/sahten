@@ -105,3 +105,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Navegación: el SVG completo de Sahten entregado por el dueño, con sus colores originales.
 - El editor permite cargar el símbolo de portada por separado del logo de navegación; ambos viajan en el archivo de contenido.
 - Ajuste publicado y verificado en Chrome: despliegue `d4d806e3`, https://sahten.online/. Hero: SVG árabe 941 × 255, blanco como el texto; navegación: SVG completo 1249 × 516, colores originales. Sin desborde en 1366 × 768 y 390 × 844. Las 469 pruebas y la compilación pasan.
+
+- El dueño pidió cambiar únicamente las letras árabes del hero a **#FAF8F5**; se conserva el logo de navegación. Verificación y publicación del color en curso.
+
+- Crédito confirmado por el dueño: **© 2026 · Diseñado y desarrollado por Daniel J. Campos Lozada · Noamdan**, enlace **https://noamdan.com/**. El pie auxiliar vacío producía una franja de 36 px; se oculta cuando no contiene información. Verificación y publicación en curso.
