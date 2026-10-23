@@ -59,6 +59,14 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - No cambia los datos del negocio ni importa automáticamente el JSON de contenido. El dueño debe revisar el archivo antes de importarlo, especialmente la respuesta sobre medios de pago: Mercado Pago continúa en pruebas.
 - La web publicada y los perfiles externos permanecen pendientes de publicación y verificación según la lista siguiente.
 
+**Nueva integración web preparada (23/10/2026)**
+- Opción genérica de tienda independiente en `/pedir/`, enlazable desde una web propia; la portada dirige a la tienda. Catálogo, carrito, retiro, delivery y conexión de pedidos usan el mismo motor existente.
+- Campo «Logo de la tienda» en el editor: SVG, PNG, JPG y WebP (hasta 2 MB), con vista previa, quitar/cambiar y opción del color del texto. Se guarda con el proyecto y los archivos publicados; no cambia el logo de la app.
+- El dueño entregó dos SVG completos: la caligrafía con los cinco signos y el wordmark completo. Pidió usar el segundo solo en sahten.online y el mismo color del texto del hero. Se conserva el trazo original; símbolo de WhatsApp en los accesos.
+- La carpeta preparada incorpora el JSON entregado y conserva el catálogo/precios públicos. La respuesta de pagos no anuncia Mercado Pago, tarjetas ni descuentos activos; las promociones y cobertura no confirmadas se omiten de las nuevas respuestas. Mercado Pago sigue en pruebas.
+- Publicar menú continúa generando carpeta o ZIP; la conexión automática al hosting aún no existe. En el modo independiente, el catálogo en vivo no reemplaza el diseño guardado en la carpeta.
+- El dueño autorizó publicar la web. No se escribe en Supabase ni se modifican perfiles externos. Despliegue y verificación en vivo pendientes de completar en este cambio.
+
 **Lo hace el dueño / una persona**
 - [ ] Importar el archivo de contenido, corregir nombre de la tienda («SAHTEN Gastronomía Árabe»), erratas del menú y sumar una línea de descripción por plato; poner `sahten` en *Kit de imágenes de marca*; **republicar y subir la carpeta** al hosting.
 - [ ] Verificar y completar la ficha de Google (datos del documento), subir logo y portada del kit, productos, 20 fotos, reseñas por WhatsApp.

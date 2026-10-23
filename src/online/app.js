@@ -47,7 +47,7 @@ export const onlinePublish = {
     if (m.site && m.site.images) ['hero', 'historia'].forEach(k => { if (m.site.images[k] && imgs['site_' + k]) m.site.images[k] = imgs['site_' + k]; });
     // La vista previa muestra lo que tenés en la app, no lo publicado: sin conexión a la nube la página no baja el menú en vivo (lo pisaría) ni puede enviar pedidos de verdad.
     m.supabase = null;
-    return buildIndexHtml(m);
+    return buildIndexHtml(m, { preview: true });
   },
   /** Vista previa en otra pestaña (imágenes incrustadas, sin publicar nada). */
   preview() {

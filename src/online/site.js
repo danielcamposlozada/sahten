@@ -1,4 +1,6 @@
 import { reviewUrl } from '../ui/review-link.js';
+import { normalizeStoreLogo } from './logo.js';
+export { readStoreLogo } from './logo.js';
 // ═══════════════════════════════════════════════════════════
 // Sitio web del negocio: módulos (secciones) con su orden y su on/off. Puro (sin DOM).
 // El editor de la app (Menú Online › Sitio web) escribe esto; menu.json lleva la versión recortada y limpia (buildSite).
@@ -25,6 +27,9 @@ export const SITE_LIMITS = { highlights: 4, steps: 4, reviews: 9, info: 4, faq: 
 export function siteDefaults() {
   return {
     enabled: false,
+    orderPage: false,
+    logo: '',
+    logoUseTextColor: false,
     seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
     order: SITE_ORDER.slice(),
     hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [] },
@@ -49,7 +54,7 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 /** Completa lo que falte con los valores de fábrica y deja el orden válido (todas las secciones, sin repetidas). */
 export function normalizeSite(raw) {
   const d = siteDefaults(); const r = isObj(raw) ? raw : {};
-  const out = { enabled: !!r.enabled };
+  const out = { enabled: !!r.enabled, orderPage: !!r.orderPage, logo: normalizeStoreLogo(r.logo), logoUseTextColor: !!r.logoUseTextColor };
   out.seo = { ...d.seo, ...(isObj(r.seo) ? r.seo : {}) };
   for (const m of SITE_MODULES) out[m.id] = { ...d[m.id], ...(isObj(r[m.id]) ? r[m.id] : {}) };
   for (const [mod, key] of [['hero', 'highlights'], ['como', 'steps'], ['resenas', 'items'], ['catering', 'info'], ['faq', 'items']]) if (!Array.isArray(out[mod][key])) out[mod][key] = d[mod][key].slice();
@@ -71,6 +76,8 @@ export function buildSite(raw, images = {}) {
   const on = id => id === 'menu' || !!s[id].on;
   const img = k => (images[k] ? 'img/site_' + k + '.jpg' : null);
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
+  if (s.orderPage) out.orderPage = true;
+  if (s.logo) { out.logo = s.logo; out.logoUseTextColor = s.logoUseTextColor; }
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
@@ -112,6 +119,9 @@ export const SITE_FILE_FORMAT = 'sahten-sitio';
 export function exportSiteContent(site) {
   const s = normalizeSite(site); const out = { format: SITE_FILE_FORMAT, version: 1, site: { order: s.order } };
   out.site.seo = s.seo;
+  out.site.orderPage = s.orderPage;
+  out.site.logo = s.logo;
+  out.site.logoUseTextColor = s.logoUseTextColor;
   for (const m of SITE_MODULES) out.site[m.id] = s[m.id];
   return JSON.stringify(out, null, 1);
 }
@@ -126,6 +136,9 @@ const SITE_FORMAT_CHECK = SITE_FILE_FORMAT;
 /** Pisa solo las secciones que trae el archivo (y el orden, si lo trae). No toca el interruptor general ni las fotos. */
 export function applySiteContent(current, parsed) {
   const s = normalizeSite(current);
+  if (typeof parsed.site.orderPage === 'boolean') s.orderPage = parsed.site.orderPage;
+  if (typeof parsed.site.logo === 'string') s.logo = normalizeStoreLogo(parsed.site.logo);
+  if (typeof parsed.site.logoUseTextColor === 'boolean') s.logoUseTextColor = parsed.site.logoUseTextColor;
   if (isObj(parsed.site.seo)) s.seo = { ...s.seo, ...parsed.site.seo };
   for (const id of parsed.modules) s[id] = { ...s[id], ...parsed.site[id] };
   if (Array.isArray(parsed.site.order)) s.order = parsed.site.order;

@@ -316,6 +316,26 @@ describe('Menú Online (admin): constructor modular del sitio web', () => {
     expect(a.on.publish.currentMenu().supabase).toBeTruthy();
     expect(a.on.publish.previewHtml({ forceSite: true })).not.toContain('x.supabase.co'); win.close();
   }, 60000);
+  it('cargar un logo lo muestra en la vista previa, lo guarda con el proyecto y se puede quitar sin cambiar la marca de la app', async () => {
+    const a = await open(); const w = a.window;
+    w.TextEncoder = TextEncoder;
+    const before = a.ev('custLoad().appLogo');
+    const input = $('[data-sb-logo]');
+    Object.defineProperty(input, 'files', { value: [{ name: 'logo.svg', type: 'image/svg+xml', size: 150, text: async () => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><path d="M0 0L20 0L10 10Z" fill="#fff"/></svg>' }] });
+    input.dispatchEvent(new w.Event('change', { bubbles: true })); await wait(50);
+    const logo = a.on.publish.currentMenu().site.logo;
+    expect(logo).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect($('img[alt="Logo de la tienda"]').src).toBe(logo);
+    $('[data-sb-logo-color]').checked = true; $('[data-sb-logo-color]').dispatchEvent(new w.Event('change', { bubbles: true }));
+    expect(a.on.publish.currentMenu().site.logoUseTextColor).toBe(true);
+    expect(a.on.publish.previewHtml()).toContain(logo);
+    expect(a.p.collect().online.menuConfig.site.logo).toBe(logo);
+    expect(a.ev('custLoad().appLogo')).toBe(before);
+    $('[data-sb-logo-remove]').click();
+    expect(a.on.publish.currentMenu().site.logo).toBeUndefined();
+    expect($('img[alt="Logo de la tienda"]')).toBeNull();
+    w.close();
+  }, 60000);
   it('apagar el sitio publica solo el menú; la foto de la portada viaja a la carpeta', async () => {
     const a = await open();
     a.ev("SAHTEN_IMAGES.site_hero='data:image/png;base64,iVBORw0KGgo='"); expect(a.on.publish.currentMenu().site.images.hero).toBe('img/site_hero.jpg');

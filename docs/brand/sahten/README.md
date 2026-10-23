@@ -47,3 +47,9 @@ No hay hoy un campo para subir un logo a mano: el logo del encabezado sale del k
 1. **Google Business Profile › Fotos › Logotipo**: `sahten-gbp-logo-720x720.png`. **Portada**: `sahten-gbp-portada-1920x1080.png`.
 2. **Instagram (sahten.ar), Facebook, WhatsApp Business**: `sahten-avatar-1080.png`; Facebook además `sahten-facebook-portada-1640x624.png`.
 3. Después de publicar la web, probar el link en <https://developers.facebook.com/tools/debug/> (Facebook/WhatsApp) y pedir «Volver a extraer»: las redes guardan la imagen vieja en caché.
+
+## Corrección del hero y logo propio (23/10/2026)
+
+El dueño entregó `source/caligrafia-completa.svg`, con los seis trazos y caja `0 0 941 255`. El generador anterior tomaba solamente el cuerpo y omitía los cinco signos separados; ahora conserva los seis trazos sin redibujarlos ni recortarlos.
+
+El editor permite cargar un logo propio para la web. Tiene prioridad sobre la caligrafía del kit y puede usar el mismo color que el texto del hero. El nuevo wordmark completo entregado por el dueño se usa solamente en sahten.online, sin reemplazar la marca de la app.
