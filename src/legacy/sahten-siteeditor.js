@@ -7,6 +7,7 @@ const _sbKey = { get: () => { try { return localStorage.getItem('sahten-google-k
 
 // Cómo se edita cada sección: [tipo, ruta, etiqueta, ayuda|filas, ...]. tipos: text · area · image · list
 const _SB_FIELDS = {
+  seo: [['text', 'url', 'Dirección pública de la web', 'https://tudominio.com/'], ['text', 'title', 'Título para Google'], ['area', 'description', 'Descripción para buscadores', 3], ['text', 'cuisine', 'Tipo de cocina'], ['text', 'streetAddress', 'Calle y número'], ['text', 'locality', 'Localidad'], ['text', 'region', 'Provincia o región'], ['text', 'country', 'Código de país', 'AR'], ['text', 'openingHours', 'Horarios para buscadores', 'Mo-Th 18:00-22:00, Fr-Sa 18:00-23:00']],
   hero: [['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
     ['list', 'highlights', 'Destacados (hasta 4)', { add: 'Agregar destacado', max: 4, fields: [['icon', 'Ícono 🍕', 'sm'], ['title', 'Título'], ['text', 'Detalle']] }]],
   favoritos: [['text', 'title', 'Título'], ['area', 'text', 'Texto de introducción', 2], ['note', 'Muestra los productos marcados con ⭐ en la lista de Menú (hasta 6).']],
@@ -68,7 +69,7 @@ function _sbRenderField(S, id, f) {
 function _sbRenderList() {
   const el = document.getElementById('sb-list'); if (!el) return;
   const S = _moSite(); const meta = Object.fromEntries(SAHTEN_SITE.SITE_MODULES.map(x => [x.id, x]));
-  el.innerHTML = S.order.map((id, idx) => {
+  el.innerHTML = '<details class="sb-seo"><summary style="padding:16px;font-weight:700;cursor:pointer">Buscadores y enlaces compartidos</summary><div style="padding:16px">' + _SB_FIELDS.seo.map(f => _sbRenderField(S, 'seo', f)).join('') + '<p>Los cambios de título, descripción y dirección requieren volver a publicar la carpeta web para actualizar lo que reciben los buscadores.</p></div></details>' + S.order.map((id, idx) => {
     const x = meta[id]; const m = S[id]; const fixed = !!x.fixed; const on = fixed || m.on; const open = _sbUi.open === id;
     return `<section class="sb-mod ${on ? '' : 'off'} ${open ? 'open' : ''}" data-mod="${id}" draggable="true">
       <div class="sb-head">

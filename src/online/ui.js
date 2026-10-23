@@ -16,15 +16,26 @@ export function createOnlineUi({ online, w = window }) {
   const run = async (slot, fn, ok) => { try { say(slot, 'Un momento…'); const r = await fn(); say(slot, ok ? (typeof ok === 'function' ? ok(r) : ok) : ''); ui.render(); return r; } catch (e) { say(slot, e.message || String(e), true); } };
 
   const ui = {
+    renderProgress() {
+      const host = $('nube-progress'); if (!host) return;
+      const p = online.progress?.info();
+      host.hidden = !p;
+      if (!p) return;
+      const count = p.active && p.total > 0 ? ` · ${p.completed} de ${p.total} fotos` : '';
+      host.innerHTML = `<div class="info-banner" style="margin-bottom:16px;padding:16px;font-size:15px" role="status" aria-live="polite" aria-atomic="true"><strong>${esc(p.title)}</strong><div style="margin:6px 0">${esc(p.detail)}${count}</div>${p.active ? `<progress aria-label="${esc(p.detail)}" style="display:block;width:100%;height:14px;accent-color:var(--accent)" ${p.total > 0 ? `max="${p.total}" value="${p.completed}"` : ''}></progress><div style="margin-top:8px;font-size:13px">Podés seguir trabajando. Esperá a que termine antes de cerrar la app.</div>` : ''}</div>`;
+      root()?.querySelectorAll('[data-cloud-action]').forEach(b => { b.disabled = !!p.active; });
+    },
     async render() {
       const el = root(); if (!el) return;
       if (!online.enabled) { el.innerHTML = '<div class="card" style="padding:24px;text-align:center"><div style="font-size:16px;font-weight:700;margin-bottom:6px">No disponible en esta versión</div><div style="font-size:13px;color:var(--muted)">Esta versión de Sahten se armó sin conexión online. Tus proyectos .sahten son los mismos y se pueden abrir en la versión con online sin perder nada.</div></div>'; return; }
       const c = online.controller.info(), sy = online.syncInfo(), role = online.role();
       el.innerHTML = `
+        <div id="nube-progress" hidden></div>
         <div class="info-banner" style="margin-bottom:16px"><strong>Opcional · cuesta $0.</strong> Conectá el proyecto a tu cuenta gratis de Supabase para recibir pedidos en tiempo real, mantener el menú actualizado sin republicar y compartir el proyecto con tu equipo. Sin esto, todo funciona igual con el archivo .sahten. Paso a paso: docs/SUPABASE.md.</div>
         ${connectCard(c)}
         ${c.signedIn ? syncCard(sy, role) : ''}
         <div id="nube-users"></div><div id="nube-audit"></div>`;
+      ui.renderProgress();
       if (c.signedIn && sy.linked && canManageUsers(role)) ui.renderUsers();
       if (c.signedIn && sy.linked && ['owner', 'admin'].includes(role)) ui.renderAudit();
     },
@@ -46,7 +57,7 @@ export function createOnlineUi({ online, w = window }) {
       say('nube-remote', 'Un momento…');
       try {
         const rows = await online.listRemote();
-        slot.innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role || '')} · versión ${r.version}</div></div><button class="btn" data-remote="${esc(r.id)}" data-role="${esc(r.role || '')}">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>';
+        slot.innerHTML = rows.length ? rows.map(r => `<div class="backup-row"><div><div class="backup-row-title">${esc(r.name || 'Proyecto')}</div><div class="backup-row-desc">${esc(ROLE_LABEL[r.role] || r.role || '')} · versión ${r.version}</div></div><button class="btn" data-cloud-action data-remote="${esc(r.id)}" data-role="${esc(r.role || '')}">Abrir</button></div>`).join('') : '<div class="info-banner">No tenés proyectos en la nube todavía.</div>';
         slot.querySelectorAll('[data-remote]').forEach(btn => btn.addEventListener('click', () => ui.openRemote(btn.dataset.remote, btn.dataset.role)));
       } catch (e) { say('nube-remote', e.message || String(e), true); }
     },
@@ -81,7 +92,7 @@ export function createOnlineUi({ online, w = window }) {
     return `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Conexión con Supabase</div>
       <div style="font-size:13px;margin-bottom:10px">Estado: <b>${esc(c.mode)}</b>${c.signedIn ? ' · ' + esc(c.email || '') : ''}${c.feed ? ' · pedidos: ' + esc(c.feed) : ''}${c.error ? `<br><span style="color:var(--red)">${esc(c.error)}</span>` : ''}</div>
       ${c.configured ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Proyecto: ${esc(conn.url)} · tienda web: <b>${esc(conn.slug || '—')}</b></div>
-        ${c.signedIn ? `<button class="btn btn-accent" onclick="SAHTEN.online.ui.syncMenu()">🔄 Sincronizar menú</button> ` : `<div style="display:grid;gap:8px;max-width:420px;margin-bottom:10px">${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}</div><button class="btn btn-accent" onclick="SAHTEN.online.ui.signIn()">Iniciar sesión</button> `}
+        ${c.signedIn ? `<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncMenu()">🔄 Sincronizar menú</button> ` : `<div style="display:grid;gap:8px;max-width:420px;margin-bottom:10px">${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}</div><button class="btn btn-accent" onclick="SAHTEN.online.ui.signIn()">Iniciar sesión</button> `}
         <button class="btn" onclick="SAHTEN.online.ui.disconnect()">Desconectar</button>`
       : `<div style="display:grid;gap:10px;max-width:460px">${f('nb-url', 'URL del proyecto', 'url', '', 'https://abcd1234.supabase.co')}${f('nb-key', 'Anon key (pública)', 'text', '', 'eyJ…')}${f('nb-slug', 'Nombre de tu tienda en la web', 'text', '', 'mi-local')}${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}
         <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="nb-new" type="checkbox"> Crear una cuenta nueva con este email</label>
@@ -104,8 +115,8 @@ export function createOnlineUi({ online, w = window }) {
     return `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Proyecto en la nube</div>
       <div style="font-size:13px;margin-bottom:10px">${esc(stateTxt)}${sy.version ? ' · versión ' + sy.version : ''}${sy.lastAt ? ' · ' + new Date(sy.lastAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : ''}${role ? ' · tu rol: <b>' + esc(ROLE_LABEL[role] || role) + '</b>' : ''}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px">El archivo .sahten siempre se guarda primero en tu equipo; la nube es una copia que se actualiza por detrás (con cola si no hay internet). Las fotos se suben a la nube y se descargan al abrir el proyecto en otro equipo; el archivo local conserva una copia.</div>
-      ${sy.conflict ? `<div class="info-banner" style="background:rgba(242,140,0,.12);border-color:rgba(242,140,0,.4);margin-bottom:12px"><b>Alguien cambió el proyecto en la nube</b> mientras vos también lo cambiabas. ¿Qué versión querés conservar?<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-accent" onclick="SAHTEN.online.ui.resolve('mine')">Quedarme con la mía</button><button class="btn" onclick="SAHTEN.online.ui.resolve('theirs')">Usar la de la nube</button></div></div>` : ''}
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${sy.linked ? '<button class="btn btn-accent" onclick="SAHTEN.online.ui.syncNow()">Sincronizar ahora</button>' : (canPush || !role ? '<button class="btn btn-accent" onclick="SAHTEN.online.ui.link()">☁ Subir este proyecto a la nube</button>' : '')}
+      ${sy.conflict ? `<div class="info-banner" style="background:rgba(242,140,0,.12);border-color:rgba(242,140,0,.4);margin-bottom:12px"><b>Alguien cambió el proyecto en la nube</b> mientras vos también lo cambiabas. ¿Qué versión querés conservar?<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.resolve('mine')">Quedarme con la mía</button><button class="btn" data-cloud-action onclick="SAHTEN.online.ui.resolve('theirs')">Usar la de la nube</button></div></div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${sy.linked ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncNow()">Sincronizar ahora</button>' : (canPush || !role ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.link()">☁ Subir este proyecto a la nube</button>' : '')}
         <button class="btn" onclick="SAHTEN.online.ui.listRemote()">Abrir proyecto de la nube…</button>${role === 'owner' && sy.linked ? '<button class="btn" onclick="SAHTEN.online.ui.remoteView()">👁 Vista remota en tiempo real</button>' : ''}</div>
       <div id="nube-remote" style="margin-top:12px"></div></div>`;
   }

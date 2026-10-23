@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.13
+
+- **Sincronización visible**: muestra la etapa de datos, fotos y guardado, con barra y contador real de fotos, fin o error. Cubre sincronizar proyecto, abrir desde nube y publicar menú.
+- **Buscadores y enlaces compartidos**: configuración por negocio para título, descripción, dirección pública y datos del restaurante; publicación con contenido HTML legible sin JavaScript, datos estructurados, Open Graph, robots y sitemap. La carta aparece sin esperar a Mercado Pago.
+
+- **Actualizaciones al iniciar**: comprueba en cada apertura y ofrece Actualizar o Más tarde. Si no hay conexión o novedades no interrumpe.
+- **Fotos web más livianas**: genera una copia WebP al sincronizar el menú (JPEG como alternativa), sin reemplazar las fotos originales del proyecto. Limita productos a 800 px y portada/historia a 1600 px, sin ampliar fotos pequeñas; conserva la copia más liviana.
+- **Publicación de fotos**: conserva referencias válidas de la misma tienda y bloquea referencias incompletas o de otras tiendas antes de reemplazar el menú.
+
 ## 0.4.12
 
 - **Ticket completo de reseñas**: el pie incluye el logo de Google en blanco y negro junto al texto y el QR del negocio. El logo está incluido en la app y se imprime sin conexión.

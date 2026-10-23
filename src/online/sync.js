@@ -53,6 +53,8 @@ export function createSync(deps) {
   const key = () => 'sync:' + deps.projectId();
   let state = 'sin vincular', error = null, pending = false, attempt = 0, retry = null, debounce = null, conflict = null, lastAt = null, busy = false;
   let generation = 0;
+  let transfer = null;
+  const report = p => transfer?.update(p);
   const guard = () => {
     const id = deps.projectId(), rid = deps.remoteId(), gen = generation;
     return () => { if (gen !== generation || id !== deps.projectId() || rid !== deps.remoteId()) throw new SupabaseError('Cambió el proyecto o se canceló la sincronización.', { code: 'project_changed' }); };
@@ -81,19 +83,25 @@ export function createSync(deps) {
 
     /** Primera vez: sube el proyecto y lo vincula. */
     async link() {
+      if (busy) throw new SupabaseError('Ya hay una sincronización en curso.');
+      busy = true; transfer = deps.progress?.start('Subiendo proyecto a la nube');
+      try {
       const check = guard(), f = deps.collect();
-      const prepared = deps.prepareFile ? await deps.prepareFile(f) : f;
+      const prepared = deps.prepareFile ? await deps.prepareFile(f, report) : f;
       check();
+      report({ detail: 'Guardando base de datos en la nube…' });
       const r = await deps.client.rpc('create_project', { p_name: f.project.name || 'Proyecto', p_data: stripForSync(prepared), p_public: deps.publicOf(prepared) });
-      check(); deps.setRemoteId(r); save({ version: 1, hash: syncHash(f), at: new Date(now()).toISOString() }); lastAt = new Date(now()); set('al día'); return r;
+      check(); deps.setRemoteId(r); save({ version: 1, hash: syncHash(f), at: new Date(now()).toISOString() }); lastAt = new Date(now()); set('al día'); transfer?.finish(); return r;
+      } catch (e) { transfer?.fail(e); throw e; } finally { busy = false; transfer = null; }
     },
 
     /** Sincroniza ahora: sube, baja o avisa del conflicto, según cambió cada lado. */
     async sync({ resolve } = {}) {
       if (busy) { pending = true; return { state: 'ocupado' }; }
       if (!deps.remoteId()) return { state: 'sin vincular' };
-      busy = true; const check = guard(); set('sincronizando');
+      busy = true; transfer = deps.progress?.start('Sincronizando proyecto'); const check = guard(); set('sincronizando');
       try {
+        report({ detail: 'Consultando cambios de la base de datos…' });
         const role = deps.role();
         if (writeScope(role) !== 'project' && role !== 'lectura') return await staffSync(check);
         if (role === 'lectura') return await pullOnly(check);
@@ -111,19 +119,21 @@ export function createSync(deps) {
         if (choice === 'mine') return await push(f, lh, meta.version, check);
         set('conflicto'); return { action: 'conflict', conflict };
       } catch (e) {
+        transfer?.fail(e);
         if (offline(e)) return { action: 'offline' };
         set('error', e.message); throw e;
-      } finally { busy = false; }
+      } finally { if (state === 'al día') transfer?.finish(); else transfer?.fail(error || 'La sincronización está pendiente. Revisá el estado del proyecto.'); transfer = null; busy = false; }
     },
 
     /** Resolver un conflicto pendiente: 'mine' (mi versión pisa la de la nube) o 'theirs' (descargo la de la nube). */
     async resolve(choice) {
       if (!conflict) return null;
-      busy = true; const check = guard(); set('sincronizando');
+      if (busy) return { state: 'ocupado' };
+      busy = true; transfer = deps.progress?.start('Sincronizando la versión elegida'); const check = guard(); set('sincronizando');
       try {
         if (choice === 'theirs') return await pull(check);
         const f = deps.collect(); return await push(f, syncHash(f), conflict.remote.version, check);
-      } catch (e) { if (offline(e)) return { action: 'offline' }; set('error', e.message); throw e; } finally { busy = false; }
+      } catch (e) { transfer?.fail(e); if (offline(e)) return { action: 'offline' }; set('error', e.message); throw e; } finally { if (state === 'al día') transfer?.finish(); else transfer?.fail(error || 'Sincronización pendiente.'); transfer = null; busy = false; }
     },
 
     /** Programar una sincronización (se llama en cada guardado local): espera 5 s y junta los cambios. */
@@ -132,8 +142,9 @@ export function createSync(deps) {
   };
 
   async function push(f, lh, baseVersion, check = guard()) {
-    const prepared = deps.prepareFile ? await deps.prepareFile(f) : f;
+    const prepared = deps.prepareFile ? await deps.prepareFile(f, report) : f;
     check();
+    report({ detail: 'Guardando base de datos en la nube…' });
     const r = await deps.client.rpc('save_project', { pid: deps.remoteId(), p_data: stripForSync(prepared), p_public: deps.publicOf(prepared), base_version: baseVersion });
     check();
     if (r.conflict) { conflict = { remote: r, local: { hash: lh } }; set('conflicto'); return { action: 'conflict', conflict }; }
@@ -143,13 +154,14 @@ export function createSync(deps) {
   }
 
   async function pull(check = guard()) {
+    report({ detail: 'Descargando base de datos…' });
     const r = await deps.client.rpc('get_project_data', { pid: deps.remoteId() });
     check();
     let incoming = r.data; const local = deps.collect(), before = syncHash(local);
-    incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images) : { ...incoming, images: local.images };
+    incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images, report) : { ...incoming, images: local.images };
     check();
     if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
-    await deps.apply(incoming);
+    report({ detail: 'Aplicando datos en este equipo…' }); await deps.apply(incoming);
     save({ version: r.version, hash: syncHash(incoming), at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
     return { action: 'pull', version: r.version };
   }
@@ -179,7 +191,7 @@ export function createSync(deps) {
     if (!l || l.version !== meta.version) {
       const r = await deps.client.rpc('get_project_public', { pid: deps.remoteId() });
       let incoming = applyPublicToFile(deps.collect(), r.public);
-      if (deps.restoreFile) incoming = await deps.restoreFile(incoming, deps.collect().images);
+      if (deps.restoreFile) incoming = await deps.restoreFile(incoming, deps.collect().images, report);
       check(); await deps.apply(incoming); save({ version: r.version, hash: '' });
     }
     const ops = await deps.client.rpc('get_ops', { pid: deps.remoteId() });

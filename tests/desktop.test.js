@@ -1,5 +1,5 @@
 // App de escritorio (Tauri): lo que se puede probar sin compilar Rust: adaptador, respaldos junto al proyecto, integración y configuración.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { createTauriAdapter } from '../src/desktop/adapter.js';
 import { prepareDesktop } from '../src/desktop/preload.js';
@@ -173,6 +173,25 @@ const apis = (over = {}) => ({
 });
 
 describe('integración con el sistema', () => {
+  it('cada inicio comprueba incluso si ya se comprobó hoy; permite posponer y no molesta sin red', async () => {
+    vi.useFakeTimers();
+    try {
+      const cfg = createMemoryConfig(); cfg.set('last-update-check', 1e12);
+      const { w } = page(); const update = { version: '4.3.0', downloadAndInstall: vi.fn() };
+      const a = apis({ update }); a.updater.check = vi.fn(async () => update);
+      w.sahtenDialog = vi.fn(async () => false);
+      installDesktop({ apis: a, project: {}, config: cfg, w, now: () => 1e12 });
+      expect(a.updater.check).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(8000);
+      expect(a.updater.check).toHaveBeenCalledTimes(1);
+      expect(w.sahtenDialog.mock.calls[0][0].actions.map(a => a.label)).toEqual(['Más tarde', 'Actualizar']);
+      expect(update.downloadAndInstall).not.toHaveBeenCalled();
+      const offline = page(); const b = apis(); b.updater.check = async () => { throw new Error('offline'); };
+      installDesktop({ apis: b, project: {}, config: cfg, w: offline.w });
+      await vi.advanceTimersByTimeAsync(8000);
+      expect(offline.w.__alerts).toBeUndefined(); expect(offline.w.__confirm).toBeUndefined();
+    } finally { vi.useRealTimers(); }
+  });
   it('las «descargas» (CSV, ZIP, JSON) abren «Guardar como» y escriben el archivo', async () => {
     const { w } = page(); const a = apis({ dialog: { save: '/Users/a/Descargas/reporte.csv' } });
     installDesktop({ apis: a, project: {}, config: createMemoryConfig(), w });

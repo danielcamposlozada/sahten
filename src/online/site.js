@@ -25,6 +25,7 @@ export const SITE_LIMITS = { highlights: 4, steps: 4, reviews: 9, info: 4, faq: 
 export function siteDefaults() {
   return {
     enabled: false,
+    seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '' },
     order: SITE_ORDER.slice(),
     hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [] },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
@@ -49,6 +50,7 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 export function normalizeSite(raw) {
   const d = siteDefaults(); const r = isObj(raw) ? raw : {};
   const out = { enabled: !!r.enabled };
+  out.seo = { ...d.seo, ...(isObj(r.seo) ? r.seo : {}) };
   for (const m of SITE_MODULES) out[m.id] = { ...d[m.id], ...(isObj(r[m.id]) ? r[m.id] : {}) };
   for (const [mod, key] of [['hero', 'highlights'], ['como', 'steps'], ['resenas', 'items'], ['catering', 'info'], ['faq', 'items']]) if (!Array.isArray(out[mod][key])) out[mod][key] = d[mod][key].slice();
   const seen = new Set(); const order = (Array.isArray(r.order) ? r.order : []).filter(id => SITE_ORDER.includes(id) && !seen.has(id) && seen.add(id));
@@ -69,6 +71,7 @@ export function buildSite(raw, images = {}) {
   const on = id => id === 'menu' || !!s[id].on;
   const img = k => (images[k] ? 'img/site_' + k + '.jpg' : null);
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
+  out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
@@ -108,6 +111,7 @@ export function reviewsFromGoogle(place, max = 5) {
 export const SITE_FILE_FORMAT = 'sahten-sitio';
 export function exportSiteContent(site) {
   const s = normalizeSite(site); const out = { format: SITE_FILE_FORMAT, version: 1, site: { order: s.order } };
+  out.site.seo = s.seo;
   for (const m of SITE_MODULES) out.site[m.id] = s[m.id];
   return JSON.stringify(out, null, 1);
 }
@@ -122,6 +126,7 @@ const SITE_FORMAT_CHECK = SITE_FILE_FORMAT;
 /** Pisa solo las secciones que trae el archivo (y el orden, si lo trae). No toca el interruptor general ni las fotos. */
 export function applySiteContent(current, parsed) {
   const s = normalizeSite(current);
+  if (isObj(parsed.site.seo)) s.seo = { ...s.seo, ...parsed.site.seo };
   for (const id of parsed.modules) s[id] = { ...s[id], ...parsed.site[id] };
   if (Array.isArray(parsed.site.order)) s.order = parsed.site.order;
   return normalizeSite(s);
