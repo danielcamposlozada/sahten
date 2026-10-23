@@ -9,8 +9,6 @@
 import { basename } from './paths.js';
 import { notesToHtml } from '../ui/notes.js';
 
-const HOUR = 3600 * 1000;
-
 export function installDesktop({ apis, project, config, w = window, now = () => Date.now() }) {
   const { dialog, fs, opener, updater, process: proc, event, core, path } = apis;
   const toast = m => (typeof w._posToast === 'function' ? w._posToast(m) : null);
@@ -50,7 +48,7 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
             body: 'Instalala cuando quieras: la app se reinicia y tus proyectos no se tocan.', action: { label: 'Actualizar ahora', call: 'update' } });
           return update;
         }
-        api.askUpdate(update);
+        await api.askUpdate(update);
         return update;
       } catch (e) { if (!silent) w.alert('No se pudo buscar actualizaciones (¿hay internet?).'); return null; }
     },
@@ -124,8 +122,11 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
     try { await event.listen('open-file', ev => api.openPath(ev.payload)); } catch (e) { /* sin eventos */ }
   })();
 
-  // 4) buscar actualizaciones, como mucho una vez por día y sin molestar si no hay internet
-  if (now() - (config.get('last-update-check', 0) || 0) > 24 * HOUR) setTimeout(() => api.checkForUpdates({ silent: true }), 8000);
+  // 4) comprobar en cada inicio; sin conexión no interrumpe y nunca instala sin elegirlo.
+  setTimeout(async () => {
+    const update = await api.checkForUpdates({ silent: true });
+    if (update) await api.askUpdate(update);
+  }, 8000);
 
   return api;
 }

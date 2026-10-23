@@ -118,22 +118,22 @@ export function createController(host) {
       return { local: m.products.length, remote, name: (m.store && m.store.name) || '', slug: host.conn.slug || '' };
     },
 
-    async prepareFile(file) {
+    async prepareFile(file, onProgress) {
       const ctx = context();
       if (!ctx.client) throw new SupabaseError('Iniciá sesión para sincronizar las fotos.');
-      const prepared = await imagesFor(ctx.client).prepare(file, ctx.storeId); check(ctx); return prepared;
+      const prepared = await imagesFor(ctx.client).prepare(file, ctx.storeId, onProgress); check(ctx); return prepared;
     },
-    async restoreFile(file, localImages = {}) {
+    async restoreFile(file, localImages = {}, onProgress) {
       const ctx = context();
       if (!ctx.client) throw new SupabaseError('Iniciá sesión para descargar las fotos.');
-      const restored = await imagesFor(ctx.client).restore(file, localImages); check(ctx); return restored;
+      const restored = await imagesFor(ctx.client).restore(file, localImages, onProgress); check(ctx); return restored;
     },
 
     /** Sube el menú actual para que la web lo lea en vivo (sin republicar archivos). */
     async syncMenu({ force = false, allowed = () => true } = {}) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
       if (publishing) throw new SupabaseError('Ya se está actualizando el menú. Esperá un momento.', { code: 'menu_busy' });
-      publishing = true; const ctx = context();
+      publishing = true; const ctx = context(), task = host.progress?.start('Actualizando el menú de la web');
       try {
         let m = host.menuJson(); delete m.supabase;
         // Protección: un menú vacío (o mucho más chico) no pisa el publicado sin avisar.
@@ -142,11 +142,12 @@ export function createController(host) {
           let remote = 0; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* si no se puede leer, no se bloquea */ }
           if (remote > 0 && m.products.length < remote * 0.5) { const e = new SupabaseError(`El menú publicado tiene ${remote} productos y este proyecto solo ${m.products.length}. Si seguís, el menú de la web se reemplaza.`, { code: 'menu_shrinks' }); e.remote = remote; e.local = m.products.length; throw e; }
         }
-        m = await menuWithCloudImages(m, host.images ? host.images() : {}, imagesFor(ctx.client), ctx.storeId);
+        m = await menuWithCloudImages(m, host.images ? host.images() : {}, imagesFor(ctx.client), ctx.storeId, task?.update);
         check(ctx);
         if (!allowed()) throw new SupabaseError('Se canceló la publicación automática.', { code: 'project_changed' });
-        await ctx.client.store.publishMenu(ctx.storeId, m); check(ctx); lastSync = new Date().toISOString(); syncStoreName(); emit(); return m.products.length;
-      } finally { publishing = false; }
+        task?.update({ detail: 'Guardando el menú publicado…' });
+        await ctx.client.store.publishMenu(ctx.storeId, m); check(ctx); lastSync = new Date().toISOString(); syncStoreName(); emit(); task?.finish(); return m.products.length;
+      } catch (e) { task?.fail(e); throw e; } finally { publishing = false; }
     },
 
     /** Cuando cambia el estado de un pedido importado, se avisa a la web/otros dispositivos. */

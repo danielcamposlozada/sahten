@@ -49,6 +49,27 @@ describe('fotos en Storage', () => {
     expect(result.site.images.hero).toBe(result.products[0].image);
     expect(menu.products[0].image).toBe('img/p.jpg');
   });
+  it('conserva una URL pública de la misma tienda aunque no haya copia local; bloquea referencias locales o ajenas', async () => {
+    const s = storage();
+    const remote = await s.images.upload({ p: PHOTO }, 'store1');
+    const menu = { products: [{ id: 'p', image: remote.p }] };
+    expect((await menuWithCloudImages(menu, {}, s.images, 'store1')).products[0].image).toBe(remote.p);
+    for (const image of ['img/p.jpg', 'file:///foto.jpg', remote.p.replace('store1/', 'store2/')]) {
+      await expect(menuWithCloudImages({ products: [{ id: 'p', image }] }, {}, s.images, 'store1')).rejects.toMatchObject({ code: 'missing_photo' });
+    }
+  });
+  it('optimiza solo la copia web y sube los bytes y tipo resultantes; el respaldo conserva el original', async () => {
+    const s = storage(); const optimize = vi.fn(async () => 'data:image/webp;base64,BAUG');
+    const store = createImageStore(s.client, { optimize });
+    const menu = { products: [{ id: 'p', image: 'img/p.jpg' }], site: { images: { hero: 'img/site_hero.jpg' } } };
+    const result = await menuWithCloudImages(menu, { p: PHOTO, site_hero: PHOTO }, store, 'store1');
+    expect(result.products[0].image).toMatch(/\.webp$/);
+    expect(s.client.storage.upload.mock.calls[0].slice(1)).toEqual([new Uint8Array([4, 5, 6]), 'image/webp']);
+    expect(optimize.mock.calls.map(c => c[1].maxDim)).toEqual([800, 1600]);
+    const backup = await store.prepare({ images: { p: PHOTO } }, 'store1');
+    expect((await store.restore(backup)).images.p).toBe(PHOTO);
+    expect(optimize).toHaveBeenCalledTimes(2);
+  });
   it('descarga fotos dentro del .sahten para usar sin red, y reutiliza las copias locales iguales', async () => {
     const s = storage(); const file = { ...emptyFile(), images: { p: PHOTO } };
     const remote = await s.images.prepare(file, 'store1');

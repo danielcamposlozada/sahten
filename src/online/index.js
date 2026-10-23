@@ -15,6 +15,7 @@ import { channelPrice } from '../core/index.js';
 import { emptyFile, serialize } from '../project/schema.js';
 import { onlinePublish } from './app.js';
 import { createPaymentUi } from '../payments/ui.js';
+import { createTransferProgress } from './progress.js';
 
 export const ONLINE_ENABLED = typeof __SAHTEN_ONLINE__ === 'undefined' ? true : !!__SAHTEN_ONLINE__;
 const clone = v => JSON.parse(JSON.stringify(v));
@@ -24,8 +25,10 @@ export function createOnline({ w = window, project, events }) {
   const conn = () => w.SAHTEN_SUPABASE;
   const roleKey = () => 'online-role:' + (session.id || 'x');
   let sync = null, viewTimer = null, remoteViewing = false;
+  const progress = createTransferProgress();
 
   const host = {
+    progress,
     conn: new Proxy({}, { get: (_, k) => conn()[k], set: (_, k, v) => { conn()[k] = v; return true; }, ownKeys: () => Reflect.ownKeys(conn()), getOwnPropertyDescriptor: (_, k) => Object.getOwnPropertyDescriptor(conn(), k), deleteProperty: (_, k) => delete conn()[k] }),
     images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
@@ -47,9 +50,10 @@ export function createOnline({ w = window, project, events }) {
     if (sync && sync.__client === cl) return sync;
     if (sync) sync.cancel();
     sync = createSync({
+      progress,
       client: cl, remoteId: () => conn().projectId || null, setRemoteId: id => { conn().projectId = id; project.markDirty(); }, role: () => role() || 'owner', projectId: () => session.id,
       collect: () => project.collect(), publicOf,
-      prepareFile: f => controller.prepareFile(f), restoreFile: (f, images) => controller.restoreFile(f, images),
+      prepareFile: (f, report) => controller.prepareFile(f, report), restoreFile: (f, images, report) => controller.restoreFile(f, images, report),
       apply: async f => { await project.apply(f); session.markDirty(); }, store: config,
     });
     sync.__client = cl; sync.onChange(() => ui.render && ui.render()); return sync;
@@ -76,7 +80,7 @@ export function createOnline({ w = window, project, events }) {
   photoPublisher.onChange(() => ui.render());
 
   const api = {
-    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher,
+    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher, progress,
     setAutoPhotos(on) { w.MENU_CONFIG.autoSyncPhotos = !!on; w._saveMenuConfig(); project.markDirty(); if (on) photoPublisher.schedule(); else photoPublisher.cancel(); },
     syncInfo: () => (sync ? sync.info() : { state: 'sin vincular', linked: !!conn().projectId, pending: false, conflict: null, version: null, role: role() }),
 
@@ -110,17 +114,22 @@ export function createOnline({ w = window, project, events }) {
     /** Abrir un proyecto de la nube según el rol: completo (dueño, admin, lectura) o sin costos (encargado, cajero). */
     async openRemote(id, roleName) {
       const cl = need(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
+      const task = progress.start('Abriendo proyecto de la nube');
+      try {
+      task.update({ detail: 'Descargando base de datos…' });
       let file;
       if (receivesFullProject(roleName)) { const r = await cl.rpc('get_project_data', { pid: id }); file = clone(r.data); }
       else { const r = await cl.rpc('get_project_public', { pid: id }); file = applyPublicToFile(emptyFile(r.name || 'Proyecto'), r.public); file.project.name = r.name || file.project.name; file.project.id = (r.public.project && r.public.project.id) || undefined; }
-      file = await controller.restoreFile(file); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
+      file = await controller.restoreFile(file, {}, task.update); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
+      task.update({ detail: 'Abriendo y guardando el proyecto…' });
       remoteViewing = true;
       try { await session.openText(serialize(file), null, (file.project.name || 'Proyecto') + '.sahten'); } finally { remoteViewing = false; }
       Object.assign(conn(), file.online.supabase);
       setRole(roleName); session.setReadOnly(roleName === 'lectura');
       await controller.resume(); ensureSync();
       if (writeScope(roleName) !== 'none') { try { await sync.sync(); } catch (e) { /* queda en cola */ } }
-      return true;
+      task.finish(); return true;
+      } catch (e) { task.fail(e); throw e; }
     },
 
     async listMembers() { return need().rpc('list_members', { pid: rid() }); },
@@ -179,6 +188,7 @@ export function createOnline({ w = window, project, events }) {
   if (ONLINE_ENABLED) api.userMenu = createUserMenu({ online: api, project, w });
   installRoleGuard(role, events);
   controller.onChange(() => ui.render());
+  progress.onChange(() => ui.renderProgress());
 
   // el estado de un pedido importado se avisa a la nube
   events.afterRender('orderSetStatus', id => { const o = (w.sahtenOrders() || []).find(x => x.id === id); if (o && o.remoteId) controller.pushStatus(o); });

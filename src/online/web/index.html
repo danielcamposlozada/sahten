@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Menú</title>
+<!--__SEO_HEAD__-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
@@ -129,6 +130,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 </style>
 </head>
 <body>
+<!--__SEARCH_CONTENT__-->
 <header><h1 id="h-title">Menú</h1><p id="h-sub"></p></header>
 <div id="s-nav"></div>
 <div id="s-top"></div>
@@ -159,6 +161,7 @@ var q=new URLSearchParams(location.search);
 // ── carga: menú en vivo (Supabase, si hay) y respaldo en menu.json ──
 function sb(){return MENU&&MENU.supabase;}
 function sbHeaders(extra){var s=sb();return Object.assign({apikey:s.anonKey,Authorization:'Bearer '+s.anonKey,'Content-Type':'application/json'},extra||{});}
+function fetchLimited(url,options,ms){var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},ms||8000);return fetch(url,Object.assign({},options||{},{signal:controller.signal})).finally(function(){clearTimeout(timer);});}
 function slugFromLocation(){
   var s=q.get('store'); if(s) return s;
   var h=location.hostname.split('.'); if(h.length>=3 && h[0]!=='www') return h[0];
@@ -168,10 +171,10 @@ function load(){
   return fetch('menu.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('menu.json '+r.status);return r.json();})
    .catch(function(){var el=$('menu-fallback');var d=null;try{d=JSON.parse(el.textContent.replace(/^\/\*.*?\*\//,''));}catch(e){}if(!d)throw new Error('No pudimos cargar el menú.');return d;})
    .then(function(base){
-     MENU=base; var s=sb(); if(!s) return;
+     MENU=base; applyTheme();render();route(); var s=sb(); if(!s) return;
      var slug=slugFromLocation()||s.slug;
      var url=s.url+'/rest/v1/stores?select=id,menus(json)&'+(slug?'slug=eq.'+encodeURIComponent(slug):'id=eq.'+encodeURIComponent(s.storeId));
-     return fetch(url,{headers:sbHeaders()}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
+     return fetchLimited(url,{headers:sbHeaders()}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
        var live=rows&&rows[0]&&rows[0].menus&&(Array.isArray(rows[0].menus)?rows[0].menus[0]:rows[0].menus);
        if(live&&live.json&&live.json.products){var keep=base.supabase;MENU=live.json;
        /* Las URL de Storage ya están subidas. Las rutas locales requieren el archivo publicado. */
@@ -188,7 +191,7 @@ function mpSessionKey(){return 'sahten-mp:'+sb().storeId;}
 function mpSavePending(p){sessionStorage.setItem(mpSessionKey(),JSON.stringify(p));mpPending=p;}
 function mpConfig(){
   if(!sb())return Promise.resolve();
-  return fetch(mpEndpoint('config')+'?store_id='+encodeURIComponent(sb().storeId)+(q.get('mp_test')==='1'?'&test=1':''),{headers:sbHeaders()})
+  return fetchLimited(mpEndpoint('config')+'?store_id='+encodeURIComponent(sb().storeId)+(q.get('mp_test')==='1'?'&test=1':''),{headers:sbHeaders()},5000)
     .then(function(r){return r.ok?r.json():{};}).then(function(c){mpAvailable=!!c.enabled;}).catch(function(){mpAvailable=false;});
 }
 function mpCall(path,data){return fetch(mpEndpoint(path),{method:'POST',headers:sbHeaders(),body:JSON.stringify(data)}).then(function(r){return r.json().then(function(d){if(!r.ok){var e=new Error(d.message||'No pudimos conectar con Mercado Pago.');e.code=d.code;throw e;}return d;});});}
@@ -229,7 +232,10 @@ document.addEventListener('click',function(e){if(e.target.closest('[data-mp-refr
 var activeCat='all';
 function applyTheme(){var t=MENU.theme||{},r=document.documentElement;if(t.primary)r.style.setProperty('--primary',t.primary);if(t.accent)r.style.setProperty('--accent',t.accent);r.style.setProperty('--on-primary',contrastText(t.primary||'#235328'));r.style.setProperty('--on-accent',contrastText(t.accent||'#F28C00'));}
 function render(){
-  var c=MENU.config||{};document.title=(MENU.store.name||'Menú');
+  var c=MENU.config||{},seo=buildSeo(MENU);document.title=seo.title;
+  var fallback=$('search-content');if(fallback)fallback.hidden=true;
+  var description=document.querySelector('meta[name="description"]');if(description)description.content=seo.description;
+  var schema=$('restaurant-schema');if(schema)schema.textContent=JSON.stringify(seo.schema);
   $('h-title').textContent=c.title||MENU.store.name||'Menú';$('h-sub').textContent=c.subtitle||'';
   $('foot').textContent=[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   if(c.enabled===false){$('grid').innerHTML='';$('cats').innerHTML='';$('msg').innerHTML='<div class="empty"><b>Menú no disponible por ahora</b><br>Volvé a intentar más tarde.</div>';return;}
@@ -298,7 +304,7 @@ function site(){
 function idOf(h){return ({'#pedido':'menu','#s-how':'como','#s-about':'historia','#s-reviews':'resenas','#s-catering':'catering','#s-faq':'faq','#s-contact':'contacto'})[h]||'';}
 function card(p){
   var n=cart[p.id]||0, showP=MENU.config.showPrices!==false;
-  var img=p.image&&MENU.config.showImages!==false?'<img loading="lazy" src="'+esc(p.image)+'" alt="" onerror="this.parentNode.textContent=this.getAttribute(\'data-i\')" data-i="'+esc((p.name||'?').charAt(0).toUpperCase())+'">':esc((p.name||'?').charAt(0).toUpperCase());
+  var img=p.image&&MENU.config.showImages!==false?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.parentNode.textContent=this.getAttribute(\'data-i\')" data-i="'+esc((p.name||'?').charAt(0).toUpperCase())+'">':esc((p.name||'?').charAt(0).toUpperCase());
   return '<div class="card"><div class="ph">'+img+'</div><div class="body">'+(p.category?'<div class="cat-l">'+esc(p.category)+'</div>':'')+'<div class="name">'+esc(p.name)+'</div>'+(p.description?'<div class="desc">'+esc(p.description)+'</div>':'')+(showP?'<div class="price">'+fmt(p.price)+'</div>':'')+
    (n?'<div class="qty"><button data-dec="'+esc(p.id)+'" aria-label="Quitar">−</button><b>'+n+'</b><button data-inc="'+esc(p.id)+'" aria-label="Agregar">+</button></div>':'<button class="add" data-inc="'+esc(p.id)+'">Agregar</button>')+'</div></div>';
 }
@@ -447,7 +453,7 @@ document.addEventListener('click',function(e){
   else if(t.id==='send')send();
 });
 window.openCart=openCart;window.__menu=function(){return MENU;};
-load().then(mpConfig).then(function(){applyTheme();render();route();mpReturn();}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
+load().then(function(){applyTheme();render();route();mpConfig().then(function(){mpReturn();});}).catch(function(e){$('msg').innerHTML='<div class="empty"><b>No pudimos cargar el menú.</b><br>'+esc(e.message)+'<br><small>Si abriste el archivo directo desde tu computadora, probá desde el sitio publicado.</small></div>';});
 })();
 </script>
 </body>
