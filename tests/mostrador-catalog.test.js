@@ -41,26 +41,32 @@ describe('catálogo del Mostrador', () => {
     expect(html).toContain(w.eval('SAHTEN_ORDERS[0].items[0].name'));
     w.close();
   });
-  it('online incluye retiro y delivery, filtra y excluye pedidos locales', async () => {
+  it('online muestra retiro y delivery en columnas, permite acciones rápidas y conserva completados recientes', async () => {
     const { window: w } = await openApp(); loadRawDemo(w);
-    w.eval(`SAHTEN_ORDERS = [
-      {id:'web-ret',remoteId:'r',source:'pickup',status:'pendiente',customerName:'Retiro web',items:[],num:1,total:100,createdAt:'2026-10-22T12:00:00Z'},
-      {id:'web-del',remoteId:'d',source:'delivery',status:'pendiente',customerName:'Delivery web',items:[],num:2,total:100,createdAt:'2026-10-22T13:00:00Z'},
-      {id:'local-del',source:'delivery',orderType:'delivery',status:'pendiente',customerName:'Delivery local',items:[],num:3,total:100},
-      {id:'old',remoteId:'o',source:'pickup',status:'cancelado',customerName:'Cancelado',items:[],num:4,total:100}
-    ]; showPanel('mostrador'); mostSetTab('online'); _renderDeliveryTab();`);
+    w.eval("SAHTEN_ORDERS = [\n      {id:'web-ret',remoteId:'r',source:'pickup',status:'pendiente',customerName:'Retiro web',items:[{qty:2}],num:1,total:100,createdAt:'2026-10-22T12:00:00Z'},\n      {id:'web-del',remoteId:'d',source:'delivery',status:'pendiente',customerName:'Delivery web',items:[{qty:3}],num:2,total:100,createdAt:'2026-10-22T13:00:00Z'},\n      {id:'local-del',source:'delivery',orderType:'delivery',status:'pendiente',customerName:'Delivery local',items:[],num:3,total:100},\n      {id:'old',remoteId:'o',source:'pickup',status:'cancelado',customerName:'Cancelado',items:[],num:4,total:100}\n    ]; showPanel('mostrador'); mostSetTab('online'); _renderDeliveryTab();");
     const d = w.document;
+    const columns = () => d.querySelectorAll('.online-board-column');
     expect(d.querySelector('.most-tab-delivery').textContent).toContain('Pedidos online');
     expect(d.querySelector('.most-tab-delivery .most-tab-badge').textContent).toBe('2');
-    expect(d.getElementById('most-tab-content').textContent).toContain('Retiro web');
-    expect(d.getElementById('most-tab-content').textContent).not.toContain('Delivery local');
-    const filters = () => d.querySelectorAll('.online-order-filters button');
-    filters()[1].click();
-    expect(d.getElementById('most-tab-content').textContent).toContain('Retiro web');
-    expect(d.getElementById('most-tab-content').textContent).not.toContain('Delivery web');
-    filters()[2].click();
-    expect(d.getElementById('most-tab-content').textContent).toContain('Delivery web');
-    expect(filters()[2].getAttribute('aria-pressed')).toBe('true');
+    expect(columns()).toHaveLength(2);
+    expect(columns()[0].textContent).toContain('Retiro web');
+    expect(columns()[0].textContent).not.toContain('Delivery web');
+    expect(columns()[1].textContent).toContain('Delivery web');
+    expect(d.querySelector('.online-board').textContent).not.toContain('Delivery local');
+    const mobile = d.querySelector('.online-board-mobile-switch');
+    mobile.querySelector('[data-online-action="delivery"]').click();
+    expect(columns()[1].classList.contains('is-selected')).toBe(true);
+    mobile.querySelector('[data-online-action="pickup"]').click();
+    expect(columns()[0].classList.contains('is-selected')).toBe(true);
+    d.querySelector('.online-board-column [data-online-action="next"]').click();
+    expect(d.querySelector('.online-board-column').textContent).toContain('En preparación');
+    expect(d.querySelector('.delivery-list')).not.toBeNull();
+    w.orderSetStatus('web-ret', 'listo');
+    w.orderSetStatus('web-ret', 'retirado');
+    expect(columns()[0].textContent).not.toContain('Retiro web');
+    expect(d.querySelector('.online-board-recent-list').textContent).toContain('Retiro web');
+    d.querySelector('[data-online-action="recent"]').click();
+    expect(d.querySelector('.online-board-recent-list').hidden).toBe(true);
     w.close();
   });
 
