@@ -1,3 +1,4 @@
+import googleLogo from '../assets/google-g.png?inline';
 import { reviewUrl } from './review-link.js';
 export { reviewUrl } from './review-link.js';
 import qrcode from 'qrcode-generator';
@@ -11,5 +12,5 @@ export function reviewFooter(config = {}) {
   qr.addData(url, 'Byte'); qr.make();
   const image = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(qr.createSvgTag({ cellSize: 4, margin: 16, scalable: true }));
   const text = String(config.reviewText || DEFAULT_REVIEW_TEXT).trim().slice(0, 140) || DEFAULT_REVIEW_TEXT;
-  return '<div class="receipt-review"><p>' + esc(text) + '</p><img class="receipt-review-qr" src="' + image + '" alt="QR para dejar una reseña en Google"><p class="receipt-review-help">Escaneá el QR para opinar</p></div>';
+  return '<div class="receipt-review"><div class="receipt-google-brand"><img class="receipt-google-logo" src="'+googleLogo+'" alt="Google"><span aria-hidden="true">Google</span></div><p>' + esc(text) + '</p><img class="receipt-review-qr" src="' + image + '" alt="QR para dejar una reseña en Google"><p class="receipt-review-help">Escaneá el QR para opinar</p></div>';
 }
