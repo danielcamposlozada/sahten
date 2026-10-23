@@ -13,7 +13,7 @@
 // ═══════════════════════════════════════════════════════════
 import { createClient, validateConnection, validSlug, slugify, SupabaseError } from './supabase.js';
 import { createImageStore, menuWithCloudImages } from './images.js';
-import { toLocalOrder, STATUS_TO_REMOTE, paymentFields } from './orders.js';
+import { toLocalOrder, STATUS_FROM_REMOTE, STATUS_TO_REMOTE, paymentFields } from './orders.js';
 
 export function createController(host) {
   let client = null, feed = null, mode = 'desconectado', error = null, lastSync = null;
@@ -32,6 +32,13 @@ export function createController(host) {
     const existing = host.orders.list().find(o => o.remoteId === row.id);
     if (existing) {
       const fields = paymentFields(row);
+      // Solo adoptar estados remotos nuevos; no revertir una acción local aún en tránsito.
+      if (row.status && existing.remoteStatus !== row.status && STATUS_FROM_REMOTE[row.status]) {
+        fields.status = STATUS_FROM_REMOTE[row.status];
+        fields.remoteStatus = row.status;
+        if (['retirado', 'entregado', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
+        else fields.completedAt = undefined;
+      }
       if (JSON.stringify(fields) !== JSON.stringify(Object.fromEntries(Object.keys(fields).map(k => [k, existing[k]])))) { Object.assign(existing, fields); host.orders.save?.(); host.markDirty(); host.refresh(); }
       return;
     }
@@ -154,7 +161,7 @@ export function createController(host) {
     async pushStatus(order) {
       if (!client || !order || !order.remoteId) return false;
       const st = STATUS_TO_REMOTE[order.status]; if (!st) return false;
-      try { await client.orders.setStatus(order.remoteId, st); return true; } catch (e) { return false; }
+      try { await client.orders.setStatus(order.remoteId, st); order.remoteStatus = st; host.orders.save?.(); return true; } catch (e) { return false; }
     },
   };
   return api;

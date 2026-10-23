@@ -36,6 +36,7 @@ import { projectUi } from './project/ui.js';
 import { onlinePublish } from './online/app.js';
 import * as siteModule from './online/site.js';
 import { createOnline } from './online/index.js';
+import * as orderWorkflow from './online/order-workflow.js';
 import { events } from './events.js';
 
 import appJs from './legacy/app.js?raw';
@@ -77,6 +78,7 @@ window.SAHTEN.receiptReviews = { footer: reviewFooter, url: reviewUrl, defaultTe
 window.SAHTEN.printDocument = html => printDocument(html);
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
+window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;
