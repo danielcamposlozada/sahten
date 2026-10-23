@@ -395,3 +395,20 @@ describe('Mercado Pago en la web sin claves privadas',()=>{
     expect(a.d.querySelector('#sheet').textContent).not.toContain('Pago acreditado.');a.w.close();
   });
 });
+
+describe('invitación a reseñar en Google', () => {
+  it('muestra la invitación aun sin reseñas y solo acepta enlaces de Google', async () => {
+    const menu = buildMenuJson(demoState(), { tienda: TIENDA });
+    menu.site = { enabled: true, order: ['resenas','menu'], resenas: { title: 'Opiniones', items: [], reviewUrl: 'https://search.google.com/local/writereview?placeid=ChIJdemo', reviewTitle: '¿Ya probaste nuestra comida?', reviewText: 'Contanos tu experiencia' } };
+    const { w, d } = await web({ menu });
+    const button = d.querySelector('.google-review-button');
+    expect(button.textContent).toContain('Dejar una reseña en Google');
+    expect(button.href).toBe(menu.site.resenas.reviewUrl);
+    expect(button.rel).toContain('noopener');
+    expect(d.querySelector('.google-review-button img').src).toMatch(/^https:\/\/www.gstatic.com/);
+    w.close();
+    menu.site.resenas.reviewUrl = 'javascript:alert(1)';
+    const bad = await web({ menu });
+    expect(bad.d.querySelector('.google-review-button')).toBeNull(); bad.w.close();
+  });
+});

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.11
+
+- **Pedidos online**: reemplaza Delivery, incluye retiro y envío con filtros Todos / Retiro / Delivery y contadores compartidos. Los pedidos creados en mostrador siguen en el historial.
+- **Reseñas en el ticket**: opción por negocio con texto editable y QR de Google generado sin internet. Se configura junto al logo para impresión.
+
+- **Mostrador en lista o grilla**: ambas vistas comparten búsqueda por nombre o categoría y conservan el pedido y los filtros. La elección se recuerda en cada equipo.
+- **Lectura más clara**: buscador con etiqueta y borde destacado, contador de resultados, nombres y precios más grandes; en lista los nombres largos se muestran completos.
+- **Comandas sin pop-ups**: la impresión prepara un documento aislado dentro de la app, espera al logo y abre el diálogo del sistema sin ventanas emergentes.
+- **Papel de 48 y 58 mm**: texto negro y mayor tamaño; en 48 mm los importes de los productos pasan a su propia línea para dejar espacio a los nombres. Elegí el papel correspondiente en el controlador de la impresora.
+
 ## 0.4.10
 
 - Checkout Pro de Mercado Pago con cuenta independiente por negocio, configurada desde Tienda online y delivery. Claves cifradas en el servidor y permisos de dueño o administrador.

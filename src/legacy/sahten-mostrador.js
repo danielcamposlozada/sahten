@@ -95,6 +95,8 @@ async function _removeProductImage() {
 let mostradorCart = [];
 let _mostCartFocusCleanup = null;
 let mostradorSearch = '';
+let mostradorView = 'grid';
+try { mostradorView = localStorage.getItem('sahten-pos-view') === 'list' ? 'list' : 'grid'; } catch (e) {}
 let mostradorCategory = 'all';
 let mostradorTab = 'pedido'; // 'pedido' | 'historial'
 
@@ -182,10 +184,16 @@ function _renderPedidoTab() {
     <div class="most-layout">
       <div class="panel-content">
         <div class="most-toolbar">
-          <div class="most-search-wrap">
+          <div class="most-catalog-tools">
+          <div class="most-search-field"><label for="most-search-input">Buscar productos</label><div class="most-search-wrap">
             <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="most-search" id="most-search-input" placeholder="Buscar producto..." value="${_esc(mostradorSearch)}" oninput="mostradorOnSearch(this.value)">
-          </div>
+            <input type="search" class="most-search" id="most-search-input" placeholder="Nombre o categoría…" value="${_esc(mostradorSearch)}" oninput="mostradorOnSearch(this.value)">
+          </div></div>
+          <div class="most-view-switch" role="group" aria-label="Vista de productos">
+            <button type="button" data-most-view="grid" aria-pressed="${mostradorView==='grid'}" onclick="mostradorSetView('grid')">▦ Grilla</button>
+            <button type="button" data-most-view="list" aria-pressed="${mostradorView==='list'}" onclick="mostradorSetView('list')">☰ Lista</button>
+          </div></div>
+          <div id="most-result-count" class="most-result-count" role="status" aria-live="polite"></div>
           <div class="most-cats" id="most-cats"></div>
         </div>
         <div class="most-product-grid" id="most-product-grid"></div>
@@ -246,7 +254,11 @@ function _mostPrice(p) {
 }
 function _renderMostradorGrid() {
   const grid = document.getElementById('most-product-grid'); if (!grid) return;
+  grid.classList.toggle('most-product-list', mostradorView === 'list');
+  document.querySelectorAll('[data-most-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mostView === mostradorView)));
   const visible = _visibleProducts();
+  const count = document.getElementById('most-result-count');
+  if (count) count.textContent = visible.length + (visible.length === 1 ? ' producto' : ' productos');
   if (visible.length === 0) {
     grid.innerHTML = '<div class="most-empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:64px;height:64px;opacity:0.3;margin-bottom:16px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div>Sin productos' + (mostradorSearch ? ' para "'+_esc(mostradorSearch)+'"' : '') + '</div></div>';
     return;
@@ -259,7 +271,7 @@ function _renderMostradorGrid() {
       '<div class="most-product-img" id="most-img-'+p.id+'"><span class="most-product-img-placeholder">'+initial+'</span>' +
       (p.star ? '<div class="most-product-star">⭐</div>' : '') +
       catBadge + '</div>' +
-      '<div class="most-product-body"><div class="most-product-name">'+_esc(p.name)+'</div>' +
+      '<div class="most-product-body"><div class="most-product-label"><div class="most-product-name">'+_esc(p.name)+'</div><div class="most-list-category">'+_esc(p.category||'')+'</div></div>' +
       '<div class="most-product-price">$'+_fmt(price)+'</div></div>' +
       '<button class="most-product-add" aria-label="Agregar '+_esc(p.name)+' al pedido" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
   }).join('');
@@ -271,6 +283,11 @@ function _renderMostradorGrid() {
   });
 }
 
+function mostradorSetView(view) {
+  mostradorView = view === 'list' ? 'list' : 'grid';
+  try { localStorage.setItem('sahten-pos-view', mostradorView); } catch (e) {}
+  _renderMostradorGrid();
+}
 function mostradorOnSearch(v) { mostradorSearch = v; _renderMostradorGrid(); }
 function mostradorSetCategory(cat) { mostradorCategory = cat; _renderCats(); _renderMostradorGrid(); }
 
@@ -678,43 +695,56 @@ body {
 .meta { text-align: center; font-size: 13px; color: #000; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
 .sep { border-top: 1px dashed #000; margin: 6px 0; }
 .sep-bold { border-top: 3px solid #000; margin: 6px 0; }
-table { width: 100%; border-collapse: collapse; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.receipt-items td:first-child { width: 65%; }
+.receipt-items td:last-child { width: 35%; }
+.total-row td:last-child { width: 65%; }
+.meta, .payment { overflow-wrap: anywhere; }
 td { padding: 3px 0; font-size: 14px; vertical-align: top; font-weight: 600; }
-.item-name { text-align: left; padding-right: 4px; word-break: break-word; font-weight: 700; }
+.item-name { overflow-wrap: anywhere; text-align: left; padding-right: 4px; word-break: break-word; font-weight: 700; }
 .item-price { text-align: right; white-space: nowrap; font-weight: 900; min-width: 16mm; }
 .sub-row td { font-size: 13px; color: #000; font-weight: 600; }
 .total-row td { font-size: 18px; font-weight: 900; padding-top: 6px; border-top: 2px solid #000; }
 .status { text-align: center; font-size: 16px; font-weight: 900; text-transform: uppercase; margin: 8px 0; padding: 6px 4px; border: 3px solid #000; letter-spacing: 0.5px; }
-.footer { text-align: center; font-size: 11px; color: #444; font-weight: 600; margin-top: 10px; padding-top: 4px; }
+.receipt-review { text-align: center; border-top: 1px dashed #000; margin-top: 12px; padding-top: 10px; break-inside: avoid; color: #000; font-size: 13px; line-height: 1.4; font-weight: 700; }
+.receipt-review-qr { display: block; width: 32mm; height: 32mm; margin: 6px auto; }
+.receipt-review-help { font-size: 12px; font-weight: 600; }
+.footer { text-align: center; font-size: 11px; color: #000; font-weight: 600; margin-top: 10px; padding-top: 4px; }
 .payment { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
 /* ── 58mm overrides ── */
 @media print and (max-width: 58mm) {
-  body { font-size: 12px; padding: 2mm; max-width: 50mm; }
+  @page { margin: 2mm; }
+  body { font-size: 13px; padding: 0; max-width: none; }
   .logo-svg { max-width: 38mm; max-height: 14mm; }
   .logo-img { max-width: 34mm; max-height: 13mm; }
   .brand { font-size: 18px; }
   .order-num { font-size: 22px; }
-  td { font-size: 12px; }
+  td { font-size: 13px; }
   .item-price { min-width: 12mm; }
   .total-row td { font-size: 16px; }
   .status { font-size: 14px; padding: 5px 3px; border-width: 2px; }
 }
 /* ── 48mm overrides ── */
 @media print and (max-width: 48mm) {
-  body { font-size: 11px; padding: 1.5mm; max-width: 42mm; line-height: 1.3; }
+  @page { margin: 1.5mm; }
+  body { font-size: 12px; padding: 0; max-width: none; line-height: 1.4; }
   .logo-svg { max-width: 32mm; max-height: 12mm; }
   .logo-img { max-width: 28mm; max-height: 10mm; }
   .brand { font-size: 15px; margin-bottom: 2px; }
   .order-num { font-size: 18px; margin: 4px 0; }
-  .meta { font-size: 10px; font-weight: 600; }
-  td { font-size: 11px; padding: 2px 0; }
+  .meta { font-size: 12px; font-weight: 600; }
+  td { font-size: 12px; padding: 2px 0; }
+  .receipt-items tr, .receipt-items td:first-child, .receipt-items td:last-child { display: block; width: 100%; }
+  .receipt-items .item-price { text-align: right; padding-top: 0; }
   .item-name { font-weight: 600; }
-  .item-price { min-width: 10mm; font-size: 11px; }
-  .sub-row td { font-size: 10px; }
+  .item-price { min-width: 0; font-size: 12px; }
+  .sub-row td { font-size: 12px; }
   .total-row td { font-size: 14px; }
   .status { font-size: 12px; padding: 4px 2px; border-width: 2px; }
-  .footer { font-size: 9px; }
-  .payment { font-size: 11px; }
+  .footer { font-size: 11px; }
+  .payment { font-size: 12px; }
+  .receipt-review { font-size: 12px; }
+  .receipt-review-qr { width: 30mm; height: 30mm; }
   .sep { margin: 4px 0; }
   .sep-bold { border-top-width: 2px; margin: 4px 0; }
 }
@@ -723,7 +753,7 @@ ${logoHtml}
 <div class="order-num">ORDEN #${orderNum}</div>
 <div class="meta">${dateStr}<br>${_esc(o.customerName||'Consumidor Final')}</div>
 <div class="sep-bold"></div>
-<table>${itemsHtml}</table>
+<table class="receipt-items">${itemsHtml}</table>
 <div class="sep"></div>
 <table>
 <tr class="sub-row"><td>Subtotal</td><td style="text-align:right">$${_fmt(o.subtotal)}</td></tr>
@@ -735,12 +765,10 @@ ${o.paymentName?'<div class="sep"></div><div class="payment">Pago: '+_esc(o.paym
 <div class="sep-bold"></div>
 <div class="status">${{pendiente:'PENDIENTE',en_preparacion:'EN PREPARACIÓN',listo:'LISTO'}[o.status]||o.status}</div>
 <div class="footer">Gracias por tu compra</div>
+${SAHTEN.receiptReviews.footer(_custData)}
 </body></html>`;
 
-  const w = window.open('','comanda','width=320,height=700');
-  if (!w) { alert('No se pudo abrir la ventana de impresión. Deshabilitá el bloqueador de pop-ups.'); return; }
-  w.document.write(html); w.document.close();
-  setTimeout(() => { w.focus(); w.print(); }, 500);
+  return SAHTEN.printDocument(html).catch(e => alert('No se pudo imprimir la comanda. ' + (e.message || 'Volvé a intentarlo.')));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -879,12 +907,12 @@ function previewComandaFromSettings() {
     customerName: 'Juan Pérez',
     discountId: null,
     discountName: '10% off',
-    discountAmount: 5690,
+    discountAmount: 3265,
     shipping: 1500,
     paymentId: null,
     paymentName: 'Efectivo',
-    subtotal: 56900,
-    total: 52710,
+    subtotal: 32650,
+    total: 30885,
     status: 'pendiente',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -929,7 +957,7 @@ Object.assign(window, {
   mostradorSetDiscount, mostradorSetShipping, mostradorCheckout,
   openDiscountManager, discAddNew, discEdit, discDelete,
   openPaymentManager, payAddNew, payEdit, payDelete,
-  openOrderDetail, orderSetStatus, orderReopen, orderDelete, printComanda,
+  mostradorSetView, openOrderDetail, orderSetStatus, orderReopen, orderDelete, printComanda,
   custAddNew, custEdit, custDeleteClient,
   _handleProductImageUpload, _removeProductImage, directUploadImage,
   getProductImage, getProductImageCached, saveProductImage, deleteProductImage,
