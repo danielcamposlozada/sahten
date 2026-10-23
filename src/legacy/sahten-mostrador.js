@@ -707,6 +707,8 @@ td { padding: 3px 0; font-size: 14px; vertical-align: top; font-weight: 600; }
 .total-row td { font-size: 18px; font-weight: 900; padding-top: 6px; border-top: 2px solid #000; }
 .status { text-align: center; font-size: 16px; font-weight: 900; text-transform: uppercase; margin: 8px 0; padding: 6px 4px; border: 3px solid #000; letter-spacing: 0.5px; }
 .receipt-review { text-align: center; border-top: 1px dashed #000; margin-top: 12px; padding-top: 10px; break-inside: avoid; color: #000; font-size: 13px; line-height: 1.4; font-weight: 700; }
+.receipt-google-brand { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 7px; font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; }
+.receipt-google-logo { width: 6mm; height: 6mm; filter: grayscale(1) brightness(0); }
 .receipt-review-qr { display: block; width: 32mm; height: 32mm; margin: 6px auto; }
 .receipt-review-help { font-size: 12px; font-weight: 600; }
 .footer { text-align: center; font-size: 11px; color: #000; font-weight: 600; margin-top: 10px; padding-top: 4px; }

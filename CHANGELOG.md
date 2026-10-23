@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.12
+
+- **Ticket completo de reseñas**: el pie incluye el logo de Google en blanco y negro junto al texto y el QR del negocio. El logo está incluido en la app y se imprime sin conexión.
+- Conserva las mejoras de Mostrador, Pedidos online y papel de 48/58 mm de 0.4.11. Activá el pie de reseñas en Ajustes → Negocio → Personalización y usá Previsualizar comanda para comprobarlo antes de imprimir.
+
 ## 0.4.11
 
 - **Pedidos online**: reemplaza Delivery, incluye retiro y envío con filtros Todos / Retiro / Delivery y contadores compartidos. Los pedidos creados en mostrador siguen en el historial.

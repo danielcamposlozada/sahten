@@ -14,8 +14,10 @@ describe('reseñas de Google en el ticket', () => {
     const html = reviewFooter({ reviewEnabled: true, reviewUrl: 'https://g.page/r/ejemplo/review', reviewText: '<script>hola</script>' });
     const d = new JSDOM(html).window.document;
     expect(d.querySelector('script')).toBeNull();
+    expect(d.querySelector('.receipt-google-logo').src).toMatch(/^data:image\/png;base64,/);
+    expect(d.querySelector('.receipt-google-logo').alt).toBe('Google');
     expect(d.querySelector('p').textContent).toBe('<script>hola</script>');
-    const svg = decodeURIComponent(d.querySelector('img').src.split(',')[1]);
+    const svg = decodeURIComponent(d.querySelector('.receipt-review-qr').src.split(',')[1]);
     expect(svg).toContain('<svg'); expect(svg).toContain('<path');
     // Rasteriza los módulos del SVG para comprobar el destino con un lector independiente.
     const size = Number(svg.match(/viewBox="0 0 (\d+)/)[1]);
