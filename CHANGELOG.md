@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Nuevo aviso de pedidos**: grabación acústica de darbuka con palmas de 3 segundos, elegida por el dueño. Reemplaza el sonido sintetizado; está incluida en la app, funciona sin internet y las notificaciones simultáneas no superponen ni cortan el ritmo.
+
 ## 0.4.16
 
 - **Guardado fiable de Mostrador**: altas, ediciones y eliminaciones de clientes y medios de pago activan el guardado del proyecto aunque no haya otro cambio pendiente. También cubre pedidos y el resto de los datos internos; la carga de un archivo no dispara escrituras. La instalación de una actualización se detiene si el proyecto no pudo guardarse o se canceló su guardado.
