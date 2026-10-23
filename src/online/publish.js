@@ -11,6 +11,8 @@ import { imageFileName, categoryPhotoKey } from './menuJson.js';
 import { createZip } from './zip.js';
 import seoSrc from './seo.js?raw';
 import { buildSeo, renderSeoHead, renderSearchContent, discoveryFiles } from './seo.js';
+import { buildSitePages } from './pages.js';
+import { brandFiles, brandInline } from './brand.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
 export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc].map(s => s.replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
@@ -22,6 +24,7 @@ export function buildIndexHtml(menu) {
     .replace('<!--__SEO_HEAD__-->', () => renderSeoHead(menu))
     .replace('<!--__SEARCH_CONTENT__-->', () => renderSearchContent(menu))
     .replace('/*__MENU_JSON__*/null', '/*__MENU_JSON__*/' + safeJson(menu))
+    .replace('/*__BRAND__*/null', () => '/*__BRAND__*/' + safeJson(brandInline(menu)))
     .replace('/*__SHARED__*/', () => sharedScript())
     .replace('<title>Menú</title>', '<title>' + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>');
 }
@@ -50,7 +53,7 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
     { path: 'index.html', data: buildIndexHtml(menu) },
     { path: 'menu.json', data: JSON.stringify(menu, null, 1) },
   ];
-  files.push(...discoveryFiles(menu));
+  files.push(...discoveryFiles(menu), ...buildSitePages(menu), ...brandFiles(menu));
   for (const p of menu.products) {
     if (!p.image || !images[p.id]) continue;
     const bytes = await optimize(images[p.id]);

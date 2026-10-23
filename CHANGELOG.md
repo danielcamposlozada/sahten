@@ -1,5 +1,13 @@
 # Changelog
 
+## Sin publicar
+
+- **Más páginas para buscadores y asistentes de IA**: «Publicar menú» genera además `/menu/` (carta completa con precios y datos estructurados Menu), `/delivery-y-retiro/`, `/catering/` y `/nuestra-historia/`, cada una con su dirección propia, migas de pan y Open Graph; el sitemap las incluye con fecha. Solo salen con la dirección pública cargada.
+- **Datos estructurados más completos**: Restaurant con tipos de cocina, barrios de reparto (`areaServed`), perfiles (`sameAs`), enlace a la carta y logo; preguntas frecuentes como FAQPage idénticas a las visibles. La portada enlaza a las páginas nuevas.
+- **Kit de imágenes de marca**: favicon, ícono para iPhone, manifiesto, íconos Android/maskable e imagen para compartir el link (1200×630, con medidas y texto alternativo). Se activa con *Kit de imágenes de marca* en SEO. La portada muestra la caligrafía árabe sola como logo. Incluye en `docs/brand/` los avatares y portadas para Google, Instagram y Facebook.
+- **Editor del sitio**: nuevos campos de barrios de reparto, otros perfiles públicos y kit de marca.
+- **Documentación para agentes**: `AGENTS.md`, `docs/SEO-GEO-AEO.md`, `docs/PROMPT-AGENTES.md`.
+
 ## 0.4.14
 
 - **Tablero de pedidos online**: dos columnas fijas para Retiro y Delivery, con número, cliente, cantidad de productos, horario y progreso.

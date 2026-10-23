@@ -25,7 +25,7 @@ export const SITE_LIMITS = { highlights: 4, steps: 4, reviews: 9, info: 4, faq: 
 export function siteDefaults() {
   return {
     enabled: false,
-    seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '' },
+    seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
     order: SITE_ORDER.slice(),
     hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [] },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
@@ -71,7 +71,7 @@ export function buildSite(raw, images = {}) {
   const on = id => id === 'menu' || !!s[id].on;
   const img = k => (images[k] ? 'img/site_' + k + '.jpg' : null);
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
-  out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : 200)]));
+  out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
