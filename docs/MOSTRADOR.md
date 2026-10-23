@@ -1,6 +1,6 @@
 # Mostrador y pedidos — cambios preparados el 23/10/2026
 
-Estado: preparado localmente, sin instalar ni publicar una nueva versión. La app publicada sigue siendo 0.4.15. Los cambios anteriores del PR #16 siguen abiertos; esta revisión amplía su rama local y se entrega también como parche.
+Estado: el dueño autorizó publicar Sahten 0.4.16 para Windows y Mac el 23/10/2026. Código y notas se integran por PR #16; publicación y verificación de instaladores en curso. La prueba física de IT01 se hace después de instalar.
 
 ## Espacio de trabajo
 

@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.16
+
 - **Guardado fiable de Mostrador**: altas, ediciones y eliminaciones de clientes y medios de pago activan el guardado del proyecto aunque no haya otro cambio pendiente. También cubre pedidos y el resto de los datos internos; la carga de un archivo no dispara escrituras. La instalación de una actualización se detiene si el proyecto no pudo guardarse o se canceló su guardado.
 - **Más altura para el pedido**: el carrito comienza junto al aviso de prueba y aprovecha toda la altura; las pestañas ocupan el ancho del catálogo. El aviso se puede ocultar con una X y vuelve al entrar a Mostrador. Los niveles de precio ya no aparecen como categorías de platos.
 - **Pedidos de mostrador y web en una cola**: «Pedidos» reúne ambas procedencias en Retiro en local / Mostrador y Delivery. Los pedidos locales también se completan como retirados o entregados y siguen disponibles en Historial.

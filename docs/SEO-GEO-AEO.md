@@ -122,3 +122,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - «Pedidos» reúne mostrador y web, en Retiro en local / Mostrador y Delivery. Las tarjetas se muestran plegadas; productos, entrega, contacto, indicaciones, pago e impresión se despliegan al pedirlos. Se distinguen estados por borde, etiqueta y acción.
 - Corregida la falta de aviso al guardado automático cuando se modifican clientes, medios de pago u otros datos internos. El instalador detiene la actualización si falla o se cancela el guardado previo. No se considera un medio de pago elegido como un cobro acreditado.
 - Estas mejoras de aplicación permanecen sin publicar, por decisión del dueño. No cambian la web desplegada ni datos de Supabase. Detalles de operación y validación en `docs/MOSTRADOR.md`.
+
+**Publicación 0.4.16 autorizada (23/10/2026)**
+- El dueño confirmó publicar para Windows y Mac los cambios preparados de impresión, personalización web, Mostrador, tarjetas desplegables y conservación de clientes/medios de pago. Se integra mediante el PR #16 y se construyen los instaladores firmados para el actualizador.
+- Publicación de instaladores en curso; la verificación final del release y `latest.json` se registra al terminar. Esta autorización no despliega nuevamente la web, no escribe en Supabase y no activa cobros reales. Audios y prueba nueva de Mercado Pago siguen en pausa.
