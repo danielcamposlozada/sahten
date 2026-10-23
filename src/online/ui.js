@@ -31,7 +31,7 @@ export function createOnlineUi({ online, w = window }) {
 
     async connect() {
       await run('nube-msg', () => online.connect({ url: val('nb-url'), anonKey: val('nb-key'), slug: val('nb-slug'), email: val('nb-mail'), password: $('nb-pass').value, signUp: $('nb-new').checked }),
-        r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Delivery.');
+        r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Pedidos online.');
     },
     async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
     async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.photoPublisher.cancel(); online.controller.disconnect(); ui.render(); } },

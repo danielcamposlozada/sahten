@@ -29,6 +29,9 @@ export const writeScope = role => ({ owner: 'project', admin: 'project', encarga
 /** ¿Recibe el proyecto completo (con costos) o la versión pública? */
 export const receivesFullProject = role => ['owner', 'admin', 'lectura'].includes(role);
 
+const BRAND_FIELDS = ['brandName', 'brandSub', 'logoStyle', 'logoData', 'bwLogoData', 'logoText', 'paletteId', 'customPrimary', 'customAccent', 'reviewEnabled', 'reviewUrl', 'reviewText'];
+const publicBrand = value => Object.fromEntries(BRAND_FIELDS.filter(k => Object.hasOwn(value || {}, k)).map(k => [k, value[k]]));
+
 /** CSS que oculta costos y márgenes para los roles sin acceso (la data ya viaja sin costos; esto limpia columnas y tarjetas). */
 export const NO_COSTS_CSS = `
 body.role-no-costs [data-sec="costs"], body.role-no-costs [data-col="margen"], body.role-no-costs [data-col="costo"], body.role-no-costs .kpi-costs,
@@ -46,6 +49,7 @@ export function toPublicProject(file, priceOf) {
   return {
     project: { name: file.project.name, currencySymbol: file.project.currencySymbol, roundTo: file.project.roundTo, locale: file.project.locale, id: file.project.id },
     products: prods,
+    branding: publicBrand(file.settings?.customization),
     images: Object.fromEntries(Object.entries(file.images || {}).filter(([, v]) => /^https?:\/\//.test(v))),
     cloudImagesVersion: file.cloudImagesVersion,
     channels: file.channels.map(c => ({ id: c.id, name: c.name, enabled: c.enabled, surcharge: 0, commission: 0 })),   // sin comisiones ni recargos
@@ -58,6 +62,7 @@ export function toPublicProject(file, priceOf) {
 export function applyPublicToFile(local, pub) {
   const f = JSON.parse(JSON.stringify(local));
   f.project = { ...f.project, ...pub.project };
+  if (pub.branding) f.settings = { ...f.settings, customization: { ...f.settings?.customization, ...publicBrand(pub.branding) } };
   if (pub.cloudImagesVersion) { f.images = pub.images || {}; f.cloudImagesVersion = pub.cloudImagesVersion; }
   f.catalog = { ...f.catalog, productos: pub.products, ingredientes: [], envases: [], tiers: f.catalog.tiers || [], categorias: [...new Set(pub.products.map(p => p.category).filter(Boolean))] };
   f.channels = pub.channels;

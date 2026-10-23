@@ -6,11 +6,12 @@ import webTemplate from './web/index.html?raw';
 import deliverySrc from '../core/delivery.js?raw';
 import messageSrc from './orderMessage.js?raw';
 import contrastSrc from '../ui/contrast.js?raw';
+import reviewLinkSrc from '../ui/review-link.js?raw';
 import { imageFileName, categoryPhotoKey } from './menuJson.js';
 import { createZip } from './zip.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
-export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc].map(s => s.replace(/^export\s+/gm, '')).join('\n');
+export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc].map(s => s.replace(/^export\s+/gm, '')).join('\n');
 
 const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028').replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
 

@@ -557,7 +557,27 @@ SAHTEN.events.beforeRender('mkChart', (id, cfg) => {
 });
 
 // ── Personalization UI ──
+function custUpdateReview() {
+  const urlInput = document.getElementById('cust-review-url');
+  const enabled = document.getElementById('cust-review-enabled').checked;
+  const url = SAHTEN.receiptReviews.url(urlInput.value);
+  const error = document.getElementById('cust-review-error');
+  const invalid = !!urlInput.value.trim() && !url;
+  error.textContent = invalid ? 'Usá un enlace HTTPS de Google Maps o de Pedir reseñas.' : enabled && !url ? 'Pegá el enlace de Google para incluir el QR.' : '';
+  error.hidden = !error.textContent;
+  urlInput.setAttribute('aria-invalid', String(invalid));
+  _cust.reviewUrl = url || '';
+  _cust.reviewEnabled = enabled && !!url;
+  _cust.reviewText = document.getElementById('cust-review-text').value.trim().slice(0,140) || SAHTEN.receiptReviews.defaultText;
+  custSave(_cust);
+}
 function renderCustPanel() {
+  const reviewEnabled = document.getElementById('cust-review-enabled');
+  if (reviewEnabled) {
+    reviewEnabled.checked = !!_cust.reviewEnabled;
+    document.getElementById('cust-review-url').value = _cust.reviewUrl || '';
+    document.getElementById('cust-review-text').value = _cust.reviewText || SAHTEN.receiptReviews.defaultText;
+  }
   // Brand inputs
   const nameInput = document.getElementById('cust-brand-name');
   const subInput = document.getElementById('cust-brand-sub');
@@ -1182,3 +1202,5 @@ function showWipeSuccess() {
     setTimeout(() => toast.remove(), 400);
   }, 3000);
 }
+
+window.custUpdateReview = custUpdateReview;

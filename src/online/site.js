@@ -1,3 +1,4 @@
+import { reviewUrl } from '../ui/review-link.js';
 // ═══════════════════════════════════════════════════════════
 // Sitio web del negocio: módulos (secciones) con su orden y su on/off. Puro (sin DOM).
 // El editor de la app (Menú Online › Sitio web) escribe esto; menu.json lleva la versión recortada y limpia (buildSite).
@@ -34,7 +35,7 @@ export function siteDefaults() {
       { title: 'Disfrutalo', text: 'Lo preparamos al momento y te lo llevamos o lo retirás en el local.' }] },
     historia: { on: false, eyebrow: 'Nuestra historia', title: '', text: '', badgeWord: '', badgeMeaning: '', badgeQuote: '' },
     banda: { on: false, text: '' },
-    resenas: { on: false, title: 'Lo que dicen nuestros clientes', lead: '', placeId: '', items: [] },
+    resenas: { on: false, title: 'Lo que dicen nuestros clientes', lead: '', placeId: '', reviewUrl: '', reviewTitle: '¿Ya probaste nuestra comida?', reviewText: 'Contanos cómo estuvo tu experiencia.', items: [] },
     catering: { on: false, eyebrow: 'Catering y eventos', title: '', text: '', cta: 'Consultar por WhatsApp', info: [] },
     delivery: { on: true, title: 'Delivery y retiro', hours: '', extra: '' },
     faq: { on: false, title: 'Preguntas frecuentes', items: [] },
@@ -76,7 +77,7 @@ export function buildSite(raw, images = {}) {
   if (on('historia')) out.historia = { eyebrow: txt(s.historia.eyebrow, 40), title: txt(s.historia.title, 90), text: txt(s.historia.text, 1500),
     badgeWord: txt(s.historia.badgeWord, 30), badgeMeaning: txt(s.historia.badgeMeaning, 60), badgeQuote: txt(s.historia.badgeQuote, 200) };
   if (on('banda')) out.banda = { text: txt(s.banda.text, 120) };
-  if (on('resenas')) out.resenas = { title: txt(s.resenas.title, 70) || 'Lo que dicen nuestros clientes', lead: txt(s.resenas.lead, 80),
+  if (on('resenas')) out.resenas = { title: txt(s.resenas.title, 70) || 'Lo que dicen nuestros clientes', lead: txt(s.resenas.lead, 80), reviewUrl: reviewUrl(s.resenas.reviewUrl) || '', reviewTitle: txt(s.resenas.reviewTitle, 100) || '¿Ya probaste nuestra comida?', reviewText: txt(s.resenas.reviewText, 200) || 'Contanos cómo estuvo tu experiencia.',
     items: list(s.resenas.items, SITE_LIMITS.reviews, r => { const text = txt(r && r.text, 300); return text ? { text, author: txt(r.author, 50), source: txt(r.source, 40) } : null; }) };
   if (on('catering')) out.catering = { eyebrow: txt(s.catering.eyebrow, 40), title: txt(s.catering.title, 90) || 'Catering y eventos', text: txt(s.catering.text, 800), cta: txt(s.catering.cta, 40) || 'Consultar por WhatsApp',
     info: list(s.catering.info, SITE_LIMITS.info, i => { const label = txt(i && i.label, 30), value = txt(i && i.value, 120); return label && value ? { label, value } : null; }) };

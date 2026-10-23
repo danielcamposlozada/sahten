@@ -1,3 +1,5 @@
+import { reviewFooter, reviewUrl, DEFAULT_REVIEW_TEXT } from './ui/receipt-reviews.js';
+import { printDocument } from './ui/print.js';
 // ═══════════════════════════════════════════════════════════
 // Sahten · punto de entrada
 // 1) estilos  2) núcleo + estado + puente  3) código legado como scripts clásicos
@@ -71,6 +73,8 @@ window.sahtenAsk = sahtenAsk;     // reemplaza al diálogo nativo de pregunta, q
 window.sahtenOfflineNotice = () => (navigator.onLine === false ? '<div style="font-size:11px;margin-top:6px;padding:7px 9px;border-radius:8px;background:rgba(242,140,0,.12);color:var(--ink)">Sin internet: el mapa y la búsqueda de direcciones no están disponibles. Cargá el envío a mano.</div>' : '');
 window.addEventListener('online', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.addEventListener('offline', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
+window.SAHTEN.receiptReviews = { footer: reviewFooter, url: reviewUrl, defaultText: DEFAULT_REVIEW_TEXT };
+window.SAHTEN.printDocument = html => printDocument(html);
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.online = { publish: onlinePublish };
