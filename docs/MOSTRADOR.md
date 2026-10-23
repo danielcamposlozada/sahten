@@ -32,7 +32,15 @@ Además, el actualizador ignoraba los errores del guardado previo a reiniciar. A
 
 El autoguardado requiere un archivo .sahten con ubicación elegida y un adaptador compatible (la app de escritorio o File System Access). Un proyecto sin archivo muestra «Sin guardar» y necesita Guardar. La nube es una copia aparte: se sincroniza después del guardado local con la conexión y permisos existentes. No se hicieron escrituras en Supabase para esta revisión ni se recuperaron automáticamente datos ya perdidos.
 
-## Verificación
+## Aviso de pedidos preparado para la próxima actualización
+
+El dueño eligió darbuka y palmas de 3 segundos, sin campana. La grabación CC0 se incluye dentro del código compilado, sin descargar archivos de otro servidor al llegar un pedido. El primer clic o uso del teclado prepara el audio; si el navegador lo bloquea, el aviso visual sigue funcionando. Los avisos simultáneos comparten la reproducción en curso para evitar superposición o reiniciar el ritmo; las notificaciones visuales conservan su funcionamiento existente.
+
+Se reemplaza la función común de sonido del centro de notificaciones, usada por pedidos y otros avisos existentes. No se agrega una canción ni se cambia el flujo de pedidos. La versión 0.4.16 ya publicada conserva el sonido anterior; este cambio todavía no tiene instalador publicado.
+
+Verificación: cuatro pruebas específicas de carga, gesto del usuario, avisos simultáneos y recuperación ante errores; suite completa de 484 pruebas en 49 archivos, compilación y scripts clásicos correctos. Chrome reprodujo el archivo incluido completo y decodificó exactamente 3,000 s a 44.100 Hz. No se afirma una prueba física en Windows.
+
+## Verificación de 0.4.16
 
 - Pruebas de altas, cambios y bajas de clientes/medios de pago, con espera de autoguardado y apertura en otra sesión.
 - Pruebas de actualización: guardado exitoso antes de instalar; error o cancelación impiden instalar/reiniciar.
