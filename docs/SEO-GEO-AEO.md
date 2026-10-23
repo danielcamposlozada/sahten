@@ -38,7 +38,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Las páginas nuevas solo salen con *Dirección pública de la web* cargada y el sitio encendido; el sitemap las lista con `lastmod`.
 
 ## 5. Estado
-**Hecho en el repo (rama `seo/geo-aeo-paginas`)**
+**Integrado en `main` mediante el PR #14 (23/10/2026)**
 - [x] Páginas propias estáticas con canonical, migas de pan (BreadcrumbList) y Open Graph; `/menu/` con esquema Menu/MenuSection/MenuItem y precios.
 - [x] Restaurant enriquecido (cocina, `areaServed`, `sameAs`, `hasMenu`, `logo`) y FAQPage con las mismas preguntas visibles.
 - [x] Sitemap con todas las páginas; enlaces «Más información» en el pie de la portada.
@@ -51,6 +51,12 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Verificado con `npm ci`, `npx vitest run` (448 pruebas, 44 archivos), compilación y comprobación de versiones. Los 33 archivos del kit coinciden con el ZIP entregado por el dueño.
 - `npm audit`: cuatro alertas preexistentes en herramientas de desarrollo (Vite/Vitest y sus dependencias); no se cambiaron dependencias en este PR. `npm audit --omit=dev` no informa vulnerabilidades. La actualización de esas herramientas queda pendiente como tarea separada.
 - La revisión no modifica Supabase, la web publicada ni perfiles externos. Integrar el código en `main` no actualiza por sí solo la app instalada ni la carpeta del hosting; hace falta una próxima versión de la app con estos cambios y volver a generar/publicar el menú.
+
+**Próxima app preparada: 0.4.15 (pendiente de confirmar su publicación)**
+- Verificación local: `npx vitest run` (457 pruebas en 45 archivos), compilación, comprobación de versiones y revisión de scripts clásicos correctas. Formulario de roles revisado en Chrome a 1366 × 768 y 390 × 844 con datos ficticios, sin conexión con Supabase.
+- Incluye las páginas SEO, el kit de marca y la corrección de rutas del PR #14, además de las invitaciones con roles más claros y el logo completo de la app.
+- No cambia los datos del negocio ni importa automáticamente el JSON de contenido. El dueño debe revisar el archivo antes de importarlo, especialmente la respuesta sobre medios de pago: Mercado Pago continúa en pruebas.
+- La web publicada y los perfiles externos permanecen pendientes de publicación y verificación según la lista siguiente.
 
 **Lo hace el dueño / una persona**
 - [ ] Importar el archivo de contenido, corregir nombre de la tienda («SAHTEN Gastronomía Árabe»), erratas del menú y sumar una línea de descripción por plato; poner `sahten` en *Kit de imágenes de marca*; **republicar y subir la carpeta** al hosting.

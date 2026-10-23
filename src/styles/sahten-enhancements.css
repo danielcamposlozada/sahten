@@ -1907,6 +1907,28 @@
 }
 
 /* ── BACKUP ROW (Ajustes) ───────────────────────────── */
+.cloud-team { padding: 20px; margin-bottom: 16px; font-size: 15px; line-height: 1.5; }
+.cloud-team h3 { font-size: 20px; margin: 0 0 8px; }
+.cloud-team h4 { font-size: 17px; margin: 0 0 12px; }
+.cloud-team p { margin: 0 0 16px; }
+.cloud-team .backup-row { flex-wrap: wrap; gap: 12px; }
+.cloud-team .backup-row > div { min-width: 0; overflow-wrap: anywhere; }
+.cloud-team .backup-row-title { font-size: 15px; }
+.cloud-team .backup-row-desc { font-size: 14px; line-height: 1.5; color: var(--ink); }
+.cloud-owner { font-size: 14px; font-weight: 700; }
+.cloud-member-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cloud-member-actions select { width: auto; max-width: 100%; }
+.cloud-invite-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.cloud-invite-fields label { display: block; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.cloud-invite-fields input, .cloud-invite-fields select { width: 100%; min-height: 44px; font-size: 16px; }
+.cloud-permissions { margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.cloud-team .cloud-invite-help { font-size: 14px; }
+.cloud-team button { min-height: 44px; }
+.cloud-team .btn-accent { background: var(--primary); color: var(--on-primary, #fff); }
+.cloud-role-guide { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+.cloud-role-guide summary { cursor: pointer; font-weight: 700; min-height: 44px; }
+.cloud-role-guide dt { font-weight: 700; margin-top: 12px; }
+.cloud-role-guide dd { margin: 4px 0 12px; }
 .backup-row {
   display: flex;
   align-items: flex-start;

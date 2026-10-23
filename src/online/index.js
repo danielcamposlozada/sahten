@@ -6,7 +6,7 @@ import { createPhotoPublisher } from './photoPublisher.js';
 import { createController } from './controller.js';
 import { createSync } from './sync.js';
 import { SupabaseError } from './supabase.js';
-import { toPublicProject, applyPublicToFile, canSeePanel, receivesFullProject, writeScope } from './roles.js';
+import { toPublicProject, applyPublicToFile, canSeePanel, receivesFullProject, writeScope, INVITABLE } from './roles.js';
 import { applyRole, installRoleGuard } from './roleView.js';
 import { createOnlineUi } from './ui.js';
 import { createUserMenu } from './userMenu.js';
@@ -133,7 +133,7 @@ export function createOnline({ w = window, project, events }) {
     },
 
     async listMembers() { return need().rpc('list_members', { pid: rid() }); },
-    async invite(email, r) { if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new SupabaseError('Escribí un email válido.'); return need().rpc('invite_member', { pid: rid(), p_email: email, p_role: r }); },
+    async invite(email, r) { if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new SupabaseError('Escribí un email válido.'); if (!INVITABLE.includes(r)) throw new SupabaseError('Elegí un rol válido para la invitación.'); return need().rpc('invite_member', { pid: rid(), p_email: email, p_role: r }); },
     async setMemberRole(uid, r) { return need().rpc('set_member_role', { pid: rid(), uid, p_role: r }); },
     async removeMember(uid) { return need().rpc('remove_member', { pid: rid(), uid }); },
     async audit(n = 50) { return need().rpc('list_audit', { pid: rid(), lim: n }); },
