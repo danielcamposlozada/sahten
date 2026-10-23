@@ -19,6 +19,11 @@ La carpeta contiene:
 | `index.html` | la página del menú (con el cálculo de zonas y el mensaje de WhatsApp adentro) |
 | `menu.json` | productos, precios, zonas, medios de pago y colores de tu marca. **No incluye costos ni márgenes** |
 | `img/` | imágenes optimizadas (hasta 800 px, JPEG) |
+| `menu/`, `delivery-y-retiro/`, `catering/`, `nuestra-historia/` | páginas propias para buscadores y asistentes de IA (solo con *Dirección pública de la web* y el sitio encendido) |
+| `robots.txt`, `sitemap.xml` | para buscadores; el sitemap lista todas las páginas |
+| `favicon.*`, `apple-touch-icon.png`, `site.webmanifest`, `brand/` | íconos e imagen para compartir el link (solo con *Kit de imágenes de marca*; ver [brand/sahten/README.md](brand/sahten/README.md)) |
+
+Guía de SEO, GEO y AEO del negocio: [SEO-GEO-AEO.md](SEO-GEO-AEO.md).
 
 Sin conexión con Supabase, cada vez que cambies precios, productos, fotos o zonas, **volvé a publicar** y subí los archivos de nuevo. Con Supabase y la configuración de fotos, **Sincronizar menú** sube también las imágenes; la web debe republicarse una vez al actualizar a 0.4.8 (ver [SUPABASE.md](SUPABASE.md#fotos-en-la-nube-desde-048)).
 
