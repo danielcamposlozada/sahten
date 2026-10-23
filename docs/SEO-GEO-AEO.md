@@ -126,3 +126,11 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 **Publicación 0.4.16 autorizada (23/10/2026)**
 - El dueño confirmó publicar para Windows y Mac los cambios preparados de impresión, personalización web, Mostrador, tarjetas desplegables y conservación de clientes/medios de pago. Se integra mediante el PR #16 y se construyen los instaladores firmados para el actualizador.
 - Publicación de instaladores en curso; la verificación final del release y `latest.json` se registra al terminar. Esta autorización no despliega nuevamente la web, no escribe en Supabase y no activa cobros reales. Audios y prueba nueva de Mercado Pago siguen en pausa.
+
+**Sahten 0.4.16 publicada y verificada (23/10/2026)**
+- Publicación autorizada e integrada mediante merge normal del PR #16, commit `174886aa0f388efa3df2e7c12b2b3132f2224d8e`, etiqueta `v0.4.16`.
+- [Release 0.4.16](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.16) pública, marcada como última versión: Windows `.exe` y `.msi`, Mac universal `.dmg`, paquete del actualizador y firmas. [Proceso completo](https://github.com/danielcamposlozada/sahten/actions/runs/39999265447) correcto en pruebas, Windows, Mac y publicación.
+- La dirección que consulta la app (`releases/latest/download/latest.json`) devuelve 0.4.16. El manifiesto contiene Windows x64, macOS Apple Silicon e Intel, con enlaces de la versión y firmas de actualización presentes.
+- 480 pruebas en 48 archivos; CI de la rama y del merge, compilación local y comprobación de versiones correctos. Se corrigió una espera fija de la prueba de guardado para comprobar la escritura real en equipos lentos; no se fuerza el guardado para hacerla pasar.
+- Esto reemplaza el estado anterior «dejar preparado». La web conserva su despliegue `b8ace0ec`; no se escribieron datos en Supabase ni se activaron cobros reales. Audios y nueva compra de prueba de Mercado Pago continúan en pausa.
+- Pendiente de uso real: instalar en Windows, verificar clientes/medios de pago al reiniciar e imprimir un ticket IT01 de 58 mm comprobando importes y QR. No se afirma prueba física desde este equipo.

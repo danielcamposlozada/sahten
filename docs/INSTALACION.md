@@ -40,8 +40,8 @@ Firmar las apps cuesta dinero (Apple) o es un trámite (Windows). Sahten viene *
 
 ## Actualizaciones automáticas
 
-La app busca versiones nuevas al abrir (como mucho una vez por día) y en **Ajustes › Esta app › Buscar actualizaciones** (y, al abrir la app, un aviso en las notificaciones 🔔). Pregunta antes de instalar y
-se reinicia; los proyectos no se tocan. Las actualizaciones vienen de GitHub Releases y **van firmadas** (clave propia, distinta de la firma de Apple/Windows).
+La app busca versiones nuevas en cada inicio y en **Ajustes › Esta app › Buscar actualizaciones** (y, al abrir la app, un aviso en las notificaciones 🔔). Pregunta antes de instalar y
+se reinicia. Antes de instalar guarda el proyecto abierto; desde 0.4.16, si ese guardado falla o se cancela, la actualización se detiene. Las actualizaciones vienen de GitHub Releases y **van firmadas** (clave propia, distinta de la firma de Apple/Windows).
 
 ### Dejarlo listo en tu repositorio (una sola vez)
 1. En `src-tauri/tauri.conf.json`, ya apunta a `danielcamposlozada/sahten` (cambialo si movés el repositorio).updater.endpoints` por tu usuario y repositorio de GitHub.
@@ -54,7 +54,7 @@ se reinicia; los proyectos no se tocan. Las actualizaciones vienen de GitHub Rel
 1. Subí la versión en los 3 lugares (tienen que coincidir; `npm run check:versions` lo verifica): `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` (y `APP_VERSION` en `src/project/schema.js`).
 2. `git tag v4.0.1 && git push --tags`.
 3. GitHub Actions (`Release`) corre los tests, arma el `.dmg` universal y el `.msi`/`.exe`, y deja un **borrador de Release** con los instaladores y `latest.json`.
-4. Revisá el borrador y **Publish release**. Las apps instaladas se actualizan solas.
+4. El proceso verifica que estén el `.dmg`, `.exe`, `.msi` y `latest.json` y publica automáticamente cuando ambos sistemas terminaron bien. Si falla, el release queda como borrador. Las apps instaladas detectan la nueva versión y piden confirmación para instalar.
 
 ## Compilar en tu computadora
 

@@ -14,4 +14,4 @@ En el diálogo de impresión seleccioná la impresora correcta, el mismo ancho d
 
 La comprobación de diseño en Chrome incluye textos largos, importes grandes y el QR, en 48 y 58 mm. **La validación física con la IT01 todavía requiere imprimir un ticket desde el equipo donde está conectada** y comprobar el borde derecho y el escaneo del QR. Una vista previa correcta no confirma cómo está configurado el controlador de Windows.
 
-Esta corrección está en el código de la próxima actualización; la app instalada 0.4.15 no recibe cambios por republicar sahten.online.
+Esta corrección está publicada en Sahten 0.4.16. Es necesario instalar esa versión en la caja; la app 0.4.15 no recibe cambios por republicar sahten.online.
