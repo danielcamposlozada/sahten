@@ -1055,7 +1055,7 @@
 .online-board-status--en_preparacion {color:#b35e24}
 .online-board-status--listo,.online-board-status--retirado,.online-board-status--entregado {color:var(--green)}
 .online-board-status--enviado {color:#447fa8}
-.online-board-next {background:var(--primary);border:1px solid var(--primary);border-radius:8px;color:#fff;font:700 12px inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:38px;cursor:pointer}
+.online-board-next {background:var(--primary);border:1px solid var(--primary);border-radius:8px;color:#fff;font-family:inherit;font-size:12px;font-weight:700;padding:9px 12px;min-height:38px;cursor:pointer}
 .online-board-next:hover {filter:brightness(1.1)}
 .online-board-detail {border:1px solid var(--border);border-radius:8px;background:var(--sand);color:var(--ink);padding:8px 10px;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
 .online-board-empty {padding:25px 12px;text-align:center;color:var(--muted);font-size:13px}
@@ -1080,3 +1080,5 @@
   .online-board-next {min-height:44px}
 }
 @media(pointer:coarse) {.online-board :is(button) {min-height:44px}}
+
+.online-board-recent-list[hidden] { display:none; }
