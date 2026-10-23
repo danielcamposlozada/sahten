@@ -1,4 +1,4 @@
-// Flujos del tablero operativo de pedidos online. No contiene DOM ni dependencias del navegador.
+// Flujos del tablero operativo: mostrador y web, separados por forma de entrega.
 export const ONLINE_FLOWS = Object.freeze({
   pickup: ['pendiente', 'en_preparacion', 'listo', 'retirado'],
   delivery: ['pendiente', 'en_preparacion', 'listo', 'enviado', 'entregado'],
@@ -12,16 +12,15 @@ export function isOnlineOrder(order) {
 }
 
 export function onlineOrderType(order) {
-  return order?.source === 'pickup' || order?.orderType === 'retiro' ? 'pickup' : 'delivery';
+  return order?.orderType === 'delivery' || order?.source === 'delivery' ? 'delivery' : 'pickup';
 }
 
 export function allowedStatuses(order) {
-  if (!isOnlineOrder(order)) return ['pendiente', 'en_preparacion', 'listo', 'cancelado'];
   return [...ONLINE_FLOWS[onlineOrderType(order)], 'cancelado'];
 }
 
 export function nextOnlineStatus(order) {
-  if (!isOnlineOrder(order) || ONLINE_FINAL.includes(order.status)) return null;
+  if (!order || ONLINE_FINAL.includes(order.status)) return null;
   const steps = ONLINE_FLOWS[onlineOrderType(order)];
   const index = steps.indexOf(order.status);
   const next = index >= 0 && index < steps.length - 1 ? steps[index + 1] : null;
@@ -49,13 +48,13 @@ export function onlineStatusLabel(order) {
 }
 
 export function activeOnlineOrders(orders) {
-  return (orders || []).filter(o => isOnlineOrder(o) &&
+  return (orders || []).filter(o => o &&
     ['pendiente', 'en_preparacion', 'listo', 'enviado'].includes(o.status));
 }
 
 export function recentOnlineOrders(orders, now = Date.now(), windowMs = ONLINE_RECENT_MS) {
   return (orders || []).filter(o => {
-    if (!isOnlineOrder(o) || !ONLINE_FINAL.includes(o.status)) return false;
+    if (!o || !ONLINE_FINAL.includes(o.status)) return false;
     const end = Date.parse(o.completedAt || o.updatedAt || '');
     return Number.isFinite(end) && end <= now && now - end <= windowMs;
   }).sort((a, b) => Date.parse(b.completedAt || b.updatedAt) - Date.parse(a.completedAt || a.updatedAt));
@@ -63,6 +62,14 @@ export function recentOnlineOrders(orders, now = Date.now(), windowMs = ONLINE_R
 
 export function orderUnitCount(order) {
   return (order?.items || []).reduce((n, item) => n + (Number(item.qty) || 0), 0);
+}
+
+export function orderAgeLabel(order, now = Date.now()) {
+  const at = Date.parse(order?.createdAt || '');
+  if (!Number.isFinite(at) || at > now) return '';
+  const minutes = Math.floor((now - at) / 60000);
+  if (!minutes) return 'Hace menos de 1 min';
+  return minutes < 60 ? 'Hace ' + minutes + ' min' : 'Hace ' + Math.floor(minutes / 60) + ' h ' + (minutes % 60) + ' min';
 }
 
 // Primero los pedidos que aún necesitan cocina; después los listos y los enviados.

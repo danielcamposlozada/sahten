@@ -80,6 +80,40 @@ describe('el proyecto es un archivo', () => {
     b.window.close();
   }, 60000);
 
+  it('agregar clientes y medios de pago por botón activa guardado y los conserva en otra apertura', async () => {
+    const disk={}; const a=await app(disk),w=a.window,d=w.document;
+    await a.p.openDemo(); a.mem.queueSaveAs('Persistencia.sahten'); await a.s.saveAs();
+    w.showPanel('mostrador'); w.mostSetTab('clientes');
+    // Sin input/change pendientes: reproduce esperar antes de pulsar Agregar.
+    d.getElementById('cust-new-name').value='Cliente persistente';
+    d.getElementById('cust-new-phone').value='123456';
+    w.custAddNew();
+    expect(a.s.info().status).toBe('dirty');
+    await wait(2300);
+    expect(JSON.parse(disk['Persistencia.sahten']).sales.customers[0].name).toBe('Cliente persistente');
+    w.mostSetTab('pedido'); w.openPaymentManager();
+    d.getElementById('pay-new-name').value='Pago de prueba'; w.payAddNew();
+    expect(a.s.info().status).toBe('dirty');
+    await wait(2300);
+    expect(JSON.parse(disk['Persistencia.sahten']).sales.payments[0].name).toBe('Pago de prueba');
+    const customerId=a.ev('SAHTEN_CUSTOMERS[0].id'),paymentId=a.ev('MOSTRADOR_PAYMENTS[0].id');
+    w.sahtenAsk=async()=> 'Actualizado';
+    await w.custEdit(customerId); await w.payEdit(paymentId);
+    await wait(2300);
+    w.close();
+    const b=await app(disk);
+    b.mem.queueOpen('Persistencia.sahten',disk['Persistencia.sahten']); await b.s.openFromPicker();
+    expect(b.ev('SAHTEN_CUSTOMERS[0].name')).toBe('Actualizado');
+    expect(b.ev('MOSTRADOR_PAYMENTS[0].name')).toBe('Actualizado');
+    b.window.sahtenConfirm=async()=>true;
+    await b.window.custDeleteClient(customerId); await b.window.payDelete(paymentId);
+    await wait(2300);
+    const saved=JSON.parse(disk['Persistencia.sahten']);
+    expect(saved.sales.customers).toHaveLength(0); expect(saved.sales.payments).toHaveLength(0);
+    expect(bizKeys(b.window)).toEqual([]);
+    b.window.close();
+  },60000);
+
   it('abrir un proyecto no mezcla datos con el anterior', async () => {
     const disk = {}; const a = await app(disk);
     await a.p.openDemo();

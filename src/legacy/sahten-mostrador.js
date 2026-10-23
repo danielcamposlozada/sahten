@@ -99,6 +99,13 @@ let mostradorView = 'grid';
 try { mostradorView = localStorage.getItem('sahten-pos-view') === 'list' ? 'list' : 'grid'; } catch (e) {}
 let mostradorCategory = 'all';
 let mostradorTab = 'pedido'; // 'pedido' | 'historial'
+let _mostBannerDismissed = false;
+function mostradorDismissBanner() {
+  _mostBannerDismissed = true;
+  const banner = document.querySelector('#panel-mostrador .most-alpha-banner');
+  if (banner) banner.hidden = true;
+  document.querySelector('#panel-mostrador .most-tab.active')?.focus({preventScroll:true});
+}
 
 // Discounts
 function _loadDiscounts(){ try{ const r=localStorage.getItem('sahten_mostrador_discounts'); if(r) return JSON.parse(r); }catch(e){} return [{id:'d1',name:'10% off',type:'pct',value:10},{id:'d2',name:'Empleado',type:'pct',value:15},{id:'d3',name:'$500 off',type:'amount',value:500}]; }
@@ -147,11 +154,14 @@ function renderMostrador() {
   mostradorSetCartOpen(false, false);
   const panel = document.getElementById('panel-mostrador');
   if (!panel) return;
+  panel.dataset.mostTab = mostradorTab;
   // Always rebuild to ensure tab content is fresh
   panel.innerHTML = `
-    <div class="most-alpha-banner">
+    <div class="most-heading">
+    <div class="most-alpha-banner" ${_mostBannerDismissed?'hidden':''}>
       <div class="most-alpha-icon">ALPHA</div>
       <div class="most-alpha-text"><strong>Mostrador está en modo de prueba.</strong> Sirve para armar pedidos, calcular totales, y llevar historial. Puede tener fallas. Tu feedback ayuda a mejorarlo.</div>
+      <button type="button" class="most-alpha-close" aria-label="Ocultar aviso de prueba" onclick="mostradorDismissBanner()">×</button>
     </div>
     <div class="most-tabs">
       <button class="most-tab ${mostradorTab==='pedido'?'active':''}" onclick="mostSetTab('pedido')">
@@ -166,6 +176,7 @@ function renderMostrador() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Clientes <span class="most-tab-badge">${SAHTEN_CUSTOMERS.length}</span>
       </button>
+    </div>
     </div>
     <div id="most-tab-content"></div>`;
   if (mostradorTab === 'pedido') _renderPedidoTab();
@@ -225,14 +236,12 @@ function _renderPedidoTab() {
 function _renderCats() {
   const wrap = document.getElementById('most-cats'); if (!wrap) return;
   const cats = _getProductCategories();
-  const tiers = (typeof TIERS !== 'undefined' ? TIERS : []);
-  const hasCats = cats.length > 0;
+  // Los niveles de precio siguen en el proyecto; no son categorías de platos.
+  if (mostradorCategory.startsWith('tier:')) mostradorCategory = 'all';
   wrap.innerHTML =
     '<button class="most-cat-chip '+(mostradorCategory==='all'?'active':'')+'" onclick="mostradorSetCategory(\'all\')">Todos</button>' +
     '<button class="most-cat-chip '+(mostradorCategory==='star'?'active':'')+'" onclick="mostradorSetCategory(\'star\')">⭐</button>' +
-    (hasCats ? cats.map(c => '<button class="most-cat-chip '+(mostradorCategory==='cat:'+c?'active':'')+'" onclick="mostradorSetCategory(\'cat:'+_esc(c)+'\')">' + _esc(c) + '</button>').join('') : '') +
-    (hasCats ? '<span class="most-cat-divider"></span>' : '') +
-    tiers.map(t => '<button class="most-cat-chip most-cat-tier '+(mostradorCategory==='tier:'+t.id?'active':'')+'" onclick="mostradorSetCategory(\'tier:'+t.id+'\')">' + _esc(t.name) + '</button>').join('');
+    cats.map(c => '<button class="most-cat-chip '+(mostradorCategory==='cat:'+c?'active':'')+'" onclick="mostradorSetCategory(\'cat:'+_esc(c)+'\')">' + _esc(c) + '</button>').join('');
 }
 
 function _visibleProducts() {
@@ -319,7 +328,7 @@ function mostradorSetCartOpen(open, restoreFocus=true) {
   if(open) cart.setAttribute('aria-modal','true'); else cart.removeAttribute('aria-modal');
   trigger?.setAttribute('aria-expanded',String(open));
   const backdrop=document.getElementById('most-cart-backdrop'); if(backdrop) backdrop.hidden=!open;
-  if (open && !_mostCartFocusCleanup) _mostCartFocusCleanup=SAHTEN.bindModalFocus({panel:cart,trigger,background:[document.querySelector('.topbar'),document.querySelector('.sidebar'),document.getElementById('bottom-nav'),document.querySelector('#most-tab-content .panel-content')],close:()=>mostradorSetCartOpen(false)});
+  if (open && !_mostCartFocusCleanup) _mostCartFocusCleanup=SAHTEN.bindModalFocus({panel:cart,trigger,background:[document.querySelector('.most-heading'),document.querySelector('.topbar'),document.querySelector('.sidebar'),document.getElementById('bottom-nav'),document.querySelector('#most-tab-content .panel-content')],close:()=>mostradorSetCartOpen(false)});
 }
 function _mostSyncCartMode() {
   const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(c.classList.contains('expanded'),false);
@@ -485,6 +494,8 @@ function mostradorCheckout() {
     items: t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
     customerId: mostradorActiveCustomerId || null,
     customerName: cust ? cust.name : 'Consumidor Final',
+    customerPhone: cust ? cust.phone || '' : '',
+    origin: 'mostrador',
     discountId: mostradorActiveDiscountId || null,
     discountName: t.disc ? t.disc.name : null,
     discountAmount: t.discount,
@@ -498,15 +509,15 @@ function mostradorCheckout() {
     updatedAt: new Date().toISOString(),
     notes: del && del.note ? del.note : '',
     orderType: mostradorOrderType,
-    ...(del ? { source: 'delivery', address: del.address + (del.note ? ' (' + del.note + ')' : ''), lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: del.zone ? del.zone.name : null, customerPhone: cust && cust.phone ? cust.phone : undefined } : {}),
+    ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: del.zone ? del.zone.name : null } : {}),
   };
   SAHTEN_ORDERS.unshift(order); _saveOrders();
   // Reset cart
   mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
   mostradorShipManual = false; mostradorDelivery = null; mostradorOrderType = 'retiro';
-  // Show confirmation + switch to historial
+  // El pedido creado entra en la misma cola operativa que los de la web.
   _posToast('Orden #' + String(order.num).padStart(4,'0') + ' creada · $' + _fmt(order.total));
-  mostradorTab = 'historial'; renderMostrador();
+  mostSetTab('online');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -585,12 +596,7 @@ function openOrderDetail(orderId) {
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">' +
     '<div><div style="font-size:12px;color:var(--muted)">'+dateStr+'</div><div style="font-size:14px;font-weight:600;margin-top:4px">'+_esc(o.customerName||'Consumidor Final')+'</div>'+(o.customerPhone?'<div style="font-size:12px;color:var(--muted);margin-top:2px">📞 '+_esc(o.customerPhone)+'</div>':'')+(o.customerEmail?'<div style="font-size:12px;color:var(--muted);margin-top:1px">✉️ '+_esc(o.customerEmail)+'</div>':'')+(o.address&&o.source==='delivery'?'<div style="font-size:12px;color:var(--muted);margin-top:1px">📍 '+_esc(o.address)+'</div>':'')+(o.source==='delivery'?'<span style="display:inline-block;margin-top:4px;background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="display:inline-block;margin-top:4px;background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'</div>' +
     '<select class="most-disc-select" style="width:auto" onchange="orderSetStatus(\''+o.id+'\',this.value);this.closest(\'.modal-overlay\').remove();openOrderDetail(\''+o.id+'\')">' +
-    '<option value="pendiente" '+(o.status==='pendiente'?'selected':'')+'>⏳ Pendiente</option>' +
-    '<option value="en_preparacion" '+(o.status==='en_preparacion'?'selected':'')+'>🔥 En preparación</option>' +
-    '<option value="listo" '+(o.status==='listo'?'selected':'')+'>✅ '+(o.source==='pickup'?'Listo para retirar':'Listo para enviar')+'</option>' +
-    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) && o.source==='delivery' ? '<option value="enviado" '+(o.status==='enviado'?'selected':'')+'>En camino</option><option value="entregado" '+(o.status==='entregado'?'selected':'')+'>Entregado</option>' : '') +
-    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) && o.source==='pickup' ? '<option value="retirado" '+(o.status==='retirado'?'selected':'')+'>Retirado</option>' : '') +
-    (window.SAHTEN?.orderWorkflow?.isOnlineOrder(o) ? '<option value="cancelado" '+(o.status==='cancelado'?'selected':'')+'>Cancelado</option>' : '') + '</select></div>' +
+    (window.SAHTEN.orderWorkflow.allowedStatuses(o).map(value => '<option value="'+value+'" '+(o.status===value?'selected':'')+'>'+_esc(window.SAHTEN.orderWorkflow.onlineStatusLabel({...o,status:value}))+'</option>').join('')) + '</select></div>' +
     '<table class="order-detail-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit.</th><th>Total</th></tr></thead><tbody>' +
     o.items.map(it => '<tr><td>'+_esc(it.name)+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right;font-family:DM Mono,monospace">$'+_fmt(it.unitPrice)+'</td><td style="text-align:right;font-family:DM Mono,monospace;font-weight:600">$'+_fmt(it.lineTotal)+'</td></tr>').join('') +
     '</tbody></table>' +
@@ -858,7 +864,7 @@ function _posToast(msg){const t=document.createElement('div');t.style.cssText='p
 (function(){
   function patch(){
     if(window._mostradorShowPanelPatched) return;
-    SAHTEN.events.onPanelShow('mostrador',()=>setTimeout(renderMostrador,30));
+    SAHTEN.events.onPanelShow('mostrador',()=>{ _mostBannerDismissed=false; setTimeout(renderMostrador,30); });
     window._mostradorShowPanelPatched=true;
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',patch); else patch();
@@ -927,7 +933,7 @@ function mostQuickAddClientSave() {
 
 // Expose everything
 Object.assign(window, {
-  renderMostrador, mostSetTab, mostradorOnSearch, mostradorSetCategory,
+  renderMostrador, mostSetTab, mostradorDismissBanner, mostradorOnSearch, mostradorSetCategory,
   mostradorAddToCart, mostradorRemoveItem, mostradorChangeQty, mostradorClearCart, mostradorToggleCart,
   mostradorSetDiscount, mostradorSetShipping, mostradorCheckout,
   openDiscountManager, discAddNew, discEdit, discDelete,

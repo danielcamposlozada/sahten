@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isOnlineOrder, onlineOrderType, allowedStatuses, nextOnlineStatus, onlineStatusLabel, activeOnlineOrders, recentOnlineOrders, orderUnitCount, operationalSort } from '../src/online/order-workflow.js';
+import { isOnlineOrder, onlineOrderType, allowedStatuses, nextOnlineStatus, onlineStatusLabel, activeOnlineOrders, recentOnlineOrders, orderUnitCount, operationalSort, orderAgeLabel } from '../src/online/order-workflow.js';
 
 const order = (source, status, extra = {}) => ({
   id: source + status, remoteId: source + status, source, status, createdAt: '2026-10-23T12:00:00Z', items: [{ qty: 2 }, { qty: 3 }], ...extra,
@@ -21,6 +21,17 @@ describe('tablero Pedidos online', () => {
     expect(nextOnlineStatus(order('delivery', 'entregado'))).toBe(null);
     expect(onlineStatusLabel(order('pickup', 'listo'))).toBe('Listo para retirar');
     expect(onlineStatusLabel(order('delivery', 'listo'))).toBe('Listo para enviar');
+  });
+  it('mostrador usa los mismos pasos de retiro y delivery, incluso para pedidos locales antiguos', () => {
+    const pickup={id:'local',status:'listo'};
+    const delivery={id:'local-del',orderType:'delivery',status:'enviado'};
+    expect(onlineOrderType(pickup)).toBe('pickup');
+    expect(nextOnlineStatus(pickup).status).toBe('retirado');
+    expect(nextOnlineStatus(delivery).status).toBe('entregado');
+    expect(activeOnlineOrders([pickup,delivery])).toHaveLength(2);
+    expect(allowedStatuses(pickup)).not.toContain('enviado');
+    expect(orderAgeLabel({createdAt:'2026-10-23T12:00:00Z'},Date.parse('2026-10-23T12:12:00Z'))).toBe('Hace 12 min');
+    expect(orderAgeLabel({})).toBe('');
   });
   it('muestra enviados hasta confirmar la entrega y excluye finalizados', () => {
     const data = ['pendiente','en_preparacion','listo','enviado','entregado','cancelado'].map(s => order('delivery', s));

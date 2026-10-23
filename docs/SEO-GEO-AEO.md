@@ -115,4 +115,10 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Requiere próxima versión instalada y prueba física con IT01; no se afirma una impresión real desde este equipo.
 - Por pedido del dueño: audios en pausa y no comenzar otra prueba de Mercado Pago hasta que retome. Último resultado confirmado de pago: rechazado; sigue pendiente una compra ficticia aprobada de punta a punta.
 
-- Revisión final de impresión: 474 pruebas en 48 archivos, compilación y scripts clásicos correctos; Chrome sin desborde de elementos a la derecha en 48/58 mm, con importe largo y QR completo. Solicitud de publicación de 0.4.16 pendiente de confirmación del dueño.
+- Revisión final de impresión: 474 pruebas en 48 archivos, compilación y scripts clásicos correctos; Chrome sin desborde de elementos a la derecha en 48/58 mm, con importe largo y QR completo. El dueño eligió dejar los cambios preparados: no integrar el PR #16 ni publicar 0.4.16 todavía.
+
+**Mostrador y conservación de datos preparados (23/10/2026)**
+- El PR #16 también prepara el carrito con altura completa, aviso de prueba descartable por visita y pestañas al ancho del catálogo. Los niveles de precio se ocultan de los filtros de platos, sin modificar el catálogo.
+- «Pedidos» reúne mostrador y web, en Retiro en local / Mostrador y Delivery. Las tarjetas se muestran plegadas; productos, entrega, contacto, indicaciones, pago e impresión se despliegan al pedirlos. Se distinguen estados por borde, etiqueta y acción.
+- Corregida la falta de aviso al guardado automático cuando se modifican clientes, medios de pago u otros datos internos. El instalador detiene la actualización si falla o se cancela el guardado previo. No se considera un medio de pago elegido como un cobro acreditado.
+- Estas mejoras de aplicación permanecen sin publicar, por decisión del dueño. No cambian la web desplegada ni datos de Supabase. Detalles de operación y validación en `docs/MOSTRADOR.md`.

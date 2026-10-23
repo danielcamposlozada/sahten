@@ -101,6 +101,11 @@ function onOpened() { try { w.gfmEnsureMonths(); w.gfmRemindToast(); } catch (e)
 
 export const session = createSession({ adapter, backupStore, config, collect, apply, importProjection, onOpened, onClosed: () => { resetApp(); try { w.renderDashboard(); w.initStock(); } catch (e) { /* */ } } });
 
+// Los botones de alta/edición también modifican datos: no depender de que
+// haya un evento input/change pendiente para guardar clientes, pagos y pedidos.
+// apply() carga las claves con kv.silently(), sin reescribir el archivo abierto.
+kv.onChange(() => session.markDirty());
+
 /** Pizzería de ejemplo (generado con `npm run demo`: punto fijo de guardar → cargar, ver scripts/make-demo.mjs). */
 function demoFile() {
   const f = clone(demoJson);
