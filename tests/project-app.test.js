@@ -89,17 +89,17 @@ describe('el proyecto es un archivo', () => {
     d.getElementById('cust-new-phone').value='123456';
     w.custAddNew();
     expect(a.s.info().status).toBe('dirty');
-    await wait(2300);
-    expect(JSON.parse(disk['Persistencia.sahten']).sales.customers[0].name).toBe('Cliente persistente');
+    // La carga/render puede reprogramar el debounce en equipos lentos: esperar
+    // la escritura observable, sin forzar saveNow ni depender de un margen de 300 ms.
+    await expect.poll(()=>JSON.parse(disk['Persistencia.sahten']).sales.customers[0]?.name,{timeout:8000}).toBe('Cliente persistente');
     w.mostSetTab('pedido'); w.openPaymentManager();
     d.getElementById('pay-new-name').value='Pago de prueba'; w.payAddNew();
     expect(a.s.info().status).toBe('dirty');
-    await wait(2300);
-    expect(JSON.parse(disk['Persistencia.sahten']).sales.payments[0].name).toBe('Pago de prueba');
+    await expect.poll(()=>JSON.parse(disk['Persistencia.sahten']).sales.payments[0]?.name,{timeout:8000}).toBe('Pago de prueba');
     const customerId=a.ev('SAHTEN_CUSTOMERS[0].id'),paymentId=a.ev('MOSTRADOR_PAYMENTS[0].id');
     w.sahtenAsk=async()=> 'Actualizado';
     await w.custEdit(customerId); await w.payEdit(paymentId);
-    await wait(2300);
+    await expect.poll(()=>{const s=JSON.parse(disk['Persistencia.sahten']).sales;return [s.customers[0]?.name,s.payments[0]?.name];},{timeout:8000}).toEqual(['Actualizado','Actualizado']);
     w.close();
     const b=await app(disk);
     b.mem.queueOpen('Persistencia.sahten',disk['Persistencia.sahten']); await b.s.openFromPicker();
@@ -107,7 +107,7 @@ describe('el proyecto es un archivo', () => {
     expect(b.ev('MOSTRADOR_PAYMENTS[0].name')).toBe('Actualizado');
     b.window.sahtenConfirm=async()=>true;
     await b.window.custDeleteClient(customerId); await b.window.payDelete(paymentId);
-    await wait(2300);
+    await expect.poll(()=>{const s=JSON.parse(disk['Persistencia.sahten']).sales;return [s.customers.length,s.payments.length];},{timeout:8000}).toEqual([0,0]);
     const saved=JSON.parse(disk['Persistencia.sahten']);
     expect(saved.sales.customers).toHaveLength(0); expect(saved.sales.payments).toHaveLength(0);
     expect(bizKeys(b.window)).toEqual([]);
