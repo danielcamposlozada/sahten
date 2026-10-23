@@ -104,4 +104,4 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Hero: solo la palabra árabe del SVG completo original, con sus cinco signos separados y en el color del texto.
 - Navegación: el SVG completo de Sahten entregado por el dueño, con sus colores originales.
 - El editor permite cargar el símbolo de portada por separado del logo de navegación; ambos viajan en el archivo de contenido.
-- Verificación y despliegue de este ajuste en curso.
+- Ajuste publicado y verificado en Chrome: despliegue `d4d806e3`, https://sahten.online/. Hero: SVG árabe 941 × 255, blanco como el texto; navegación: SVG completo 1249 × 516, colores originales. Sin desborde en 1366 × 768 y 390 × 844. Las 469 pruebas y la compilación pasan.
