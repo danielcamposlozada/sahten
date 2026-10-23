@@ -8,7 +8,7 @@ const _sbKey = { get: () => { try { return localStorage.getItem('sahten-google-k
 // Cómo se edita cada sección: [tipo, ruta, etiqueta, ayuda|filas, ...]. tipos: text · area · image · list
 const _SB_FIELDS = {
   seo: [['text', 'url', 'Dirección pública de la web', 'https://tudominio.com/'], ['text', 'title', 'Título para Google'], ['area', 'description', 'Descripción para buscadores', 3], ['text', 'cuisine', 'Tipo de cocina'], ['text', 'streetAddress', 'Calle y número'], ['text', 'locality', 'Localidad'], ['text', 'region', 'Provincia o región'], ['text', 'country', 'Código de país', 'AR'], ['text', 'openingHours', 'Horarios para buscadores', 'Mo-Th 18:00-22:00, Fr-Sa 18:00-23:00'], ['text', 'areaServed', 'Barrios donde reparten (separados por coma)', 'Belgrano, Núñez, Olivos'], ['text', 'sameAs', 'Otros perfiles públicos (Facebook, TripAdvisor, Google Maps; separados por coma)', 'https://www.facebook.com/tunegocio'], ['text', 'brandKit', 'Kit de imágenes de marca (íconos e imagen al compartir; hoy: sahten)', 'sahten']],
-  hero: [['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
+  hero: [['logo'], ['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
     ['list', 'highlights', 'Destacados (hasta 4)', { add: 'Agregar destacado', max: 4, fields: [['icon', 'Ícono 🍕', 'sm'], ['title', 'Título'], ['text', 'Detalle']] }]],
   favoritos: [['text', 'title', 'Título'], ['area', 'text', 'Texto de introducción', 2], ['note', 'Muestra los productos marcados con ⭐ en la lista de Menú (hasta 6).']],
   menu: [['text', 'title', 'Título de la sección'], ['note', 'Es tu carta con categorías y el carrito. Siempre está; solo podés moverla de lugar.']],
@@ -46,6 +46,7 @@ function _sbSummary(id, m) {
 function _sbGet(S, path) { const [m, k] = path.split('.'); return S[m] ? S[m][k] : undefined; }
 function _sbRenderField(S, id, f) {
   const [type, key, label, extra] = f; const m = S[id];
+  if (type === 'logo') return `<div class="f"><b>Logo de la portada (opcional)</b><p>Podés usar un símbolo distinto al logo de navegación. Si no cargás uno, se usa el logo de la tienda.</p>${m.logo ? `<div style="background:var(--primary,#235328);padding:16px;border-radius:8px;margin-bottom:12px"><img src="${_esc(m.logo)}" alt="Logo de la portada" style="display:block;max-width:100%;width:240px;max-height:110px;object-fit:contain"></div>` : ''}<label class="btn" style="cursor:pointer">${m.logo ? 'Cambiar logo de portada' : 'Cargar logo de portada'}<input type="file" data-sb-logo data-sb-logo-for="hero" accept="image/svg+xml,image/png,image/jpeg,image/webp,.svg" hidden></label> ${m.logo ? '<button class="btn" data-sb-logo-remove="hero">Quitar logo de portada</button>' : ''}<label style="display:flex;gap:10px;margin-top:12px"><input type="checkbox" data-sb-hero-logo-color ${m.logoUseTextColor !== false ? 'checked' : ''}>Usar el color del texto de la portada</label></div>`;
   if (type === 'google') return `<div class="sb-google"><b>Traer reseñas de Google</b><small>Trae hasta 5 reseñas de tu ficha de Google y las deja acá para que las edites o borres. Cada tienda tiene su propio ID de lugar.</small>
       <label class="f">ID del lugar (Place ID)<input type="text" class="custom-input" data-sb="resenas.placeId" placeholder="ChIJ…" value="${_esc(m.placeId)}"></label>
       <label class="f">Clave de API de Google (queda solo en esta computadora)<input type="password" class="custom-input" autocomplete="off" data-sb-gkey value="${_esc(_sbKey.get())}"></label>
@@ -147,15 +148,16 @@ function _sbBind(host) {
     else if (t.dataset.sbImgdel) { delete SAHTEN_IMAGES['site_' + t.dataset.sbImgdel]; if (typeof scheduleSave === 'function') scheduleSave(); _sbChanged({ list: true }); }
     else if (t.dataset.sbGoogle !== undefined) _sbGoogle();
     else if (t.dataset.sbExport !== undefined) _sbExport();
-    else if (t.dataset.sbLogoRemove !== undefined) { S.logo = ''; _sbChanged({ top: true }); }
+    else if (t.dataset.sbLogoRemove !== undefined) { if (t.dataset.sbLogoRemove === 'hero') S.hero.logo = ''; else S.logo = ''; _sbChanged({ top: true, list: true }); }
     else if (t.dataset.sbDev) { _sbUi.device = t.dataset.sbDev; host.querySelectorAll('[data-sb-dev]').forEach(b => b.classList.toggle('on', b.dataset.sbDev === _sbUi.device)); host.querySelector('.sb-frame').className = 'sb-frame ' + _sbUi.device; }
   });
   host.addEventListener('change', e => {
     const t = e.target; const S = _moSite();
     if (t.dataset.sbEnabled !== undefined) { S.enabled = t.checked; _sbChanged({ top: true }); }
     if (t.dataset.sbOrderPage !== undefined) { S.orderPage = t.checked; _sbChanged({ top: true }); }
-    else if (t.dataset.sbLogo !== undefined && t.files && t.files[0]) { const config = MENU_CONFIG; SAHTEN_SITE.readStoreLogo(t.files[0]).then(logo => { if (MENU_CONFIG !== config) return; _moSite().logo = logo; _sbChanged({ top: true }); }).catch(err => alert(err.message)); }
+    else if (t.dataset.sbLogo !== undefined && t.files && t.files[0]) { const config = MENU_CONFIG, target = t.dataset.sbLogoFor; SAHTEN_SITE.readStoreLogo(t.files[0]).then(logo => { if (MENU_CONFIG !== config) return; if (target === 'hero') _moSite().hero.logo = logo; else _moSite().logo = logo; _sbChanged({ top: true, list: true }); }).catch(err => alert(err.message)); }
     else if (t.dataset.sbLogoColor !== undefined) { S.logoUseTextColor = t.checked; _sbChanged({}); }
+    else if (t.dataset.sbHeroLogoColor !== undefined) { S.hero.logoUseTextColor = t.checked; _sbChanged({}); }
     else if (t.dataset.sbOn) { S[t.dataset.sbOn].on = t.checked; _sbChanged({ list: true }); }
     else if (t.dataset.sbImg) _sbImage(t.dataset.sbImg, t.files && t.files[0]);
     else if (t.dataset.sbImport !== undefined) _sbImport(t.files && t.files[0]);

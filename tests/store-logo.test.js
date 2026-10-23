@@ -34,3 +34,20 @@ it('el logo personalizado tiene prioridad sobre el kit y puede usar el color del
   expect(dom.window.document.querySelector('#fab svg.wa-icon')).not.toBeNull();
   dom.window.close();
 });
+
+it('la portada y la navegación usan logos distintos y se conservan al guardar e importar', async () => {
+  const heroSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 25"><path d="M0 0L100 25"/></svg>';
+  const heroLogo = 'data:image/svg+xml;base64,' + Buffer.from(heroSvg).toString('base64');
+  const raw = normalizeSite({ enabled: true, logo, logoUseTextColor: false, hero: { title: 'Portada', logo: heroLogo, logoUseTextColor: true } });
+  const restored = applySiteContent({}, parseSiteContent(exportSiteContent(raw)));
+  expect(buildSite({ ...restored, enabled: true }).hero).toMatchObject({ logo: heroLogo, logoUseTextColor: true });
+  const menu = { store: { name: 'Mi negocio' }, products: [], config: {}, site: buildSite(raw) };
+  const dom = new JSDOM(buildIndexHtml(menu), { url: 'https://local.example/', runScripts: 'dangerously', beforeParse(w) { w.scrollTo = () => {}; w.fetch = async () => ({ ok: false }); } });
+  await new Promise(r => setTimeout(r, 50));
+  const d = dom.window.document;
+  expect(d.querySelector('#snav .nav-brand>img').getAttribute('src')).toBe(logo);
+  expect(d.querySelector('#snav .nav-brand').getAttribute('aria-label')).toContain('Mi negocio');
+  expect(d.querySelector('#s-hero .brand-mask').style.getPropertyValue('--logo')).toContain(heroLogo);
+  expect(d.querySelector('#s-hero .brand-mask').style.getPropertyValue('--logo')).not.toContain(logo);
+  dom.window.close();
+});

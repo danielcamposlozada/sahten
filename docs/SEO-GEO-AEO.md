@@ -62,7 +62,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 **Nueva integración web publicada (23/10/2026)**
 - Opción genérica de tienda independiente en `/pedir/`, enlazable desde una web propia; la portada dirige a la tienda. Catálogo, carrito, retiro, delivery y conexión de pedidos usan el mismo motor existente.
 - Campo «Logo de la tienda» en el editor: SVG, PNG, JPG y WebP (hasta 2 MB), con vista previa, quitar/cambiar y opción del color del texto. Se guarda con el proyecto y los archivos publicados; no cambia el logo de la app.
-- El dueño entregó dos SVG completos: la caligrafía con los cinco signos y el wordmark completo. Pidió usar el segundo solo en sahten.online y el mismo color del texto del hero. Se conserva el trazo original; símbolo de WhatsApp en los accesos.
+- El dueño entregó dos SVG completos: la caligrafía con los cinco signos y el wordmark completo. Aclaración posterior: el wordmark completo va en la barra de navegación y el hero usa solamente la caligrafía árabe, del mismo color que el texto. Ambos se guardan por separado. Se conserva el trazo original; símbolo de WhatsApp en los accesos.
 - La carpeta preparada incorpora el JSON entregado y conserva el catálogo/precios públicos. La respuesta de pagos no anuncia Mercado Pago, tarjetas ni descuentos activos; las promociones y cobertura no confirmadas se omiten de las nuevas respuestas. Mercado Pago sigue en pruebas.
 - Publicar menú continúa generando carpeta o ZIP; la conexión automática al hosting aún no existe. En el modo independiente, el catálogo en vivo no reemplaza el diseño guardado en la carpeta.
 - Publicada por autorización del dueño en Cloudflare Pages (`sahten-menu`, despliegue `3dec932c`, 23/10/2026): https://sahten.online/ y tienda https://sahten.online/pedir/. Chrome confirma logo completo en el color del texto, símbolo de WhatsApp, navegación a la tienda y fotos visibles. Trece recursos públicos comprobados por HTTPS devuelven 200; el sitemap incluye las cuatro páginas informativas. No se escribieron datos en Supabase ni se modificaron perfiles externos.
@@ -99,3 +99,9 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 3. No inventar horarios, precios, promociones ni categorías: usar solo los datos de la tabla del punto 2 o lo que el dueño confirme.
 4. Cualquier cambio en `src/online/seo.js` debe seguir sin imports (va embebido en la web) y con tests. Correr `npx vitest run`.
 5. Si algo de esto queda desactualizado (datos, URLs, estado), actualizar este archivo en el mismo cambio.
+
+## Ajuste de logos solicitado por el dueño (23/10/2026)
+- Hero: solo la palabra árabe del SVG completo original, con sus cinco signos separados y en el color del texto.
+- Navegación: el SVG completo de Sahten entregado por el dueño, con sus colores originales.
+- El editor permite cargar el símbolo de portada por separado del logo de navegación; ambos viajan en el archivo de contenido.
+- Verificación y despliegue de este ajuste en curso.

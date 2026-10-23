@@ -40,7 +40,7 @@ campo `logo` del esquema Restaurant los genera `src/online/seo.js` (`brandHeadTa
 
 **Encabezado de la web**: con el kit activo, la portada (y el encabezado simple si el sitio completo está apagado) muestra la **caligrafía sola** en crema,
 incrustada como vector en `index.html` (sin archivo aparte, se ve igual en la vista previa). Si no hay kit, queda la etiqueta de texto con el nombre del negocio.
-No hay hoy un campo para subir un logo a mano: el logo del encabezado sale del kit. Para cambiarlo hay que reemplazar `source/` y regenerar.
+El editor ahora permite cargar un logo de navegación y otro de portada; sin uno propio se usa el kit o el nombre del negocio.
 
 ## Subir a las plataformas (lo hace una persona; no se automatiza)
 
@@ -53,3 +53,5 @@ No hay hoy un campo para subir un logo a mano: el logo del encabezado sale del k
 El dueño entregó `source/caligrafia-completa.svg`, con los seis trazos y caja `0 0 941 255`. El generador anterior tomaba solamente el cuerpo y omitía los cinco signos separados; ahora conserva los seis trazos sin redibujarlos ni recortarlos.
 
 El editor permite cargar un logo propio para la web. Tiene prioridad sobre la caligrafía del kit y puede usar el mismo color que el texto del hero. El nuevo wordmark completo entregado por el dueño se usa solamente en sahten.online, sin reemplazar la marca de la app.
+
+El dueño aclaró que el wordmark completo es para la **barra de navegación**. En el **hero** va únicamente `source/caligrafia-completa.svg`, con sus seis trazos originales y del mismo color que el texto. Ambos logos se guardan por separado.

@@ -97,7 +97,7 @@ usar una dirección gratis `algo.pages.dev` y sumar el dominio después.
 
 ## Tienda independiente y logo propio
 
-En **Menú Online › Sitio web** podés cargar el **Logo de la tienda** (SVG, PNG, JPG o WebP, hasta 2 MB), cambiarlo o quitarlo. Se guarda con el contenido del proyecto, conserva transparencia y proporciones y tiene prioridad sobre el logo del kit. No cambia el logo de la aplicación. La opción «Usar el mismo color que el texto del encabezado» permite mostrarlo en un solo color; se recomienda un archivo con fondo transparente.
+En **Menú Online › Sitio web** podés cargar el **Logo de la tienda** (SVG, PNG, JPG o WebP, hasta 2 MB), cambiarlo o quitarlo. Se guarda con el contenido del proyecto, conserva transparencia y proporciones y tiene prioridad sobre el logo del kit. En la sección **Portada** podés cargar un **Logo de la portada** independiente; si lo dejás vacío, se usa el logo de la tienda. No cambia el logo de la aplicación. La opción «Usar el mismo color que el texto del encabezado» permite mostrarlo en un solo color; se recomienda un archivo con fondo transparente.
 
 Activá **Abrir tienda en una página independiente** para que la carpeta incluya `pedir/index.html`. La portada dirige sus botones a `pedir/`; los favoritos llevan a su categoría. La tienda conserva el mismo carrito, entrega, retiro y conexión de pedidos. Si ya tenés una web con tu diseño, agregá un enlace a `https://tudominio.com/pedir/` (o al dominio donde alojaste esta carpeta). No hace falta importar tu HTML/CSS en Sahten. Subí también `menu.json`, imágenes y archivos de marca: no alcanza con subir solo `pedir/index.html`.
 

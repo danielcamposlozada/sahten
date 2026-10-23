@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Logo de navegación y portada separados**: la barra muestra el logo de la tienda y la portada permite cargar un símbolo independiente. Sahten usa el logo completo en navegación y solo la caligrafía árabe completa en el hero, del color del texto.
+
 - **Tienda independiente**: opción en Sitio web para generar `/pedir/`, enlazable desde cualquier web propia. La portada dirige a la tienda y el catálogo conserva el mismo carrito, retiro, delivery y conexión de pedidos. La actualización del catálogo no reemplaza el diseño publicado.
 - **Logo de la tienda**: cargar, previsualizar, cambiar o quitar SVG, PNG, JPG o WebP desde Sitio web. Viaja con el proyecto y la publicación; opción para usar el color del texto. No cambia la identidad de la aplicación.
 - **Logo árabe completo**: el encabezado del kit de Sahten conserva los cinco signos separados del SVG entregado por el dueño.

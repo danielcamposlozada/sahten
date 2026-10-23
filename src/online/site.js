@@ -32,7 +32,7 @@ export function siteDefaults() {
     logoUseTextColor: false,
     seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
     order: SITE_ORDER.slice(),
-    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [] },
+    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [], logo: '', logoUseTextColor: true },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
     menu: { title: 'Nuestro menú' },
     como: { on: true, title: '¿Cómo funciona?', lead: 'En 3 pasos tenés tu pedido.', steps: [
@@ -57,6 +57,8 @@ export function normalizeSite(raw) {
   const out = { enabled: !!r.enabled, orderPage: !!r.orderPage, logo: normalizeStoreLogo(r.logo), logoUseTextColor: !!r.logoUseTextColor };
   out.seo = { ...d.seo, ...(isObj(r.seo) ? r.seo : {}) };
   for (const m of SITE_MODULES) out[m.id] = { ...d[m.id], ...(isObj(r[m.id]) ? r[m.id] : {}) };
+  out.hero.logo = normalizeStoreLogo(out.hero.logo);
+  out.hero.logoUseTextColor = out.hero.logoUseTextColor !== false;
   for (const [mod, key] of [['hero', 'highlights'], ['como', 'steps'], ['resenas', 'items'], ['catering', 'info'], ['faq', 'items']]) if (!Array.isArray(out[mod][key])) out[mod][key] = d[mod][key].slice();
   const seen = new Set(); const order = (Array.isArray(r.order) ? r.order : []).filter(id => SITE_ORDER.includes(id) && !seen.has(id) && seen.add(id));
   out.order = [...order, ...SITE_ORDER.filter(id => !seen.has(id))];
@@ -81,6 +83,7 @@ export function buildSite(raw, images = {}) {
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
+  if (out.hero && s.hero.logo) { out.hero.logo = s.hero.logo; out.hero.logoUseTextColor = s.hero.logoUseTextColor; }
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
   if (on('como')) out.como = { title: txt(s.como.title, 60) || '¿Cómo funciona?', lead: txt(s.como.lead, 160),
     steps: list(s.como.steps, SITE_LIMITS.steps, p => { const title = txt(p && p.title, 40); return title ? { title, text: txt(p.text, 160) } : null; }) };
