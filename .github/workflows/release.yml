@@ -104,6 +104,6 @@ jobs:
           assets=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
           echo "$assets"
           for pat in '\.dmg$' '-setup\.exe$' '\.msi$' '^latest\.json$'; do
-            echo "$assets" | grep -Eq "$pat" || { echo "Falta un archivo ($pat): el release queda como borrador"; exit 1; }
+            echo "$assets" | grep -Eq -- "$pat" || { echo "Falta un archivo ($pat): el release queda como borrador"; exit 1; }
           done
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
