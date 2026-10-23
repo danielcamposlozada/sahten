@@ -1,0 +1,31 @@
+name: Launch Sahten v0.4.14
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/launch-v0-4-14.yml'
+permissions:
+  contents: write
+  actions: write
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm release version
+        run: |
+          node scripts/check-versions.mjs
+          node -e "if(require('./package.json').version!=='0.4.14') process.exit(1)"
+      - name: Create release tag and dispatch installer build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="v0.4.14"
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists."
+          else
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$GITHUB_SHA"
+          fi
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$tag"
+          echo "Release workflow dispatched for $tag."
