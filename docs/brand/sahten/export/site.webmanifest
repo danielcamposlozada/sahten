@@ -1,0 +1,29 @@
+{
+ "name": "SAHTEN Gastronomía Árabe",
+ "short_name": "Sahten",
+ "description": "Comida árabe casera en Vicente López: pedí online con retiro o delivery.",
+ "lang": "es-AR",
+ "start_url": "./",
+ "scope": "./",
+ "display": "browser",
+ "background_color": "#235328",
+ "theme_color": "#235328",
+ "icons": [
+  {
+   "src": "brand/sahten-icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "brand/sahten-icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "brand/sahten-icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
