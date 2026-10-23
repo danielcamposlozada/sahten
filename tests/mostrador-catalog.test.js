@@ -56,7 +56,7 @@ describe('catálogo del Mostrador', () => {
     const mobile = d.querySelector('.online-board-mobile-switch');
     mobile.querySelector('[data-online-action="delivery"]').click();
     expect(columns()[1].classList.contains('is-selected')).toBe(true);
-    mobile.querySelector('[data-online-action="pickup"]').click();
+    d.querySelector('.online-board-mobile-switch [data-online-action="pickup"]').click();
     expect(columns()[0].classList.contains('is-selected')).toBe(true);
     d.querySelector('.online-board-column [data-online-action="next"]').click();
     expect(d.querySelector('.online-board-column').textContent).toContain('En preparación');
