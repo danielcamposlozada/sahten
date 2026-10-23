@@ -54,7 +54,7 @@ describe('roles en pantalla', () => {
     expect(visibleNav(a).filter(p => p !== 'nube')).toEqual(['mostrador']);
     a.ev("showPanel('gastos')"); expect(a.ev('currentPanel')).toBe('mostrador');
     expect(a.window.document.body.classList.contains('role-no-costs')).toBe(true);
-    expect(a.window.document.getElementById('role-banner').textContent).toMatch(/Cajero/);
+    expect(a.window.document.getElementById('role-banner').textContent).toMatch(/Vendedor \/ Caja/);
     a.window.close();
   }, 60000);
   it('encargado: Mostrador y Stock, sin costos; lectura: Reportes, Gastos y Proyección en solo lectura; admin: todo', async () => {

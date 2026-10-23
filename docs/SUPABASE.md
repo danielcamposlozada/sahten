@@ -40,16 +40,19 @@ La web lee el menú en vivo por nombre de tienda (`?store=mi-local`, o un subdom
 
 ## 4. Usuarios y roles
 
-El dueño, en **Nube y usuarios › Usuarios**, invita por email y elige el rol. La persona crea su cuenta con ese email,
+El dueño, en **Nube y usuarios › Equipo y permisos**, invita por email y elige el rol. La persona crea su cuenta con ese email,
 conecta la app (misma URL y anon key, nombre de la tienda) y usa **Abrir proyecto de la nube**.
+La invitación empieza como **Vendedor / Caja** y explica los permisos antes de crearla. La app no envía un email: el dueño debe avisarle a la persona. El rol de dueño no se puede asignar por invitación.
 
 | Rol | Ve y hace |
 |---|---|
 | **Dueño** | todo, incluido gestionar usuarios |
 | **Administrador** | todo menos usuarios |
 | **Encargado** | Mostrador, Stock y Pedidos; **sin costos ni márgenes** |
-| **Cajero** | solo Mostrador |
+| **Vendedor / Caja** | Mostrador: pedidos, cobros, historial y clientes; sin costos ni márgenes |
 | **Solo lectura** | Reportes, Gastos y Proyección; no cambia nada |
+
+El identificador interno de Vendedor / Caja sigue siendo `cajero`, para conservar las membresías, invitaciones y políticas existentes. Este cambio no requiere una migración de Supabase.
 
 **Cómo se hace cumplir.** No es solo ocultar pantallas:
 

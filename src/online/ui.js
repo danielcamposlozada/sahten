@@ -14,6 +14,7 @@ export function createOnlineUi({ online, w = window }) {
   const val = id => ($(id) ? $(id).value.trim() : '');
   const say = (id, msg, err) => { const el = $(id); if (el) el.innerHTML = msg ? `<div class="info-banner" style="margin:10px 0;${err ? 'background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.35)' : ''}">${esc(msg)}</div>` : ''; };
   const run = async (slot, fn, ok) => { try { say(slot, 'Un momento…'); const r = await fn(); say(slot, ok ? (typeof ok === 'function' ? ok(r) : ok) : ''); ui.render(); return r; } catch (e) { say(slot, e.message || String(e), true); } };
+  let inviting = false;
 
   const ui = {
     renderProgress() {
@@ -63,17 +64,33 @@ export function createOnlineUi({ online, w = window }) {
     },
     async renderUsers() {
       const host = $('nube-users'); if (!host) return;
+      if (online.role() !== 'owner') { host.innerHTML = ''; return; }
       try {
         const members = await online.listMembers();
-        host.innerHTML = `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:4px">Usuarios</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Invitá a tu equipo con su email. La persona crea su cuenta con ese email, inicia sesión desde «Abrir proyecto de la nube» y entra con el rol que le diste.</div>
+        if (online.role() !== 'owner' || !host.isConnected) return;
+        host.innerHTML = `<div class="card cloud-team"><h3>Equipo y permisos</h3>
+          <p>Solo el dueño puede invitar personas y cambiar sus roles. Cada persona entra con su propia cuenta.</p>
           ${members.map(m => `<div class="backup-row"><div><div class="backup-row-title">${esc(m.email)}</div><div class="backup-row-desc">${esc(ROLE_DESC[m.role] || '')}</div></div>
-            ${m.role === 'owner' ? '<span style="font-size:12px;font-weight:700">Dueño</span>' : `<div style="display:flex;gap:8px"><select class="custom-input" style="width:auto" onchange="SAHTEN.online.ui.setRole('${m.user_id}',this.value)">${INVITABLE.map(r => `<option value="${r}" ${r === m.role ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}</select><button class="btn" onclick="SAHTEN.online.ui.removeMember('${m.user_id}')">Quitar</button></div>`}</div>`).join('')}
+            ${m.role === 'owner' ? '<span class="cloud-owner">Dueño</span>' : `<div class="cloud-member-actions"><select class="custom-input" aria-label="Rol de ${esc(m.email)}" onchange="SAHTEN.online.ui.setRole('${m.user_id}',this.value)">${INVITABLE.map(r => `<option value="${r}" ${r === m.role ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}</select><button class="btn" onclick="SAHTEN.online.ui.removeMember('${m.user_id}')">Quitar</button></div>`}</div>`).join('')}
           <div class="backup-divider"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="nb-inv-mail" class="custom-input" type="email" placeholder="email@ejemplo.com" style="flex:1;min-width:200px"><select id="nb-inv-role" class="custom-input" style="width:auto">${INVITABLE.map(r => `<option value="${r}">${ROLE_LABEL[r]}</option>`).join('')}</select><button class="btn btn-accent" onclick="SAHTEN.online.ui.invite()">Invitar</button></div><div id="nube-users-msg"></div></div>`;
-      } catch (e) { host.innerHTML = ''; }
+          <h4>Invitar a una persona</h4><div class="cloud-invite-fields"><div><label for="nb-inv-mail">Correo electrónico</label><input id="nb-inv-mail" class="custom-input" type="email" autocomplete="email" placeholder="email@ejemplo.com"></div><div><label for="nb-inv-role">Rol de acceso</label><select id="nb-inv-role" class="custom-input" aria-describedby="nb-inv-permissions" onchange="SAHTEN.online.ui.renderInviteRole()">${INVITABLE.map(r => `<option value="${r}" ${r === 'cajero' ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}</select></div></div>
+          <div id="nb-inv-permissions" class="cloud-permissions" role="status" aria-live="polite"></div>
+          <p class="cloud-invite-help">La persona deberá crear su cuenta con ese correo y abrir el proyecto de la nube. La app no envía un email de invitación.</p>
+          <button id="nb-inv-send" class="btn btn-accent" onclick="SAHTEN.online.ui.invite()">Crear invitación</button><div id="nube-users-msg" role="status" aria-live="polite"></div>
+          <details class="cloud-role-guide"><summary>Ver todos los roles y permisos</summary><dl>${['owner', ...INVITABLE].map(r => `<dt>${ROLE_LABEL[r]}</dt><dd>${esc(ROLE_DESC[r])}</dd>`).join('')}</dl><p>El dueño es quien creó el proyecto; no se asigna ese rol mediante una invitación.</p></details></div>`;
+        ui.renderInviteRole();
+      } catch (e) { host.innerHTML = '<div id="nube-users-msg" role="status"></div>'; say('nube-users-msg', 'No se pudo cargar el equipo. ' + (e.message || ''), true); }
     },
-    async invite() { await run('nube-users-msg', () => online.invite(val('nb-inv-mail'), val('nb-inv-role')), 'Invitación creada. Avisale a la persona que cree su cuenta con ese email.'); ui.renderUsers(); },
+    renderInviteRole() { const el = $('nb-inv-permissions'), r = val('nb-inv-role'); if (el) el.textContent = ROLE_DESC[r] || 'Elegí un rol para ver sus permisos.'; },
+    async invite() {
+      if (inviting || online.role() !== 'owner') return;
+      const email = val('nb-inv-mail'), r = val('nb-inv-role');
+      inviting = true; const button = $('nb-inv-send'); if (button) { button.disabled = true; button.textContent = 'Creando invitación…'; }
+      say('nube-users-msg', 'Creando invitación…');
+      try { await online.invite(email, r); await ui.renderUsers(); say('nube-users-msg', `Invitación creada para ${email} como ${ROLE_LABEL[r]}. Avisale a la persona que cree su cuenta con ese correo.`); ui.renderAudit(); }
+      catch (e) { say('nube-users-msg', e.message || String(e), true); }
+      finally { inviting = false; const current = $('nb-inv-send'); if (current) { current.disabled = false; current.textContent = 'Crear invitación'; } }
+    },
     async setRole(uid, role) { try { await online.setMemberRole(uid, role); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
     async removeMember(uid) { if (!(await w.sahtenConfirm('¿Quitar a este usuario del proyecto?', { okLabel: 'Quitar', danger: true }))) return; try { await online.removeMember(uid); } catch (e) { w.alert(e.message); } ui.renderUsers(); ui.renderAudit(); },
     async renderAudit() {

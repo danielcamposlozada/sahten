@@ -8,10 +8,10 @@
 // La seguridad real está en Supabase (RLS + funciones: ver supabase/schema.sql); esto ordena la pantalla.
 // ═══════════════════════════════════════════════════════════
 export const ROLES = ['owner', 'admin', 'encargado', 'cajero', 'lectura'];
-export const ROLE_LABEL = { owner: 'Dueño', admin: 'Administrador', encargado: 'Encargado', cajero: 'Cajero', lectura: 'Solo lectura' };
+export const ROLE_LABEL = { owner: 'Dueño', admin: 'Administrador', encargado: 'Encargado', cajero: 'Vendedor / Caja', lectura: 'Solo lectura' };
 export const ROLE_DESC = {
-  owner: 'Todo, incluido gestionar usuarios.', admin: 'Todo menos usuarios.', encargado: 'Mostrador, Stock y Pedidos. No ve costos ni márgenes.',
-  cajero: 'Solo el Mostrador.', lectura: 'Reportes, Gastos y Proyección, sin poder cambiar nada.',
+  owner: 'Acceso completo, incluido invitar personas y cambiar sus roles.', admin: 'Administra el negocio, el catálogo, los costos y la configuración. No gestiona usuarios.', encargado: 'Mostrador, pedidos y stock. No ve costos ni márgenes.',
+  cajero: 'Mostrador: pedidos, cobros, historial y clientes. No ve costos ni márgenes.', lectura: 'Consulta reportes, gastos y proyección, sin modificar datos.',
 };
 export const INVITABLE = ['admin', 'encargado', 'cajero', 'lectura'];
 
