@@ -686,83 +686,43 @@ function printComanda(orderId) {
   const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const itemsHtml = o.items.map(it => '<tr><td class="item-name">' + it.qty + '× ' + _esc(it.name) + '</td><td class="item-price">$' + _fmt(it.lineTotal) + '</td></tr>').join('');
   const orderNum = String(o.num).padStart(4,'0');
+  const paper = SAHTEN.receiptPaper.profile(SAHTEN.receiptPaper.width());
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comanda #${orderNum}</title>
 <style>
-/* ── Responsive: 58mm / 80mm thermal + A4 laser ── */
-@page { margin: 3mm; size: auto; }
-@media print { @page { margin: 3mm; } body { width: 100% !important; max-width: none !important; } }
+/* Ancho explícito: no depender del viewport que informa el controlador. */
+@page { margin: 0; size: auto; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Courier New', 'Lucida Console', monospace;
-  font-size: 14px; color: #000;
-  max-width: 72mm; margin: 0 auto; padding: 3mm;
-  line-height: 1.4;
-  -webkit-print-color-adjust: exact;
-}
+html { background: #fff; }
+body { width: ${paper.contentMm}mm; max-width: ${paper.contentMm}mm; padding: 1mm; margin: 0;
+  font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000; line-height: 1.4; -webkit-print-color-adjust: exact; }
 .logo-wrap { text-align: center; margin-bottom: 6px; padding: 2px 0; }
-.logo-svg { width: 100%; max-width: 48mm; height: auto; max-height: 18mm; display: block; margin: 0 auto; }
-.logo-img { max-width: 42mm; max-height: 16mm; height: auto; display: block; margin: 0 auto; object-fit: contain; }
-.brand { text-align: center; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; font-family: -apple-system, 'Helvetica Neue', sans-serif; }
-.order-num { text-align: center; font-size: 26px; font-weight: 900; margin: 6px 0; letter-spacing: 1px; }
-.meta { text-align: center; font-size: 13px; color: #000; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+.logo-svg { width: 100%; max-width: 38mm; height: auto; max-height: 16mm; display: block; margin: 0 auto; }
+.logo-img { max-width: 100%; max-height: 16mm; height: auto; display: block; margin: 0 auto; object-fit: contain; }
+.brand { text-align: center; font-size: 21px; font-weight: 800; margin-bottom: 4px; overflow-wrap: anywhere; }
+.order-num { text-align: center; font-size: 22px; font-weight: 800; margin: 6px 0; }
+.meta { text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
 .sep { border-top: 1px dashed #000; margin: 6px 0; }
-.sep-bold { border-top: 3px solid #000; margin: 6px 0; }
+.sep-bold { border-top: 2px solid #000; margin: 6px 0; }
 table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.receipt-items td:first-child { width: 65%; }
-.receipt-items td:last-child { width: 35%; }
-.total-row td:last-child { width: 65%; }
-.meta, .payment { overflow-wrap: anywhere; }
-td { padding: 3px 0; font-size: 14px; vertical-align: top; font-weight: 600; }
-.item-name { overflow-wrap: anywhere; text-align: left; padding-right: 4px; word-break: break-word; font-weight: 700; }
-.item-price { text-align: right; white-space: nowrap; font-weight: 900; min-width: 16mm; }
-.sub-row td { font-size: 13px; color: #000; font-weight: 600; }
-.total-row td { font-size: 18px; font-weight: 900; padding-top: 6px; border-top: 2px solid #000; }
-.status { text-align: center; font-size: 16px; font-weight: 900; text-transform: uppercase; margin: 8px 0; padding: 6px 4px; border: 3px solid #000; letter-spacing: 0.5px; }
-.receipt-review { text-align: center; border-top: 1px dashed #000; margin-top: 12px; padding-top: 10px; break-inside: avoid; color: #000; font-size: 13px; line-height: 1.4; font-weight: 700; }
-.receipt-google-brand { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 7px; font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; }
+td { padding: 3px 0; font-size: 14px; vertical-align: top; font-weight: 600; overflow-wrap: anywhere; }
+td:first-child { width: 38%; } td:last-child { width: 62%; }
+.receipt-items tr { break-inside: avoid; }
+.item-name { text-align: left; padding-right: 4px; font-weight: 700; }
+.item-price { text-align: right; font-weight: 800; }
+${paper.contentMm <= 48 ? '.receipt-items tr,.receipt-items td:first-child,.receipt-items td:last-child{display:block;width:100%}.receipt-items .item-price{padding-top:0;padding-bottom:7px}' : ''}
+${paper.contentMm <= 40 ? '.receipt-totals,.receipt-totals tbody,.receipt-totals tr{display:block;width:100%}.receipt-totals .sub-row{display:flex}.total-row td{display:block;width:100%}.total-row td:last-child{border-top:0;padding-top:0}' : ''}
+.sub-row td { font-size: 13px; }
+.total-row td { font-size: 17px; font-weight: 800; padding-top: 6px; border-top: 2px solid #000; }
+.status { text-align: center; font-size: 15px; font-weight: 800; text-transform: uppercase; margin: 8px 0; padding: 6px 3px; border: 2px solid #000; }
+.meta,.payment,.status,.receipt-review,.footer { overflow-wrap: anywhere; }
+.receipt-review { text-align: center; border-top: 1px dashed #000; margin-top: 12px; padding-top: 10px; break-inside: avoid; font-size: 13px; line-height: 1.45; font-weight: 700; }
+.receipt-google-brand { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 7px; font-size: 17px; font-weight: 700; }
 .receipt-google-logo { width: 6mm; height: 6mm; filter: grayscale(1) brightness(0); }
-.receipt-review-qr { display: block; width: 32mm; height: 32mm; margin: 6px auto; }
+.receipt-review-qr { display: block; width: 30mm; height: 30mm; max-width: 100%; margin: 6px auto; }
 .receipt-review-help { font-size: 12px; font-weight: 600; }
-.footer { text-align: center; font-size: 11px; color: #000; font-weight: 600; margin-top: 10px; padding-top: 4px; }
+.footer { text-align: center; font-size: 12px; font-weight: 600; margin-top: 10px; padding-top: 4px; }
 .payment { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
-/* ── 58mm overrides ── */
-@media print and (max-width: 58mm) {
-  @page { margin: 2mm; }
-  body { font-size: 13px; padding: 0; max-width: none; }
-  .logo-svg { max-width: 38mm; max-height: 14mm; }
-  .logo-img { max-width: 34mm; max-height: 13mm; }
-  .brand { font-size: 18px; }
-  .order-num { font-size: 22px; }
-  td { font-size: 13px; }
-  .item-price { min-width: 12mm; }
-  .total-row td { font-size: 16px; }
-  .status { font-size: 14px; padding: 5px 3px; border-width: 2px; }
-}
-/* ── 48mm overrides ── */
-@media print and (max-width: 48mm) {
-  @page { margin: 1.5mm; }
-  body { font-size: 12px; padding: 0; max-width: none; line-height: 1.4; }
-  .logo-svg { max-width: 32mm; max-height: 12mm; }
-  .logo-img { max-width: 28mm; max-height: 10mm; }
-  .brand { font-size: 15px; margin-bottom: 2px; }
-  .order-num { font-size: 18px; margin: 4px 0; }
-  .meta { font-size: 12px; font-weight: 600; }
-  td { font-size: 12px; padding: 2px 0; }
-  .receipt-items tr, .receipt-items td:first-child, .receipt-items td:last-child { display: block; width: 100%; }
-  .receipt-items .item-price { text-align: right; padding-top: 0; }
-  .item-name { font-weight: 600; }
-  .item-price { min-width: 0; font-size: 12px; }
-  .sub-row td { font-size: 12px; }
-  .total-row td { font-size: 14px; }
-  .status { font-size: 12px; padding: 4px 2px; border-width: 2px; }
-  .footer { font-size: 11px; }
-  .payment { font-size: 12px; }
-  .receipt-review { font-size: 12px; }
-  .receipt-review-qr { width: 30mm; height: 30mm; }
-  .sep { margin: 4px 0; }
-  .sep-bold { border-top-width: 2px; margin: 4px 0; }
-}
 </style></head><body>
 ${logoHtml}
 <div class="order-num">ORDEN #${orderNum}</div>
@@ -770,7 +730,7 @@ ${logoHtml}
 <div class="sep-bold"></div>
 <table class="receipt-items">${itemsHtml}</table>
 <div class="sep"></div>
-<table>
+<table class="receipt-totals">
 <tr class="sub-row"><td>Subtotal</td><td style="text-align:right">$${_fmt(o.subtotal)}</td></tr>
 ${o.discountAmount>0?'<tr class="sub-row"><td>'+_esc(o.discountName||'Dto.')+'</td><td style="text-align:right">−$'+_fmt(o.discountAmount)+'</td></tr>':''}
 ${o.shipping>0?'<tr class="sub-row"><td>Envío</td><td style="text-align:right">$'+_fmt(o.shipping)+'</td></tr>':''}
@@ -783,7 +743,7 @@ ${o.paymentName?'<div class="sep"></div><div class="payment">Pago: '+_esc(o.paym
 ${SAHTEN.receiptReviews.footer(_custData)}
 </body></html>`;
 
-  return SAHTEN.printDocument(html).catch(e => alert('No se pudo imprimir la comanda. ' + (e.message || 'Volvé a intentarlo.')));
+  return SAHTEN.printDocument(html, { paperWidthMm: paper.paperMm }).catch(e => alert('No se pudo imprimir la comanda. ' + (e.message || 'Volvé a intentarlo.')));
 }
 
 // ═══════════════════════════════════════════════════════════

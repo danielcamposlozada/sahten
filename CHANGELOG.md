@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Comandas sin recortes en tiqueteras**: selección local de papel de 48, 58 u 80 mm; ancho útil explícito de 40, 48 o 72 mm. Los tickets estrechos separan nombre e importe en líneas y conservan el QR dentro del ancho. El documento de impresión usa el papel seleccionado, sin depender de ventanas emergentes ni de detección automática del controlador.
+
 - **Pie del sitio personalizable**: texto y enlace del crédito por negocio; el pie auxiliar vacío ya no agrega una franja de 36 px debajo del sitio.
 
 - **Color del símbolo de portada**: campo independiente para definir el color del logo monocromo del hero. Sahten usa `#FAF8F5`, solicitado por el dueño.

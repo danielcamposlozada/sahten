@@ -557,6 +557,12 @@ SAHTEN.events.beforeRender('mkChart', (id, cfg) => {
 });
 
 // ── Personalization UI ──
+function custUpdateReceiptPaper() {
+  const el = document.getElementById('cust-receipt-paper');
+  if (!el) return;
+  try { localStorage.setItem('sahten-receipt-paper', String(SAHTEN.receiptPaper.profile(el.value).paperMm)); }
+  catch { alert('No se pudo guardar el formato de papel en este equipo.'); }
+}
 function custUpdateReview() {
   const urlInput = document.getElementById('cust-review-url');
   const enabled = document.getElementById('cust-review-enabled').checked;
@@ -572,6 +578,8 @@ function custUpdateReview() {
   custSave(_cust);
 }
 function renderCustPanel() {
+  const paper = document.getElementById('cust-receipt-paper');
+  if (paper) paper.value = String(SAHTEN.receiptPaper.width());
   const reviewEnabled = document.getElementById('cust-review-enabled');
   if (reviewEnabled) {
     reviewEnabled.checked = !!_cust.reviewEnabled;
@@ -1204,3 +1212,4 @@ function showWipeSuccess() {
 }
 
 window.custUpdateReview = custUpdateReview;
+window.custUpdateReceiptPaper = custUpdateReceiptPaper;

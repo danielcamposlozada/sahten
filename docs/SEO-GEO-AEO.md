@@ -106,6 +106,13 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - El editor permite cargar el símbolo de portada por separado del logo de navegación; ambos viajan en el archivo de contenido.
 - Ajuste publicado y verificado en Chrome: despliegue `d4d806e3`, https://sahten.online/. Hero: SVG árabe 941 × 255, blanco como el texto; navegación: SVG completo 1249 × 516, colores originales. Sin desborde en 1366 × 768 y 390 × 844. Las 469 pruebas y la compilación pasan.
 
-- El dueño pidió cambiar únicamente las letras árabes del hero a **#FAF8F5**; se conserva el logo de navegación. Verificación y publicación del color en curso.
+- El dueño pidió cambiar únicamente las letras árabes del hero a **#FAF8F5**; se conserva el logo de navegación. Publicado y verificado en Chrome en el despliegue `b8ace0ec`: color calculado RGB(250, 248, 245), equivalente a #FAF8F5.
 
-- Crédito confirmado por el dueño: **© 2026 · Diseñado y desarrollado por Daniel J. Campos Lozada · Noamdan**, enlace **https://noamdan.com/**. El pie auxiliar vacío producía una franja de 36 px; se oculta cuando no contiene información. Verificación y publicación en curso.
+- Crédito confirmado por el dueño: **© 2026 · Diseñado y desarrollado por Daniel J. Campos Lozada · Noamdan**, enlace **https://noamdan.com/**. El pie auxiliar vacío producía una franja de 36 px; se oculta cuando no contiene información. Publicado y verificado en Chrome en el despliegue `b8ace0ec`: enlace correcto y pie auxiliar con altura cero. 471 pruebas pasaron antes del despliegue.
+
+## Comandera y pausa solicitada (23/10/2026)
+- Preparado y verificado en PR #16: formato de impresión por equipo para rollos 48/58/80 mm, con ancho útil de 40/48/72 mm. Default 58 mm para el caso IT01 informado por el dueño. Evita depender del tamaño de viewport que declara el controlador y presenta importes en una línea propia en tickets estrechos.
+- Requiere próxima versión instalada y prueba física con IT01; no se afirma una impresión real desde este equipo.
+- Por pedido del dueño: audios en pausa y no comenzar otra prueba de Mercado Pago hasta que retome. Último resultado confirmado de pago: rechazado; sigue pendiente una compra ficticia aprobada de punta a punta.
+
+- Revisión final de impresión: 474 pruebas en 48 archivos, compilación y scripts clásicos correctos; Chrome sin desborde de elementos a la derecha en 48/58 mm, con importe largo y QR completo. Solicitud de publicación de 0.4.16 pendiente de confirmación del dueño.

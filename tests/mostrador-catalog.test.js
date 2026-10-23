@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { writeFileSync } from 'node:fs';
 import { buildTestBundle, openApp, loadRawDemo } from './app-harness.js';
 beforeAll(() => buildTestBundle(), 120000);
 
@@ -39,6 +40,26 @@ describe('catálogo del Mostrador', () => {
     expect(html).toContain('ORDEN #0001');
     expect(html).toContain('TOTAL');
     expect(html).toContain(w.eval('SAHTEN_ORDERS[0].items[0].name'));
+    w.close();
+  });
+  it('genera tickets con ancho útil explícito, importes largos y QR en cada papel, guardado solo en el equipo', async () => {
+    const { window: w } = await openApp(); loadRawDemo(w);
+    w.eval("SAHTEN_ORDERS=[{id:'ancho',num:11,createdAt:'2026-10-23T15:00:00Z',status:'pendiente',customerName:'Cliente de prueba con nombre largo',subtotal:19753086,total:19753086,items:[{qty:2,name:'Producto de nombre largo para verificar que la comanda se ajuste sin cortar palabras ni importes',lineTotal:19753086}]}];_cust.reviewEnabled=true;_cust.reviewUrl='https://g.page/r/ejemplo/review';_cust.reviewText='¿Cómo estuvo tu experiencia? Dejanos tu reseña en Google.';");
+    let html, options; w.SAHTEN.printDocument = async (h, o) => { html = h; options = o; };
+    for (const [paper, width] of [[48,40],[58,48],[80,72]]) {
+      w.localStorage.setItem('sahten-receipt-paper', String(paper));
+      await w.printComanda('ancho');
+      expect(options.paperWidthMm).toBe(paper);
+      expect(html).toContain('width: ' + width + 'mm');
+      expect(html).toContain('$19.753.086');
+      expect(html).toContain('receipt-review-qr');
+      expect(html).not.toContain('max-width: 58mm');
+      writeFileSync(new URL('../.tmp/receipt-' + paper + '.html', import.meta.url), html);
+    }
+    w.renderCustPanel(); expect(w.document.getElementById('cust-receipt-paper').value).toBe('80');
+    w.document.getElementById('cust-receipt-paper').value='58'; w.custUpdateReceiptPaper();
+    expect(w.localStorage.getItem('sahten-receipt-paper')).toBe('58');
+    expect(JSON.stringify(w.SAHTEN.project.collect())).not.toContain('sahten-receipt-paper');
     w.close();
   });
   it('online muestra retiro y delivery en columnas, permite acciones rápidas y conserva completados recientes', async () => {
