@@ -46,6 +46,12 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - [x] Kit de imágenes: favicon, apple-touch-icon, manifiesto, imagen para compartir 1200×630 con medidas y texto alternativo, logo en el esquema.
 - [x] Tests en `tests/seo.test.js`.
 
+**Revisión del PR #14 (23/10/2026)**
+- Corregidos los enlaces `Restaurant.hasMenu`, `Menu.url` y el sitemap declarado en `robots.txt` para sitios en subcarpetas sin barra final. Cuatro casos de regresión cubren subcarpetas, barra final, parámetros y rutas anidadas.
+- Verificado con `npm ci`, `npx vitest run` (448 pruebas, 44 archivos), compilación y comprobación de versiones. Los 33 archivos del kit coinciden con el ZIP entregado por el dueño.
+- `npm audit`: cuatro alertas preexistentes en herramientas de desarrollo (Vite/Vitest y sus dependencias); no se cambiaron dependencias en este PR. `npm audit --omit=dev` no informa vulnerabilidades. La actualización de esas herramientas queda pendiente como tarea separada.
+- La revisión no modifica Supabase, la web publicada ni perfiles externos. Integrar el código en `main` no actualiza por sí solo la app instalada ni la carpeta del hosting; hace falta una próxima versión de la app con estos cambios y volver a generar/publicar el menú.
+
 **Lo hace el dueño / una persona**
 - [ ] Importar el archivo de contenido, corregir nombre de la tienda («SAHTEN Gastronomía Árabe»), erratas del menú y sumar una línea de descripción por plato; poner `sahten` en *Kit de imágenes de marca*; **republicar y subir la carpeta** al hosting.
 - [ ] Verificar y completar la ficha de Google (datos del documento), subir logo y portada del kit, productos, 20 fotos, reseñas por WhatsApp.

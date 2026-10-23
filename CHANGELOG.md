@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **SEO en subcarpetas**: los enlaces a la carta y al sitemap conservan la ruta del negocio aunque la dirección pública se cargue sin barra final.
+
 - **Más páginas para buscadores y asistentes de IA**: «Publicar menú» genera además `/menu/` (carta completa con precios y datos estructurados Menu), `/delivery-y-retiro/`, `/catering/` y `/nuestra-historia/`, cada una con su dirección propia, migas de pan y Open Graph; el sitemap las incluye con fecha. Solo salen con la dirección pública cargada.
 - **Datos estructurados más completos**: Restaurant con tipos de cocina, barrios de reparto (`areaServed`), perfiles (`sameAs`), enlace a la carta y logo; preguntas frecuentes como FAQPage idénticas a las visibles. La portada enlaza a las páginas nuevas.
 - **Kit de imágenes de marca**: favicon, ícono para iPhone, manifiesto, íconos Android/maskable e imagen para compartir el link (1200×630, con medidas y texto alternativo). Se activa con *Kit de imágenes de marca* en SEO. La portada muestra la caligrafía árabe sola como logo. Incluye en `docs/brand/` los avatares y portadas para Google, Instagram y Facebook.

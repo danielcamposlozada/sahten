@@ -57,6 +57,26 @@ const full = {
 };
 const jsonLd = (doc, id) => JSON.parse(doc.querySelector(id).textContent);
 
+it.each([
+  ['https://local.example/tienda', 'https://local.example/tienda/'],
+  ['https://local.example/tienda/', 'https://local.example/tienda/'],
+  ['https://local.example/tienda?origen=prueba#pedido', 'https://local.example/tienda/'],
+  ['https://local.example/negocios/tienda', 'https://local.example/negocios/tienda/'],
+])('conserva la subcarpeta de %s en todos los enlaces SEO', async (url, base) => {
+  const m = structuredClone(full); m.site.seo.url = url; m.site.seo.brandKit = 'sahten';
+  const files = await buildPublishFiles(m);
+  const home = new JSDOM(files.find(f => f.path === 'index.html').data).window.document;
+  const page = new JSDOM(files.find(f => f.path === 'menu/index.html').data).window.document;
+  expect(jsonLd(home, '#restaurant-schema').hasMenu).toBe(base + 'menu/');
+  expect(page.querySelector('link[rel=canonical]').href).toBe(base + 'menu/');
+  const schemas = [...page.querySelectorAll('script[type="application/ld+json"]')].map(s => JSON.parse(s.textContent));
+  expect(schemas.find(s => s['@type'] === 'Menu').url).toBe(base + 'menu/');
+  expect(schemas.find(s => s['@type'] === 'BreadcrumbList').itemListElement[1].item).toBe(base + 'menu/');
+  expect(files.find(f => f.path === 'robots.txt').data).toContain('Sitemap: ' + base + 'sitemap.xml');
+  expect(files.find(f => f.path === 'sitemap.xml').data).toContain('<loc>' + base + 'menu/</loc>');
+  expect(home.querySelector('link[rel=manifest]').href).toBe(base + 'site.webmanifest');
+});
+
 it('publica páginas propias con su canonical, migas de pan y datos estructurados, y las lista en el sitemap', async () => {
   const files = await buildPublishFiles(full);
   const paths = files.map(f => f.path);

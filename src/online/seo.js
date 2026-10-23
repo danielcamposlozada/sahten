@@ -49,7 +49,7 @@ export function buildSeo(menu) {
   const image = kit ? kit.og : heroImage;   // al compartir el link se ve la imagen de marca; la foto va en los datos estructurados
   const schema = { '@context': 'https://schema.org', '@type': 'Restaurant', name: store.name || title };
   const hasMenuPage = sitePageList(menu).some(p => p.slug === 'menu');
-  if (canonical) { schema['@id'] = canonical + '#restaurant'; schema.url = canonical; schema.hasMenu = hasMenuPage ? new URL('menu/', canonical).href : canonical + '#pedido'; }
+  if (canonical) { schema['@id'] = canonical + '#restaurant'; schema.url = canonical; schema.hasMenu = hasMenuPage ? seoAsset(canonical, 'menu/') : canonical + '#pedido'; }
   if (store.address) schema.address = { '@type': 'PostalAddress', streetAddress: options.streetAddress || store.address, ...(options.locality ? { addressLocality: options.locality } : {}), ...(options.region ? { addressRegion: options.region } : {}), ...(options.country ? { addressCountry: options.country } : {}) };
   if (store.whatsapp) schema.telephone = '+' + String(store.whatsapp).replace(/\D/g, '');
   const cuisine = seoList(options.cuisine);
@@ -77,7 +77,7 @@ export function faqSchema(menu) {
 export function menuSchema(menu) {
   const canonical = buildSeo(menu).canonical, currency = seoCurrency(menu), showPrices = menu.config?.showPrices !== false;
   if (!canonical) return null;
-  return { '@context': 'https://schema.org', '@type': 'Menu', name: 'Menú de ' + (menu.store?.name || 'la carta'), url: new URL('menu/', canonical).href, inLanguage: 'es',
+  return { '@context': 'https://schema.org', '@type': 'Menu', name: 'Menú de ' + (menu.store?.name || 'la carta'), url: seoAsset(canonical, 'menu/'), inLanguage: 'es',
     hasMenuSection: menuSections(menu).map(sec => ({ '@type': 'MenuSection', name: sec.name,
       hasMenuItem: sec.items.map(p => ({ '@type': 'MenuItem', name: p.name, ...(p.description ? { description: p.description } : {}),
         ...(showPrices && currency && Number.isFinite(Number(p.price)) ? { offers: { '@type': 'Offer', price: String(p.price), priceCurrency: currency } } : {}) })) })) };
@@ -108,5 +108,5 @@ export function discoveryFiles(menu) {
   const base = canonical.endsWith('/') ? canonical : canonical + '/', day = /^\d{4}-\d{2}-\d{2}/.exec(menu.generatedAt || '');
   const lastmod = day ? '<lastmod>' + day[0] + '</lastmod>' : '';
   const urls = [canonical, ...sitePageList(menu).map(p => new URL(p.slug + '/', base).href)];
-  return [{ path: 'robots.txt', data: 'User-agent: *\nAllow: /\nSitemap: ' + new URL('sitemap.xml', canonical).href + '\n' }, { path: 'sitemap.xml', data: '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls.map(u => '<url><loc>' + seoEscape(u) + '</loc>' + lastmod + '</url>').join('') + '</urlset>' }];
+  return [{ path: 'robots.txt', data: 'User-agent: *\nAllow: /\nSitemap: ' + seoAsset(canonical, 'sitemap.xml') + '\n' }, { path: 'sitemap.xml', data: '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls.map(u => '<url><loc>' + seoEscape(u) + '</loc>' + lastmod + '</url>').join('') + '</urlset>' }];
 }
