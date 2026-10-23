@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.14
+
+- **Tablero de pedidos online**: dos columnas fijas para Retiro y Delivery, con número, cliente, cantidad de productos, horario y progreso.
+- **Acciones rápidas**: avanzar a preparación, listo, enviado, retirado y entregado sin abandonar el tablero.
+- **Completados recientes**: sección plegable durante 30 minutos; el historial conserva todos los pedidos.
+- **Sincronización de estados**: flujos diferenciados para retiro y delivery; migración de Supabase requerida y aplicada para la instalación actual.
+- **Adaptabilidad**: pantalla estrecha con selector Retiro/Delivery y mejoras de estilos compatibles con el tema existente.
+
 ## 0.4.13
 
 - **Sincronización visible**: muestra la etapa de datos, fotos y guardado, con barra y contador real de fotos, fin o error. Cubre sincronizar proyecto, abrir desde nube y publicar menú.
