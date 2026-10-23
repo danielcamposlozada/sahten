@@ -52,7 +52,8 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - `npm audit`: cuatro alertas preexistentes en herramientas de desarrollo (Vite/Vitest y sus dependencias); no se cambiaron dependencias en este PR. `npm audit --omit=dev` no informa vulnerabilidades. La actualización de esas herramientas queda pendiente como tarea separada.
 - La revisión no modifica Supabase, la web publicada ni perfiles externos. Integrar el código en `main` no actualiza por sí solo la app instalada ni la carpeta del hosting; hace falta una próxima versión de la app con estos cambios y volver a generar/publicar el menú.
 
-**Próxima app preparada: 0.4.15 (pendiente de confirmar su publicación)**
+**App 0.4.15 publicada (23/10/2026)**
+- Instaladores de Windows y macOS disponibles en [la publicación v0.4.15](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.15). El proceso completo de GitHub terminó correctamente y `latest.json` anuncia 0.4.15 con Windows, Apple Silicon e Intel y sus firmas de actualización.
 - Verificación local: `npx vitest run` (457 pruebas en 45 archivos), compilación, comprobación de versiones y revisión de scripts clásicos correctas. Formulario de roles revisado en Chrome a 1366 × 768 y 390 × 844 con datos ficticios, sin conexión con Supabase.
 - Incluye las páginas SEO, el kit de marca y la corrección de rutas del PR #14, además de las invitaciones con roles más claros y el logo completo de la app.
 - No cambia los datos del negocio ni importa automáticamente el JSON de contenido. El dueño debe revisar el archivo antes de importarlo, especialmente la respuesta sobre medios de pago: Mercado Pago continúa en pruebas.
