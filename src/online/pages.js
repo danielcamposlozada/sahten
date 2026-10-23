@@ -53,7 +53,7 @@ footer{border-top:1px solid var(--border);padding:22px 16px;color:var(--muted);f
 <p class="crumbs"><a href="../">Inicio</a> › ${esc(page.label)}</p>
 <h1>${esc(h1)}</h1>
 ${body}
-<p><a class="cta" href="../#pedido">Pedir online</a>${wa ? `<a class="cta alt" href="${esc(wa)}">Consultar por WhatsApp</a>` : ''}</p>
+<p><a class="cta" href="${menu.site?.orderPage ? '../pedir/' : '../#pedido'}">Pedir online</a>${wa ? `<a class="cta alt" href="${esc(wa)}">Consultar por WhatsApp</a>` : ''}</p>
 </main>
 <footer><div class="in"><div><h2>${esc(name)}</h2>${store.address ? `<p>${esc(store.address)}</p>` : ''}</div>${hours}${wa ? `<div><h2>Contacto</h2><p><a href="${esc(wa)}">WhatsApp ${esc(store.whatsapp)}</a></p></div>` : ''}</div></footer>
 </body>

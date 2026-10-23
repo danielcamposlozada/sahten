@@ -1,0 +1,212 @@
+{
+ "format": "sahten-sitio",
+ "version": 1,
+ "site": {
+  "order": [
+   "hero",
+   "favoritos",
+   "menu",
+   "como",
+   "historia",
+   "banda",
+   "resenas",
+   "delivery",
+   "catering",
+   "faq",
+   "contacto"
+  ],
+  "seo": {
+   "url": "https://sahten.online/",
+   "title": "Sahten | Comida árabe en Vicente López y delivery",
+   "description": "Comida árabe casera en Vicente López: shawarma, fatay y recetas sirias. Pedí online: retiro en Roca 1489 o delivery en Olivos, Martínez, Belgrano y Núñez.",
+   "cuisine": "Árabe, siria",
+   "streetAddress": "General Julio Argentino Roca 1489",
+   "locality": "Vicente López",
+   "region": "Buenos Aires",
+   "country": "AR",
+   "openingHours": "Mo-Th 18:00-22:00, Fr-Sa 18:00-23:00",
+   "areaServed": "Belgrano, Núñez, Florida, Vicente López, Olivos, Martínez, La Lucila",
+   "sameAs": "",
+   "brandKit": "sahten"
+  },
+  "orderPage": true,
+  "logo": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI0OSIgaGVpZ2h0PSI1MTYiIHZpZXdCb3g9IjAgMCAxMjQ5IDUxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMxNi43MTUgMEMyNjcuMzE4IDAgMjI3LjMwNSA0MC4wMTI5IDIyNy4zMDUgODkuNDFWMTI5LjE4SDE5NC45ODJWODkuNDFDMTk0Ljk4MiA0MC4wMTI5IDE1NC45NjkgMCAxMDUuNTcyIDBDNTYuMTc0NSAwIDE2LjE2MTYgNDAuMDEyOSAxNi4xNjE2IDg5LjQxVjI3NC43NjRIMTMwLjIwNVY0NTguMzc3QzEzMC4yMDUgNDcyLjA2MiAxMTkuMTI2IDQ4My4wMSAxMDUuNTcyIDQ4My4wMUM5Mi4wMTY3IDQ4My4wMSA4MC45MzgyIDQ3MS45MzIgODAuOTM4MiA0NTguMzc3VjM3MS44NjRIMFYzODcuODk1SDE2LjE2MTZWNDI2LjA1NEMxNi4xNjE2IDQ3NS40NTEgNTYuMTc0NSA1MTUuNDY0IDEwNS41NzIgNTE1LjQ2NEMxMTQuMTc0IDUxNS40NjQgMTIyLjM4NSA1MTQuMjkxIDEzMC4yMDUgNTExLjk0NUMxNjcuNjExIDUwMS4yNTcgMTk0Ljk4MiA0NjYuODQ5IDE5NC45ODIgNDI2LjA1NFYyNDIuNDQxSDgwLjkzODJWNTcuMDg2OEM4MC45MzgyIDQzLjQwMTYgOTIuMDE2NyAzMi40NTM1IDEwNS41NzIgMzIuNDUzNUMxMTkuMTI2IDMyLjQ1MzUgMTMwLjIwNSA0My41MzIgMTMwLjIwNSA1Ny4wODY4VjE0NS4zNDFIMTk0Ljk4MkgyMTEuMTQzSDIyNy4zMDVIMjkyLjA4MVY1Ny4wODY4QzI5Mi4wODEgNDMuNDAxNiAzMDMuMTYgMzIuNDUzNSAzMTYuNzE1IDMyLjQ1MzVDMzMwLjI2OSAzMi40NTM1IDM0MS4zNDggNDMuNTMyIDM0MS4zNDggNTcuMDg2OFYyNDIuNDQxSDMxNi43MTVDMjY3LjMxOCAyNDIuNDQxIDIyNy4zMDUgMjgyLjQ1NCAyMjcuMzA1IDMzMS44NTFWNTE1LjQ2NEg0MDYuMTI1Vjg5LjQxQzQwNi4xMjUgNDAuMDEyOSAzNjYuMTEyIDAgMzE2LjcxNSAwWk0zNDEuMzQ4IDQxNC40OTlWNDgzLjE0MUgyOTEuOTUxVjI5OS41MjhDMjkxLjk1MSAyODUuODQzIDMwMy4wMjkgMjc0Ljg5NCAzMTYuNTg0IDI3NC44OTRDMzMwLjEzOSAyNzQuODk0IDM0MS4yMTggMjg1Ljk3MyAzNDEuMjE4IDI5OS41MjhWNDE0LjQ5OUgzNDEuMzQ4WiIgZmlsbD0iI0ZGRjRENiIvPgo8cGF0aCBkPSJNOTM1LjkyNiAwQzg4Ni41MjkgMCA4NDYuNTE2IDQwLjAxMjkgODQ2LjUxNiA4OS40MUw4NDYuNTMzIDQyNi4wNTRDODQ2LjUzMyA0NzUuNDUxIDg4Ni41NDYgNTE1LjQ2NCA5MzUuOTQzIDUxNS40NjRDOTg1LjM0IDUxNS40NjQgMTAyNS4zNSA0NzUuNDUxIDEwMjUuMzUgNDI2LjA1NEwxMDI1LjM0IDM3MS44NjRIOTYwLjU2SDk0NC4zOTlWMzg4LjAyNUg5NjAuNTZMOTYwLjU3NiA0NTguMzc3Qzk2MC41NzYgNDcyLjA2MiA5NDkuNDk4IDQ4My4wMSA5MzUuOTQzIDQ4My4wMUM5MjIuMzg4IDQ4My4wMSA5MTEuMzA5IDQ3MS45MzIgOTExLjMwOSA0NTguMzc3TDkxMS4yOTQgMjc0Ljc2NEgxMDI1LjM0TDEwMjUuMzQgODkuNDFDMTAyNS4zNCA0MC4wMTI5IDk4NS4zMjMgMCA5MzUuOTI2IDBaTTk2MC41NiAyNDIuNDQxSDkxMS4xNjNMOTExLjE2MiA1Ny4wODY4QzkxMS4xNjIgNDMuNDAxNiA5MjIuMjQgMzIuNDUzNSA5MzUuNzk1IDMyLjQ1MzVDOTQ5LjM1IDMyLjQ1MzUgOTYwLjQyOSA0My41MzIgOTYwLjQyOSA1Ny4wODY4TDk2MC40MyAyNDIuNDQxSDk2MC41NloiIGZpbGw9IiNGRkY0RDYiLz4KPHBhdGggZD0iTTUyNy45OTEgMjQyLjQ0Mkg1MDMuMzU4TDUwMy4zNTYgMC4yNjEyM0g0MjIuNDE4VjE2LjI5MjVINDM4LjU4TDQzOC41ODEgNTE1LjQ2NUg1MDMuMzU4VjI5OS4zOThDNTAzLjM1OCAyODUuNzEzIDUxNC40MzYgMjc0Ljc2NSA1MjcuOTkxIDI3NC43NjVDNTQxLjU0NiAyNzQuNzY1IDU1Mi42MjQgMjg1Ljg0MyA1NTIuNjI0IDI5OS4zOThWNTE1LjQ2NUg2MTcuNDAxVjMzMS44NTJDNjE3LjQwMSAyODIuNDU0IDU3Ny4zODggMjQyLjQ0MiA1MjcuOTkxIDI0Mi40NDJaIiBmaWxsPSIjRkZGNEQ2Ii8+CjxwYXRoIGQ9Ik03MDUuNjE2IDE2LjQyMjhINzIxLjc3OFYwLjI2MTIzSDY0MC44NEw2NDAuODU3IDQyNi4wNTRDNjQwLjg1NyA0NzUuNDUxIDY4MC44NyA1MTUuNDY1IDczMC4yNjcgNTE1LjQ2NUM3NzkuNjY0IDUxNS40NjUgODE5LjY3NyA0NzUuNDUxIDgxOS42NzcgNDI2LjA1NEw4MTkuNjYxIDM3MS44NjRINzM4LjcyM1YzODcuODk2SDc1NC44ODVMNzU0LjkgNDU4LjM3OEM3NTQuOSA0NzIuMDYzIDc0My44MjIgNDgzLjAxMSA3MzAuMjY3IDQ4My4wMTFDNzE2LjcxMiA0ODMuMDExIDcwNS42MzMgNDcxLjkzMiA3MDUuNjMzIDQ1OC4zNzhMNzA1LjYxNiAxMjkuNTU0SDgxOS42NlY5Ny4yMzA3SDcwNS42MTZWMTYuMjkyNVYxNi40MjI4WiIgZmlsbD0iI0ZGRjRENiIvPgo8cGF0aCBkPSJNMTI0OC44NyA0OTkuNDMzSDEyMzIuNzFMMTIzMi43MSA4OS40MUMxMjMyLjcxIDQwLjAxMjkgMTE5Mi43IDAgMTE0My4zIDBIMTAzNy43M1YxNi4xNjE2SDEwNTMuODlMMTA1My44OSA1MTUuNTk0SDExMTguNjdIMTEzNC44M1Y0OTkuNDMzSDExMTguNjdMMTExOC42NiA1Ny4wODY4QzExMTguNjYgNDMuNDAxNiAxMTI5Ljc0IDMyLjQ1MzUgMTE0My4zIDMyLjQ1MzVDMTE1Ni45OCAzMi40NTM1IDExNjcuOTMgNDMuNTMyIDExNjcuOTMgNTcuMDg2OEwxMTY3LjkzIDUxNS41OTRIMTIzMi43MUgxMjQ4Ljg3VjQ5OS40MzNaIiBmaWxsPSIjRkZGNEQ2Ii8+CjxwYXRoIGQ9Ik01OTcuNTU4IDEyMy4wNjhMNTY4LjAzNSAxMDMuMjkxTDU1Mi40MTQgMTM2LjI1M0w1ODEuNTA3IDE1Ni40Nkw1OTcuNTU4IDEyMy4wNjhaIiBmaWxsPSIjRjI4QzAwIi8+CjxwYXRoIGQ9Ik01MzYuMjEyIDExNi40NzRMNTA2LjY4OSA5Ni41NTM3TDQ5MS4yMTEgMTI5LjY1OUw1MjAuMzA0IDE0OS43MjNMNTM2LjIxMiAxMTYuNDc0WiIgZmlsbD0iI0YyOEMwMCIvPgo8cGF0aCBkPSJNMjcwLjIzOCAxNzkuOTYzTDI0MC43MTUgMTYwLjE4NkwyMjUuMDk0IDE5My4xNDhMMjU0LjE4NyAyMTMuMzU1TDI3MC4yMzggMTc5Ljk2M1oiIGZpbGw9IiNGMjhDMDAiLz4KPHBhdGggZD0iTTQ1My4zODMgMzQ5LjIxN0w0ODIuNDc2IDM2OS40MjVMNDk4LjUyNyAzMzYuMTc2TDQ2OS4wMDQgMzE2LjI1NUw0NTMuMzgzIDM0OS4yMTdaIiBmaWxsPSIjRjI4QzAwIi8+CjxwYXRoIGQ9Ik0zOTIuMTggMzU2LjUyNkw0MjEuMjczIDM3Ni43MzRMNDM3LjE4IDM0My4zNDFMNDA3LjY1OCAzMjMuNTY0TDM5Mi4xOCAzNTYuNTI2WiIgZmlsbD0iI0YyOEMwMCIvPgo8cGF0aCBkPSJNMTA3NC43OSAxOTUuMjk3QzEwNDkuODYgMTkzLjQzNCAxMDE5LjMzIDE5OC4wMiA5ODcuNTE0IDIxNy4zNjdDOTY3LjMwNiAyMjkuNjkyIDk1MS4zOTggMjQ0LjMxIDkzOC45MyAyNTguNjQyQzg5OS4wODkgMjQzLjczNyA4ODkuNDg3IDIyMi41MjcgODg5LjQ4NyAyMjIuNTI3Qzg4OS40ODcgMjIyLjUyNyA4NzkuNTk4IDI3Mi45NzMgODMwLjAxMSAyNzIuOTczQzc5OC42MjUgMjcyLjk3MyA3ODQuMDA3IDI0OC40NjYgNzc3LjU1OCAyMzAuNTUyQzgwOC45NDQgMjE1LjA3NCA4MzQuNzQgMjA5LjQ4NSA4MzQuNzQgMjA5LjQ4NUw4MDguODAxIDE4Mi4yNTVDNzY0LjgwMyAyMDAuNzQzIDcyNy44MjggMTkxLjcxNCA2ODEuNTM3IDE2My43NjhDNjQxLjY5NiAxMzkuNjkxIDYwOS40NSAxNTMuODc5IDYwOS40NSAxNTMuODc5TDU5MS4zOTMgMTkzLjE0N0M1OTEuMzkzIDE5My4xNDcgNjMxLjIzNCAxNzcuNjY5IDY2MS42MTcgMTkyLjI4N0M2OTYuMjk5IDIwOS4wNTUgNzM1LjI4IDIxMS42MzUgNzM1LjI4IDIxMS42MzVDNzM1LjI4IDIxMS42MzUgNjczLjUxMiAyNzIuNTQzIDYzNS45NjMgMjcyLjU0M0M1OTguNDE1IDI3Mi41NDMgNTkxLjI0OSAyMzYuMjg1IDU5MS4yNDkgMjM2LjI4NUw1NTcuNDI3IDIxMS42MzVDNTU3LjQyNyAyMTEuNjM1IDUzOS4zNyAyNzEuNjgzIDUwNC44MzEgMjcxLjY4M0M0NzAuMjkyIDI3MS42ODMgNDY2LjQyMiAyMzMuMjc1IDQ2Ni40MjIgMjMzLjI3NUw0MzEuODg0IDIxMS42MzVDNDMxLjg4NCAyMTEuNjM1IDQyMy4yODUgMjczLjQwMyAzODQuNDQ3IDI3My40MDNDMzQ1LjYwOCAyNzMuNDAzIDM0NC43NDggMjM4LjAwNCAzNDQuNzQ4IDIzOC4wMDRMMzA5LjM1IDIxMS42MzVDMzA5LjM1IDIxMS42MzUgMzA1LjQ4IDM1My42NTkgMjE5LjIwNSAzNTMuNjU5QzEzMi45MyAzNTMuNjU5IDEzOC4zNzYgMjM0LjEzNSAxMzguMzc2IDIzNC4xMzVMMTA2Ljg0NyAyMTEuNjM1Qzk1LjY2OCAyOTYuMTkgMTY3LjMyNSAzODEuNjA2IDI0OC4wMTEgMzY3LjQxN0MzMjguNjk3IDM1My4yMjkgMzM2LjAwNiAyNTUuMjAyIDMzNi4wMDYgMjU1LjIwMkMzNDcuNjE1IDI3OS44NTIgMzgyLjAxIDMwMy4zNTYgNDE2LjI2MiAyOTIuMzIxQzQ0Ni41MDIgMjgyLjU3NSA0NTYuODIgMjQ5LjYxMyA0NTYuODIgMjQ5LjYxM0M0NjcuODU2IDI3OS44NTIgNTAxLjI0OCAzMDQuNjQ2IDUzNy45MzYgMjkwLjYwMUM1NjguMDMyIDI3OS4xMzYgNTgxLjY0NyAyNTIuMzM2IDU4MS42NDcgMjUyLjMzNkM2MTEuODg3IDMxOC45NzcgNjg2LjI2NyAyOTUuNDc0IDczMi44NDQgMjU4LjM1NUM3NDMuMzA2IDI1MC4wNDMgNzU0LjE5OCAyNDMuMDIgNzY0LjY2IDIzNy4xNDVDNzc0LjY5MiAyNjEuMjIxIDc5NS4wNDIgMjk0LjkgODI5LjcyNCAyOTQuOUM4ODMuNzU0IDI5NC45IDkwMi41MjggMjUzLjE5NiA5MDIuNTI4IDI1My4xOTZDOTAyLjUyOCAyNTMuMTk2IDkwOS45ODEgMjYyLjc5OCA5MjYuNDYyIDI3My41NDZDOTA5LjI2NCAyOTcuMzM3IDkwMi4yNDIgMzE2LjY4NCA5MDIuMjQyIDMxNi42ODRMOTI2Ljg5MiAzNDMuOTE0QzkyNi44OTIgMzQzLjkxNCA5MzAuMzMxIDMxOC4yNjEgOTUyLjk3NSAyODcuMzA1Qzk3Mi44OTYgMjk1LjMzIDk5OS4yNjUgMzAxLjYzNiAxMDMyLjk0IDMwMS42MzZDMTEyNi4xIDMwMS42MzYgMTE0MCAyNDEuMTU3IDExNDAgMjQxLjE1N0MxMTI3Ljk2IDIxNS4wNzQgMTEwMi43NCAxOTcuNDQ3IDEwNzQuMDggMTk1LjQ0TDEwNzQuNzkgMTk1LjI5N1pNMTAzNC4yMyAyNzIuOTczQzEwMDguODcgMjcyLjk3MyA5ODcuOTQ0IDI3MC44MjMgOTcwLjQ1OSAyNjcuMzg0Qzk3OC40ODUgMjU5LjA3MiA5ODcuOTQ0IDI1MC42MTYgOTk5LjI2NiAyNDIuNDQ3QzEwNjMuNjEgMTk2LjAxMyAxMTIwLjUxIDIyNS41MzYgMTEyMC41MSAyMjUuNTM2QzExMjAuNTEgMjI1LjUzNiAxMTAyLjQ1IDI3Mi45NzMgMTAzNC4yMyAyNzIuOTczWiIgZmlsbD0iI0YyOEMwMCIvPgo8L3N2Zz4K",
+  "logoUseTextColor": false,
+  "hero": {
+   "on": true,
+   "title": "Sabores que cuentan nuestra historia",
+   "subtitle": "Recetas familiares sirias. Pedí online con retiro en Vicente López o delivery en nuestra zona de reparto.",
+   "cta": "Pedir online",
+   "highlights": [
+    {
+     "icon": "",
+     "title": "Recetas familiares",
+     "text": "De nuestra Sitto y María Teresa."
+    },
+    {
+     "icon": "",
+     "title": "Retiro en el local",
+     "text": "Roca 1489, Vicente López."
+    },
+    {
+     "icon": "",
+     "title": "Delivery",
+     "text": "Envío gratis desde $45.000."
+    }
+   ],
+   "logo": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTQxIiBoZWlnaHQ9IjI1NSIgdmlld0JveD0iMCAwIDk0MSAyNTUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik00NDcuMzIzIDI0LjExMzJMNDIwLjQ3NCA2LjEyNjk1TDQwNi4yNjggMzYuMTA0TDQzMi43MjYgNTQuNDgxM0w0NDcuMzIzIDI0LjExMzJaIiBmaWxsPSIjRjI4QzAwIi8+CjxwYXRoIGQ9Ik0zOTEuNTMzIDE4LjExNjZMMzY0LjY4NCAwTDM1MC42MDcgMzAuMTA3NEwzNzcuMDY1IDQ4LjM1NDRMMzkxLjUzMyAxOC4xMTY2WiIgZmlsbD0iI0YyOEMwMCIvPgo8cGF0aCBkPSJNMTQ5LjY0MiA3NS44NTU1TDEyMi43OTIgNTcuODY5MUwxMDguNTg2IDg3Ljg0NjNMMTM1LjA0NCAxMDYuMjI0TDE0OS42NDIgNzUuODU1NVoiIGZpbGw9IiNGMjhDMDAiLz4KPHBhdGggZD0iTTMxNi4yMDUgMjI5Ljc4MUwzNDIuNjYzIDI0OC4xNThMMzU3LjI2MSAyMTcuOTIxTDMzMC40MTIgMTk5LjgwNEwzMTYuMjA1IDIyOS43ODFaIiBmaWxsPSIjRjI4QzAwIi8+CjxwYXRoIGQ9Ik0yNjAuNTQ1IDIzNi40MjlMMjg3LjAwMyAyNTQuODA2TDMwMS40NyAyMjQuNDM4TDI3NC42MjEgMjA2LjQ1MUwyNjAuNTQ1IDIzNi40MjlaIiBmaWxsPSIjRjI4QzAwIi8+CjxwYXRoIGQ9Ik04ODEuMzM0IDg5LjgwMDZDODU4LjY1NiA4OC4xMDYzIDgzMC44OTUgOTIuMjc3IDgwMS45NiAxMDkuODcyQzc4My41ODMgMTIxLjA4MSA3NjkuMTE2IDEzNC4zNzUgNzU3Ljc3NyAxNDcuNDA5QzcyMS41NDQgMTMzLjg1NCA3MTIuODExIDExNC41NjQgNzEyLjgxMSAxMTQuNTY0QzcxMi44MTEgMTE0LjU2NCA3MDMuODE4IDE2MC40NDIgNjU4LjcyMiAxNjAuNDQyQzYzMC4xNzggMTYwLjQ0MiA2MTYuODg0IDEzOC4xNTUgNjExLjAxOSAxMjEuODYzQzYzOS41NjMgMTA3Ljc4NyA2NjMuMDIzIDEwMi43MDQgNjYzLjAyMyAxMDIuNzA0TDYzOS40MzIgNzcuOTQwMUM1OTkuNDE5IDk0Ljc1MzMgNTY1Ljc5MyA4Ni41NDIyIDUyMy42OTUgNjEuMTI2OEM0ODcuNDYxIDM5LjIzMDUgNDU4LjEzNiA1Mi4xMzM3IDQ1OC4xMzYgNTIuMTMzN0w0NDEuNzE0IDg3Ljg0NTZDNDQxLjcxNCA4Ny44NDU2IDQ3Ny45NDcgNzMuNzY5NCA1MDUuNTc4IDg3LjA2MzZDNTM3LjExOSAxMDIuMzEzIDU3Mi41NyAxMDQuNjU5IDU3Mi41NyAxMDQuNjU5QzU3Mi41NyAxMDQuNjU5IDUxNi4zOTYgMTYwLjA1MSA0ODIuMjQ4IDE2MC4wNTFDNDQ4LjEgMTYwLjA1MSA0NDEuNTgzIDEyNy4wNzYgNDQxLjU4MyAxMjcuMDc2TDQxMC44MjQgMTA0LjY1OUM0MTAuODI0IDEwNC42NTkgMzk0LjQwMiAxNTkuMjY5IDM2Mi45OTEgMTU5LjI2OUMzMzEuNTgxIDE1OS4yNjkgMzI4LjA2MiAxMjQuMzM5IDMyOC4wNjIgMTI0LjMzOUwyOTYuNjUxIDEwNC42NTlDMjk2LjY1MSAxMDQuNjU5IDI4OC44MzEgMTYwLjgzMyAyNTMuNTEgMTYwLjgzM0MyMTguMTg5IDE2MC44MzMgMjE3LjQwNyAxMjguNjQgMjE3LjQwNyAxMjguNjRMMTg1LjIxNCAxMDQuNjU5QzE4NS4yMTQgMTA0LjY1OSAxODEuNjk1IDIzMy44MjEgMTAzLjIzMyAyMzMuODIxQzI0Ljc3MTUgMjMzLjgyMSAyOS43MjQyIDEyNS4xMjEgMjkuNzI0MiAxMjUuMTIxTDEuMDUwNTQgMTA0LjY1OUMtOS4xMTU2MSAxODEuNTU3IDU2LjA1MiAyNTkuMjM2IDEyOS40MzEgMjQ2LjMzM0MyMDIuODA5IDIzMy40MyAyMDkuNDU2IDE0NC4yODEgMjA5LjQ1NiAxNDQuMjgxQzIyMC4wMTQgMTY2LjY5OCAyNTEuMjk0IDE4OC4wNzMgMjgyLjQ0NCAxNzguMDM3QzMwOS45NDUgMTY5LjE3NSAzMTkuMzI5IDEzOS4xOTggMzE5LjMyOSAxMzkuMTk4QzMyOS4zNjUgMTY2LjY5OCAzNTkuNzMzIDE4OS4yNDYgMzkzLjA5OSAxNzYuNDc0QzQyMC40NjkgMTY2LjA0NyA0MzIuODUxIDE0MS42NzQgNDMyLjg1MSAxNDEuNjc0QzQ2MC4zNTIgMjAyLjI4IDUyNy45OTYgMTgwLjkwNSA1NzAuMzU1IDE0Ny4xNDhDNTc5Ljg2OSAxMzkuNTg5IDU4OS43NzUgMTMzLjIwMiA1OTkuMjg5IDEyNy44NThDNjA4LjQxMyAxNDkuNzU1IDYyNi45MiAxODAuMzg0IDY1OC40NjEgMTgwLjM4NEM3MDcuNTk4IDE4MC4zODQgNzI0LjY3MiAxNDIuNDU2IDcyNC42NzIgMTQyLjQ1NkM3MjQuNjcyIDE0Mi40NTYgNzMxLjQ0OSAxNTEuMTg4IDc0Ni40MzggMTYwLjk2NEM3MzAuNzk3IDE4Mi41OTkgNzI0LjQxMSAyMDAuMTk1IDcyNC40MTEgMjAwLjE5NUw3NDYuODI5IDIyNC45NThDNzQ2LjgyOSAyMjQuOTU4IDc0OS45NTcgMjAxLjYyOCA3NzAuNTUgMTczLjQ3NkM3ODguNjY2IDE4MC43NzUgODEyLjY0OCAxODYuNTA5IDg0My4yNzcgMTg2LjUwOUM5MjcuOTk1IDE4Ni41MDkgOTQwLjYzNyAxMzEuNTA4IDk0MC42MzcgMTMxLjUwOEM5MjkuNjg5IDEwNy43ODcgOTA2Ljc1IDkxLjc1NTcgODgwLjY4MyA4OS45MzFMODgxLjMzNCA4OS44MDA2Wk04NDQuNDUgMTYwLjQ0MkM4MjEuMzggMTYwLjQ0MiA4MDIuMzUxIDE1OC40ODcgNzg2LjQ1IDE1NS4zNTlDNzkzLjc0OSAxNDcuOCA4MDIuMzUxIDE0MC4xMSA4MTIuNjQ4IDEzMi42ODFDODcxLjE2OCA5MC40NTIzIDkyMi45MTEgMTE3LjMwMSA5MjIuOTExIDExNy4zMDFDOTIyLjkxMSAxMTcuMzAxIDkwNi40ODkgMTYwLjQ0MiA4NDQuNDUgMTYwLjQ0MloiIGZpbGw9IiNGMjhDMDAiLz4KPC9zdmc+Cg==",
+   "logoUseTextColor": true,
+   "logoColor": "#FAF8F5"
+  },
+  "favoritos": {
+   "on": true,
+   "title": "Nuestros favoritos",
+   "text": "Cada plato tiene historia. Son las recetas que nuestra Sitto cocinaba en Siria, adaptadas con amor por nuestra familia. Ingredientes frescos, preparados al momento, con el sabor que solo lo casero puede dar."
+  },
+  "menu": {
+   "title": "Nuestro menú"
+  },
+  "como": {
+   "on": true,
+   "title": "¿Cómo funciona?",
+   "lead": "En 3 pasos tenés tu comida",
+   "steps": [
+    {
+     "text": "Armá tu pedido desde el menú o escribinos por WhatsApp.",
+     "title": "Elegí"
+    },
+    {
+     "text": "Te contactamos por WhatsApp para confirmar tu pedido y coordinar.",
+     "title": "Confirmamos"
+    },
+    {
+     "text": "Lo cocinamos al momento y te lo llevamos o lo retirás en el local.",
+     "title": "Disfrutalo"
+    }
+   ]
+  },
+  "historia": {
+   "on": true,
+   "eyebrow": "Nuestra historia",
+   "title": "De la cocina de nuestra Sitto a tu mesa",
+   "text": "Sahten nació de una decisión familiar. Cuando migramos a Argentina, nos sentamos en familia y decidimos darle vida a las recetas que nuestra Sitto —la mamá de mi papá— cocinaba con tanto amor.\n\nHoy cocina mi mamá, María Teresa, que fue adaptando y perfeccionando cada receta. Con una familia emprendedora y años de experiencia gastronómica, Sahten es tradición, historia y familia.",
+   "badgeWord": "",
+   "badgeMeaning": "",
+   "badgeQuote": ""
+  },
+  "banda": {
+   "on": true,
+   "text": "SAHTEN · GASTRONOMÍA ÁRABE · DELIVERY · CATERING"
+  },
+  "resenas": {
+   "on": true,
+   "title": "Lo que dicen nuestros clientes",
+   "lead": "★★★★★ en Google Reviews",
+   "placeId": "",
+   "reviewUrl": "https://search.google.com/local/writereview?placeid=ChIJ_8u4HRjLvJUR6O_iQ94qY6Y",
+   "reviewTitle": "¿Ya probaste nuestra comida?",
+   "reviewText": "Contanos cómo estuvo tu experiencia.",
+   "items": [
+    {
+     "text": "Los Shawarma son re grandes! En efectivo te hacen descuento. Ganaron una clienta!",
+     "author": "Gisele Pessano",
+     "source": "Google Reviews"
+    },
+    {
+     "text": "La comida es tan rica que se merecen 5 estrellas y más. Excelente calidad y porciones abundantes ♥️",
+     "author": "Abigail Di Giunta",
+     "source": "Google Reviews"
+    },
+    {
+     "text": "Excelente la comida. Es igual a la comida árabe que se encuentra en Venezuela.",
+     "author": "Fergie Fernández",
+     "source": "Google Reviews"
+    }
+   ]
+  },
+  "catering": {
+   "on": true,
+   "eyebrow": "Catering y eventos",
+   "title": "Llevá la mesa árabe a tu próximo evento",
+   "text": "Imaginá una mesa larga con fuentes de shawarma recién cortado, hummus cremoso, baba ganoush ahumado, taboulé fresco y pan árabe artesanal calentito. Eso es lo que armamos para cada evento.\n\nLa gastronomía siria es para compartir. Cada plato se sirve al centro, se comparte con las manos, se acompaña con conversación. Nuestro catering no es solo comida — es una experiencia que conecta.\n\nCumpleaños, reuniones corporativas, celebraciones familiares o cualquier excusa para juntarse. Cocinamos todo al momento con ingredientes frescos.",
+   "cta": "Consultá por WhatsApp",
+   "info": [
+    {
+     "label": "Zona de cobertura",
+     "value": "Todo CABA y GBA Zona Norte"
+    },
+    {
+     "label": "Anticipación",
+     "value": "Mínimo 48 horas de anticipación"
+    },
+    {
+     "label": "Ideal para",
+     "value": "Cumpleaños, eventos corporativos, reuniones familiares, celebraciones"
+    }
+   ]
+  },
+  "delivery": {
+   "on": true,
+   "title": "Delivery y retiro",
+   "hours": "Lun a Jue: 18:00 a 22:00\nVie y Sáb: 18:00 a 23:00\nDomingos: cerrado",
+   "extra": "Zona: Belgrano, Núñez, Florida, Vicente López, Olivos, Martínez y La Lucila (unos 6 km a la redonda). Pedido mínimo $15.000. Envío gratis desde $45.000."
+  },
+  "faq": {
+   "on": true,
+   "title": "Preguntas frecuentes",
+   "items": [
+    {
+     "q": "¿Dónde queda Sahten y cómo retiro mi pedido?",
+     "a": "Estamos en General Julio Argentino Roca 1489, Vicente López, Buenos Aires. Armás tu pedido online, elegís retiro y lo pasás a buscar en nuestro horario: lunes a jueves de 18:00 a 22:00 y viernes y sábados de 18:00 a 23:00."
+    },
+    {
+     "q": "¿Cómo hago mi pedido?",
+     "a": "Podés armar tu pedido desde esta página y te contactamos por WhatsApp, o escribinos directamente al +54 9 11 2393-7295."
+    },
+    {
+     "q": "¿A qué zonas hacen delivery?",
+     "a": "Belgrano, Núñez, Florida, Vicente López, Olivos, Martínez y La Lucila. Aprox. 6 km a la redonda del local."
+    },
+    {
+     "q": "¿Cuál es el pedido mínimo para delivery?",
+     "a": "El pedido mínimo es de $15.000. El envío es gratis a partir de $45.000; por debajo de ese monto varía según la distancia."
+    },
+    {
+     "q": "¿Puedo pedir para el mismo día?",
+     "a": "¡Sí! Los pedidos de delivery se hacen el mismo día dentro de nuestro horario. Para catering necesitamos mínimo 48 horas."
+    },
+    {
+     "q": "¿Abren los domingos?",
+     "a": "No, los domingos cerramos. Atendemos de lunes a jueves de 18:00 a 22:00 y viernes y sábados de 18:00 a 23:00."
+    },
+    {
+     "q": "¿Cómo pago?",
+     "a": "Consultá los medios de pago disponibles al armar tu pedido o escribinos por WhatsApp."
+    },
+    {
+     "q": "¿La comida es siria o libanesa?",
+     "a": "Es comida siria casera: las recetas de nuestra Sitto, la mamá de mi papá, que hoy prepara mi mamá, María Teresa."
+    },
+    {
+     "q": "¿Qué es el fatay?",
+     "a": "El fatay es una empanada árabe triangular de masa fina, típica de la cocina siria."
+    },
+    {
+     "q": "¿Hacen catering para eventos? ¿Con cuánta anticipación?",
+     "a": "Sí, armamos mesas árabes para eventos con un mínimo de 48 horas de anticipación. Consultanos por WhatsApp al +54 9 11 2393-7295."
+    },
+    {
+     "q": "¿El envío tiene costo?",
+     "a": "Gratis a partir de $45.000. Para pedidos menores, varía según la distancia."
+    }
+   ]
+  },
+  "contacto": {
+   "on": true,
+   "instagram": "sahten.ar",
+   "note": "General Julio Argentino Roca 1489, Vicente López, Buenos Aires · Domingos cerrado",
+   "creditText": "© 2026 · Diseñado y desarrollado por Daniel J. Campos Lozada · Noamdan",
+   "creditUrl": "https://noamdan.com/"
+  }
+ }
+}

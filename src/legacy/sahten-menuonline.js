@@ -354,7 +354,7 @@ function _fmtN(n) { return Number(n || 0).toLocaleString('es-AR', { maximumFract
 // ═══════════════════════════════════════════════════════════
 // DELIVERY TAB IN MOSTRADOR
 // ═══════════════════════════════════════════════════════════
-// Pedidos online: el origen es independiente del tipo de entrega.
+// Pedidos: el origen (web/mostrador) es independiente del tipo de entrega.
 // Se conservan las dos columnas en escritorio. En pantallas estrechas se alternan.
 let onlineBoardMobileType = 'pickup';
 let onlineBoardRecentOpen = true;
@@ -372,6 +372,7 @@ function _injectDeliveryTab() {
   if (window._deliveryTabPatched) return;
   SAHTEN.events.afterRender('renderMostrador', () => _addDeliveryTabBtn());
   window._deliveryTabPatched = true;
+  _addDeliveryTabBtn();
 }
 
 function _addDeliveryTabBtn() {
@@ -384,7 +385,7 @@ function _addDeliveryTabBtn() {
 
   const btn = document.createElement('button');
   btn.className = 'most-tab most-tab-delivery' + (typeof mostradorTab !== 'undefined' && mostradorTab === 'delivery' ? ' active' : '');
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Pedidos online' +
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Pedidos' +
     (pendingDel > 0 ? ' <span class="most-tab-badge" style="background:var(--red)">' + pendingDel + '</span>' : ' <span class="most-tab-badge">' + deliveryCount + '</span>');
   btn.onclick = function () { mostSetTab('online'); };
   // Insert as 2nd tab (after "Nuevo pedido")
@@ -413,54 +414,70 @@ function _patchMostSetTab() {
 
 // Render delivery content when tab is active
 function _patchDeliveryContent() {
-  // We'll hook into the tab content rendering
-  // Check if delivery tab is active after render
-  const observer = new MutationObserver(() => {
-    if (typeof mostradorTab !== 'undefined' && mostradorTab === 'delivery') {
-      const content = document.getElementById('most-tab-content');
-      if (content && !content.querySelector('.delivery-list')) {
-        _renderDeliveryTab();
-      }
-    }
+  SAHTEN.events.afterRender('renderMostrador', () => {
+    if (mostradorTab === 'delivery') _renderDeliveryTab();
   });
-
-  const panel = document.getElementById('panel-mostrador');
-  if (panel) observer.observe(panel, { childList: true, subtree: true });
+  if (mostradorTab === 'delivery') _renderDeliveryTab();
 }
 
 function _onlineBoardCard(o, recent = false) {
   const workflow = SAHTEN.orderWorkflow;
   const id = _esc(o.id);
-  const date = new Date(o.createdAt || Date.now());
-  const time = Number.isNaN(date.getTime()) ? '—' : date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const date = new Date(o.createdAt || '');
+  const time = Number.isNaN(date.getTime()) ? 'Hora sin registrar' : date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
   const num = '#' + String(o.num || 0).padStart(4, '0');
   const count = workflow.orderUnitCount(o);
   const next = recent ? null : workflow.nextOnlineStatus(o);
+  const delivery = workflow.onlineOrderType(o) === 'delivery';
+  const online = workflow.isOnlineOrder(o);
   const statusClass = ['pendiente', 'en_preparacion', 'listo', 'enviado', 'retirado', 'entregado', 'cancelado'].includes(o.status) ? o.status : 'pendiente';
   const status = workflow.onlineStatusLabel(o);
+  const items = (o.items || []).map(it => '<li>' + _esc(it.qty) + ' × ' + _esc(it.name || 'Producto') + '</li>').join('');
+  const phone = String(o.customerPhone || '').trim();
+  const dial = phone.replace(/[^0-9+]/g, '');
+  const payment = o.paymentStatusLabel || (o.paymentStatus ? 'Estado de pago: ' + o.paymentStatus : 'Cobro sin confirmar');
+  const paid = ['paid', 'overpaid'].includes(o.paymentStatus);
+  const warning = ['rejected', 'partial', 'in_mediation', 'charged_back', 'refunded', 'partially_refunded', 'overpaid'].includes(o.paymentStatus);
   return '<article class="online-board-card online-board-card--' + statusClass + '">' +
     '<div class="online-board-card-top">' +
       '<button type="button" class="online-board-order-link" data-online-action="open" data-id="' + id + '" aria-label="Abrir detalles de la orden ' + _esc(num) + '">' + _esc(num) + '</button>' +
-      '<time class="online-board-time" datetime="' + _esc(o.createdAt || '') + '">' + _esc(time) + '</time>' +
-    '</div>' +
-    '<div class="online-board-name">' + _esc(o.customerName || 'Cliente online') + '</div>' +
-    '<div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
-      (o.notes ? '<span class="online-board-note" title="El pedido tiene indicaciones"> · Con indicaciones</span>' : '') +
-    '</div>' +
-    '<div class="online-board-card-bottom">' +
+      '<span class="online-board-origin">' + (online ? 'Web' : 'Mostrador') + '</span>' +
       '<span class="online-board-status online-board-status--' + statusClass + '">' + _esc(status) + '</span>' +
-      (next ? '<button type="button" class="online-board-next" data-online-action="next" data-id="' + id + '">' + _esc(next.label) + '</button>' : '') +
-      (recent ? '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Ver detalle</button>' : '') +
     '</div>' +
+    '<div class="online-board-name">' + _esc(o.customerName || 'Consumidor Final') + '</div>' +
+    '<div class="online-board-card-bottom"><div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
+      (!recent ? ' <span class="online-board-age" data-order-age="' + id + '">' + _esc(workflow.orderAgeLabel(o)) + '</span>' : '') + '</div><strong class="online-board-total">$' + _fmtN(o.total) + '</strong></div>' +
+    (warning ? '<div class="online-board-payment is-warning"><strong>' + _esc(payment) + '</strong></div>' : '') +
+    '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
+    '<div class="online-board-time"><time datetime="' + _esc(o.createdAt || '') + '">Creado ' + _esc(time) + '</time></div>' +
+    (items ? '<ul class="online-board-items">' + items + '</ul>' : '') +
+    (delivery ? '<div class="online-board-address' + (o.address ? '' : ' online-board-missing') + '"><strong>Entrega</strong><span>' + _esc(o.address || 'Falta dirección de entrega') + '</span>' +
+      ((o.deliveryZone || o._zoneName) ? '<span>Zona: ' + _esc(o.deliveryZone || o._zoneName) + '</span>' : '') + '</div>' : '') +
+    (phone ? '<a class="online-board-phone" href="tel:' + _esc(dial) + '">Llamar: ' + _esc(phone) + '</a>' : delivery ? '<div class="online-board-missing">Sin teléfono de contacto</div>' : '') +
+    (o.notes ? '<div class="online-board-note"><strong>Indicaciones</strong> ' + _esc(o.notes) + '</div>' : '') +
+    '<div class="online-board-payment' + (warning ? ' is-warning' : paid ? ' is-paid' : '') + '"><strong>' + _esc(payment) + '</strong><span>' + _esc(o.paymentName || o.paymentMethod || 'Medio de pago sin especificar') + '</span></div>' +
+    (delivery ? '<span class="online-board-shipping">Incluye envío: $' + _fmtN(o.shipping) + '</span>' : '') +
+    '<div class="online-board-actions">' +
+      '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Abrir pedido completo</button>' +
+      '<button type="button" class="online-board-detail" data-online-action="print" data-id="' + id + '" aria-label="Imprimir orden ' + _esc(num) + '">Imprimir</button></div></div></details>' +
+      (next ? '<button type="button" class="online-board-next" data-online-action="next" data-id="' + id + '">' + _esc(next.label) + '</button>' : '') +
   '</article>';
 }
+
+// Solo cambia el texto del tiempo: no reemplaza tarjetas ni interrumpe el foco.
+setInterval(() => {
+  document.querySelectorAll('[data-order-age]').forEach(el => {
+    const order = SAHTEN_ORDERS.find(o => String(o.id) === el.dataset.orderAge);
+    if (order) el.textContent = SAHTEN.orderWorkflow.orderAgeLabel(order);
+  });
+}, 60000);
 
 function _onlineBoardColumn(type, orders) {
   const isPickup = type === 'pickup';
   const entries = orders.filter(o => SAHTEN.orderWorkflow.onlineOrderType(o) === type);
-  const label = isPickup ? 'Retiro en local' : 'Delivery';
+  const label = isPickup ? 'Retiro en local / Mostrador' : 'Delivery';
   return '<section class="online-board-column ' + (onlineBoardMobileType === type ? 'is-selected' : '') + '" aria-label="' + label + '">' +
-    '<header class="online-board-column-head"><h3>' + (isPickup ? 'Retiro en local' : 'Delivery') + '</h3><span class="online-board-count">' + entries.length + '</span></header>' +
+    '<header class="online-board-column-head"><h3>' + label + '</h3><span class="online-board-count">' + entries.length + '</span></header>' +
     '<div class="online-board-column-cards">' + (entries.length ? entries.map(o => _onlineBoardCard(o)).join('') :
       '<div class="online-board-empty">No hay pedidos activos para ' + (isPickup ? 'retirar' : 'delivery') + '.</div>') + '</div>' +
   '</section>';
@@ -477,15 +494,21 @@ function _onlineBoardClick(event) {
   const order = SAHTEN_ORDERS.find(o => String(o.id) === button.dataset.id);
   if (!order) return;
   if (action === 'open') { openOrderDetail(order.id); return; }
+  if (action === 'print') { printComanda(order.id); return; }
   if (action === 'next') {
     const next = SAHTEN.orderWorkflow.nextOnlineStatus(order);
-    if (next) orderSetStatus(order.id, next.status);
+    if (next) {
+      orderSetStatus(order.id, next.status);
+      const candidates=[...document.querySelectorAll('[data-online-action][data-id]')].filter(el=>el.dataset.id===String(order.id));
+      (candidates.find(el=>el.dataset.onlineAction==='next') || candidates.find(el=>el.dataset.onlineAction==='open'))?.focus({preventScroll:true});
+    }
   }
 }
 
 function _renderDeliveryTab() {
   const c = document.getElementById('most-tab-content');
   if (!c) return;
+  const expanded = new Set([...c.querySelectorAll('[data-order-details][open]')].map(el => el.dataset.orderDetails));
   const workflow = SAHTEN.orderWorkflow;
   const active = _activeOnlineOrders().sort(workflow.operationalSort);
   const pickup = active.filter(o => workflow.onlineOrderType(o) === 'pickup').length;
@@ -496,10 +519,10 @@ function _renderDeliveryTab() {
 
   c.innerHTML = '<div class="delivery-list online-board">' +
     '<header class="online-board-toolbar">' +
-      '<div><h2>Pedidos online</h2><p>' + active.length + ' ' + (active.length === 1 ? 'pedido activo' : 'pedidos activos') +
+      '<div><h2>Pedidos</h2><p>' + active.length + ' ' + (active.length === 1 ? 'pedido activo' : 'pedidos activos') +
       ' · ' + pending + ' pendientes · ' + preparing + ' en preparación</p></div>' +
       '<div class="online-board-toolbar-actions">' +
-        '<button type="button" class="online-board-utility" data-online-action="refresh">Actualizar</button>' +
+        '<button type="button" class="online-board-utility" data-online-action="refresh">Actualizar vista</button>' +
         '<button type="button" class="online-board-utility" data-online-action="history">Historial</button>' +
       '</div>' +
     '</header>' +
@@ -518,6 +541,7 @@ function _renderDeliveryTab() {
       '</div>' +
     '</section>' +
   '</div>';
+  c.querySelectorAll('[data-order-details]').forEach(el => { el.open = expanded.has(el.dataset.orderDetails); });
   c.onclick = _onlineBoardClick;
   // Actualizar contador de la pestaña sin forzar un render completo de Mostrador.
   const badge = document.querySelector('#panel-mostrador .most-tab-delivery .most-tab-badge');
@@ -540,11 +564,9 @@ function _refreshDelivery() {
     window._menuOnlineShowPatched = true;
 
     // Inject delivery tab
-    setTimeout(() => {
-      _injectDeliveryTab();
-      _patchMostSetTab();
-      _patchDeliveryContent();
-    }, 200);
+    _injectDeliveryTab();
+    _patchMostSetTab();
+    _patchDeliveryContent();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patch);
   else patch();

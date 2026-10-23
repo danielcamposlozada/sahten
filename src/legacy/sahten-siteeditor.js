@@ -8,7 +8,7 @@ const _sbKey = { get: () => { try { return localStorage.getItem('sahten-google-k
 // Cómo se edita cada sección: [tipo, ruta, etiqueta, ayuda|filas, ...]. tipos: text · area · image · list
 const _SB_FIELDS = {
   seo: [['text', 'url', 'Dirección pública de la web', 'https://tudominio.com/'], ['text', 'title', 'Título para Google'], ['area', 'description', 'Descripción para buscadores', 3], ['text', 'cuisine', 'Tipo de cocina'], ['text', 'streetAddress', 'Calle y número'], ['text', 'locality', 'Localidad'], ['text', 'region', 'Provincia o región'], ['text', 'country', 'Código de país', 'AR'], ['text', 'openingHours', 'Horarios para buscadores', 'Mo-Th 18:00-22:00, Fr-Sa 18:00-23:00'], ['text', 'areaServed', 'Barrios donde reparten (separados por coma)', 'Belgrano, Núñez, Olivos'], ['text', 'sameAs', 'Otros perfiles públicos (Facebook, TripAdvisor, Google Maps; separados por coma)', 'https://www.facebook.com/tunegocio'], ['text', 'brandKit', 'Kit de imágenes de marca (íconos e imagen al compartir; hoy: sahten)', 'sahten']],
-  hero: [['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
+  hero: [['logo'], ['text', 'logoColor', 'Color del logo de portada (opcional)', '#FAF8F5'], ['text', 'title', 'Título', 'Ej: Las mejores pizzas del barrio'], ['area', 'subtitle', 'Bajada', 2], ['text', 'cta', 'Texto del botón principal'], ['image', 'hero', 'Foto de fondo (opcional)'],
     ['list', 'highlights', 'Destacados (hasta 4)', { add: 'Agregar destacado', max: 4, fields: [['icon', 'Ícono 🍕', 'sm'], ['title', 'Título'], ['text', 'Detalle']] }]],
   favoritos: [['text', 'title', 'Título'], ['area', 'text', 'Texto de introducción', 2], ['note', 'Muestra los productos marcados con ⭐ en la lista de Menú (hasta 6).']],
   menu: [['text', 'title', 'Título de la sección'], ['note', 'Es tu carta con categorías y el carrito. Siempre está; solo podés moverla de lugar.']],
@@ -21,7 +21,7 @@ const _SB_FIELDS = {
     ['list', 'info', 'Datos (hasta 4)', { add: 'Agregar dato', max: 4, fields: [['label', 'Dato (ej. Zona)', 'sm'], ['value', 'Valor']] }]],
   delivery: [['text', 'title', 'Título'], ['area', 'hours', 'Horarios', 3], ['text', 'extra', 'Aclaración (opcional)'], ['note', 'Las zonas, el pedido mínimo y el envío gratis salen de Ajustes › Negocio › Tienda online y delivery.']],
   faq: [['text', 'title', 'Título'], ['list', 'items', 'Preguntas (hasta 12)', { add: 'Agregar pregunta', max: 12, fields: [['q', 'Pregunta'], ['a', 'Respuesta', 'area']] }]],
-  contacto: [['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Negocio › Tienda online y delivery y de Menú › Ajustes.']],
+  contacto: [['text', 'creditText', 'Crédito del sitio (opcional)'], ['text', 'creditUrl', 'Enlace del crédito', 'https://tusitio.com/'], ['text', 'instagram', 'Instagram (usuario)', 'tu_usuario'], ['text', 'note', 'Frase del pie (opcional)'], ['note', 'La dirección y el WhatsApp salen de Ajustes › Negocio › Tienda online y delivery y de Menú › Ajustes.']],
 };
 const _SB_ANCHOR = { hero: 's-hero', favoritos: 's-fav', menu: 's-menuhd', como: 's-how', historia: 's-about', resenas: 's-reviews', catering: 's-catering', delivery: 's-delivery', faq: 's-faq', contacto: 's-contact' };
 
@@ -46,6 +46,7 @@ function _sbSummary(id, m) {
 function _sbGet(S, path) { const [m, k] = path.split('.'); return S[m] ? S[m][k] : undefined; }
 function _sbRenderField(S, id, f) {
   const [type, key, label, extra] = f; const m = S[id];
+  if (type === 'logo') return `<div class="f"><b>Logo de la portada (opcional)</b><p>Podés usar un símbolo distinto al logo de navegación. Si no cargás uno, se usa el logo de la tienda.</p>${m.logo ? `<div style="background:var(--primary,#235328);padding:16px;border-radius:8px;margin-bottom:12px"><img src="${_esc(m.logo)}" alt="Logo de la portada" style="display:block;max-width:100%;width:240px;max-height:110px;object-fit:contain"></div>` : ''}<label class="btn" style="cursor:pointer">${m.logo ? 'Cambiar logo de portada' : 'Cargar logo de portada'}<input type="file" data-sb-logo data-sb-logo-for="hero" accept="image/svg+xml,image/png,image/jpeg,image/webp,.svg" hidden></label> ${m.logo ? '<button class="btn" data-sb-logo-remove="hero">Quitar logo de portada</button>' : ''}<label style="display:flex;gap:10px;margin-top:12px"><input type="checkbox" data-sb-hero-logo-color ${m.logoUseTextColor !== false ? 'checked' : ''}>Usar el color del texto de la portada</label></div>`;
   if (type === 'google') return `<div class="sb-google"><b>Traer reseñas de Google</b><small>Trae hasta 5 reseñas de tu ficha de Google y las deja acá para que las edites o borres. Cada tienda tiene su propio ID de lugar.</small>
       <label class="f">ID del lugar (Place ID)<input type="text" class="custom-input" data-sb="resenas.placeId" placeholder="ChIJ…" value="${_esc(m.placeId)}"></label>
       <label class="f">Clave de API de Google (queda solo en esta computadora)<input type="password" class="custom-input" autocomplete="off" data-sb-gkey value="${_esc(_sbKey.get())}"></label>
@@ -86,8 +87,8 @@ function _sbRenderList() {
 
 function _sbRenderTop() {
   const el = document.getElementById('sb-top'); if (!el) return; const S = _moSite();
-  el.innerHTML = `<div class="sb-file"><button class="btn" data-sb-export>Exportar contenido</button><label class="btn" style="cursor:pointer">Importar contenido<input type="file" accept=".json,application/json" hidden data-sb-import></label></div><label class="sb-master"><span class="mo-sw"><input type="checkbox" data-sb-enabled ${S.enabled ? 'checked' : ''}><span></span></span>
-    <span><b>${S.enabled ? 'Sitio completo activado' : 'Sitio apagado: se publica solo el menú'}</b><small>${S.enabled ? 'Se publica tu menú con las secciones encendidas.' : 'Encendelo para publicar portada, historia, reseñas y más.'}</small></span></label>${S.enabled ? '' : '<p class="sb-offnote">La vista previa de la derecha muestra cómo quedaría el sitio. Mientras esté apagado, en la web publicada solo se ve el menú.</p>'}`;
+  el.innerHTML = `<div class="sb-file"><button class="btn" data-sb-export>Exportar contenido</button><label class="btn" style="cursor:pointer">Importar contenido<input type="file" accept=".json,application/json" hidden data-sb-import></label></div><div class="f" style="padding:16px;border:1px solid var(--border);border-radius:12px;margin:12px 0"><b>Logo de la tienda</b><p style="font-size:14px">Se muestra en el encabezado y la portada de tu web. No cambia el logo de la aplicación.</p>${S.logo ? `<div style="background:var(--primary,#235328);padding:16px;border-radius:8px;margin-bottom:12px"><img src="${_esc(S.logo)}" alt="Logo de la tienda" style="display:block;max-width:100%;width:240px;max-height:110px;object-fit:contain"></div>` : '<p>Sin logo personalizado: se usa el kit de marca o el nombre del negocio.</p>'}<label class="btn" style="cursor:pointer">${S.logo ? 'Cambiar logo' : 'Cargar logo'}<input type="file" data-sb-logo accept="image/svg+xml,image/png,image/jpeg,image/webp,.svg" hidden></label> ${S.logo ? '<button class="btn" data-sb-logo-remove>Quitar logo</button>' : ''}<small style="display:block;margin-top:8px">SVG, PNG, JPG o WebP · hasta 2 MB. Recomendado: fondo transparente.</small><label style="display:flex;gap:10px;margin-top:12px"><input type="checkbox" data-sb-logo-color ${S.logoUseTextColor ? 'checked' : ''}>Usar el mismo color que el texto del encabezado</label></div><label class="sb-master"><span class="mo-sw"><input type="checkbox" data-sb-enabled ${S.enabled ? 'checked' : ''}><span></span></span>
+    <span><b>${S.enabled ? 'Sitio completo activado' : 'Sitio apagado: se publica solo el menú'}</b><small>${S.enabled ? 'Se publica tu menú con las secciones encendidas.' : 'Encendelo para publicar portada, historia, reseñas y más.'}</small></span></label><label class="sb-master"><input type="checkbox" data-sb-order-page ${S.orderPage ? 'checked' : ''}><span><b>Abrir tienda en una página independiente</b><small>El botón «Pedir online» abre /pedir/. Podés enlazarlo desde tu propia web. En la vista previa se abre dentro del editor.</small></span></label>${S.enabled ? '' : '<p class="sb-offnote">La vista previa de la derecha muestra cómo quedaría el sitio. Mientras esté apagado, en la web publicada solo se ve el menú.</p>'}`;
 }
 
 function _sbSchedulePreview(delay = 300) { clearTimeout(_sbUi.timer); _sbUi.timer = setTimeout(_sbPreview, delay); }
@@ -138,7 +139,7 @@ function _sbImage(key, file) {
 function _sbBind(host) {
   if (host.dataset.bound) return; host.dataset.bound = '1';
   host.addEventListener('click', e => {
-    const t = e.target.closest('[data-sb-open],[data-sb-move],[data-sb-add],[data-sb-del],[data-sb-imgdel],[data-sb-dev],[data-sb-google],[data-sb-export]'); if (!t || !host.contains(t)) return;
+    const t = e.target.closest('[data-sb-open],[data-sb-move],[data-sb-add],[data-sb-del],[data-sb-imgdel],[data-sb-dev],[data-sb-google],[data-sb-export],[data-sb-logo-remove]'); if (!t || !host.contains(t)) return;
     const S = _moSite();
     if (t.dataset.sbOpen) { _sbUi.open = _sbUi.open === t.dataset.sbOpen ? null : t.dataset.sbOpen; if (_sbUi.open) _sbUi.focus = _sbUi.open; _sbRenderList(); if (_sbUi.open) _sbSchedulePreview(0); }
     else if (t.dataset.sbMove) { const id = t.dataset.sbMove, i = S.order.indexOf(id), j = i + +t.dataset.d; if (j < 0 || j >= S.order.length) return; S.order.splice(i, 1); S.order.splice(j, 0, id); _sbChanged({ list: true }); }
@@ -147,11 +148,16 @@ function _sbBind(host) {
     else if (t.dataset.sbImgdel) { delete SAHTEN_IMAGES['site_' + t.dataset.sbImgdel]; if (typeof scheduleSave === 'function') scheduleSave(); _sbChanged({ list: true }); }
     else if (t.dataset.sbGoogle !== undefined) _sbGoogle();
     else if (t.dataset.sbExport !== undefined) _sbExport();
+    else if (t.dataset.sbLogoRemove !== undefined) { if (t.dataset.sbLogoRemove === 'hero') S.hero.logo = ''; else S.logo = ''; _sbChanged({ top: true, list: true }); }
     else if (t.dataset.sbDev) { _sbUi.device = t.dataset.sbDev; host.querySelectorAll('[data-sb-dev]').forEach(b => b.classList.toggle('on', b.dataset.sbDev === _sbUi.device)); host.querySelector('.sb-frame').className = 'sb-frame ' + _sbUi.device; }
   });
   host.addEventListener('change', e => {
     const t = e.target; const S = _moSite();
     if (t.dataset.sbEnabled !== undefined) { S.enabled = t.checked; _sbChanged({ top: true }); }
+    if (t.dataset.sbOrderPage !== undefined) { S.orderPage = t.checked; _sbChanged({ top: true }); }
+    else if (t.dataset.sbLogo !== undefined && t.files && t.files[0]) { const config = MENU_CONFIG, target = t.dataset.sbLogoFor; SAHTEN_SITE.readStoreLogo(t.files[0]).then(logo => { if (MENU_CONFIG !== config) return; if (target === 'hero') _moSite().hero.logo = logo; else _moSite().logo = logo; _sbChanged({ top: true, list: true }); }).catch(err => alert(err.message)); }
+    else if (t.dataset.sbLogoColor !== undefined) { S.logoUseTextColor = t.checked; _sbChanged({}); }
+    else if (t.dataset.sbHeroLogoColor !== undefined) { S.hero.logoUseTextColor = t.checked; _sbChanged({}); }
     else if (t.dataset.sbOn) { S[t.dataset.sbOn].on = t.checked; _sbChanged({ list: true }); }
     else if (t.dataset.sbImg) _sbImage(t.dataset.sbImg, t.files && t.files[0]);
     else if (t.dataset.sbImport !== undefined) _sbImport(t.files && t.files[0]);

@@ -1,4 +1,7 @@
 import { reviewUrl } from '../ui/review-link.js';
+import { normalizeStoreLogo } from './logo.js';
+import { publicWebUrl } from './seo.js';
+export { readStoreLogo } from './logo.js';
 // ═══════════════════════════════════════════════════════════
 // Sitio web del negocio: módulos (secciones) con su orden y su on/off. Puro (sin DOM).
 // El editor de la app (Menú Online › Sitio web) escribe esto; menu.json lleva la versión recortada y limpia (buildSite).
@@ -25,9 +28,12 @@ export const SITE_LIMITS = { highlights: 4, steps: 4, reviews: 9, info: 4, faq: 
 export function siteDefaults() {
   return {
     enabled: false,
+    orderPage: false,
+    logo: '',
+    logoUseTextColor: false,
     seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
     order: SITE_ORDER.slice(),
-    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [] },
+    hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [], logo: '', logoUseTextColor: true, logoColor: '' },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
     menu: { title: 'Nuestro menú' },
     como: { on: true, title: '¿Cómo funciona?', lead: 'En 3 pasos tenés tu pedido.', steps: [
@@ -40,7 +46,7 @@ export function siteDefaults() {
     catering: { on: false, eyebrow: 'Catering y eventos', title: '', text: '', cta: 'Consultar por WhatsApp', info: [] },
     delivery: { on: true, title: 'Delivery y retiro', hours: '', extra: '' },
     faq: { on: false, title: 'Preguntas frecuentes', items: [] },
-    contacto: { on: true, instagram: '', note: '' },
+    contacto: { on: true, instagram: '', note: '', creditText: '', creditUrl: '' },
   };
 }
 
@@ -49,9 +55,11 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 /** Completa lo que falte con los valores de fábrica y deja el orden válido (todas las secciones, sin repetidas). */
 export function normalizeSite(raw) {
   const d = siteDefaults(); const r = isObj(raw) ? raw : {};
-  const out = { enabled: !!r.enabled };
+  const out = { enabled: !!r.enabled, orderPage: !!r.orderPage, logo: normalizeStoreLogo(r.logo), logoUseTextColor: !!r.logoUseTextColor };
   out.seo = { ...d.seo, ...(isObj(r.seo) ? r.seo : {}) };
   for (const m of SITE_MODULES) out[m.id] = { ...d[m.id], ...(isObj(r[m.id]) ? r[m.id] : {}) };
+  out.hero.logo = normalizeStoreLogo(out.hero.logo);
+  out.hero.logoUseTextColor = out.hero.logoUseTextColor !== false;
   for (const [mod, key] of [['hero', 'highlights'], ['como', 'steps'], ['resenas', 'items'], ['catering', 'info'], ['faq', 'items']]) if (!Array.isArray(out[mod][key])) out[mod][key] = d[mod][key].slice();
   const seen = new Set(); const order = (Array.isArray(r.order) ? r.order : []).filter(id => SITE_ORDER.includes(id) && !seen.has(id) && seen.add(id));
   out.order = [...order, ...SITE_ORDER.filter(id => !seen.has(id))];
@@ -71,9 +79,13 @@ export function buildSite(raw, images = {}) {
   const on = id => id === 'menu' || !!s[id].on;
   const img = k => (images[k] ? 'img/site_' + k + '.jpg' : null);
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
+  if (s.orderPage) out.orderPage = true;
+  if (s.logo) { out.logo = s.logo; out.logoUseTextColor = s.logoUseTextColor; }
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
     highlights: list(s.hero.highlights, SITE_LIMITS.highlights, h => { const title = txt(h && h.title, 40); return title ? { icon: txt(h.icon, 4), title, text: txt(h.text, 90) } : null; }) };
+  if (out.hero && /^#[0-9a-f]{6}$/i.test(s.hero.logoColor || '')) out.hero.logoColor = s.hero.logoColor;
+  if (out.hero && s.hero.logo) { out.hero.logo = s.hero.logo; out.hero.logoUseTextColor = s.hero.logoUseTextColor; }
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
   if (on('como')) out.como = { title: txt(s.como.title, 60) || '¿Cómo funciona?', lead: txt(s.como.lead, 160),
     steps: list(s.como.steps, SITE_LIMITS.steps, p => { const title = txt(p && p.title, 40); return title ? { title, text: txt(p.text, 160) } : null; }) };
@@ -87,7 +99,7 @@ export function buildSite(raw, images = {}) {
   if (on('delivery')) out.delivery = { title: txt(s.delivery.title, 60) || 'Delivery y retiro', hours: txt(s.delivery.hours, 300), extra: txt(s.delivery.extra, 200) };
   if (on('faq')) out.faq = { title: txt(s.faq.title, 60) || 'Preguntas frecuentes',
     items: list(s.faq.items, SITE_LIMITS.faq, f => { const q = txt(f && f.q, 140), a = txt(f && f.a, 500); return q && a ? { q, a } : null; }) };
-  if (on('contacto')) out.contacto = { instagram: txt(s.contacto.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''), note: txt(s.contacto.note, 200) };
+  if (on('contacto')) out.contacto = { instagram: txt(s.contacto.instagram, 40).replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, ''), note: txt(s.contacto.note, 200), creditText: txt(s.contacto.creditText, 160), creditUrl: publicWebUrl(s.contacto.creditUrl) };
   return out;
 }
 
@@ -112,6 +124,9 @@ export const SITE_FILE_FORMAT = 'sahten-sitio';
 export function exportSiteContent(site) {
   const s = normalizeSite(site); const out = { format: SITE_FILE_FORMAT, version: 1, site: { order: s.order } };
   out.site.seo = s.seo;
+  out.site.orderPage = s.orderPage;
+  out.site.logo = s.logo;
+  out.site.logoUseTextColor = s.logoUseTextColor;
   for (const m of SITE_MODULES) out.site[m.id] = s[m.id];
   return JSON.stringify(out, null, 1);
 }
@@ -126,6 +141,9 @@ const SITE_FORMAT_CHECK = SITE_FILE_FORMAT;
 /** Pisa solo las secciones que trae el archivo (y el orden, si lo trae). No toca el interruptor general ni las fotos. */
 export function applySiteContent(current, parsed) {
   const s = normalizeSite(current);
+  if (typeof parsed.site.orderPage === 'boolean') s.orderPage = parsed.site.orderPage;
+  if (typeof parsed.site.logo === 'string') s.logo = normalizeStoreLogo(parsed.site.logo);
+  if (typeof parsed.site.logoUseTextColor === 'boolean') s.logoUseTextColor = parsed.site.logoUseTextColor;
   if (isObj(parsed.site.seo)) s.seo = { ...s.seo, ...parsed.site.seo };
   for (const id of parsed.modules) s[id] = { ...s[id], ...parsed.site[id] };
   if (Array.isArray(parsed.site.order)) s.order = parsed.site.order;

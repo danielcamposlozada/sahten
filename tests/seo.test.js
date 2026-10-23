@@ -195,7 +195,10 @@ it('con kit de marca la portada muestra la caligrafía sola (vector incrustado, 
   const m = structuredClone(full); m.site.order = ['hero', 'contacto']; m.site.hero = { title: 'Comida árabe casera', subtitle: '', cta: 'Pedir', highlights: [] }; m.site.seo.brandKit = 'sahten';
   const on = await render(m), mark = on.window.document.querySelector('#s-hero svg.brand-mark');
   expect(mark.getAttribute('aria-label')).toBe('SAHTEN Gastronomía Árabe');
-  expect(mark.getAttribute('viewBox')).toBe('152 259 944 204');
+  expect(mark.getAttribute('viewBox')).toBe('0 0 941 255');
+  for (const start of ['M447.323 24.1132', 'M391.533 18.1166', 'M149.642 75.8555', 'M316.205 229.781', 'M260.545 236.429', 'M881.334 89.8006']) {
+    expect(mark.querySelector('path').getAttribute('d')).toContain(start);
+  }
   expect(mark.querySelector('path').getAttribute('d').length).toBeGreaterThan(500);
   expect(on.window.document.querySelector('#s-hero .tag')).toBeNull();
   expect(on.window.document.querySelector('#h-mark svg.brand-mark')).not.toBeNull();   // también en el encabezado simple

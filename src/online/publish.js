@@ -7,6 +7,7 @@ import deliverySrc from '../core/delivery.js?raw';
 import messageSrc from './orderMessage.js?raw';
 import contrastSrc from '../ui/contrast.js?raw';
 import reviewLinkSrc from '../ui/review-link.js?raw';
+import storefrontSrc from './storefront.js?raw';
 import { imageFileName, categoryPhotoKey } from './menuJson.js';
 import { createZip } from './zip.js';
 import seoSrc from './seo.js?raw';
@@ -15,18 +16,19 @@ import { buildSitePages } from './pages.js';
 import { brandFiles, brandInline } from './brand.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
-export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc].map(s => s.replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
+export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc].map(s => s.replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
 
 const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028').replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
 
-export function buildIndexHtml(menu) {
+export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
-    .replace('<!--__SEO_HEAD__-->', () => renderSeoHead(menu))
+    .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
+    .replace('<body>', storefront ? '<body data-storefront>' : preview ? '<body data-preview>' : '<body>')
     .replace('<!--__SEARCH_CONTENT__-->', () => renderSearchContent(menu))
     .replace('/*__MENU_JSON__*/null', '/*__MENU_JSON__*/' + safeJson(menu))
     .replace('/*__BRAND__*/null', () => '/*__BRAND__*/' + safeJson(brandInline(menu)))
     .replace('/*__SHARED__*/', () => sharedScript())
-    .replace('<title>Menú</title>', '<title>' + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>');
+    .replace('<title>Menú</title>', '<title>' + (storefront ? 'Pedir online | ' : '') + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>');
 }
 
 export function dataUrlToBytes(dataUrl) {
@@ -53,6 +55,7 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
     { path: 'index.html', data: buildIndexHtml(menu) },
     { path: 'menu.json', data: JSON.stringify(menu, null, 1) },
   ];
+  if (menu.site?.enabled && menu.site.orderPage) files.push({ path: 'pedir/index.html', data: buildIndexHtml(menu, { storefront: true }) });
   files.push(...discoveryFiles(menu), ...buildSitePages(menu), ...brandFiles(menu));
   for (const p of menu.products) {
     if (!p.image || !images[p.id]) continue;

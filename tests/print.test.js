@@ -3,6 +3,14 @@ import { JSDOM } from 'jsdom';
 import { printDocument } from '../src/ui/print.js';
 
 describe('impresión aislada sin pop-ups', () => {
+  it('el documento usa el ancho del papel seleccionado en vez de abrirse siempre a 80 mm', async () => {
+    const w = new JSDOM('<body></body>').window;
+    const p = printDocument('comanda', w, { paperWidthMm: 58 });
+    const frame = w.document.querySelector('iframe');
+    expect(frame.style.width).toBe('58mm');
+    frame.contentWindow.focus = () => {}; frame.contentWindow.print = () => {};
+    frame.dispatchEvent(new w.Event('load')); await p; w.close();
+  });
   it('imprime el documento completo y limpia al cerrar el diálogo', async () => {
     const w = new JSDOM('<body><main>App y carrito</main></body>').window;
     const html = '<html><head><style>@page {margin:3mm}</style></head><body>ORDEN #0042</body></html>';

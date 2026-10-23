@@ -1,5 +1,6 @@
 import { reviewFooter, reviewUrl, DEFAULT_REVIEW_TEXT } from './ui/receipt-reviews.js';
 import { printDocument } from './ui/print.js';
+import { receiptProfile, receiptPaperWidth } from './ui/receipt-paper.js';
 // ═══════════════════════════════════════════════════════════
 // Sahten · punto de entrada
 // 1) estilos  2) núcleo + estado + puente  3) código legado como scripts clásicos
@@ -75,7 +76,8 @@ window.sahtenOfflineNotice = () => (navigator.onLine === false ? '<div style="fo
 window.addEventListener('online', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.addEventListener('offline', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.SAHTEN.receiptReviews = { footer: reviewFooter, url: reviewUrl, defaultText: DEFAULT_REVIEW_TEXT };
-window.SAHTEN.printDocument = html => printDocument(html);
+window.SAHTEN.printDocument = (html, options) => printDocument(html, window, options);
+window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth };
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.orderWorkflow = orderWorkflow;

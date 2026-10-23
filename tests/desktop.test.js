@@ -246,6 +246,24 @@ describe('integración con el sistema', () => {
     const c = apis(); c.updater.check = async () => { throw new Error('offline'); }; const pg = page();
     expect(await installDesktop({ apis: c, project: {}, config: createMemoryConfig(), w: pg.w }).checkForUpdates({ silent: true })).toBeNull(); expect(pg.w.__alerts).toBeUndefined();
   });
+  it('actualizar exige guardar primero: error o cancelación impiden instalar y reiniciar', async () => {
+    for (const outcome of ['error','cancel','saved']) {
+      const {w}=page(),sequence=[];
+      const a=apis({update:{version:'4.3.0',downloadAndInstall:async()=>{sequence.push('install');}}});
+      const project={session:{isOpen:true,info:()=>({readOnly:false}),saveNow:async options=>{
+        expect(options.force).toBe(true); sequence.push('save');
+        if(outcome==='error') throw new Error('Disco lleno');
+        return outcome==='saved';
+      }}};
+      const desktop=installDesktop({apis:a,project,config:createMemoryConfig(),w});
+      await desktop.installUpdate();
+      expect(sequence).toEqual(outcome==='saved'?['save','install']:['save']);
+      expect(a.process.relaunched).toBe(outcome==='saved'?1:0);
+      if(outcome==='error') expect(w.__alerts[0]).toContain('La actualización se detuvo');
+      if(outcome==='cancel') expect(w.__toasts.at(-1)).toContain('pospuesta');
+      w.close();
+    }
+  });
   it('actualizaciones al abrir la app: dejan un aviso en las notificaciones (una sola vez), con botón para instalar; sin novedades limpia el aviso', async () => {
     const { w } = page(); const pushed = [], dropped = []; w.pushNotification = n => { pushed.push(n); }; w.dropNotifications = p => { dropped.push(p); };
     const installs = []; const a = apis({ update: { version: '4.2.0', downloadAndInstall: async () => { installs.push(1); } } });

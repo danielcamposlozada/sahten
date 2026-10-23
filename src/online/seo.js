@@ -92,8 +92,12 @@ export function brandHeadTags(menu) {
     `<meta property="og:image:type" content="image/png">`, `<meta property="og:image:width" content="1200">`, `<meta property="og:image:height" content="630">`,
     `<meta property="og:image:alt" content="${e(kit.ogAlt)}">`, `<meta name="twitter:image" content="${e(kit.og)}">`, `<meta name="twitter:image:alt" content="${e(kit.ogAlt)}">`].join('\n');
 }
-export function renderSeoHead(menu) {
+export function renderSeoHead(menu, { storefront = false } = {}) {
   const s = buildSeo(menu), faq = faqSchema(menu), meta = (name, content, property = false) => content ? `<meta ${property ? 'property' : 'name'}="${name}" content="${seoEscape(content)}">` : '';
+  if (storefront) {
+    const url = s.canonical ? seoAsset(s.canonical, 'pedir/') : '';
+    return [meta('robots', 'noindex,follow'), meta('description', s.description), url ? `<link rel="canonical" href="${seoEscape(url)}">` : '', meta('og:title', 'Pedir online | ' + s.title, true), meta('og:url', url, true), brandHeadTags(menu)].filter(Boolean).join('\n');
+  }
   return [meta('description', s.description), s.canonical ? `<link rel="canonical" href="${seoEscape(s.canonical)}">` : '', meta('og:type', 'website', true), meta('og:title', s.title, true), meta('og:description', s.description, true), meta('og:url', s.canonical, true), meta('og:image', s.image, true), meta('twitter:card', s.image ? 'summary_large_image' : 'summary'), meta('twitter:title', s.title), meta('twitter:description', s.description), brandHeadTags(menu), ldScript('restaurant-schema', s.schema), faq ? ldScript('faq-schema', faq) : ''].filter(Boolean).join('\n');
 }
 /** Contenido útil sin JavaScript y mientras llegan los datos en vivo. */

@@ -1,5 +1,27 @@
 # Changelog
 
+## Sin publicar
+
+## 0.4.16
+
+- **Guardado fiable de Mostrador**: altas, ediciones y eliminaciones de clientes y medios de pago activan el guardado del proyecto aunque no haya otro cambio pendiente. También cubre pedidos y el resto de los datos internos; la carga de un archivo no dispara escrituras. La instalación de una actualización se detiene si el proyecto no pudo guardarse o se canceló su guardado.
+- **Más altura para el pedido**: el carrito comienza junto al aviso de prueba y aprovecha toda la altura; las pestañas ocupan el ancho del catálogo. El aviso se puede ocultar con una X y vuelve al entrar a Mostrador. Los niveles de precio ya no aparecen como categorías de platos.
+- **Pedidos de mostrador y web en una cola**: «Pedidos» reúne ambas procedencias en Retiro en local / Mostrador y Delivery. Los pedidos locales también se completan como retirados o entregados y siguen disponibles en Historial.
+- **Tarjetas compactas con detalle desplegable**: muestran cliente, origen, tiempo, total y estado; productos, dirección, contacto, indicaciones, pago e impresión se despliegan a pedido. Bordes, etiquetas y botones distinguen estados sin teñir la tarjeta completa. Elegir un medio de pago no equivale a un cobro acreditado.
+
+- **Comandas sin recortes en tiqueteras**: selección local de papel de 48, 58 u 80 mm; ancho útil explícito de 40, 48 o 72 mm. Los tickets estrechos separan nombre e importe en líneas y conservan el QR dentro del ancho. El documento de impresión usa el papel seleccionado, sin depender de ventanas emergentes ni de detección automática del controlador.
+
+- **Pie del sitio personalizable**: texto y enlace del crédito por negocio; el pie auxiliar vacío ya no agrega una franja de 36 px debajo del sitio.
+
+- **Color del símbolo de portada**: campo independiente para definir el color del logo monocromo del hero. Sahten usa `#FAF8F5`, solicitado por el dueño.
+
+- **Logo de navegación y portada separados**: la barra muestra el logo de la tienda y la portada permite cargar un símbolo independiente. Sahten usa el logo completo en navegación y solo la caligrafía árabe completa en el hero, del color del texto.
+
+- **Tienda independiente**: opción en Sitio web para generar `/pedir/`, enlazable desde cualquier web propia. La portada dirige a la tienda y el catálogo conserva el mismo carrito, retiro, delivery y conexión de pedidos. La actualización del catálogo no reemplaza el diseño publicado.
+- **Logo de la tienda**: cargar, previsualizar, cambiar o quitar SVG, PNG, JPG o WebP desde Sitio web. Viaja con el proyecto y la publicación; opción para usar el color del texto. No cambia la identidad de la aplicación.
+- **Logo árabe completo**: el encabezado del kit de Sahten conserva los cinco signos separados del SVG entregado por el dueño.
+- **WhatsApp**: símbolo vectorial de la marca en los accesos de la portada, navegación y botón flotante. Texto de productos y controles de compra más legibles.
+
 ## 0.4.15
 
 - **Invitaciones con permisos claros**: el dueño ve campos separados de correo y rol, la explicación de los permisos elegidos y una guía de todos los roles. La invitación empieza como Vendedor / Caja, conserva los errores y evita envíos duplicados.

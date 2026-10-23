@@ -1,6 +1,6 @@
 // Documento aislado dentro de la app: no depende de window.open ni de pop-ups.
 const preparing = new WeakSet();
-export function printDocument(html, w = window) {
+export function printDocument(html, w = window, { paperWidthMm = 80 } = {}) {
   if (preparing.has(w)) return Promise.reject(new Error('Ya hay una impresión abierta. Cerrala antes de volver a imprimir.'));
   preparing.add(w);
   w.document.getElementById('sahten-print-frame')?.remove();
@@ -9,7 +9,8 @@ export function printDocument(html, w = window) {
     frame.id = 'sahten-print-frame';
     frame.title = 'Impresión de comanda';
     frame.setAttribute('aria-hidden', 'true');
-    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:80mm;height:100vh;border:0;';
+    const width = [48, 58, 80].includes(Number(paperWidthMm)) ? Number(paperWidthMm) : 80;
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + width + 'mm;height:100vh;border:0;';
     let timer;
     const cleanup = () => { preparing.delete(w); w.clearTimeout(timer); frame.remove(); };
     frame.onload = async () => {

@@ -65,7 +65,12 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
     async installUpdate() {
       try {
         const update = pending || await updater.check(); if (!update) { toast('Estás usando la última versión.'); return null; }
-        try { if (project.session && project.session.isOpen) await project.session.saveNow({ force: true }); } catch (e) { /* se guarda solo igual */ }
+        if (project.session?.isOpen && !project.session.info?.().readOnly) {
+          let saved;
+          try { saved = await project.session.saveNow({ force: true }); }
+          catch (e) { throw new Error('No se pudo guardar el proyecto antes de actualizar. La actualización se detuvo para conservar los cambios. ' + (e.message || e)); }
+          if (saved === false) { toast('Actualización pospuesta. Guardá el proyecto antes de actualizar.'); return null; }
+        }
         toast('Descargando la actualización…'); await update.downloadAndInstall(); await proc.relaunch(); return update;
       } catch (e) { w.alert('No se pudo actualizar: ' + (e && e.message || e)); return null; }
     },

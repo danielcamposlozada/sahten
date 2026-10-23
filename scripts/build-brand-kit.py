@@ -65,13 +65,17 @@ for v, (bg, _, _) in VARIANTS.items():
         save(f'sahten-logo-{v}-{label}-sobre-fondo.svg', wrap(w + 2 * pad, h + 2 * pad, f'<g transform="translate({pad} {pad})">{body}</g>', bg).encode())
 
 # ── Caligrafía sola (صَحْتَيْن): para el encabezado de la web y donde el wordmark no entra. Se puede escalar libremente: es vector ──
-CALLI_VB = (152, 259, 944, 204)   # caja ajustada de la caligrafía dentro del logo (x, y, ancho, alto)
+CALLI_SOURCE = (ROOT / 'docs/brand/sahten/source/caligrafia-completa.svg').read_text()
+CALLI_PATHS = re.findall(r'<path d="([^"]+)"', CALLI_SOURCE)
+assert len(CALLI_PATHS) == 6, 'la caligrafía completa lleva cinco signos y el trazo principal'
+CALLI_D = ' '.join(CALLI_PATHS)   # conservar todos los trazos originales entregados por el dueño
+CALLI_VB = (0, 0, 941, 255)
 for name, color in (('crema', CREAM), ('naranja', ORANGE), ('verde', GREEN)):
     vb = ' '.join(map(str, CALLI_VB))
-    save(f'sahten-caligrafia-{name}-transparente.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{CALLI_VB[2]}" height="{CALLI_VB[3]}"><path d="{SCRIPT[0]}" fill="{color}"/></svg>'.encode())
+    save(f'sahten-caligrafia-{name}-transparente.svg', f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{CALLI_VB[2]}" height="{CALLI_VB[3]}"><path d="{CALLI_D}" fill="{color}"/></svg>'.encode())
 def calli(size, ratio):
     bx, by, bw, bh = CALLI_VB
-    return place(f'<path d="{SCRIPT[0]}" fill="{ORANGE}"/>', CALLI_VB, size / 2, size / 2, size * ratio)
+    return place(f'<path d="{CALLI_D}" fill="{ORANGE}"/>', CALLI_VB, size / 2, size / 2, size * ratio)
 save('sahten-avatar-caligrafia-1080.png', png_bytes(1080, 1080, calli(1080, 0.78), GREEN))   # alternativa de avatar: solo la caligrafía
 
 # ── Íconos: verde de marca, letras naranjas, detalles crema (solo el wordmark, sin tagline: a 32 px no se lee) ──
@@ -113,6 +117,6 @@ save('site.webmanifest', json.dumps(manifest, indent=1, ensure_ascii=False).enco
 lines = ['// Generado por scripts/build-brand-kit.py — no editar a mano. Archivos del kit de marca de Sahten (base64) que se publican en la raíz del sitio.', 'export const SAHTEN_BRAND_FILES = {']
 lines += [f'  {json.dumps(p)}: {json.dumps(base64.b64encode(b).decode())},' for p, b in sorted(PUB.items())]
 lines += ['};', '', '// Caligrafía sola en vector, para el encabezado de la web (se incrusta en index.html: funciona también en la vista previa).',
-          f'export const SAHTEN_CALLIGRAPHY = {json.dumps({"viewBox": " ".join(map(str, CALLI_VB)), "d": SCRIPT[0]})};', '']
+          f'export const SAHTEN_CALLIGRAPHY = {json.dumps({"viewBox": " ".join(map(str, CALLI_VB)), "d": CALLI_D})};', '']
 JS.write_text('\n'.join(lines))
 print('ok', len(list(OUT.glob('*'))), 'archivos;', {k: len(v) for k, v in PUB.items()})
