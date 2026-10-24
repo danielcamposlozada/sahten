@@ -17,7 +17,7 @@ correctos y coherentes. Lo que más pesa: datos idénticos en todos lados (NAP),
 | Horarios | Lun–Jue 18:00–22:00 · Vie–Sáb 18:00–23:00 · Dom cerrado. Cargar horarios especiales de feriados |
 | Zona de delivery | Belgrano, Núñez, Florida, Vicente López, Olivos, Martínez y La Lucila (~6 km). Mínimo $15.000, envío gratis desde $45.000 |
 | Retiro | En el local, Roca 1489 |
-| Beneficio confirmado el 24/10/2026 | 10 % con efectivo o transferencia, solo productos (envío sin descuento), en web y Mostrador. No acumulable: aplicar el mayor descuento de la orden. Pendiente de activación/publicación |
+| Beneficio confirmado el 24/10/2026 | 10 % con efectivo o transferencia, solo productos (envío sin descuento), en web y Mostrador. No acumulable: aplicar el mayor descuento de la orden. Activo en app y tienda; verificación final del 24/10/2026 al pie |
 | Catering | Mesas árabes para eventos, 48 horas de anticipación |
 | Instagram | sahten.ar |
 | Sitio | https://sahten.online/ — en Google usar `?utm_source=google&utm_medium=organic&utm_campaign=gbp` (y `utm_content=pedidos` / `menu` en esos botones) |
@@ -86,7 +86,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 2. ¿Ficha de Google verificada y qué categorías tiene hoy?
 3. Horario real frente al continuo que muestra TodoResto.
 4. ¿Siguen vigentes el Fatay Hour (18:30–21:30) y el envío gratis en Vicente López?
-5. Resuelto el 24/10/2026: 10 % por efectivo o transferencia; solo productos, web y Mostrador, sin acumular (se aplica el mayor). Activación pendiente.
+5. Resuelto el 24/10/2026: 10 % por efectivo o transferencia; solo productos, web y Mostrador, sin acumular (se aplica el mayor). Activado y verificado el 24/10/2026 (estado final al pie).
 6. Tiempo de entrega y costo de envío por zona.
 7. Platos vegetarianos y aptos para celíacos; qué es «Aristilos».
 8. Año de apertura; fotos de fachada y equipo.
@@ -218,3 +218,23 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Validación visual local con datos ficticios, sin conexión al negocio: tienda a 320 px y Mostrador a 1366 × 768 y 1024 × 600. El descuento no altera precios publicados ni costos fijos/variables. Pendiente de aprobación concreta: conexión productiva, activación del beneficio, publicación web e instaladores 0.4.21. No se modificaron menús, proyectos u órdenes en Supabase para esta preparación.
 
 - Validación final de 0.4.21 preparada: `npx vitest run` — 521 pruebas en 54 archivos; compilación, scripts clásicos, versiones y diff sin errores. Incluye prueba de QR personalizado sin beneficio, cambio entre efectivo/MP, persistencia de la política sin alterar ventas, costos históricos netos, ticket y exportación sin duplicar el importe del beneficio. La prueba antigua de guardado espera ahora la escritura automática observable, sin forzarla, para evitar un fallo por espera fija en equipos lentos.
+
+### 24/10/2026 — 0.4.21 publicada; conexión real verificada; web en espera
+
+- El dueño confirmó integrar PR #22, publicar web e instaladores y conectar producción con el beneficio confirmado. Merge normal `5e47372b25d74ea555b5560d2f8dbd5b84d8c265`, etiqueta `v0.4.21`. [Release pública](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.21) publicada a las 06:48:53 UTC; run `40070821412` correcto en pruebas, Windows, Mac universal y publicación. `latest.json` ofrece 0.4.21, enlaces y firmas presentes. La app instalada muestra 0.4.21.
+- Verificación de configuración, sin leer secretos: cuenta `MARCELTKAMISSO` (`326689208`), `production`, habilitada, sitio `https://sahten.online`; conexiones ficticias deshabilitadas. No se hizo ningún pago con fondos reales. El QR posterior para volver a leer credenciales no hace falta para esta verificación; se conserva la conexión existente.
+- Se guardó en la app el beneficio del 10 %, enabled=true, web y Mostrador=true, solo productos y mayor descuento sin acumular. La tienda todavía recibe la política publicada anterior (enabled=false): no afirmar que el beneficio esté activo online.
+- La app advierte que sincronizar reemplazaría 37 productos publicados por 36 visibles: «Combo Fatay» está oculto en la app. Se pidió al dueño elegir entre conservar los 37 (volver a mostrar Combo Fatay) o publicar los 36 actuales. No se continuó ese formulario; no se cambió la visibilidad de productos ni sus precios.
+- Cloudflare continúa en el despliegue `4558e615-3350-4f37-9dc3-625f15eecb2b`. La revisión automática bloqueó la carga del ZIP hasta resolver la diferencia 36/37. No se publicó un despliegue nuevo. La carga directa quedó abierta en Chrome; el paquete de la nueva plantilla está preparado localmente, pendiente de ajustar al catálogo elegido y la política sincronizada.
+- El límite previo de autorización se restableció. La API de assets rechazó la autenticación general (403); la obtención de una credencial temporal no pudo completarse y no se guardó ningún JWT de carga. Se preparó la carga desde el panel del navegador, manteniendo las credenciales en ese panel, pero se detuvo ante el bloqueo de publicación indicado.
+
+
+### 24/10/2026 — Publicación final de 0.4.21 y 36 productos verificada
+
+- El dueño confirmó «Publicar los 36 actuales, sin Combo Fatay». Se sincronizó desde la app instalada mediante su formulario normal, sin escrituras SQL directas en menús, proyectos ni pedidos. La app informó carga de 42 imágenes y «Completado». El catálogo público contiene 36 productos, sin Combo Fatay; los precios de los restantes coinciden con los publicados anteriormente.
+- Beneficio activo en el catálogo: 10 %, web y Mostrador, revisión `4aa36749-e29c-4e98-bb2e-68fcd0d44abe`, vigencia `2026-10-24T11:59:09.140Z`. Envío sin descuento y mayor descuento sin acumular. Actualización del menú `2026-10-24T12:20:21.667Z`.
+- Cloudflare Pages, publicación productiva final `918df74c-3a5f-47f4-86a5-8878ad33a51f`, creada a las 12:28:33 UTC, estado success. Subida por el panel de Chrome de 17 archivos. https://sahten.online/ y https://sahten.online/pedir/ usan la plantilla 0.4.21, el diseño y los logos aprobados y el crédito de Noamdan.
+- La comprobación de la primera carpeta nueva detectó que el auxiliar temporal de generación había omitido conservar la conexión pública de pedidos al combinar el catálogo. Se corrigió el auxiliar, se volvió a generar y publicar y se verificó la conexión en el archivo público. El despliegue intermedio `8273ac3f` queda sustituido por el final indicado; no fue un cambio de las credenciales del negocio.
+- Chrome en vivo: dos opciones principales de idénticas dimensiones (251,5 × 132,89 px). Shawarma de Carne $16.000 → efectivo/transferencia $14.400, descuento $1.600; Mercado Pago $16.000 sin ese descuento. Transferencia conserva $14.400. Las acciones muestran «Enviar pedido» e «Ir a Mercado Pago» según corresponda. Navegación, fotos y pie presentes. Se limpió el producto de la comprobación sin enviar ninguna orden.
+- Mercado Pago productivo conectado a MARCELTKAMISSO (326689208), con conexiones ficticias deshabilitadas, tal como se verificó antes. No se realizó una compra con fondos reales: queda pendiente la comprobación supervisada del titular de un cobro productivo, su notificación y su orden recibida.
+- Reemplaza los estados anteriores de espera por la elección 36/37. Sahten 0.4.21 para Windows/Mac ya publicada, manifiesto del actualizador verificado y 521 pruebas aprobadas antes de publicar. Capturas, ZIP final y estado en `entregables/checkout-descuento/` del espacio de trabajo del dueño.

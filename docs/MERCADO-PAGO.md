@@ -1,6 +1,6 @@
 # Mercado Pago por negocio
 
-Implementación de Checkout Pro en la app y la web. Primera cuenta: Sahten; el modelo y la pantalla son generales para todos los negocios. Todavía no se activaron cobros reales.
+Implementación de Checkout Pro en la app y la web. Primera cuenta: Sahten; el modelo y la pantalla son generales para todos los negocios. Al 24/10/2026 la conexión de Sahten está habilitada en Producción; el resto de los negocios configura su propia cuenta. No se realizó una transacción real desde este chat.
 
 ## Decisión
 
@@ -61,7 +61,7 @@ Las devoluciones y los contracargos se consultan y reflejan; esta versión no in
 
 Evidencia local: `entregables/mercadopago-2026-10-24/pago-prueba-resultado.png` en el espacio de trabajo de este chat.
 
-## Descuento y selección de medios · preparado para 0.4.21
+## Descuento y selección de medios · publicado en 0.4.21
 
 La tienda presenta dos opciones del mismo tamaño: efectivo/transferencia y Mercado Pago. Elegir pago directo permite precisar efectivo o transferencia para registrar el medio real. Mostrador muestra una opción compacta por medio, sin duplicación; los medios personalizados (QR, débito, otros) se incorporan en el mismo grupo y declaran su tipo. Esto registra una elección, no una confirmación bancaria ni una nueva integración QR.
 
@@ -70,3 +70,9 @@ En Ajustes → Negocio → Tienda online y delivery se configura el porcentaje y
 Ejemplo ilustrativo: productos $10.000 + envío $1.500 → efectivo/transferencia $10.500 (descuento $1.000); Mercado Pago $11.500. Con otro descuento de 15 %, se aplica ese mayor beneficio y no se clasifica como descuento por pago. Mercado Pago siempre recalcula en servidor desde precios del menú; ignora descuentos enviados por el navegador. Los pedidos directos conservan el flujo de recepción existente y requieren verificar el cobro por el negocio.
 
 Reportes permite desplegar las operaciones beneficiadas y exportarlas con porcentaje, importe y revisión. El importe específico del beneficio se exporta una sola vez por orden, en la primera línea; no sumar las columnas rotuladas «total orden» por cada producto. Se excluyen las canceladas del resumen y no se infieren beneficios de ventas antiguas por coincidencia de importe.
+
+## Estado verificado al retomar · 24/10/2026
+
+La app 0.4.21 y una consulta de configuración sin secretos confirman la cuenta real `MARCELTKAMISSO`, vendedor `326689208`, modo `production`, enabled=true, sitio https://sahten.online. Las cuentas ficticias están deshabilitadas. No se reemplazaron credenciales al retomar: se conservó la conexión que ya estaba guardada.
+
+El dueño eligió publicar los 36 productos actuales, sin Combo Fatay. Se sincronizó desde la app, que informó Completado. El catálogo público y el menú de la carpeta final tienen el beneficio del 10 % habilitado para web y Mostrador, revisión `4aa36749-e29c-4e98-bb2e-68fcd0d44abe`; productos y precios restantes conservados. Web publicada en Cloudflare `918df74c-3a5f-47f4-86a5-8878ad33a51f` a las 12:28:33 UTC. La carpeta final conserva explícitamente la conexión pública de pedidos, sin secretos. Chrome verifica botones iguales, $16.000 → $14.400 por efectivo o transferencia y $16.000 por Mercado Pago; las acciones son Enviar pedido / Ir a Mercado Pago. No se envió una orden durante esta comprobación. La validación de una transacción con fondos reales, su notificación y su orden queda pendiente del titular.

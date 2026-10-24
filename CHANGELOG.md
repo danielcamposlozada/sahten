@@ -2,7 +2,7 @@
 
 ## Sin publicar
 
-## 0.4.21 · preparada, pendiente de publicación
+## 0.4.21
 
 - **Medios de pago visibles**: en la tienda, dos opciones grandes del mismo tamaño para efectivo/transferencia y Mercado Pago con su símbolo oficial, sin desplegable. En Mostrador, una opción compacta por medio real, incluidos QR y medios personalizados, sin botones duplicados. El total se actualiza al elegir y conserva los datos de contacto y entrega.
 - **Beneficio configurable por negocio**: descuento por efectivo o transferencia sobre productos, con alcance independiente para web y Mostrador. Aplica el mayor descuento de la orden, sin acumular; no reduce el envío. Desactivado por defecto para otros negocios.
