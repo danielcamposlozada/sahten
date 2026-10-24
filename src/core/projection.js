@@ -95,11 +95,7 @@ export function computeProjection(s) {
   const rows = s.products.map(p => {
     const units = getProjUnits(s, p);
     totalUnits += units;
-    const unitCost = costPerUnit(s, p);
-    const gfContrib = Math.round(units * gfAssigned(s, p));
-    gfContribTotal += gfContrib;
-
-    let ingRaw = 0;
+    let ingRaw = 0, costRaw = 0, fixedRaw = 0;
     const byChannel = {};
     channels.forEach(c => {
       const net = channelNetReceivedWithDisc(s, p, c.id);
@@ -107,14 +103,19 @@ export function computeProjection(s) {
       const pct = pr.channelDist[c.id] || 0;
       if (net == null) { byChannel[c.id] = { pct, units: 0, net: null, gross, income: 0 }; return; }
       const u = units * (pct / 100);
+      costRaw += u * costPerUnit(s, p, c.id);
+      fixedRaw += u * gfAssigned(s, p, c.id);
       ingRaw += u * net;
       chIncome[c.id] = (chIncome[c.id] || 0) + u * net;
       chUnits[c.id] = (chUnits[c.id] || 0) + u;
       if (gross != null) chGross[c.id] = (chGross[c.id] || 0) + u * gross;
-      byChannel[c.id] = { pct, units: u, net, gross, income: u * net };
+      byChannel[c.id] = { pct, units: u, net, gross, income: u * net, unitCost: costPerUnit(s, p, c.id), fixedCost: gfAssigned(s, p, c.id) };
     });
     const ing = Math.round(ingRaw);
-    const cost = Math.round(units * unitCost);
+    const cost = Math.round(costRaw);
+    const gfContrib = Math.round(fixedRaw);
+    const unitCost = units ? costRaw / units : costPerUnit(s, p);
+    gfContribTotal += gfContrib;
     const marg = ing - cost;
     tI += ing; tC += cost; tM += marg;
     return { id: p.id, name: p.name, star: !!p.star, units, unitCost, gfContrib, ing, cost, marg, byChannel };

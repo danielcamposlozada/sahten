@@ -153,7 +153,7 @@ function renderCostReceta() {
     return `<div class="cr-product-card ${isExp?'expanded':''}" style="border-left-color:${isExp?tierObj.color:'var(--border)'}">
       <div class="cr-product-header" onclick="crToggle('${p.id}')">
         <div style="display:flex;align-items:center;gap:12px;min-width:0">${SAHTEN.photos.thumb(p.id,p.name,{size:48,del:false})}<div>
-          <div class="cr-product-name">${p.star?'\u2b50 ':''}<span class="cr-name-text">${p.name}</span> <span class="cr-cat-badge" style="background:${tierObj.color}22;color:${tierObj.color}">${p.tier} \u00d7${tierObj.factor}</span>${p.category?'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:600;cursor:pointer">'+p.category+'</span>':'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:rgba(150,150,150,0.15);color:var(--muted);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500;cursor:pointer">+ categoría</span>'}${p.recetaOnly?'<span style="font-size:10px;background:rgba(107,124,108,0.12);color:var(--muted);border:1px solid rgba(107,124,108,0.25);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">🔒 interna</span>':'<span style="font-size:10px;background:rgba(42,125,46,0.12);color:var(--green);border:1px solid rgba(42,125,46,0.3);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">📋 menú</span>'}</div>
+          <div class="cr-product-name">${p.star?'\u2b50 ':''}<span class="cr-name-text">${p.name}</span>${SAHTEN.pricing.badge(p)} <span class="cr-cat-badge" style="background:${tierObj.color}22;color:${tierObj.color}">${p.tier} \u00d7${tierObj.factor}</span>${p.category?'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:600;cursor:pointer">'+p.category+'</span>':'<span onclick="event.stopPropagation();editCategoryInline('+idx+',this)" style="font-size:10px;background:rgba(150,150,150,0.15);color:var(--muted);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500;cursor:pointer">+ categoría</span>'}${p.recetaOnly?'<span style="font-size:10px;background:rgba(107,124,108,0.12);color:var(--muted);border:1px solid rgba(107,124,108,0.25);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">🔒 interna</span>':'<span style="font-size:10px;background:rgba(42,125,46,0.12);color:var(--green);border:1px solid rgba(42,125,46,0.3);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:500">📋 menú</span>'}</div>
           <div class="cr-meta"><span class="cr-meta-item">${p.ingredients.length} ing. \u00b7 ${p.packaging.length} env.${(p.combos||[]).length?' \u00b7 '+(p.combos||[]).length+' combo':''}</span></div>
         </div>
         </div>
@@ -790,7 +790,7 @@ function renderProductos() {
     const commPesos = Math.round(commBase * commRate);
     tr.innerHTML=`
       <td><input type="checkbox" class="prod-cb" ${selectedSet.has(i)?'checked':''} onchange="toggleProd(${i},this.checked)"></td>
-      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:8px">${SAHTEN.photos.thumb(p.id,p.name,{size:36,del:false})}<input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}</div></td>
+      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:8px">${SAHTEN.photos.thumb(p.id,p.name,{size:36,del:false})}<input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}${SAHTEN.pricing.badge(p)}</div></td>
       <td data-col="etiquetas"><div class="prod-tags-wrap">${tagsHtml}${addTagBtn}</div></td>
       <td data-col="categoria"><span class="cat-pill" onclick="editCategoryInline(${i},this)" style="display:inline-block;background:var(--accent);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${p.category||'Sin categoría'}</span></td>
       <td data-col="estrella" style="text-align:center"><button class="star-toggle-btn${p.star?' active':''}" onclick="PRODUCTS[${i}].star=!PRODUCTS[${i}].star;renderProductos();renderDashboard()" title="${p.star?'Quitar estrella':'Marcar como estrella'}">${p.star?'⭐':'☆'}</button></td>
@@ -825,7 +825,7 @@ function renderProductos() {
         </div>
       </td>
       <td data-col="comision"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--primary)">${commPct}%</span>${commPesos>0?`<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)" title="Pesos que suma la comisión al precio">+${fmt(commPesos)}</span>`:'<span style="font-size:10px;color:var(--muted)">sin comisión</span>'}</div></td>
-      <td data-col="subtotal" class="price-cell price-main" style="color:var(--muted);font-weight:500;white-space:nowrap">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="¿De dónde sale este precio?">?</button></td>
+      <td data-col="subtotal" class="price-cell price-main" style="color:var(--muted);font-weight:500;white-space:nowrap">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="Ver y ajustar precio por canal" aria-label="Ver y ajustar precio por canal">?</button></td>
       <td data-col="por_canal">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;width:220px">
           ${CHANNELS.filter(c=>c.enabled).map(c=>{
@@ -841,7 +841,7 @@ function renderProductos() {
               </div>
               <div style="display:flex;align-items:baseline;gap:4px">
                 ${disc>0?`<span style="font-family:'DM Mono',monospace;font-size:9px;opacity:0.5;text-decoration:line-through">${fmt(cp)}</span>`:''}
-                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${fmt(cpD)}</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${fmt(cpD)}</span>${SAHTEN.pricing.badge(p,c.id)}
               </div>
               <div style="font-family:'DM Mono',monospace;font-size:9px;opacity:0.7;white-space:nowrap">↳ ${fmt(net)}</div>
             </div>`;
@@ -927,7 +927,7 @@ function renderProdGrid(indices) {
         tooltipLines.push(prodDisc>0 ? 'Descuento producto: −'+prodDisc+'%' : 'Descuento canal: −'+chDisc+'%');
         tooltipLines.push('Precio sin desc: '+fmt(cp));
       }
-      if(ch.commission>0) tooltipLines.push('Comisión plataforma: −'+(ch.commission*100).toFixed(0)+'%');
+      if(channelCommission(p,c.id)>0) tooltipLines.push('Comisión estimada: −'+(channelCommission(p,c.id)*100).toFixed(1)+'%');
       tooltipLines.push('Vos recibís: '+fmt(net));
       const tt = tooltipLines.join('&#10;');
       return '<div class="prod-card-ch" style="background:'+col.bg+';color:'+col.text+';flex-direction:column;align-items:flex-start;gap:1px;cursor:default" title="'+tt+'">'
@@ -935,7 +935,7 @@ function renderProdGrid(indices) {
         +   '<span class="prod-card-ch-name">'+c.name+'</span>'
         +   (disc>0 ? '<span style="font-size:8px;background:rgba(0,0,0,0.2);border-radius:99px;padding:1px 5px;font-weight:700;white-space:nowrap">−'+(disc*100).toFixed(0)+'%</span>' : '')
         + '</div>'
-        + '<span class="prod-card-ch-price">'+(disc>0?'<s style="opacity:0.45;font-size:9px">'+fmt(cp)+'</s> ':'')+fmt(cpD)+'</span>'
+        + '<span class="prod-card-ch-price">'+(disc>0?'<s style="opacity:0.45;font-size:9px">'+fmt(cp)+'</s> ':'')+fmt(cpD)+SAHTEN.pricing.badge(p,c.id)+'</span>'
         + '<span style="font-size:9px;opacity:0.7">↳ '+fmt(net)+'</span>'
         + '</div>';
     }).join('');
@@ -955,7 +955,7 @@ function renderProdGrid(indices) {
       + '<div class="prod-card-header">'
       +   SAHTEN.photos.thumb(p.id, p.name, { size: 52, del: false })
       +   '<div style="flex:1;min-width:0">'
-      +     '<div class="prod-card-name">' + p.name + discBadge + '</div>'
+      +     '<div class="prod-card-name">' + p.name + discBadge + SAHTEN.pricing.badge(p) + '</div>'
       +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center">' + tagsHtml + addTagBtnGrid + '</div>'
       +   '</div>'
       +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'
@@ -1287,11 +1287,11 @@ function openModal(i) {
   }).join('');
   const chCards=CHANNELS.filter(c=>c.enabled).map(c=>{
     const cp=channelPrice(p,c.id)||mp;
-    const m=marginPct(cp,tc+gfa);const mc=marginColor(m);
+    const m=marginPct(cp,costPerUnit(p,c.id)+gfAssigned(p,c.id));const mc=marginColor(m);
     const col=chColor(c.id);
     return`<div class="ch-card" style="border-top:3px solid ${col.bg};background:${col.bg}10">
       <div class="ch-card-name" style="color:${col.bg}">${c.name}</div>
-      <div class="ch-card-price" style="color:${col.bg}">${fmt(cp)}</div>
+      <div class="ch-card-price" style="color:${col.bg}">${fmt(cp)}${SAHTEN.pricing.badge(p,c.id)}</div>
       <div class="ch-card-margin" style="color:${mc.text}">Margen: ${(m*100).toFixed(1)}%</div>
       ${c.id==='mostrador'?'<div style="font-size:10px;color:var(--muted);margin-top:2px">Precio base</div>':c.surcharge>0?`<div style="font-size:10px;color:var(--muted);margin-top:2px">+${(c.surcharge*100).toFixed(0)}% sobre mostrador</div>`:'<div style="font-size:10px;color:var(--muted);margin-top:2px">= Precio mostrador</div>'}
     </div>`;
@@ -2050,7 +2050,7 @@ function renderProyeccion() {
       const net   = channelNetReceivedWithDisc(p, c.id) || gross;
       const pct   = projChannelDist[c.id]||0;
       const u     = Math.round(units*pct/100);
-      const comm  = Math.round((c.commission||0)*100);
+      const comm  = Math.round(channelCommission(p,c.id)*100);
       const col   = chColor(c.id);
       return `<td style="font-size:11px;font-family:'DM Mono',monospace;text-align:center">
         <span class="tip-wrap tip-left">
@@ -2072,7 +2072,7 @@ function renderProyeccion() {
 
     const tr=document.createElement('tr');
     if(p.star) tr.classList.add('star-row');
-    tr.innerHTML=`<td style="font-size:12px">${p.star?'⭐ ':''}<strong>${p.name}</strong></td>
+    tr.innerHTML=`<td style="font-size:12px">${p.star?'⭐ ':''}<strong>${p.name}</strong>${SAHTEN.pricing.badge(p)}</td>
       ${unitsCell}
       ${chCells}
       <td class="price-cell" style="font-size:12px">
@@ -2345,17 +2345,17 @@ function renderVentasGrilla() {
     const margenMes=ingMes-costoMes; const gfPU=gfa;
     const div=document.createElement('div'); div.className='venta-card';
     div.innerHTML=`
-      <div class="venta-header"><div class="venta-name">${p.star?'⭐ ':''}${p.name}</div><span class="gf-pct-badge">${p.avgMes||0} u/mes</span></div>
+      <div class="venta-header"><div class="venta-name">${p.star?'⭐ ':''}${p.name}${SAHTEN.pricing.badge(p)}</div><span class="gf-pct-badge">${p.avgMes||0} u/mes</span></div>
       <div class="venta-row"><label>Promedio mensual (u.)</label><input class="venta-input" type="number" value="${p.avgMes||0}" min="0" step="1" onchange="PRODUCTS[${i}].avgMes=parseInt(this.value)||0;renderVentas()"></div>
       <div class="venta-row"><label>Absorbe GF</label><label class="toggle" title="Si está activo, este producto absorbe parte del gasto fijo en su precio"><input type="checkbox" ${absorbsGF(p)?'checked':''} onchange="PRODUCTS[${i}].absorbeGF=this.checked;recalcAll();renderVentas();scheduleSave()"><span class="toggle-slider"></span></label></div>
       <div class="venta-row"><label>GF / unidad vendida</label><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">${fmt(gfPU)}</span></div>
-      <div class="venta-row"><label>Precio mostrador</label><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--primary)">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="¿De dónde sale este precio?">?</button></span></div>
+      <div class="venta-row"><label>Precio mostrador</label><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--primary)">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="Ver y ajustar precio por canal" aria-label="Ver y ajustar precio por canal">?</button></span></div>
       <div class="venta-row"><label>Ingreso est./mes</label><span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">${fmt(ingMes)}</span></div>
       <div class="venta-row"><label>GF asignado (mes)</label><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">${fmt(gfa)}</span></div>
       <div class="venta-row"><label>Margen neto est./mes</label><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${margenMes>=0?'var(--green)':'var(--red)'}">${fmt(margenMes)}</span></div>
       <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
         <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.3px">Precios por canal</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px">${CHANNELS.filter(c=>c.enabled).map(c=>{const cp=channelPrice(p,c.id)||mp;const col=chColor(c.id);return`<div style="background:${col.bg};color:${col.text};border-radius:6px;padding:3px 8px;font-size:11px"><span style="opacity:0.8;font-size:9px">${c.name} </span><strong>${fmt(cp)}</strong></div>`;}).join('')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${CHANNELS.filter(c=>c.enabled).map(c=>{const cp=channelPrice(p,c.id)||mp;const col=chColor(c.id);return`<div style="background:${col.bg};color:${col.text};border-radius:6px;padding:3px 8px;font-size:11px"><span style="opacity:0.8;font-size:9px">${c.name} </span><strong>${fmt(cp)}</strong>${SAHTEN.pricing.badge(p,c.id)}</div>`;}).join('')}</div>
       </div>
       <button class="btn" style="width:100%;margin-top:10px;font-size:11px;border-color:var(--accent);color:var(--accent)" onclick="openRecipe(${i})">✏ Editar receta</button>`;
     g.appendChild(div);
@@ -2369,7 +2369,7 @@ function renderVentasLista() {
     const margenMes=ingMes-costoMes; const gfPU=gfa;
     const m=marginPct(mp,costPerUnit(p)+gfa); const mc=marginColor(m);
     return`<div class="vl-row${p.star?' vl-row-star':''}">
-      <div class="vl-name">${p.star?'⭐ ':''}${p.name}</div>
+      <div class="vl-name">${p.star?'⭐ ':''}${p.name}${SAHTEN.pricing.badge(p)}</div>
       <div class="vl-field"><span class="vl-label">Absorbe GF</span><label class="toggle" title="Si está activo, este producto absorbe parte del gasto fijo en su precio"><input type="checkbox" ${absorbsGF(p)?'checked':''} onchange="PRODUCTS[${i}].absorbeGF=this.checked;recalcAll();renderVentas();scheduleSave()"><span class="toggle-slider"></span></label></div>
       <div class="vl-field"><span class="vl-label">Unid/mes</span><input class="stock-input" type="number" value="${p.avgMes||0}" min="0" style="width:65px" onchange="PRODUCTS[${i}].avgMes=parseInt(this.value)||0;renderVentas()"></div>
       <div class="vl-field"><span class="vl-label">GF/unidad</span>
@@ -2380,7 +2380,7 @@ function renderVentasLista() {
         </div>
       </div>
       <div class="vl-field"><span class="vl-label">Ajuste precio</span><div style="display:flex;align-items:center;gap:4px"><input class="stock-input" type="number" step="1" style="width:56px" title="Ajuste sobre el precio del tier (lo usa el asistente de estrategia). 0 = sin ajuste" value="${Math.round(((p.priceAdj||1)-1)*1000)/10}" onchange="PRODUCTS[${i}].priceAdj=1+(parseFloat(this.value)||0)/100;recalcAll();renderVentas();scheduleSave()"><span style="font-size:11px;color:var(--muted)">%</span></div></div>
-      <div class="vl-field"><span class="vl-label">Precio</span><span class="vl-val" style="color:var(--primary)">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="¿De dónde sale este precio?">?</button></span></div>
+      <div class="vl-field"><span class="vl-label">Precio</span><span class="vl-val" style="color:var(--primary)">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="Ver y ajustar precio por canal" aria-label="Ver y ajustar precio por canal">?</button></span></div>
       <div class="vl-field"><span class="vl-label">Ingreso/mes</span><span class="vl-val" style="color:var(--green)">${fmt(ingMes)}</span></div>
       <div class="vl-field"><span class="vl-label">Margen neto</span><span class="vl-val" style="color:${margenMes>=0?'var(--green)':'var(--red)'};font-weight:600">${fmt(margenMes)}</span></div>
       <div class="vl-field"><span class="vl-label">%</span><span class="margin-badge" style="background:${mc.bg};color:${mc.text}">${(m*100).toFixed(1)}%</span></div>
@@ -3126,7 +3126,7 @@ function gfRenderPage(pageObj, pageIndex, totalPages, forPrint = false) {
   slice.forEach((p, i) => {
     const bg = i%2===0 ? '#f7faf7' : 'white';
     const tipoBadge = p._tipo ? `<span style="font-size:5.5pt;background:${p._tipo==='ING'?'rgba(35,83,40,0.1)':'rgba(242,140,0,0.1)'};color:${p._tipo==='ING'?'#235328':'#c07000'};padding:1px 4px;border-radius:3px;font-weight:700;margin-left:3px">${p._tipo}</span>` : '';
-    const nameWithBadge = p.name + (p._tipo ? tipoBadge : '');
+    const nameWithBadge = p.name + (p._tipo ? tipoBadge : '') + SAHTEN.pricing.badge(p);
     tableRows += `<tr style="background:${bg}">${gfRenderProductRow(nameWithBadge, p.unit, p.detalle, p.precio)}</tr>`;
   });
 
@@ -4496,6 +4496,7 @@ function exportCSV() {
 
 // Recolectar estado completo en un objeto
 function collectState() {
+  SAHTEN.pricing?.prepare();
   let projSnapshots = [];
   try { projSnapshots = JSON.parse(localStorage.getItem(PROJ_SNAPSHOTS_KEY)||'[]'); } catch(e){}
 
@@ -4553,6 +4554,10 @@ function collectState() {
     channelDiscounts: p.channelDiscounts ?? {},
     absorbeGF:        p.absorbeGF ?? null,
     priceAdj:         p.priceAdj ?? 1,
+    ...(p.pricingPolicies ? { pricingPolicies: JSON.parse(JSON.stringify(p.pricingPolicies)), pricingHistory: JSON.parse(JSON.stringify(p.pricingHistory || [])) } : {}),
+    ...(p.fixedPrices ? { fixedPrices: { ...p.fixedPrices } } : {}),
+    ...(p.priceFixedChannels ? { priceFixedChannels: [...p.priceFixedChannels] } : {}),
+    ...(p.quoteIds ? { quoteIds: { ...p.quoteIds } } : {}),
     ...(p.description ? { description: p.description } : {}),   // descripción corta para el menú publicado
   }));
 
@@ -4624,6 +4629,8 @@ function collectState() {
     usdRate:          String(SAHTEN.state.usdRate),            // v4: vive en el estado, el input solo lo refleja
     globalCommission: String(SAHTEN.state.globalCommission),
     customTC,
+    saleCosts: JSON.parse(JSON.stringify(SAHTEN_SALE_COSTS || {})),
+    pricingQuotes: JSON.parse(JSON.stringify(SAHTEN_PRICING_QUOTES || {})),
     // ── Estado de UI ───────────────────────────────────────
     visibleCols:   [...visibleCols],
     ingView,
@@ -4650,6 +4657,8 @@ function collectState() {
 
 // Aplicar datos cargados a las variables globales y los inputs del DOM
 function applyData(data) {
+  SAHTEN_SALE_COSTS = JSON.parse(JSON.stringify(data.saleCosts || {}));
+  SAHTEN_PRICING_QUOTES = JSON.parse(JSON.stringify(data.pricingQuotes || {}));
   const setArr = (arr, src) => { if(src && Array.isArray(src)) { arr.length=0; src.forEach(x=>arr.push(x)); } };
   const setVal = (id, val) => { if(val != null) { const el=document.getElementById(id); if(el) el.value=val; } };
 

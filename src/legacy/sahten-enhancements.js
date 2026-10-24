@@ -560,9 +560,16 @@ SAHTEN.events.beforeRender('mkChart', (id, cfg) => {
 function custUpdateReceiptPaper() {
   const el = document.getElementById('cust-receipt-paper');
   if (!el) return;
-  try { localStorage.setItem('sahten-receipt-paper', String(SAHTEN.receiptPaper.profile(el.value).paperMm)); }
+  try { SAHTEN.receiptPaper.save({ paperMm: el.value, calibration: document.getElementById('cust-receipt-calibration').value, printer: document.getElementById('cust-receipt-printer').value }); renderCustPanel(); }
   catch { alert('No se pudo guardar el formato de papel en este equipo.'); }
 }
+function custUpdateReceiptPrinter() {
+  const printer = document.getElementById('cust-receipt-printer').value;
+  const current = SAHTEN.receiptPaper.current();
+  try { SAHTEN.receiptPaper.save(printer === 'it01' ? { printer, paperMm: 48, calibration: 88 } : printer === 'normal' ? { printer, paperMm: 210, calibration: 100 } : { printer, paperMm: current.paperMm > 80 ? 58 : current.paperMm, calibration: 100 }); renderCustPanel(); }
+  catch { alert('No se pudo guardar el perfil de impresión.'); }
+}
+window.custUpdateReceiptPrinter = custUpdateReceiptPrinter;
 function custUpdateReview() {
   const urlInput = document.getElementById('cust-review-url');
   const enabled = document.getElementById('cust-review-enabled').checked;
@@ -580,6 +587,10 @@ function custUpdateReview() {
 function renderCustPanel() {
   const paper = document.getElementById('cust-receipt-paper');
   if (paper) paper.value = String(SAHTEN.receiptPaper.width());
+  const receipt = SAHTEN.receiptPaper.current();
+  const printerInput = document.getElementById('cust-receipt-printer'); if (printerInput) printerInput.value = receipt.printer;
+  const calibrationInput = document.getElementById('cust-receipt-calibration'); if (calibrationInput) calibrationInput.value = receipt.calibration;
+  const widthOutput = document.getElementById('cust-receipt-width'); if (widthOutput) widthOutput.textContent = 'Ancho del contenido: '+receipt.contentMm+' mm. Se conserva el tamaño del texto y del QR.';
   const reviewEnabled = document.getElementById('cust-review-enabled');
   if (reviewEnabled) {
     reviewEnabled.checked = !!_cust.reviewEnabled;

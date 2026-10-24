@@ -8,11 +8,12 @@ import { createMemoryBackupStore } from '../project/adapters/backupStores.js';
 export const isTauri = (w = typeof window !== 'undefined' ? window : {}) => !!(w.__TAURI_INTERNALS__ || w.__TAURI__);
 
 export async function loadTauriApis() {
-  const [dialog, fs, store, opener, updater, proc, event, core, path] = await Promise.all([
+  const [dialog, fs, store, opener, updater, proc, event, core, path, webview] = await Promise.all([
     import('@tauri-apps/plugin-dialog'), import('@tauri-apps/plugin-fs'), import('@tauri-apps/plugin-store'), import('@tauri-apps/plugin-opener'),
     import('@tauri-apps/plugin-updater'), import('@tauri-apps/plugin-process'), import('@tauri-apps/api/event'), import('@tauri-apps/api/core'), import('@tauri-apps/api/path'),
+    import('@tauri-apps/api/webview'),
   ]);
-  return { dialog, fs, store, opener, updater, process: proc, event, core, path };
+  return { dialog, fs, store, opener, updater, process: proc, event, core, path, webview };
 }
 
 export async function prepareDesktop(apis) {

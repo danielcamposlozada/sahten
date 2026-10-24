@@ -17,10 +17,12 @@ export function currentTheme() {
 /** menu.json del proyecto abierto. */
 export function currentMenu(opts = {}) {
   const S = w.SAHTEN.state;
+  if (w.SAHTEN.pricing?.prepare()) { w.SAHTEN.project.markDirty(); }
   const sb = w.SAHTEN_SUPABASE || {};
   const m = buildMenuJson(S, {
     menuConfig: opts.forceSite && w.MENU_CONFIG && w.MENU_CONFIG.site ? { ...w.MENU_CONFIG, site: { ...w.MENU_CONFIG.site, enabled: true } } : (w.MENU_CONFIG || {}), tienda: w._getTiendaConfig ? w._getTiendaConfig() : {}, images: w.SAHTEN_IMAGES || {},
     supabase: sb, store: { name: S.project.name || (w.SAHTEN_PROJECT && w.SAHTEN_PROJECT.name), slug: sb.slug || '' },
+    quoteIds: Object.fromEntries(S.products.map(p => [p.id, w.SAHTEN.pricing?.quoteIds(p).mostrador])),
   });
   m.theme = currentTheme();
   return m;

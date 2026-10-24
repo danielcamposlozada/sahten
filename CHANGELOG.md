@@ -2,6 +2,17 @@
 
 ## Sin publicar
 
+## 0.4.18
+
+- **Navegación dentro de la tienda**: `/pedir/` conserva logo, secciones del sitio, Menú activo y botón «Mi pedido» con cantidad. Enlaces compatibles con subcarpetas y menú desplegable en pantallas chicas.
+- **Editor de precio más claro**: precio final destacado, costos secundarios y candados con estado explícito. La vista previa actualiza el campo automático al modificar costos y mantiene precio/resto visibles durante la edición; explica qué cambia al fijar un precio.
+
+- **Precio y costos bloqueados por producto/canal**: editor con importe, slider y bloqueo independiente del precio final, costo variable por unidad, gasto fijo asignado por unidad y porcentaje de comisión estimada. Etiqueta interna «Precio fijado», sin mostrarla a clientes. Historial con vigencia desde el guardado; los precios fijados reemplazan recargos y descuentos automáticos de ese producto/canal.
+- **Costos históricos privados**: las nuevas órdenes de la caja conservan su desglose. Versiones de precio publicadas permiten recuperar costos de pedidos recibidos desde la web u otra caja después de un cambio. Los costos permanecen en el proyecto privado; órdenes y catálogo solo llevan una referencia. Reportes y exportación distinguen órdenes sin historial; la proyección pondera los costos por canal y descuenta el GF mensual una sola vez.
+- **Perfil IT01 y calibración**: 48 mm con calibración horizontal del 88 % (contenido de 35,2 mm), sin reducir texto ni QR. Perfil manual, papel térmico 48/58/80 y papel normal A4/Carta. Preferencias locales por equipo; escala del controlador 100 %. Pendiente prueba física de IT01.
+- **Escala de interfaz por equipo**: 80–125 %, accesos a 85/90/100 %, persistente y con zoom nativo de escritorio. Independiente del proyecto, la web y el formato del ticket.
+- **Importar clientes CSV/Excel**: vista previa, asignación de columnas, hoja de direcciones por ID externo, múltiples direcciones y una principal por cliente. Los teléfonos compartidos conservan personas distintas; se omiten duplicados claros y filas inválidas sin reemplazar clientes previos. Se conservan compras anteriores como referencia, sin crear ventas. El checkout con identificación de clientes queda para una próxima etapa.
+
 ## 0.4.17
 
 - **Nuevo aviso de pedidos**: grabación acústica de darbuka con palmas de 3 segundos, elegida por el dueño. Reemplaza el sonido sintetizado; está incluida en la app, funciona sin internet y las notificaciones simultáneas no superponen ni cortan el ritmo.

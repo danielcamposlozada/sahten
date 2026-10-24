@@ -90,3 +90,20 @@ it('la vista previa mantiene el recorrido dentro del editor, sin salir al hostin
   expect(dom.window.document.querySelector('#s-fav [data-inc]')).not.toBeNull();
   dom.window.close();
 });
+it.each(['https://local.example/pedir/','https://local.example/tienda/pedir/'])('la tienda mantiene identidad, retorno a secciones y carrito en %s',async url=>{
+  const menu=fixture();menu.site.logo='data:image/png;base64,iVBORw0KGgo=';
+  menu.site.order.push('historia','contacto');menu.site.historia={title:'Historia',text:'Nuestra cocina'};menu.site.contacto={};
+  const dom=await render(menu,{storefront:true},url),d=dom.window.document,home=new URL('../',url).href;
+  expect(d.querySelector('#snav .nav-brand').href).toBe(home);
+  expect(d.querySelector('#snav .brand-mark')).not.toBeNull();
+  expect(d.querySelector('#snav a[aria-current=page]').textContent).toBe('Menú');
+  expect([...d.querySelectorAll('#snav a')].some(a=>a.href===home+'#s-about')).toBe(true);
+  expect(d.querySelector('#s-hero')).toBeNull();expect(d.querySelector('#s-about')).toBeNull();
+  d.querySelector('#grid [data-inc]').click();expect(d.querySelector('#snav .pedido').textContent).toBe('Mi pedido (1)');
+  d.querySelector('#snav .pedido').click();expect(d.querySelector('#ov').classList.contains('on')).toBe(true);dom.window.close();
+});
+it('el menú simple conserva catálogo al apagar el sitio completo',async()=>{
+  const menu=fixture();menu.site.enabled=false;
+  const dom=await render(menu,{storefront:true},'https://local.example/pedir/');
+  expect(dom.window.document.querySelector('#snav')).toBeNull();expect(dom.window.document.querySelector('#grid [data-inc]')).not.toBeNull();dom.window.close();
+});

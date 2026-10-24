@@ -4,9 +4,11 @@
 import { RND } from './format.js';
 import { costPerUnit } from './costs.js';
 import { gfAssigned } from './gf.js';
+import { lockedAmount, isPriceFixed } from './price-policy.js';
 
 export const getTier = (s, id) => s.tiers.find(t => t.id === id) || s.tiers[2] || s.tiers[0] || { id: '', name: '—', factor: 1, color: '#8e8e93' };
 export const getChannel = (s, id) => s.channels.find(c => c.id === id) || s.channels[0] || { id: 'mostrador', name: 'Mostrador', surcharge: 0, commission: 0, enabled: true };
+export const channelCommission = (s, p, id) => lockedAmount(p, id, 'commissionRate', getChannel(s, id).commission || 0);
 
 /** Comisión global (fracción). Antes se leía del input del DOM; ahora vive en el estado. */
 export const globalComm = s => (parseFloat(s.globalCommission) || 0) / 100;
@@ -18,22 +20,24 @@ export const getUSD = s => parseFloat(s.usdRate) || 1200;
 // { mostrador: precio final, rappi: precio, … }. Sin esa propiedad (el caso normal) todo se calcula como siempre.
 const fixed = (p, chId) => (p.fixedPrices && p.fixedPrices[chId] != null ? p.fixedPrices[chId] : null);
 
-export function mostradorPrice(s, p) {
-  if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
+function calculatedBase(s, p, channel = 'mostrador') {
   const tier = getTier(s, p.tier);
-  const base = costPerUnit(s, p) + gfAssigned(s, p);
+  const base = costPerUnit(s, p, channel) + gfAssigned(s, p, channel);
   let price = base * tier.factor * (p.priceAdj || 1);
   const disc = p.discount || 0;
-  const dtype = p.discountType || 'pct';
-  if (disc > 0) {
-    if (dtype === 'pct') price = price * (1 - disc);
-    else price = price - disc;
-  }
+  if (disc > 0) price = (p.discountType || 'pct') === 'pct' ? price * (1 - disc) : price - disc;
   return Math.max(0, RND(s, price));
+}
+
+export function mostradorPrice(s, p) {
+  if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
+  return lockedAmount(p, 'mostrador', 'price', calculatedBase(s, p));
 }
 
 export function mostradorFinalPrice(s, p) {
   if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
+  const pinned = lockedAmount(p, 'mostrador', 'price', null);
+  if (pinned !== null) return pinned;
   const mostradorCh = s.channels.find(c => c.id === 'mostrador');
   if (!mostradorCh) return mostradorPrice(s, p);
   const afterSurcharge = mostradorPrice(s, p) * (1 + mostradorCh.surcharge);
@@ -45,12 +49,14 @@ export function channelPrice(s, p, chId) {
   const ch = getChannel(s, chId);
   if (!ch.enabled) return null;
   if (fixed(p, chId) != null) return fixed(p, chId);
+  const pinned = lockedAmount(p, chId, 'price', null);
+  if (pinned !== null) return pinned;
   if (chId === 'mostrador') {
     const afterSurcharge = mostradorPrice(s, p) * (1 + ch.surcharge);
     return RND(s, afterSurcharge * (1 + globalComm(s)));
   }
   const mostCh = s.channels.find(c => c.id === 'mostrador');
-  const base = mostradorPrice(s, p) * (1 + (mostCh ? mostCh.surcharge : 0));
+  const base = calculatedBase(s, p, chId) * (1 + (mostCh ? mostCh.surcharge : 0));
   return RND(s, base * (1 + ch.surcharge) * (1 + globalComm(s)));
 }
 
@@ -60,11 +66,12 @@ export function channelNetReceived(s, p, chId) {
   if (!ch.enabled) return null;
   const gross = channelPrice(s, p, chId);
   if (gross == null) return null;
-  return Math.round(gross * (1 - (ch.commission || 0)));
+  return Math.round(gross * (1 - channelCommission(s, p, chId)));
 }
 
 /** Descuento efectivo de canal para un producto (no acumulable): producto › canal. */
 export function effectiveChannelDisc(s, p, chId) {
+  if (isPriceFixed(p, chId)) return 0;
   const prodDisc = ((p.channelDiscounts || {})[chId]) || 0;
   if (prodDisc > 0) return prodDisc / 100;
   const ch = getChannel(s, chId);
@@ -85,11 +92,11 @@ export function channelNetReceivedWithDisc(s, p, chId) {
   const gross = channelPriceWithDisc(s, p, chId);
   if (gross == null) return null;
   const ch = getChannel(s, chId);
-  return Math.round(gross * (1 - (ch.commission || 0)));
+  return Math.round(gross * (1 - channelCommission(s, p, chId)));
 }
 
 export function marginPct(price, cost) { return price > 0 ? (price - cost) / price : 0; }
 
 /** Ganancia extra generada por el factor de tier, por encima de costo + GF. */
-export const tierProfitPerUnit = (s, p) => (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
+export const tierProfitPerUnit = (s, p) => isPriceFixed(p, 'mostrador') ? 0 : (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
 export const tierProfitTotal = s => s.products.reduce((a, p) => a + tierProfitPerUnit(s, p) * (p.avgMes || 0), 0);

@@ -1,7 +1,10 @@
 import { reviewFooter, reviewUrl, DEFAULT_REVIEW_TEXT } from './ui/receipt-reviews.js';
 import { printDocument } from './ui/print.js';
 import { installNotificationSound } from './ui/notification-sound.js';
-import { receiptProfile, receiptPaperWidth } from './ui/receipt-paper.js';
+import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptProfile } from './ui/receipt-paper.js';
+import { installPricing } from './ui/pricing-editor.js';
+import { installInterfaceScale } from './ui/interface-scale.js';
+import { installCustomerImport } from './ui/customer-import.js';
 // ═══════════════════════════════════════════════════════════
 // Sahten · punto de entrada
 // 1) estilos  2) núcleo + estado + puente  3) código legado como scripts clásicos
@@ -79,8 +82,10 @@ window.addEventListener('offline', () => { try { if (window.currentPanel === 'mo
 window.SAHTEN.receiptReviews = { footer: reviewFooter, url: reviewUrl, defaultText: DEFAULT_REVIEW_TEXT };
 window.SAHTEN.printDocument = (html, options) => printDocument(html, window, options);
 window.SAHTEN.notificationSound = installNotificationSound(window);
-window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth };
+window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth, current: currentReceiptProfile, save: saveReceiptProfile };
 window.SAHTEN.projectUi = projectUi;
+window.SAHTEN.pricing = installPricing(window);
+window.SAHTEN.customersImport = installCustomerImport(window);
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.online = { publish: onlinePublish };
@@ -110,12 +115,25 @@ bindSettingInputs();
   .forEach(([n, c]) => { runClassic(n, c); instrument(RENDERS); });
 
 window.SAHTEN_READY = true;
+const explainPrice = window.sahtenWhy;
+window.sahtenWhy = (id, channel) => {
+  if (channel) return window.SAHTEN.pricing.open(id, channel);
+  if (document.body.classList.contains('role-no-costs')) return;
+  explainPrice(id);
+  const box = document.querySelector('#why-ov .why-box');
+  if (!box) return;
+  const edit = document.createElement('button'); edit.className = 'btn btn-primary'; edit.textContent = 'Ajustar precio y bloquear costos por canal';
+  edit.style.cssText = 'margin-top:16px;min-height:44px;white-space:normal';
+  edit.addEventListener('click', () => { document.getElementById('why-ov')?.remove(); window.SAHTEN.pricing.open(id); });
+  box.append(edit);
+};
 openFromHash();   // enlace directo a una sección (#/menuonline)
 }
 
 // En el navegador arranca enseguida (antes de DOMContentLoaded); en escritorio espera a que carguen los archivos y la configuración.
 initDesktop().then(() => {
   if (window.__SAHTEN_DESKTOP) window.SAHTEN.desktop = installDesktop({ apis: window.__SAHTEN_DESKTOP.apis, project, config: window.__SAHTEN_DESKTOP.config });
+  window.SAHTEN.interfaceScale = installInterfaceScale(window, isTauri() ? factor => window.__SAHTEN_DESKTOP.apis.webview.getCurrentWebview().setZoom(factor) : null);
   startLegacy();
   if (isTauri()) {                       // los scripts viejos esperan DOMContentLoaded / load: si ya pasaron, se repiten una vez
     document.dispatchEvent(new Event('DOMContentLoaded'));

@@ -20,6 +20,11 @@ async function notification({timestamp=NOW,id='999',signedId=id,secret,query=tru
 }
 
 describe('importes y preferencias de cada negocio',()=>{
+  it('conserva la revisión del catálogo privado sin aceptar una referencia suministrada por el comprador',()=>{
+    const published={...menu,products:[{...menu.products[0],priceRevision:'revision-del-catalogo'}]};
+    const q=quoteOrder(published,{...order,items:[{id:'p',qty:2,priceRevision:'inventada-por-el-cliente'}]});
+    expect(q.items[0].priceRevision).toBe('revision-del-catalogo');
+  });
   it('usa el catálogo del servidor y calcula envío, aunque el navegador altere precios',()=>{
     const q=quoteOrder(menu,{...order,source:'delivery',address:'Calle de prueba 123',lat:-34.6,lng:-58.4,shipping:0,total:1});
     expect(q).toMatchObject({subtotal:2000,shipping:200,total:2200});

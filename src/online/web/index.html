@@ -61,7 +61,7 @@ html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-be
 @media(prefers-reduced-motion:reduce){.ctile{transition:none}.ctile:hover{transform:none}}
 .snav{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--primary) 94%,transparent);backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;gap:4px;padding:10px 18px;overflow-x:auto;white-space:nowrap;box-shadow:0 1px 0 rgba(255,255,255,.08)}
 .snav b{font-family:var(--serif);font-weight:400;font-size:21px;margin-right:auto;letter-spacing:.2px}
-.snav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;opacity:.88;padding:7px 11px;border-radius:99px;transition:background .15s}.snav a:hover{background:rgba(255,255,255,.14);opacity:1}
+.snav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;opacity:.88;padding:7px 11px;border-radius:99px;transition:background .15s}.snav a[aria-current="page"]{background:rgba(255,255,255,.18);opacity:1}.snav a:hover{background:rgba(255,255,255,.14);opacity:1}
 .snav .pedido{background:var(--accent);font-weight:800;border:0;color:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;font-size:13.5px;margin-left:6px}
 .has-site .cats{top:calc(var(--navh,56px) - 1px)}
 .eyebrow{display:block;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
@@ -307,7 +307,7 @@ var MOD={
 var navResizeObserver=null;
 function site(){
   if(navResizeObserver){navResizeObserver.disconnect();navResizeObserver=null;}
-  var S=MENU.site,c=MENU.config||{},on=!!(S&&S.enabled&&c.enabled!==false&&!ORDER_PAGE),top=$('s-top'),rest=$('s-rest');
+  var S=MENU.site,c=MENU.config||{},on=!!(S&&S.enabled&&c.enabled!==false),top=$('s-top'),rest=$('s-rest');
   document.body.classList.toggle('has-site',on);
   if(ORDER_PAGE){$('oback').querySelector('a').href=new URL('./',document.baseURI).href;}
   if(!on){$('s-nav').innerHTML='';top.innerHTML='';rest.innerHTML='';var fab0=$('fab');if(fab0)fab0.remove();return;}
@@ -320,11 +320,12 @@ function site(){
     if(seen)after+=html;else before+=html;
   });
   links.sort(function(a,b){return order.indexOf(idOf(a[0]))-order.indexOf(idOf(b[0]));});
-  var navLinks=links.map(function(l){return '<a href="'+esc(l[0]==='#pedido'?orderHref():l[0])+'">'+l[1]+'</a>'}).join('');
+  var home=new URL('./',document.baseURI).href;
+  var navLinks=(ORDER_PAGE?'<a href="'+esc(home)+'">Inicio</a>':'')+links.map(function(l){var menu=l[0]==='#pedido',href=menu?orderHref():(ORDER_PAGE?home+l[0]:l[0]);return '<a href="'+esc(href)+'"'+(ORDER_PAGE&&menu?' aria-current="page"':'')+'>'+l[1]+'</a>'}).join('');
   var waLink=wa?'<a class="wa" href="'+esc(wa)+'" target="_blank" rel="noopener">' +waIcon()+'WhatsApp</a>':'';
-  $('s-nav').innerHTML='<nav class="snav" id="snav" aria-label="Secciones"><a class="nav-brand" href="'+'#'+'" aria-label="'+esc(name)+' · Inicio">'+(brandMark(name)||'<b>'+esc(name)+'</b>')+'</a><div class="snav-links">'+navLinks+'</div><details class="snav-menu"><summary aria-label="Desplegar secciones del sitio">Menú</summary><div>'+navLinks+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">' +waIcon()+'WhatsApp</a>':'')+'</div></details>'+waLink+(separateStore()?'<a class="pedido" href="'+esc(orderHref())+'">Pedir online →</a>':'<button class="pedido" onclick="openCart()">Pedido ('+count()+')</button>')+'</nav>';
+  $('s-nav').innerHTML='<nav class="snav" id="snav" aria-label="Secciones"><a class="nav-brand" href="'+esc(ORDER_PAGE?home:'#')+'" aria-label="'+esc(name)+' · Inicio">'+(brandMark(name)||'<b>'+esc(name)+'</b>')+'</a><div class="snav-links">'+navLinks+'</div><details class="snav-menu"><summary aria-label="Desplegar secciones del sitio">Secciones</summary><div>'+navLinks+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">' +waIcon()+'WhatsApp</a>':'')+'</div></details>'+waLink+(separateStore()?'<a class="pedido" href="'+esc(orderHref())+'">Pedir online →</a>':'<button class="pedido" onclick="openCart()">Mi pedido ('+count()+')</button>')+'</nav>';
 
-  top.innerHTML=before;rest.innerHTML=after;$('foot').textContent=hasContact?'':[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
+  top.innerHTML=ORDER_PAGE?'':before;rest.innerHTML=ORDER_PAGE?'':after;$('foot').textContent=hasContact?'':[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   var f=$('fab');if(wa&&!f){f=document.createElement('a');f.id='fab';f.className='fab';f.target='_blank';f.rel='noopener';f.setAttribute('aria-label','Escribinos por WhatsApp');f.innerHTML=waIcon();document.body.appendChild(f);}if(f)f.href=wa;
   var nv=$('snav');if(nv){var setH=function(){document.documentElement.style.setProperty('--navh',nv.offsetHeight+'px');};setH();if(window.ResizeObserver){navResizeObserver=new ResizeObserver(setH);navResizeObserver.observe(nv);}}
 }
@@ -335,7 +336,7 @@ function card(p){
   return '<div class="card"><div class="ph">'+img+'</div><div class="body">'+(p.category?'<div class="cat-l">'+esc(p.category)+'</div>':'')+'<div class="name">'+esc(p.name)+'</div>'+(p.description?'<div class="desc">'+esc(p.description)+'</div>':'')+(showP?'<div class="price">'+fmt(p.price)+'</div>':'')+
    (separateStore()?'<a class="add" href="'+esc(orderHref(p.category))+'">Ver en la tienda →</a>':n?'<div class="qty"><button data-dec="'+esc(p.id)+'" aria-label="Quitar">−</button><b>'+n+'</b><button data-inc="'+esc(p.id)+'" aria-label="Agregar">+</button></div>':'<button class="add" data-inc="'+esc(p.id)+'">Agregar</button>')+'</div></div>';
 }
-function lines(){return MENU.products.filter(function(p){return cart[p.id]}).map(function(p){return {id:p.id,name:p.name,qty:cart[p.id],unitPrice:p.price,lineTotal:p.price*cart[p.id]}});}
+function lines(){return MENU.products.filter(function(p){return cart[p.id]}).map(function(p){return {id:p.id,name:p.name,qty:cart[p.id],unitPrice:p.price,lineTotal:p.price*cart[p.id],priceRevision:p.priceRevision||null}});}
 function subtotal(){return lines().reduce(function(s,l){return s+l.lineTotal},0);}
 function count(){return lines().reduce(function(s,l){return s+l.qty},0);}
 function bar(){var n=count();$('bar').classList.toggle('on',n>0);$('bar-n').textContent=n+(n===1?' producto':' productos');$('bar-t').textContent=fmt(subtotal());}

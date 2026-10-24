@@ -1,4 +1,5 @@
 import { t } from '../i18n/index.js';
+import { lockedAmount } from './price-policy.js';
 
 // ═══════════════════════════════════════════════════════════
 // Gastos fijos (GF): total, quién los absorbe, GF por unidad
@@ -26,12 +27,13 @@ export function gfPerUnit(s) {
 }
 
 /** GF asignado a un producto (gfPctOverride: 100 = promedio, 150 = 50% más, 70 = 30% menos). */
-export function gfAssigned(s, p) {
+export function actualGfAssigned(s, p) {
   if (!absorbsGF(p)) return 0;
   const base = gfPerUnit(s);
   if (p.gfPctOverride != null) return base * (p.gfPctOverride / 100);
   return base;
 }
+export const gfAssigned = (s, p, channel = 'mostrador') => lockedAmount(p, channel, 'fixedCost', actualGfAssigned(s, p));
 
 /** Cuánto GF se recupera al mes (ponderado por volumen). */
 export const gfCoverageAmount = s => s.products.reduce((a, p) => a + gfAssigned(s, p) * (p.avgMes || 0), 0);

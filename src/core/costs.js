@@ -4,6 +4,8 @@
 
 // ── Unidades ─────────────────────────────────────────────
 /** Convierte un valor a unidad base (g o ml). */
+import { lockedAmount } from './price-policy.js';
+
 export function toBase(val, unit) {
   if (unit === 'kg') return val * 1000;
   if (unit === 'L') return val * 1000;
@@ -222,7 +224,8 @@ export function totalCost(s, p) {
 }
 
 /** Costo por unidad vendida: costo de la receta ÷ porciones. */
-export const costPerUnit = (s, p) => totalCost(s, p) / getPorc(p);
+export const actualCostPerUnit = (s, p) => totalCost(s, p) / getPorc(p);
+export const costPerUnit = (s, p, channel = 'mostrador') => lockedAmount(p, channel, 'variableCost', actualCostPerUnit(s, p));
 
 /** Recalcula receta_cost desde los ingredientes indexados (no pisa el costo manual si no hay ingredientes). */
 export function recalcRecetaCost(s, p) {

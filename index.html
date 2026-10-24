@@ -1069,13 +1069,16 @@
                   <textarea class="custom-input" id="cust-review-text" rows="3" maxlength="140" onchange="custUpdateReview()"></textarea>
                 </div>
                 <div style="display:grid;gap:8px;max-width:520px;margin-top:18px">
+                  <label class="custom-label" for="cust-receipt-printer">Perfil de impresora en este equipo</label>
+                  <select class="custom-input" id="cust-receipt-printer" onchange="custUpdateReceiptPrinter()"><option value="thermal">Térmica · ajuste manual</option><option value="it01">IT01 · 48 mm · calibración 88 %</option><option value="normal">Impresora normal · A4 / Carta</option></select>
                   <label class="custom-label" for="cust-receipt-paper">Papel de la comendera en este equipo</label>
                   <select class="custom-input" id="cust-receipt-paper" onchange="custUpdateReceiptPaper()">
-                    <option value="58">58 mm · contenido hasta 48 mm (IT01)</option>
+                    <option value="58">58 mm · contenido base 48 mm</option>
                     <option value="48">48 mm · contenido hasta 40 mm</option>
-                    <option value="80">80 mm · contenido hasta 72 mm</option>
+                    <option value="80">80 mm · contenido base 72 mm</option><option value="210">Normal · A4</option><option value="216">Normal · Carta</option>
                   </select>
-                  <p class="custom-hint">Se guarda solo en esta computadora. En el diálogo de impresión elegí el mismo ancho de papel, escala 100 %, sin encabezados ni pies del navegador.</p>
+                  <label class="custom-label" for="cust-receipt-calibration">Calibración horizontal (%)</label><input class="custom-input" id="cust-receipt-calibration" type="number" min="80" max="110" step="1" value="100" onchange="custUpdateReceiptPaper()"><p class="custom-hint" id="cust-receipt-width" role="status"></p>
+                  <p class="custom-hint">Se guarda solo en esta computadora. Elegí el mismo papel y escala 100 % en el diálogo de impresión, sin encabezados ni pies. El perfil no instala ni selecciona el controlador de Windows.</p>
                 </div>
                 <button class="btn" style="margin-top:12px" onclick="previewComandaFromSettings()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -1142,6 +1145,12 @@
                 </button>
               </div>
 
+              <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:grid;gap:12px;max-width:560px">
+                <label class="custom-label" for="interface-scale-number">Escala de interfaz en este equipo</label>
+                <div style="display:flex;gap:14px;align-items:center"><input id="interface-scale-range" type="range" min="80" max="125" step="1" value="100" data-interface-scale aria-label="Escala de interfaz" style="flex:1;min-width:0"><input class="custom-input" id="interface-scale-number" type="number" min="80" max="125" step="1" value="100" data-interface-scale style="width:90px"><span>%</span></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-interface-preset="85">85 %</button><button class="btn" data-interface-preset="90">90 %</button><button class="btn" data-interface-preset="100">Restablecer 100 %</button></div>
+                <p class="custom-hint" id="interface-scale-status" role="status">Se guarda solo en este equipo. No cambia la tienda ni el formato de impresión.</p>
+              </div>
               <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
                 <button class="btn" onclick="custReset()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>

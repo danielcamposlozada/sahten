@@ -124,6 +124,7 @@ let mostradorActivePaymentId = null;
 function _loadCustomers(){ try{ const r=localStorage.getItem('sahten_customers'); if(r) return JSON.parse(r); }catch(e){} return []; }
 function _saveCustomers(){ localStorage.setItem('sahten_customers',JSON.stringify(SAHTEN_CUSTOMERS)); }
 let SAHTEN_CUSTOMERS = _loadCustomers();
+window.sahtenCustomers = () => SAHTEN_CUSTOMERS;
 let mostradorActiveCustomerId = null; // null = Consumidor Final
 
 // Orders
@@ -281,7 +282,7 @@ function _renderMostradorGrid() {
       (p.star ? '<div class="most-product-star">⭐</div>' : '') +
       catBadge + '</div>' +
       '<div class="most-product-body"><div class="most-product-label"><div class="most-product-name">'+_esc(p.name)+'</div><div class="most-list-category">'+_esc(p.category||'')+'</div></div>' +
-      '<div class="most-product-price">$'+_fmt(price)+'</div></div>' +
+      '<div class="most-product-price">$'+_fmt(price)+SAHTEN.pricing.badge(p,'mostrador')+'</div></div>' +
       '<button class="most-product-add" aria-label="Agregar '+_esc(p.name)+' al pedido" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
   }).join('');
   visible.forEach(async p => {
@@ -491,7 +492,7 @@ function mostradorCheckout() {
   const order = {
     id: 'ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
     num: _nextOrderNum(),
-    items: t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
+    items: t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
     customerId: mostradorActiveCustomerId || null,
     customerName: cust ? cust.name : 'Consumidor Final',
     customerPhone: cust ? cust.phone || '' : '',
@@ -511,6 +512,7 @@ function mostradorCheckout() {
     orderType: mostradorOrderType,
     ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: del.zone ? del.zone.name : null } : {}),
   };
+  SAHTEN.pricing?.capture(order);
   SAHTEN_ORDERS.unshift(order); _saveOrders();
   // Reset cart
   mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
@@ -608,6 +610,7 @@ function openOrderDetail(orderId) {
     (o.paymentName?'<div style="font-size:12px;color:var(--muted);margin-top:6px">Pago: '+_esc(o.paymentName)+'</div>':'') +
     (o.paymentStatusLabel?'<div style="font-size:13px;font-weight:600;margin-top:8px" role="status">Mercado Pago: '+_esc(o.paymentStatusLabel)+'</div>':'') +
     '</div>' +
+    SAHTEN.pricing.orderDetail(o) +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">' +
     (o.stockDeducted?'<button class="btn" onclick="orderRestoreStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Devuelve al stock lo descontado por esta orden">↩ Revertir stock</button>':'<button class="btn" onclick="orderDeductStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Descuenta ingredientes y envases según las recetas">📦 Descontar stock</button>') +
     '<button class="btn btn-primary" onclick="printComanda(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir comanda</button>' +
@@ -692,12 +695,12 @@ function printComanda(orderId) {
   const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const itemsHtml = o.items.map(it => '<tr><td class="item-name">' + it.qty + '× ' + _esc(it.name) + '</td><td class="item-price">$' + _fmt(it.lineTotal) + '</td></tr>').join('');
   const orderNum = String(o.num).padStart(4,'0');
-  const paper = SAHTEN.receiptPaper.profile(SAHTEN.receiptPaper.width());
+  const paper = SAHTEN.receiptPaper.current();
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comanda #${orderNum}</title>
 <style>
 /* Ancho explícito: no depender del viewport que informa el controlador. */
-@page { margin: 0; size: auto; }
+@page { margin: 0; size: ${paper.pageSize || 'auto'}; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: #fff; }
 body { width: ${paper.contentMm}mm; max-width: ${paper.contentMm}mm; padding: 1mm; margin: 0;
@@ -758,6 +761,7 @@ ${SAHTEN.receiptReviews.footer(_custData)}
 function _renderClientesTab() {
   const c = document.getElementById('most-tab-content'); if (!c) return;
   c.innerHTML = '<div class="card"><div class="card-header"><div class="card-title">Clientes</div></div><div class="card-body">' +
+    '<button type="button" class="btn btn-primary" style="margin-bottom:14px;min-height:44px" onclick="SAHTEN.customersImport.open()">Importar CSV / Excel</button>' +
     '<div class="info-banner" style="margin-bottom:14px"><strong>Clientes:</strong> Datos básicos opcionales. Si no asignás un cliente al pedido, se usa "Consumidor Final" por defecto.</div>' +
     '<div class="disc-list" id="cust-list"></div>' +
     '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin:16px 0 8px">Agregar cliente</div>' +
@@ -775,8 +779,10 @@ function _renderCustList() {
   if (SAHTEN_CUSTOMERS.length === 0) { list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:14px;text-align:center">No hay clientes guardados. "Consumidor Final" se usa por defecto.</div>'; return; }
   list.innerHTML = SAHTEN_CUSTOMERS.map(c =>
     '<div class="disc-list-item" style="grid-template-columns:1fr auto"><div><div class="disc-list-item-name">'+_esc(c.name||'Sin nombre')+'</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.phone?'📱 '+_esc(c.phone):'')+(c.email?' · ✉️ '+_esc(c.email):'')+(c.address?' · 📍 '+_esc(c.address):'')+((!c.phone&&!c.email&&!c.address)?'Sin datos de contacto':'')+'</div></div>' +
-    '<div class="disc-list-item-actions">' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.phone?'📱 '+_esc(c.phone):'')+(c.email?' · ✉️ '+_esc(c.email):'')+(c.address?' · 📍 '+_esc(c.address):'')+((!c.phone&&!c.email&&!c.address)?'Sin datos de contacto':'')+'</div>' +
+    (c.importPhoneOriginal?'<p style="font-size:13px">Teléfono por revisar: '+_esc(c.importPhoneOriginal)+'</p>':'')+
+    (c.addresses?.length ? '<details style="font-size:13px;margin-top:8px"><summary>'+c.addresses.length+' dirección(es) guardada(s)</summary>'+c.addresses.map(a=>'<p>'+_esc(SAHTEN.core.addressText(a))+(a.isPrimary?' · Principal':'')+(a.reference?'<br>'+_esc(a.reference):'')+'</p>').join('')+'</details>' : '')+
+    '</div><div class="disc-list-item-actions">' +
     '<button class="disc-action-btn" title="Editar" onclick="custEdit(\''+c.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
     '<button class="disc-action-btn danger" title="Eliminar" onclick="custDeleteClient(\''+c.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>' +
     '</div></div>'
@@ -798,7 +804,15 @@ async function custEdit(id) {
   const name = await sahtenAsk('Nombre:', c.name); if(name===null) return;
   const phone = await sahtenAsk('Teléfono:', c.phone||''); if(phone===null) return;
   const email = await sahtenAsk('Email:', c.email||''); if(email===null) return;
-  const address = await sahtenAsk('Dirección:', c.address||''); if(address===null) return;
+  let address = await sahtenAsk('Dirección:', c.address||''); if(address===null) return;
+  if (c.addresses?.length && address.trim() !== (c.address || '')) {
+    const primary = c.addresses.find(a=>a.isPrimary) || c.addresses[0];
+    if (!address.trim()) {
+      c.addresses = c.addresses.filter(a=>a!==primary);
+      c.addresses.forEach((a,i)=>{a.isPrimary=i===0;});
+      address = c.addresses.length ? SAHTEN.core.addressText(c.addresses[0]) : '';
+    } else Object.assign(primary,{address:address.trim(),street:'',number:'',floor:'',city:'',source:'Manual'});
+  }
   c.name = name.trim()||c.name; c.phone = phone.trim(); c.email = email.trim(); c.address = address.trim();
   _saveCustomers(); _renderCustList();
 }

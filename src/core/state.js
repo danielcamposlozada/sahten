@@ -26,6 +26,8 @@ export function createState(init = {}) {
     gastosS: [],            // sueldos { id, name, amount }
     gfDiscHistory: [],      // legado: ya no afecta el GF
     gfMonths: {},           // control mensual { 'YYYY-MM': {...} }
+    saleCosts: {},          // desglose histórico privado por pedido
+    pricingQuotes: {},      // versiones privadas; al cliente se envía solo un identificador
     stock: {},              // { itemId: { actual, minimo, unit } }
     movements: [],
     globalCommission: 0,    // en % (antes: input #global-commission)

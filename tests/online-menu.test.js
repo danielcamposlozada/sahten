@@ -319,7 +319,7 @@ describe('sitio web: módulos (secciones) junto al menú', () => {
     expect(d.querySelectorAll('.faq details').length).toBe(1); expect(d.querySelector('#s-how')).toBeNull(); expect(d.querySelector('.band')).toBeNull();
     expect(d.querySelector('.sfoot a[href^="https://instagram.com/"]').getAttribute('href')).toBe('https://instagram.com/mi.localx');
     expect(d.querySelector('.fab').getAttribute('href')).toContain('wa.me/');
-    a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Pedido (1)');
+    a.click('[data-inc]'); expect(d.querySelector('.snav .pedido').textContent).toBe('Mi pedido (1)');
   });
   it('con sitio: el inicio muestra tarjetas por categoría y «Pedir online»; la carta completa se abre en su propia vista (#pedido) y «Atrás» vuelve', async () => {
     const m = menuCon(SITE); const a = await web({ menu: m }); const { d, w } = a;

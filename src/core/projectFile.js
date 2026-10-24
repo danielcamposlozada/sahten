@@ -18,6 +18,8 @@ export function stateFromSahten(input) {
     ingredients: clone(cat.ingredientes), packs: clone(cat.envases), products: clone(cat.productos),
     gastosOp: clone(costs.gastosOp), gastosS: clone(costs.gastosS), gfMonths: clone(costs.gfMonths),
     gfDiscHistory: clone(costs.gfDiscHistory || []),
+    saleCosts: clone(costs.saleCosts || {}),
+    pricingQuotes: clone(costs.pricingQuotes || {}),
     stock: clone(file.stock.items), movements: clone(file.stock.movements),
     globalCommission: +costs.globalCommission || 0, usdRate: +costs.usdRate || 1200, customTC: +costs.customTC || 0,
     projection: {
