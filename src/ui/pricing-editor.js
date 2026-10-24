@@ -27,24 +27,29 @@ export function installPricing(w = window) {
     return `<button type="button" class="price-fixed-badge" data-price-product="${esc(p.id)}" data-price-channel="${esc(fixed[0])}" onclick="event.stopPropagation();SAHTEN.pricing.open(this.dataset.priceProduct,this.dataset.priceChannel)" title="${esc(title)}" aria-label="${esc(title + ' de ' + p.name)}">Precio fijado</button>`;
   };
   let closeCurrent = null;
-  function open(id, initialChannel = 'mostrador') {
+  function open(id, initialChannel = 'mostrador', options = {}) {
     const product = state.products.find(p => p.id === id);
     if (!product || !canCost()) return;
-    closeCurrent?.();
+    closeCurrent?.('replace');
     const projectId = state.project.id;
-    const ov = d.createElement('div'); ov.className = 'pricing-overlay';
-    const box = d.createElement('section'); box.className = 'pricing-dialog'; box.tabIndex = -1;
-    box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'pricing-title');
-    ov.append(box); d.body.append(ov);
+    const embedded = !!options.host;
+    const ov = d.createElement('div'); ov.className = embedded ? 'pricing-embedded' : 'pricing-overlay';
+    const box = d.createElement('section'); box.className = 'pricing-dialog' + (embedded ? ' pricing-inline' : ''); box.tabIndex = -1;
+    box.setAttribute('role', embedded ? 'region' : 'dialog');
+    if (!embedded) box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-labelledby', 'pricing-title');
+    ov.append(box); (options.host || d.body).append(ov);
     const drafts = {}, originals = clone(product.pricingPolicies || {});
     const channels = state.channels.filter(c => c.enabled);
     if (!channels.length) channels.push({ id: 'mostrador', name: 'Mostrador' });
     let channel = channels.some(c => c.id === initialChannel) ? initialChannel : channels[0].id, reason = '';
     let release = () => {};
-    const close = () => { release(); ov.remove(); closeCurrent = null; };
+    const close = (reason = 'cancel') => { release(); ov.remove(); if (closeCurrent === close) closeCurrent = null; options.onClose?.(typeof reason === 'string' ? reason : 'cancel'); };
     closeCurrent = close;
-    release = bindModalFocus(box, { w, close, background: [d.querySelector('.app-shell'), d.querySelector('.main'), d.querySelector('.sidebar')] });
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    if (!embedded) {
+      release = bindModalFocus(box, { w, close, background: [d.querySelector('.app-shell'), d.querySelector('.main'), d.querySelector('.sidebar')] });
+      ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    }
     const draft = () => drafts[channel] ||= clone(policyFor(product, channel));
     const proposed = () => ({ ...product, pricingPolicies: { ...product.pricingPolicies, [channel]: draft() } });
     const automaticValues = () => ({
@@ -90,9 +95,18 @@ export function installPricing(w = window) {
         <label for="pricing-reason">Motivo del ajuste (opcional)</label><input id="pricing-reason" maxlength="300" value="${esc(reason)}" placeholder="Por ejemplo: nueva carta de precios">
         <details class="pricing-history"><summary>Historial de ajustes (${(product.pricingHistory || []).length})</summary>${[...(product.pricingHistory || [])].reverse().map(h => `<article><strong>${esc(state.channels.find(c => c.id === h.channel)?.name || h.channel)}</strong> · ${esc(new Date(h.effectiveAt).toLocaleString('es-AR'))}<p>${fields.map(([key, label]) => `${label}: ${h.before[key] == null ? 'automático' : key === 'commissionRate' ? (h.before[key] * 100).toFixed(2) + ' %' : money(h.before[key])} → ${h.after[key] == null ? 'automático' : key === 'commissionRate' ? (h.after[key] * 100).toFixed(2) + ' %' : money(h.after[key])}`).map(esc).join('<br>')}</p>${h.reason ? `<p>${esc(h.reason)}</p>` : ''}<small>${esc(h.actor)}</small></article>`).join('') || '<p>Todavía no hay ajustes guardados.</p>'}</details>
         <p class="pricing-help">Vigencia: desde que guardás. Las ventas anteriores conservan sus valores. El menú público requiere sincronizar o publicar.</p><p class="pricing-error" role="alert"></p><div class="pricing-actions"><div class="pricing-live-result" data-live-result aria-live="polite"></div><button type="button" data-close>Cancelar</button>${editable ? '<button type="button" class="btn-primary" data-save>Guardar ajustes</button>' : '<span>Consulta de solo lectura</span>'}</div>`;
+      if (embedded) {
+        const costs = d.createElement('details'); costs.className = 'pricing-inline-costs';
+        costs.innerHTML = '<summary>Costos y bloqueos</summary><div class="pricing-fields"></div>';
+        box.querySelectorAll('.pricing-secondary').forEach(field => costs.querySelector('.pricing-fields').append(field));
+        box.querySelector('.pricing-fields').append(costs);
+        const breakdown = d.createElement('details'); breakdown.className = 'pricing-help';
+        breakdown.innerHTML = '<summary>Desglose del resultado</summary>';
+        box.querySelector('.pricing-preview').before(breakdown); breakdown.append(box.querySelector('.pricing-preview'));
+      }
       box.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
       box.querySelector('#pricing-reason').addEventListener('input', e => { reason = e.target.value; });
-      box.querySelector('#pricing-channel').addEventListener('change', e => { channel = e.target.value; render(); });
+      box.querySelector('#pricing-channel').addEventListener('change', e => { channel = e.target.value; render(); options.onChannelChange?.(channel); });
       box.querySelectorAll('[data-lock]').forEach(b => b.addEventListener('click', () => {
         const key = b.dataset.lock; const focusKey = key;
         values[key] = values[key] == null ? automaticValues()[key] : null;
@@ -117,15 +131,18 @@ export function installPricing(w = window) {
           for (const [id, data] of Object.entries(drafts)) savePricePolicy(staged, id, data, { now, actor: d.body.dataset.role || 'local', reason: box.querySelector('#pricing-reason').value });
           e.target.disabled = true;
           product.pricingPolicies = staged.pricingPolicies; product.pricingHistory = staged.pricingHistory;
+          close('saved');
           w.SAHTEN.project.markDirty(); w.scheduleSave(); w.recalcAll();
           if (w.currentPanel === 'menuonline') w.renderMenuOnline?.();
           if (w.currentPanel === 'mostrador') w.renderMostrador();
-          close();
         } catch (err) { error.textContent = err.message; e.target.disabled = false; }
       });
       preview();
     }
     render();
+    return { close, product, projectId, get channel() { return channel; }, get dirty() {
+      return Object.entries(drafts).some(([id, values]) => fields.some(([key]) => (values[key] ?? null) !== (originals[id]?.[key] ?? null))) || !!reason.trim();
+    } };
   }
   d.addEventListener('click', e => {
     const b = e.target.closest('[data-price-product]');

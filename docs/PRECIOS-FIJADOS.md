@@ -2,6 +2,8 @@
 
 Desde el detalle «?» del precio se abre el cálculo y el botón **Ajustar precio y bloquear costos por canal**. La etiqueta **Precio fijado** abre directamente el editor. Seleccioná el canal antes de editar; los cambios de varios canales se guardan juntos.
 
+La próxima actualización agrega acceso directo **Editar precio** en las nuevas vistas del Menú. En el comparador se pulsa el importe del canal; la vista lateral incluye este mismo editor. El acceso anterior sigue en la tabla avanzada. Ver [MENU-VISTAS.md](MENU-VISTAS.md).
+
 Cada concepto tiene importe/campo numérico, slider y botón **Automático / Bloqueado**:
 
 - Precio: importe final exacto, sin redondeo extra, recargos ni descuentos automáticos del producto/canal. Los descuentos que se agreguen explícitamente al pedido siguen siendo un concepto separado.

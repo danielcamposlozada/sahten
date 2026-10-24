@@ -238,3 +238,9 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Chrome en vivo: dos opciones principales de idénticas dimensiones (251,5 × 132,89 px). Shawarma de Carne $16.000 → efectivo/transferencia $14.400, descuento $1.600; Mercado Pago $16.000 sin ese descuento. Transferencia conserva $14.400. Las acciones muestran «Enviar pedido» e «Ir a Mercado Pago» según corresponda. Navegación, fotos y pie presentes. Se limpió el producto de la comprobación sin enviar ninguna orden.
 - Mercado Pago productivo conectado a MARCELTKAMISSO (326689208), con conexiones ficticias deshabilitadas, tal como se verificó antes. No se realizó una compra con fondos reales: queda pendiente la comprobación supervisada del titular de un cobro productivo, su notificación y su orden recibida.
 - Reemplaza los estados anteriores de espera por la elección 36/37. Sahten 0.4.21 para Windows/Mac ya publicada, manifiesto del actualizador verificado y 521 pruebas aprobadas antes de publicar. Capturas, ZIP final y estado en `entregables/checkout-descuento/` del espacio de trabajo del dueño.
+
+### 24/10/2026 — Nuevas vistas internas del Menú preparadas
+
+- Por pedido del dueño se preparan lista esencial, lista con editor lateral, tarjetas y comparador de canales, con selector persistente y edición directa del precio. Se conserva la tabla avanzada. Guía: [MENU-VISTAS.md](MENU-VISTAS.md).
+- Se usa el mismo núcleo de precios, bloqueos e historial. Cambiar la vista no cambia el catálogo ni los precios; las comprobaciones en Chrome usan un negocio ficticio sin conexión al negocio real.
+- Todavía no se publicó una nueva versión de la app ni se cambió la web: se conserva el despliegue productivo y catálogo de 36 productos registrados arriba. Este trabajo no modifica Supabase ni Mercado Pago.

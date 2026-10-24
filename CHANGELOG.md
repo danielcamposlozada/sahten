@@ -2,6 +2,9 @@
 
 ## Sin publicar
 
+- **Menú con selector de vista**: lista esencial, lista con editor lateral, tarjetas y comparador de hasta tres canales; conserva la tabla avanzada. Recuerda la vista y canales elegidos en el equipo. Buscador por nombre/categoría, precios legibles, estado automático/fijado y edición directa por canal.
+- **Detalle a un clic**: pulsar el precio abre el editor con sus costos, candados e historial; el nombre abre la ficha del producto. El editor lateral comparte fórmula y guardado con el editor existente y avisa antes de descartar ajustes. Cobertura de gastos y proyección pasan a un bloque desplegable.
+
 ## 0.4.21
 
 - **Medios de pago visibles**: en la tienda, dos opciones grandes del mismo tamaño para efectivo/transferencia y Mercado Pago con su símbolo oficial, sin desplegable. En Mostrador, una opción compacta por medio real, incluidos QR y medios personalizados, sin botones duplicados. El total se actualiza al elegir y conserva los datos de contacto y entrega.

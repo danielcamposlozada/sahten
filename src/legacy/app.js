@@ -56,7 +56,7 @@ let selectedSet = new Set();
 let ventasView = 'grilla';
 let prodSortCol = null;  // column key being sorted
 let prodSortDir = 'asc'; // 'asc' | 'desc'
-let prodView    = 'tabla'; // 'tabla' | 'grilla'
+let prodView    = 'lista';
 let stockView = 'tabla';
 // ═══════════════════════════════════════════════════════════════
 // RECETAS INDEXADAS — importadas del Excel "Costos Recetas Mayo"
@@ -469,7 +469,7 @@ function showPanel(name) {
   const savedRepTab = _getSavedTab('reportes', 'sahten');
   const savedStockCat = _getSavedTab('stockCat', 'ingredientes');
   const savedStockView = _getSavedTab('stockView', 'tabla');
-  const savedProdView = _getSavedTab('prodView', 'tabla');
+  const savedProdView = SAHTEN.menuViews.normalize(_getSavedTab('prodView', 'lista'));
 
   // Restore view states
   if (name === 'stock') { stockView = savedStockView; if (typeof stockTabCat !== 'undefined') stockTabCat = savedStockCat; }
@@ -721,7 +721,8 @@ function renderProductos() {
   const sortMode = document.getElementById('prod-sort')?.value || '';
   // Filtrar productos "solo receta" — no deben aparecer en el Menú público
   let indices = PRODUCTS.map((p,i)=>i).filter(i => !PRODUCTS[i].recetaOnly);
-  if (search) indices = indices.filter(i => PRODUCTS[i].name.toLowerCase().includes(search));
+  const normalizeSearch = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (search) indices = indices.filter(i => normalizeSearch(PRODUCTS[i].name + ' ' + (PRODUCTS[i].category || '')).includes(normalizeSearch(search)));
   if (sortMode) {
     indices.sort((a,b) => {
       const pa=PRODUCTS[a], pb=PRODUCTS[b];
@@ -729,8 +730,8 @@ function renderProductos() {
       if (sortMode==='name-desc')  return pb.name.localeCompare(pa.name);
       if (sortMode==='cost-desc')  return costPerUnit(pb)-costPerUnit(pa);
       if (sortMode==='cost-asc')   return costPerUnit(pa)-costPerUnit(pb);
-      if (sortMode==='price-desc') return mostradorPrice(pb)-mostradorPrice(pa);
-      if (sortMode==='price-asc')  return mostradorPrice(pa)-mostradorPrice(pb);
+      if (sortMode==='price-desc') return SAHTEN.menuViews.price(pb)-SAHTEN.menuViews.price(pa);
+      if (sortMode==='price-asc')  return SAHTEN.menuViews.price(pa)-SAHTEN.menuViews.price(pb);
       if (sortMode==='tier')       return (pa.tier||'').localeCompare(pb.tier||'');
       return 0;
     });
@@ -743,7 +744,7 @@ function renderProductos() {
       let va=0, vb=0;
       if (prodSortCol==='cost')       { va=totalCost(pa);       vb=totalCost(pb); }
       if (prodSortCol==='cost_total') { va=costPerUnit(pa)+gfAssigned(pa); vb=costPerUnit(pb)+gfAssigned(pb); }
-      if (prodSortCol==='base')       { va=mostradorPrice(pa);  vb=mostradorPrice(pb); }
+      if (prodSortCol==='base')       { va=SAHTEN.menuViews.price(pa); vb=SAHTEN.menuViews.price(pb); }
       if (prodSortCol==='margin')     { va=marginPct(mostradorFinalPrice(pa),costPerUnit(pa)+gfAssigned(pa)); vb=marginPct(mostradorFinalPrice(pb),costPerUnit(pb)+gfAssigned(pb)); }
       if (prodSortCol==='star')       { va=pa.star?1:0; vb=pb.star?1:0; }
       return prodSortDir==='asc' ? va-vb : vb-va;
@@ -855,16 +856,8 @@ function renderProductos() {
     tbody.appendChild(tr);
   });
   applyColVisibility();
-  // Show/hide table vs grid
-  const tableCard = document.querySelector('#panel-productos .card');
-  const gridCont  = document.getElementById('prod-grid-container');
-  if (prodView === 'grilla') {
-    if (tableCard) tableCard.style.display = 'none';
-    if (gridCont)  { gridCont.style.display = 'block'; renderProdGrid(indices); }
-  } else {
-    if (tableCard) tableCard.style.display = '';
-    if (gridCont)  gridCont.style.display = 'none';
-  }
+  document.getElementById('prod-grid-container').style.display = 'none';
+  SAHTEN.menuViews.render(indices, prodView, selectedSet);
 }
 
 // ── PRODUCT VIEW / SORT HELPERS ─────────────────────────
@@ -879,10 +872,8 @@ function setProdSort(col) {
 }
 
 function setProdView(view) {
-  prodView = view;
-  if (typeof _saveTabState === 'function') _saveTabState('prodView', view);
-  document.getElementById('pv-tabla').className = 'ptb-view-btn' + (view === 'tabla' ? ' active' : '');
-  document.getElementById('pv-grilla').className = 'ptb-view-btn' + (view === 'grilla' ? ' active' : '');
+  prodView = SAHTEN.menuViews.normalize(view);
+  if (typeof _saveTabState === 'function') _saveTabState('prodView', prodView);
   renderProductos();
 }
 
