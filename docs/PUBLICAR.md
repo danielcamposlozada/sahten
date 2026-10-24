@@ -104,3 +104,5 @@ Activá **Abrir tienda en una página independiente** para que la carpeta incluy
 En este modo, los productos, precios y condiciones de venta siguen actualizándose desde la nube, mientras el diseño y contenido del sitio son los de la carpeta publicada. Los cambios visuales requieren volver a generar y subir la carpeta. La vista previa permanece dentro del editor y no envía pedidos reales.
 
 «Publicar menú» sigue exportando una carpeta o ZIP; no sube automáticamente al hosting. La publicación directa puede conectarse a un proveedor con autorización por negocio y estado de progreso, pero esa conexión aún no está implementada.
+
+La tienda independiente conserva la barra de navegación y el logo configurado. «Menú» identifica la página actual y «Mi pedido» muestra la cantidad de productos; los otros enlaces vuelven a las secciones de la portada. En pantallas chicas se agrupan en «Secciones».

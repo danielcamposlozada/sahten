@@ -22,6 +22,8 @@ const map = {
   TIERS: 'tiers', CHANNELS: 'channels', INGREDIENTES: 'ingredients', ENVASES: 'packs', PRODUCTS: 'products',
   GASTOS_OP: 'gastosOp', GASTOS_S: 'gastosS', GF_DISC_HISTORY: 'gfDiscHistory', GF_MONTHS: 'gfMonths',
   SAHTEN_PROJECT: 'project', STOCK: 'stock', MOVIMIENTOS: 'movements', customTC: 'customTC',
+  SAHTEN_SALE_COSTS: 'saleCosts',
+  SAHTEN_PRICING_QUOTES: 'pricingQuotes',
 };
 Object.entries(map).forEach(([g, k]) => accessor(g, () => state[k], v => { state[k] = v; }));
 const proj = { projChannelDist: 'channelDist', projChannelLocked: 'channelLocked', projManualMode: 'manualMode', projManualUnits: 'manualUnits' };
@@ -54,7 +56,7 @@ const bind = {
   packCost: p => C.packCost(S, p),
   comboCost: p => C.comboCost(S, p),
   totalCost: p => C.totalCost(S, p),
-  costPerUnit: p => C.costPerUnit(S, p),
+  costPerUnit: (p, ch) => C.costPerUnit(S, p, ch),
   recalcRecetaCost: p => C.recalcRecetaCost(S, p),
   // gastos fijos
   totalGFRaw: () => C.totalGFRaw(S),
@@ -65,7 +67,8 @@ const bind = {
   gfUnitsBase: () => C.gfUnitsBase(S),
   gfPerUnit: () => C.gfPerUnit(S),
   gfPerProduct: () => C.gfPerUnit(S),
-  gfAssigned: p => C.gfAssigned(S, p),
+  gfAssigned: (p, ch) => C.gfAssigned(S, p, ch),
+  channelCommission: (p, ch) => C.channelCommission(S, p, ch),
   gfCoverageAmount: () => C.gfCoverageAmount(S),
   gfCoveragePct: () => C.gfCoveragePct(S),
   gfNewId: () => C.gfNewId(),

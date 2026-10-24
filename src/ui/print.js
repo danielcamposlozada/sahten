@@ -9,7 +9,7 @@ export function printDocument(html, w = window, { paperWidthMm = 80 } = {}) {
     frame.id = 'sahten-print-frame';
     frame.title = 'Impresión de comanda';
     frame.setAttribute('aria-hidden', 'true');
-    const width = [48, 58, 80].includes(Number(paperWidthMm)) ? Number(paperWidthMm) : 80;
+    const width = [48, 58, 80, 210, 216].includes(Number(paperWidthMm)) ? Number(paperWidthMm) : 80;
     frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + width + 'mm;height:100vh;border:0;';
     let timer;
     const cleanup = () => { preparing.delete(w); w.clearTimeout(timer); frame.remove(); };

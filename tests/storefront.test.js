@@ -10,9 +10,9 @@ const fixture = () => ({
   products: [{ id: 'p', name: 'Fatay', category: 'Árabe / entradas', price: 100, star: true, image: 'img/p.jpg' }],
   site: { enabled: true, orderPage: true, seo: { url: 'https://local.example/tienda' }, images: {}, order: ['hero', 'favoritos', 'menu'], hero: { title: 'Nuestra cocina', cta: 'Pedir online', highlights: [] }, favoritos: { title: 'Favoritos' } },
 });
-async function render(menu, options = {}, url = 'https://local.example/tienda/') {
+async function render(menu, options = {}, url = 'https://local.example/tienda/', storage = {}) {
   const dom = new JSDOM(buildIndexHtml(menu, options), { url, runScripts: 'dangerously', beforeParse(w) {
-    w.scrollTo = () => {}; w.fetch = async () => ({ ok: false });
+    w.scrollTo = () => {}; w.fetch = async () => ({ ok: false });for(const [k,v] of Object.entries(storage))w.sessionStorage.setItem(k,v);
   } });
   await new Promise(r => setTimeout(r, 50)); return dom;
 }
@@ -89,4 +89,38 @@ it('la vista previa mantiene el recorrido dentro del editor, sin salir al hostin
   expect(dom.window.document.querySelector('#s-hero .btn1').getAttribute('href')).toBe('#pedido');
   expect(dom.window.document.querySelector('#s-fav [data-inc]')).not.toBeNull();
   dom.window.close();
+});
+it.each(['https://local.example/pedir/','https://local.example/tienda/pedir/'])('la tienda mantiene identidad, retorno a secciones y carrito en %s',async url=>{
+  const menu=fixture();menu.site.logo='data:image/png;base64,iVBORw0KGgo=';
+  menu.site.order.push('historia','contacto');menu.site.historia={title:'Historia',text:'Nuestra cocina'};menu.site.contacto={};
+  const dom=await render(menu,{storefront:true},url),d=dom.window.document,home=new URL('../',url).href;
+  expect(d.querySelector('#snav .nav-brand').href).toBe(home);
+  expect(d.querySelector('#snav .brand-mark')).not.toBeNull();
+  expect(d.querySelector('#snav a[aria-current=page]').textContent).toBe('Menú');
+  expect([...d.querySelectorAll('#snav a')].some(a=>a.href===home+'#s-about')).toBe(true);
+  expect(d.querySelector('#s-hero')).toBeNull();expect(d.querySelector('#s-about')).toBeNull();
+  d.querySelector('#grid [data-inc]').click();expect(d.querySelector('#snav .pedido').textContent).toBe('Mi pedido (1)');
+  d.querySelector('#snav .pedido').click();expect(d.querySelector('#ov').classList.contains('on')).toBe(true);dom.window.close();
+});
+it('el menú simple conserva catálogo al apagar el sitio completo',async()=>{
+  const menu=fixture();menu.site.enabled=false;
+  const dom=await render(menu,{storefront:true},'https://local.example/pedir/');
+  expect(dom.window.document.querySelector('#snav')).toBeNull();expect(dom.window.document.querySelector('#grid [data-inc]')).not.toBeNull();dom.window.close();
+});
+
+it('conserva cantidades al volver de otra sección, usa precios actuales y no comparte el carrito entre negocios',async()=>{
+ const m=fixture(),dom=await render(m,{storefront:true},'https://local.example/tienda/pedir/');
+ dom.window.document.querySelector('#grid [data-inc]').click();
+ const key=dom.window.sessionStorage.key(0),storage={[key]:dom.window.sessionStorage.getItem(key)};dom.window.close();
+ expect(JSON.stringify(storage)).not.toMatch(/customerName|unitPrice|phone/);
+ m.products[0].price=200;const back=await render(m,{storefront:true},'https://local.example/tienda/pedir/',storage);
+ expect(back.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (1)');expect(back.window.document.querySelector('#bar-t').textContent).toBe('$200');back.window.close();
+ const other=await render(m,{storefront:true},'https://local.example/otro/pedir/',storage);expect(other.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');other.window.close();
+});
+it('descarta carrito vencido o cantidades inválidas',async()=>{
+ const key='sahten-cart:/tienda/:Local de prueba';
+ for(const saved of [{at:Date.now()-86400001,items:{p:2}},{at:Date.now(),items:{p:-1}}]){
+  const dom=await render(fixture(),{storefront:true},'https://local.example/tienda/pedir/',{[key]:JSON.stringify(saved)});
+  expect(dom.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');dom.window.close();
+ }
 });

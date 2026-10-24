@@ -19,7 +19,7 @@
 
 export const SAHTEN_FORMAT = 'sahten';
 export const SCHEMA_VERSION = 2;
-export const APP_VERSION = '0.4.17';
+export const APP_VERSION = '0.4.18';
 
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -39,7 +39,7 @@ export function emptyFile(name = '') {
     project: name ? { name } : {},
     settings: { theme: null, customization: {} },
     catalog: { ingredientes: [], envases: [], productos: [], categorias: [], tiers: [] },
-    costs: { gastosOp: [], gastosS: [], gfMonths: {}, gfDiscHistory: [], globalCommission: 0, usdRate: 1200, customTC: 0 },
+    costs: { gastosOp: [], gastosS: [], gfMonths: {}, gfDiscHistory: [], globalCommission: 0, usdRate: 1200, customTC: 0, saleCosts: {}, pricingQuotes: {} },
     channels: [],
     stock: { items: {}, movements: [] },
     sales: { orders: [], customers: [], discounts: [], payments: [], reportData: {} },
@@ -69,6 +69,8 @@ export function legacyToFile(L, { modifiedAt = null, prev = null } = {}) {
     gastosOp: clone(arr(L.GASTOS_OP)), gastosS: clone(arr(L.GASTOS_S)), gfMonths: clone(obj(L.gfMonths)), gfDiscHistory: clone(arr(L.gfDiscHistory)),
     globalCommission: num(L.globalCommission, 0), usdRate: num(L.usdRate, 1200), customTC: num(L.customTC, 0),
   };
+  f.costs.saleCosts = clone(obj(L.saleCosts));
+  f.costs.pricingQuotes = clone(obj(L.pricingQuotes));
   if (num(L.gfDiscPct, 0) > 0) { f.costs.gfDiscPct = num(L.gfDiscPct, 0); f.costs.gfDiscNotes = L.gfDiscNotes || ''; } // descuento único de versiones viejas
   f.channels = clone(arr(L.CHANNELS));
   f.stock = { items: clone(obj(L.STOCK)), movements: clone(arr(L.MOVIMIENTOS)) };
@@ -99,6 +101,8 @@ export function fileToLegacy(file) {
     projChannelDist: clone(p.channelDist), projChannelLocked: clone(p.channelLocked), projManualMode: !!p.manualMode, projManualUnits: clone(p.manualUnits),
     projSnapshots: clone(p.snapshots), activeProjSnapshotId: p.activeId,
     gfDiscHistory: clone(c.gfDiscHistory), gfMonths: clone(c.gfMonths), project: clone(f.project),
+    ...(Object.keys(obj(c.saleCosts)).length ? { saleCosts: clone(c.saleCosts) } : {}),
+    ...(Object.keys(obj(c.pricingQuotes)).length ? { pricingQuotes: clone(c.pricingQuotes) } : {}),
     usdRate: String(c.usdRate), globalCommission: String(c.globalCommission), customTC: c.customTC,
     customers: clone(s.customers), orders: clone(s.orders), mostradorDiscounts: clone(s.discounts), mostradorPayments: clone(s.payments),
     reportData: clone(s.reportData), menuConfig: clone(f.online.menuConfig), tiendaConfig: clone(f.online.tiendaConfig),

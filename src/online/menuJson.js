@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // menu.json: lo que ve el menú publicado. Puro (sin DOM). Nunca incluye costos, márgenes ni datos de clientes.
 // ═══════════════════════════════════════════════════════════
-import { mostradorFinalPrice } from '../core/pricing.js';
+import { channelPriceWithDisc } from '../core/pricing.js';
 import { buildSite } from './site.js';
 
 export const MENU_VERSION = 1;
@@ -25,12 +25,13 @@ export function publishableProducts(s, config = {}) {
  * s = estado del núcleo; menuConfig / tienda = secciones online del proyecto; images = { productId: dataURL }.
  * Las imágenes no van adentro: cada una se publica como archivo en img/<id>.jpg y acá solo se referencia.
  */
-export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, now = new Date() } = {}) {
+export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, quoteIds = {}, now = new Date() } = {}) {
   const products = publishableProducts(s, menuConfig);
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
-    price: showPrices ? mostradorFinalPrice(s, p) : 0,
+    price: showPrices ? channelPriceWithDisc(s, p, 'mostrador') : 0,
+    ...(quoteIds[p.id] ? { priceRevision: quoteIds[p.id] } : {}),
     image: showImages && images[p.id] ? 'img/' + imageFileName(p.id) : null,
     tags: (p.tags || []).map(t => (typeof t === 'string' ? t : t.label || t.name || '')).filter(Boolean),
     description: txt(p.description, 220),

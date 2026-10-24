@@ -11,7 +11,7 @@ import { applyRole, installRoleGuard } from './roleView.js';
 import { createOnlineUi } from './ui.js';
 import { createUserMenu } from './userMenu.js';
 import { stateFromSahten } from '../core/projectFile.js';
-import { channelPrice } from '../core/index.js';
+import { channelPriceWithDisc, pricingQuoteIds } from '../core/index.js';
 import { emptyFile, serialize } from '../project/schema.js';
 import { onlinePublish } from './app.js';
 import { createPaymentUi } from '../payments/ui.js';
@@ -32,7 +32,7 @@ export function createOnline({ w = window, project, events }) {
     conn: new Proxy({}, { get: (_, k) => conn()[k], set: (_, k, v) => { conn()[k] = v; return true; }, ownKeys: () => Reflect.ownKeys(conn()), getOwnPropertyDescriptor: (_, k) => Object.getOwnPropertyDescriptor(conn(), k), deleteProperty: (_, k) => delete conn()[k] }),
     images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
-    orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: o => { w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
+    orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: o => { w.SAHTEN.pricing?.capture(o, { basis: 'from-quote' }); w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
     notify: n => { try { w.pushNotification({ type: 'delivery', source: 'delivery', title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
     refresh: () => { try { if (w.currentPanel === 'mostrador') w.renderMostrador(); } catch (e) { /* */ } },
     storage: config,
@@ -42,8 +42,8 @@ export function createOnline({ w = window, project, events }) {
   const role = () => config.get(roleKey(), null);
   const setRole = r => { config.set(roleKey(), r); applyRole(r, w); };
 
-  const priceMap = S => p => Object.fromEntries(S.channels.filter(c => c.enabled).map(c => [c.id, channelPrice(S, p, c.id)]));
-  const publicOf = file => { const S = stateFromSahten(file); return toPublicProject(file, priceMap(S)); };
+  const priceMap = S => p => Object.fromEntries(S.channels.filter(c => c.enabled).map(c => [c.id, channelPriceWithDisc(S, p, c.id)]));
+  const publicOf = file => { const S = stateFromSahten(file); return toPublicProject(file, priceMap(S), p => pricingQuoteIds(S, p)); };
 
   function ensureSync() {
     const cl = controller.client; if (!cl) { sync = null; return null; }

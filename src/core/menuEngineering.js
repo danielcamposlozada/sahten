@@ -10,6 +10,7 @@ import { channelNetReceivedWithDisc, mostradorFinalPrice } from './pricing.js';
 import { getProjUnits, initProjDist } from './projection.js';
 import { fmt } from './format.js';
 import { t } from '../i18n/index.js';
+import { isPriceFixed } from './price-policy.js';
 
 const QUADRANTS = ['star', 'horse', 'puzzle', 'dog'];
 export const QN = Object.fromEntries(QUADRANTS.map(q => [q, t('menu.q.' + q)]));
@@ -35,7 +36,7 @@ export function baseRows(s) {
     const nets = {}; chs.forEach(c => { const n = channelNetReceivedWithDisc(s, p, c.id); nets[c.id] = n == null ? 0 : n; });
     const w = c => tot > 0 ? (dist[c.id] || 0) / tot : (c.id === 'mostrador' ? 1 : 0);
     let net = chs.reduce((a, c) => a + w(c) * nets[c.id], 0); if (!net) net = mostradorFinalPrice(s, p);
-    const cost = costPerUnit(s, p); const price = mostradorFinalPrice(s, p);
+    const cost = chs.reduce((sum, c) => sum + w(c) * costPerUnit(s, p, c.id), 0); const price = mostradorFinalPrice(s, p);
     const ingByIng = {};
     (p.ingredients || []).forEach(r => { if (r.ingId) { const v = calcIngCost(s, r) / Math.max(0.01, getPorc(p)); ingByIng[r.ingId] = (ingByIng[r.ingId] || 0) + v; } });
     return { p, id: p.id, name: p.name, cat: p.category || t('menu.uncategorized'), star: !!p.star, units, nets, w: Object.fromEntries(chs.map(c => [c.id, w(c)])), net, cost, price, ingByIng, hasRecipe: (p.ingredients || []).some(r => r.ingId) || (p.receta_cost || 0) > 0 };
@@ -45,8 +46,18 @@ export function baseRows(s) {
 /** Simula un conjunto de cambios { priceAdj, ingCut, chSurcharge, unitAdj } con elasticidad E. */
 export function simulate(s, rows, ch, E) {
   ch = ch || {}; const pa = ch.priceAdj || {}, ic = ch.ingCut || {}, cs = ch.chSurcharge || {}, ua = ch.unitAdj || {};
+  const trial = { ...s, ingredients: s.ingredients.map(i => ic[i.id] == null ? i : { ...i, precioPkg: i.precioPkg * (1 - ic[i.id]) }), channels: s.channels.map(c => cs[c.id] == null ? c : { ...c, surcharge: cs[c.id] }) };
   const out = rows.map(r => {
     const f = pa[r.id] || 1;
+    if (Object.values(r.p.pricingPolicies || {}).some(v => Object.values(v).some(x => typeof x === 'number'))) {
+      const p = { ...r.p, priceAdj: (r.p.priceAdj || 1) * f };
+      trial.products = s.products.map(x => x.id === p.id ? p : x);
+      const net = Object.keys(r.w).reduce((a, cid) => a + r.w[cid] * (channelNetReceivedWithDisc(trial, p, cid) || 0), 0);
+      const cost = Object.keys(r.w).reduce((a, cid) => a + r.w[cid] * costPerUnit(trial, p, cid), 0);
+      const price = mostradorFinalPrice(trial, p), change = r.price ? price / r.price : 1;
+      const units = Math.max(0, r.units * (ua[r.id] || 1) * Math.max(0, 1 - (E || 0) * (change - 1)));
+      return { ...r, f: change, net, cost, price, units, cm: net - cost, fc: price > 0 ? cost / price : 0 };
+    }
     let net = 0;
     Object.keys(r.w).forEach(cid => {
       const c = s.channels.find(x => x.id === cid); let n = r.nets[cid];
@@ -173,7 +184,7 @@ export function acceptedChanges(S, sc) {
 
 /** Aplica los cambios al estado: ajuste de precio por producto, costo de ingredientes, recargo de canal y unidades manuales. */
 export function applyStrategyChanges(s, ch) {
-  Object.entries(ch.priceAdj).forEach(([id, f]) => { const p = s.products.find(x => x.id === id); if (p) p.priceAdj = Math.round((p.priceAdj || 1) * f * 1000) / 1000; });
+  Object.entries(ch.priceAdj).forEach(([id, f]) => { const p = s.products.find(x => x.id === id); if (p && s.channels.some(c => c.enabled && !isPriceFixed(p, c.id))) p.priceAdj = Math.round((p.priceAdj || 1) * f * 1000) / 1000; });
   Object.entries(ch.ingCut).forEach(([id, r]) => { const i = s.ingredients.find(x => x.id === id); if (i) i.precioPkg = Math.round(i.precioPkg * (1 - r) * 100) / 100; });
   Object.entries(ch.chSurcharge).forEach(([id, v]) => { const c = s.channels.find(x => x.id === id); if (c) c.surcharge = v; });
   if (Object.keys(ch.unitAdj).length) {

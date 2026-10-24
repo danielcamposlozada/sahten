@@ -41,10 +41,12 @@ body.role-readonly .panel input, body.role-readonly .panel select, body.role-rea
 `;
 
 /** Productos públicos: sin costos, con los precios ya calculados por canal. */
-export function toPublicProject(file, priceOf) {
+export function toPublicProject(file, priceOf, quoteOf = () => ({})) {
   const prods = file.catalog.productos.filter(p => !p.recetaOnly).map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star, avgMes: undefined, tier: undefined,
     fixedPrices: priceOf(p), porciones: 1, ingredients: [], packaging: [], combos: [],
+    priceFixedChannels: Object.entries(p.pricingPolicies || {}).filter(([, v]) => typeof v.price === 'number').map(([id]) => id),
+    quoteIds: quoteOf(p),
   }));
   return {
     project: { name: file.project.name, currencySymbol: file.project.currencySymbol, roundTo: file.project.roundTo, locale: file.project.locale, id: file.project.id },
@@ -66,7 +68,7 @@ export function applyPublicToFile(local, pub) {
   if (pub.cloudImagesVersion) { f.images = pub.images || {}; f.cloudImagesVersion = pub.cloudImagesVersion; }
   f.catalog = { ...f.catalog, productos: pub.products, ingredientes: [], envases: [], tiers: f.catalog.tiers || [], categorias: [...new Set(pub.products.map(p => p.category).filter(Boolean))] };
   f.channels = pub.channels;
-  f.costs = { ...f.costs, gastosOp: [], gastosS: [], gfMonths: {} };
+  f.costs = { ...f.costs, gastosOp: [], gastosS: [], gfMonths: {}, saleCosts: {}, pricingQuotes: {} };
   f.sales = { ...f.sales, discounts: pub.sales.discounts || [], payments: pub.sales.payments || [], customers: f.sales.customers.length ? f.sales.customers : (pub.sales.customers || []) };
   f.online = { ...f.online, menuConfig: pub.online.menuConfig || {}, tiendaConfig: pub.online.tiendaConfig || {} };
   return f;

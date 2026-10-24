@@ -35,7 +35,7 @@ export function quoteOrder(menu, input) {
     const p = menu.products.find(p => p.id === id);
     if (!p || menu.config?.hiddenProducts?.includes(id) || menu.config?.hiddenCategories?.includes(p.category)) fail('Un producto ya no está disponible. Actualizá el menú.', 409, 'menu_changed');
     const price = cents(p.price); if (!price) fail('Un producto no tiene precio de venta.', 409);
-    return { productId: id, name: text(p.name, 200), qty, unitPrice: price / 100, lineTotal: price * qty / 100 };
+    return { productId: id, name: text(p.name, 200), qty, unitPrice: price / 100, lineTotal: price * qty / 100, ...(p.priceRevision ? { priceRevision: text(p.priceRevision, 100) } : {}) };
   });
   const sub = items.reduce((n, i) => n + cents(i.lineTotal), 0);
   const source = input.source;

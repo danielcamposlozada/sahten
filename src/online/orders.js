@@ -19,6 +19,7 @@ export function toLocalOrder(row, existing = []) {
   const num = existing.reduce((m, o) => Math.max(m, o.num || 0), 0) + 1;
   const items = (Array.isArray(p.items) ? p.items : []).map(i => ({
     productId: i.productId || i.id, name: String(i.name || '?'), qty: +i.qty || 0, unitPrice: +i.unitPrice || 0, lineTotal: +i.lineTotal || (+i.unitPrice || 0) * (+i.qty || 0),
+    ...(typeof i.priceRevision === 'string' ? { priceRevision: i.priceRevision.slice(0, 100) } : {}),
   }));
   return {
     ...paymentFields(row),
