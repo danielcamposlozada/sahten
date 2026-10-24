@@ -4,7 +4,7 @@
 
 ## 0.4.18
 
-- **Navegación dentro de la tienda**: `/pedir/` conserva logo, secciones del sitio, Menú activo y botón «Mi pedido» con cantidad. Enlaces compatibles con subcarpetas y menú desplegable en pantallas chicas.
+- **Navegación dentro de la tienda**: `/pedir/` conserva logo, secciones del sitio, Menú activo y botón «Mi pedido» con cantidad. Enlaces compatibles con subcarpetas y menú desplegable en pantallas chicas. El carrito conserva cantidades al visitar otras secciones durante la sesión, sin guardar datos personales ni precios anteriores.
 - **Editor de precio más claro**: precio final destacado, costos secundarios y candados con estado explícito. La vista previa actualiza el campo automático al modificar costos y mantiene precio/resto visibles durante la edición; explica qué cambia al fijar un precio.
 
 - **Precio y costos bloqueados por producto/canal**: editor con importe, slider y bloqueo independiente del precio final, costo variable por unidad, gasto fijo asignado por unidad y porcentaje de comisión estimada. Etiqueta interna «Precio fijado», sin mostrarla a clientes. Historial con vigencia desde el guardado; los precios fijados reemplazan recargos y descuentos automáticos de ese producto/canal.

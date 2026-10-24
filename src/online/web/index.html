@@ -194,7 +194,7 @@ function load(){
   return fetch('menu.json',{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('menu.json '+r.status);return r.json();})
    .catch(function(){var el=$('menu-fallback');var d=null;try{d=JSON.parse(el.textContent.replace(/^\/\*.*?\*\//,''));}catch(e){}if(!d)throw new Error('No pudimos cargar el menú.');return d;})
    .then(function(base){
-     MENU=base; applyTheme();render();route(); var s=sb(); if(!s) return;
+     MENU=base; restoreCart();applyTheme();render();route(); var s=sb(); if(!s) return;
      var slug=slugFromLocation()||s.slug;
      var url=s.url+'/rest/v1/stores?select=id,menus(json)&'+(slug?'slug=eq.'+encodeURIComponent(slug):'id=eq.'+encodeURIComponent(s.storeId));
      return fetchLimited(url,{headers:sbHeaders()}).then(function(r){return r.ok?r.json():[];}).then(function(rows){
@@ -339,7 +339,12 @@ function card(p){
 function lines(){return MENU.products.filter(function(p){return cart[p.id]}).map(function(p){return {id:p.id,name:p.name,qty:cart[p.id],unitPrice:p.price,lineTotal:p.price*cart[p.id],priceRevision:p.priceRevision||null}});}
 function subtotal(){return lines().reduce(function(s,l){return s+l.lineTotal},0);}
 function count(){return lines().reduce(function(s,l){return s+l.qty},0);}
-function bar(){var n=count();$('bar').classList.toggle('on',n>0);$('bar-n').textContent=n+(n===1?' producto':' productos');$('bar-t').textContent=fmt(subtotal());}
+// Solo cantidades por producto: conserva el pedido al visitar otras secciones del sitio.
+function cartKey(){return 'sahten-cart:'+new URL('./',document.baseURI).pathname+':'+((sb()&&sb().storeId)||MENU.store.name||'menu');}
+function saveCart(){if(PREVIEW)return;try{sessionStorage.setItem(cartKey(),JSON.stringify({at:Date.now(),items:cart}));}catch(e){/* almacenamiento no disponible */}}
+function restoreCart(){if(PREVIEW)return;try{var saved=JSON.parse(sessionStorage.getItem(cartKey())||'null');if(!saved||Date.now()-saved.at>86400000||!Number.isFinite(saved.at))return;var next=Object.create(null);Object.keys(saved.items||{}).slice(0,500).forEach(function(id){var n=saved.items[id];if(id.length<=200&&Number.isInteger(n)&&n>0&&n<=999)next[id]=n;});cart=next;}catch(e){/* carrito vacío */}}
+
+function bar(){saveCart();var n=count();$('bar').classList.toggle('on',n>0);$('bar-n').textContent=n+(n===1?' producto':' productos');$('bar-t').textContent=fmt(subtotal());}
 function change(id,d){cart[id]=Math.max(0,(cart[id]||0)+d);if(!cart[id])delete cart[id];if(geo)ship=shippingFor(MENU.delivery,geo.lat,geo.lng,subtotal());render();if($('ov').classList.contains('on'))sheet();}
 
 // ── carrito / checkout ──

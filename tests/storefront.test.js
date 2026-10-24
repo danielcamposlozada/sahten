@@ -10,9 +10,9 @@ const fixture = () => ({
   products: [{ id: 'p', name: 'Fatay', category: 'Árabe / entradas', price: 100, star: true, image: 'img/p.jpg' }],
   site: { enabled: true, orderPage: true, seo: { url: 'https://local.example/tienda' }, images: {}, order: ['hero', 'favoritos', 'menu'], hero: { title: 'Nuestra cocina', cta: 'Pedir online', highlights: [] }, favoritos: { title: 'Favoritos' } },
 });
-async function render(menu, options = {}, url = 'https://local.example/tienda/') {
+async function render(menu, options = {}, url = 'https://local.example/tienda/', storage = {}) {
   const dom = new JSDOM(buildIndexHtml(menu, options), { url, runScripts: 'dangerously', beforeParse(w) {
-    w.scrollTo = () => {}; w.fetch = async () => ({ ok: false });
+    w.scrollTo = () => {}; w.fetch = async () => ({ ok: false });for(const [k,v] of Object.entries(storage))w.sessionStorage.setItem(k,v);
   } });
   await new Promise(r => setTimeout(r, 50)); return dom;
 }
@@ -106,4 +106,21 @@ it('el menú simple conserva catálogo al apagar el sitio completo',async()=>{
   const menu=fixture();menu.site.enabled=false;
   const dom=await render(menu,{storefront:true},'https://local.example/pedir/');
   expect(dom.window.document.querySelector('#snav')).toBeNull();expect(dom.window.document.querySelector('#grid [data-inc]')).not.toBeNull();dom.window.close();
+});
+
+it('conserva cantidades al volver de otra sección, usa precios actuales y no comparte el carrito entre negocios',async()=>{
+ const m=fixture(),dom=await render(m,{storefront:true},'https://local.example/tienda/pedir/');
+ dom.window.document.querySelector('#grid [data-inc]').click();
+ const key=dom.window.sessionStorage.key(0),storage={[key]:dom.window.sessionStorage.getItem(key)};dom.window.close();
+ expect(JSON.stringify(storage)).not.toMatch(/customerName|unitPrice|phone/);
+ m.products[0].price=200;const back=await render(m,{storefront:true},'https://local.example/tienda/pedir/',storage);
+ expect(back.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (1)');expect(back.window.document.querySelector('#bar-t').textContent).toBe('$200');back.window.close();
+ const other=await render(m,{storefront:true},'https://local.example/otro/pedir/',storage);expect(other.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');other.window.close();
+});
+it('descarta carrito vencido o cantidades inválidas',async()=>{
+ const key='sahten-cart:/tienda/:Local de prueba';
+ for(const saved of [{at:Date.now()-86400001,items:{p:2}},{at:Date.now(),items:{p:-1}}]){
+  const dom=await render(fixture(),{storefront:true},'https://local.example/tienda/pedir/',{[key]:JSON.stringify(saved)});
+  expect(dom.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');dom.window.close();
+ }
 });
