@@ -124,3 +124,23 @@ it('descarta carrito vencido o cantidades inválidas',async()=>{
   expect(dom.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');dom.window.close();
  }
 });
+
+it.each([true,false])('el pie configurado se conserva al comprar, independiente=%s, sin duplicar IDs ni mostrar la portada',async standalone=>{
+ const m=fixture();m.site.orderPage=standalone;m.site.order=['contacto','hero','menu'];
+ m.site.contacto={creditText:'Crédito de prueba',creditUrl:'https://example.com/'};
+ const dom=await render(m,{storefront:standalone},'https://local.example/tienda/'+(standalone?'pedir/':'')+'#pedido'),d=dom.window.document;
+ const footer=d.querySelector('#s-rest .sfoot');expect(footer).not.toBeNull();
+ expect(d.querySelectorAll('#s-contact')).toHaveLength(1);
+ expect(footer.textContent).toContain('Calle 123');expect(footer.querySelector('.by a').href).toBe('https://example.com/');
+ expect(footer.querySelector('a[href="menu/"]').href).toBe('https://local.example/tienda/menu/');
+ expect(d.querySelector('#foot').textContent).toBe('');
+ d.querySelector('#grid [data-inc]').click();expect(d.body.classList.contains('has-cart')).toBe(true);
+ d.querySelector('#grid [data-dec]').click();expect(d.body.classList.contains('has-cart')).toBe(false);
+ if(standalone){d.querySelector('#cats button:last-child').click();d.querySelector('#grid [data-inc]').click();expect(new URL(dom.window.location.href).pathname).toBe('/tienda/pedir/');expect(d.querySelector('#s-contact a[href="menu/"]').href).toBe('https://local.example/tienda/menu/');}
+ if(!standalone){dom.window.location.hash='';await new Promise(r=>setTimeout(r,20));expect(d.querySelectorAll('#s-contact')).toHaveLength(1);expect(d.querySelector('#s-top .sfoot')).not.toBeNull();}
+ dom.window.close();
+});
+it('respeta la sección contacto apagada y mantiene el pie simple sin inventar un crédito',async()=>{
+ const m=fixture(),dom=await render(m,{storefront:true},'https://local.example/tienda/pedir/');
+ expect(dom.window.document.querySelector('.sfoot')).toBeNull();expect(dom.window.document.querySelector('#foot').textContent).toContain('Calle 123');dom.window.close();
+});
