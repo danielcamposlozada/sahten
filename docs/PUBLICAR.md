@@ -1,7 +1,9 @@
 # Publicar tu menú online (gratis)
 
 Sahten genera una carpeta estática con tu menú. Los clientes arman el pedido y **te lo mandan por WhatsApp** con el detalle,
-el total, el envío calculado según la zona y sus datos. No hace falta servidor ni base de datos.
+el total, el envío calculado según la zona y sus datos. Ese modo básico funciona sin servidor.
+
+**Delivery geográfico v2:** al activarlo se necesitan Supabase, la migración y las funciones de validación/rutas. No confirma envíos por WhatsApp como respaldo si la ruta no se pudo validar. Actualizá la carpeta web y la app antes de activar la política nueva. Ver el orden de despliegue y aprobación en [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md#8-pendiente-antes-de-activarpublicar).
 
 ## 1. Generar la carpeta
 

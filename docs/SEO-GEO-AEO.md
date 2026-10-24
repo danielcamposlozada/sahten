@@ -238,3 +238,12 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Chrome en vivo: dos opciones principales de idénticas dimensiones (251,5 × 132,89 px). Shawarma de Carne $16.000 → efectivo/transferencia $14.400, descuento $1.600; Mercado Pago $16.000 sin ese descuento. Transferencia conserva $14.400. Las acciones muestran «Enviar pedido» e «Ir a Mercado Pago» según corresponda. Navegación, fotos y pie presentes. Se limpió el producto de la comprobación sin enviar ninguna orden.
 - Mercado Pago productivo conectado a MARCELTKAMISSO (326689208), con conexiones ficticias deshabilitadas, tal como se verificó antes. No se realizó una compra con fondos reales: queda pendiente la comprobación supervisada del titular de un cobro productivo, su notificación y su orden recibida.
 - Reemplaza los estados anteriores de espera por la elección 36/37. Sahten 0.4.21 para Windows/Mac ya publicada, manifiesto del actualizador verificado y 521 pruebas aprobadas antes de publicar. Capturas, ZIP final y estado en `entregables/checkout-descuento/` del espacio de trabajo del dueño.
+
+
+## Delivery geográfico y horario — preparado el 24/10/2026, sin publicar
+
+Rama `codex/delivery-geografico`. Se verificó el centro −34.5264314, −58.4818959 contra la dirección de la tabla y OSM way 369183696. El horario publicado coincide con la tabla: lun–jue 18–22, vie–sáb 18–23, domingo cerrado, zona Argentina. La integración nueva lo aplica a web, Mostrador y servidor, con excepciones por fecha editables; no se inventaron feriados, cortes anticipados ni pedidos programados.
+
+Zonas, tarifas y mínimos solicitados están precargados pero la política y sus promociones permanecen apagadas. No se modificaron Supabase, el hosting ni perfiles públicos. La lectura de `menu.json` encontró tarifas anteriores $1.500/$2.500/$6.000 y umbral global gratis $60.000; no confundir ese estado observado con las referencias históricas de la tabla o con la propuesta nueva. No anunciar los nuevos valores como activos.
+
+La tarjeta de beneficio se prepara con fondo verde claro tanto para tienda como para POS. Fórmula, tabla propuesta, pruebas, fuentes, requisitos del proveedor y orden de activación: [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md). Antes de publicación falta aprobar configuración, disponer de clave de rutas, aplicar migración, desplegar y verificar en ensayo, actualizar app/web y activar la revisión acordada.

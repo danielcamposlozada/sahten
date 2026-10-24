@@ -344,13 +344,15 @@ function _calcCartTotals() {
   const manual=MOSTRADOR_DISCOUNTS.find(d=>d.id===mostradorActiveDiscountId);
   const benefit=SAHTEN.paymentChoices.quote(subtotal,_mostSelectedPayment()?.method,_mostTiendaCfg().paymentBenefit,'mostrador',manual);
   const discount=benefit.amount, disc=discount?{name:benefit.label}:null;
-  let shipping=0, freeShip=false;
+  let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
-    if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
+    const cfg=_mostTiendaCfg();
+    if(cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
   const total=Math.round((subtotal-discount+shipping)*100)/100;
-  return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount};
+  return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount,deliveryQuote};
 }
 
 function _mostPaymentOptions() {
@@ -401,22 +403,25 @@ function _renderCartTotals() {
   const count=document.getElementById('most-cart-open-count'), total=document.getElementById('most-cart-open-total');
   if(count) count.textContent=t.items.reduce((s,it)=>s+it.qty,0);
   if(total) total.textContent='$'+_fmt(t.total);
-  f.innerHTML =
+  const totalsHtml =
     '<div class="most-cart-row"><span>Subtotal</span><span class="val">$'+_fmt(t.subtotal)+'</span></div>' +
     (t.discount > 0 ? '<div class="most-cart-row discount"><span>'+_esc(t.disc?.name||'Descuento')+'</span><span class="val">−$'+_fmt(t.discount)+'</span></div>' : '') +
     (t.shipping > 0 ? '<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(t.shipping)+'</span></div>' : (t.freeShip ? '<div class="most-cart-row"><span>Envío</span><span class="val" style="color:var(--green)">Gratis</span></div>' : '')) +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(t.total)+'</span></div>' +
-    '<button class="most-checkout" '+(t.items.length===0?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
+    '<button class="most-checkout" '+(t.items.length===0||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
+  if(f._totalsMarkup!==totalsHtml){f.innerHTML=totalsHtml;f._totalsMarkup=totalsHtml;}
+  const incentive=document.getElementById('most-delivery-incentive');
+  if(incentive){const html=SAHTEN.delivery.incentive(mostradorDelivery?.routeLoading?{status:'loading'}:t.deliveryQuote,{pos:true})+(mostradorDelivery?.routeError?'<p role="status">'+_esc(mostradorDelivery.routeError)+'</p><button class="btn" onclick="SAHTEN.delivery.refreshPos()">Reintentar ruta</button>':'')+(t.deliveryQuote?.status==='authorization_required'&&(!document.body.dataset.role||['owner','admin'].includes(document.body.dataset.role))?'<button class="btn" onclick="SAHTEN.delivery.authorizePos()">Autorizar esta entrega</button>':'');if(incentive._deliveryMarkup!==html){const open=incentive.querySelector('details')?.open;incentive.innerHTML=html;incentive._deliveryMarkup=html;if(open&&incentive.querySelector('details'))incentive.querySelector('details').open=true;}}
 }
 
 function mostradorSetDiscount(id) { mostradorActiveDiscountId = id || null; _renderCartTotals(); }
-function mostradorSetShipping(v) { if (v === '' || v == null) { mostradorShipManual = false; mostradorShipping = 0; } else { mostradorShipManual = true; mostradorShipping = parseFloat(v) || 0; } _renderCartTotals(); }
+function mostradorSetShipping(v) { if(_mostTiendaCfg().deliveryV2?.active)return; if (v === '' || v == null) { mostradorShipManual = false; mostradorShipping = 0; } else { mostradorShipManual = true; mostradorShipping = parseFloat(v) || 0; } _renderCartTotals(); }
 
 // ═══════════════════════════════════════════════════════════
 // DELIVERY LOCAL (v3) — dirección con sugerencias + zonas de envío
 // ═══════════════════════════════════════════════════════════
 function _mostTiendaCfg(){ try { return (typeof _getTiendaConfig==='function') ? _getTiendaConfig() : {}; } catch(e){ return {}; } }
-function _mostZoneFor(lat,lng){ return SAHTEN.core.zoneFor(_mostTiendaCfg(),lat,lng); } // la cuenta vive en src/core/delivery.js (la usa también el menú publicado)
+function _mostZoneFor(lat,lng){const cfg=_mostTiendaCfg();if(cfg.deliveryV2?.active){const p=cfg.deliveryV2,zone=p.zones.find(z=>SAHTEN.core.zoneContains(p.center,z,{lat,lng}));return {zone,distKm:SAHTEN.core.haversineKm(p.center.lat,p.center.lng,lat,lng),out:!zone};} return SAHTEN.core.zoneFor(cfg,lat,lng); }
 function _mostShortAddr(d){ const a=d.address||{}; const street=[a.road||a.pedestrian||a.footway, a.house_number].filter(Boolean).join(' '); const area=a.suburb||a.neighbourhood||a.city_district||a.town||a.city||a.village||''; return [street||(d.display_name||'').split(',').slice(0,2).join(','), area].filter(Boolean).join(', '); }
 function mostradorSetOrderType(t){ mostradorOrderType=t; if(t!=='delivery'){ mostradorShipManual=false; mostradorShipping=0; } _renderCartExtras(); _renderCartTotals(); if(t==='delivery' && !mostradorDelivery) setTimeout(()=>document.getElementById('most-addr-input')?.focus(),50); }
 function _mostDeliveryExtrasHtml(){
@@ -433,13 +438,13 @@ function _mostDeliveryExtrasHtml(){
     '<div style="position:relative"><input type="text" id="most-addr-input" aria-label="Dirección de entrega" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
     '<div id="most-addr-sugs" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:40;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden"></div></div>' +
     (d?'<input type="text" placeholder="Piso, depto, referencias (opcional)" value="'+_esc(d.note||'')+'" oninput="mostradorDelivery.note=this.value" style="width:100%;margin-top:6px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:12px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">':'') +
-    info +
-    (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">Podés mover el pin para ajustar la ubicación.</div>':'') +
+    (cfg.deliveryV2?.active?'<button class="btn" type="button" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar dirección</button><div id="most-delivery-incentive"></div>':info) +
+    (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">'+(cfg.deliveryV2?.active?'La ubicación corresponde a la dirección elegida en Buscar dirección.':'Podés mover el pin para ajustar la ubicación.')+'</div>':'') +
     '</div>' +
-    '<div class="most-extras-row"><label for="most-ship-val">Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>';
+    (cfg.deliveryV2?.active?'':'<div class="most-extras-row"><label for="most-ship-val">Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>');
   return h;
 }
-function _mostAddrInput(v){
+function _mostAddrInput(v,explicit=false){
   clearTimeout(_mostAddrTimer);
   // Una dirección editada nunca conserva la ubicación ni la tarifa automática de la anterior.
   mostradorDelivery={address:String(v||'').trim(),note:mostradorDelivery?.note||'',lat:null,lng:null,zone:null};
@@ -448,44 +453,47 @@ function _mostAddrInput(v){
   const shipping=document.getElementById('most-ship-val'); if(shipping&&!mostradorShipManual) shipping.placeholder='Indicá el envío manual';
   const box=document.getElementById('most-addr-sugs');
   if(box) box.style.display='none';
+  if(_mostTiendaCfg().deliveryV2?.active&&!explicit)return;
   if(!v || v.trim().length<4){ if(box) box.style.display='none'; return; }
   _mostAddrTimer=setTimeout(async()=>{
     const cfg=_mostTiendaCfg(); const lat=cfg.lat||-34.6037, lng=cfg.lng||-58.3816;
     const vb=[lng-0.3,lat+0.3,lng+0.3,lat-0.3].join(',');
     try{
-      const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&accept-language=es&viewbox='+vb+'&q='+encodeURIComponent(v));
-      const data=await r.json();
+      const data=cfg.deliveryV2?.active?await SAHTEN.delivery.client.geocode(v):await (await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&accept-language=es&viewbox='+vb+'&q='+encodeURIComponent(v))).json();
       if(document.getElementById('most-addr-input')?.value!==v) return;
       _mostAddrSugs=(data||[]).map(x=>({label:_mostShortAddr(x),full:x.display_name,lat:+x.lat,lng:+x.lon}));
       const b=document.getElementById('most-addr-sugs'); if(!b) return;
       if(!_mostAddrSugs.length){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Sin resultados. Probá con calle y altura.</div>'; b.style.display='block'; return; }
       b.innerHTML=_mostAddrSugs.map((s,i)=>{ const z=_mostZoneFor(s.lat,s.lng); return '<div onmousedown="_mostPickSug('+i+')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;align-items:center" onmouseover="this.style.background=\'var(--sand)\'" onmouseout="this.style.background=\'\'"><div style="min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(s.label)+'</div><div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(s.full)+'</div></div><div style="font-size:11px;font-weight:600;white-space:nowrap;color:'+(z.zone?'var(--green)':'var(--red)')+'">'+(z.zone?'$'+_fmt(z.zone.baseCost||0):'Fuera')+'</div></div>'; }).join('');
       b.style.display='block';
-    }catch(e){ const b=document.getElementById('most-addr-sugs'); if(b){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Sin conexión para buscar direcciones. Cargá el envío a mano.</div>'; b.style.display='block'; } }
+    }catch(e){ const b=document.getElementById('most-addr-sugs'); if(b){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">'+(cfg.deliveryV2?.active?'No se pudo buscar la dirección. Reintentá o elegí retiro.':'Sin conexión para buscar direcciones. Cargá el envío a mano.')+'</div>'; b.style.display='block'; } }
   },400);
 }
 function _mostSetDeliveryPoint(lat,lng,address){
   const z=_mostZoneFor(lat,lng);
   mostradorDelivery={ address: address!=null?address:(mostradorDelivery?mostradorDelivery.address:''), note: mostradorDelivery?mostradorDelivery.note:'', lat, lng, distKm:z.distKm, zone:z.zone, out:!!z.out };
   mostradorShipManual=false;
+  if(_mostTiendaCfg().deliveryV2?.active)SAHTEN.delivery.refreshPos();
 }
+window.mostradorDeliveryValue=()=>mostradorDelivery;
+function _mostDeliveryRequest(){const t=_calcCartTotals(),p=_mostSelectedPayment()||_mostPaymentOptions()[0];return {source:'delivery',items:t.items.map(it=>({productId:it.product.id,qty:it.qty})),lat:mostradorDelivery?.lat,lng:mostradorDelivery?.lng,address:mostradorDelivery?.address||'',customerName:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.name||'Consumidor Final',customerPhone:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.phone||'',paymentMethod:p?.method||'efectivo',total:t.total,deliveryQuoteId:mostradorDelivery?.quoteId,manualDiscountId:mostradorActiveDiscountId};}
 function _mostPickSug(i){ const s=_mostAddrSugs[i]; if(!s) return; _mostSetDeliveryPoint(s.lat,s.lng,s.label); _renderCartExtras(); _renderCartTotals(); }
 function _mostInitDelMap(){
   const el=document.getElementById('most-del-map'); if(!el||!mostradorDelivery) return;
   const go=()=>{
     const el2=document.getElementById('most-del-map'); if(!el2||!window.L) return;
     if(_mostDelMap){ try{_mostDelMap.remove();}catch(e){} _mostDelMap=null; }
-    const cfg=_mostTiendaCfg(); const sLat=cfg.lat||-34.6037, sLng=cfg.lng||-58.3816; const d=mostradorDelivery;
-    _mostDelMap=L.map(el2,{zoomControl:false,attributionControl:false});
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_mostDelMap);
-    (cfg.zones||[]).forEach(z=>{ const st={color:z.color||'#4CAF50',weight:1,fillOpacity:0.08}; if(z.type==='polygon'&&(z.points||[]).length>=3) L.polygon(z.points,st).addTo(_mostDelMap); else if(z.radiusKm) L.circle([sLat,sLng],{...st,radius:z.radiusKm*1000}).addTo(_mostDelMap); });
+    const cfg=_mostTiendaCfg(),modern=cfg.deliveryV2?.active,center=modern?cfg.deliveryV2.center:cfg; const sLat=center.lat??-34.6037, sLng=center.lng??-58.3816; const d=mostradorDelivery;
+    _mostDelMap=L.map(el2,{zoomControl:false,attributionControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(_mostDelMap);
+    if(modern)[...cfg.deliveryV2.zones].sort((a,b)=>b.radiusKm-a.radiusKm).forEach(z=>L.polygon(SAHTEN.delivery.rings(center,z),{color:z.color,weight:1,fillOpacity:z.enabled ? 0.08 : 0.02}).addTo(_mostDelMap));
+    else (cfg.zones||[]).forEach(z=>{ const st={color:z.color||'#4CAF50',weight:1,fillOpacity:0.08}; if(z.type==='polygon'&&(z.points||[]).length>=3) L.polygon(z.points,st).addTo(_mostDelMap); else if(z.radiusKm) L.circle([sLat,sLng],{...st,radius:z.radiusKm*1000}).addTo(_mostDelMap); });
     const storeIcon=L.divIcon({className:'',html:'<div style="width:22px;height:22px;border-radius:50%;background:#235328;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></div>',iconSize:[22,22],iconAnchor:[11,11]});
     const pinIcon=L.divIcon({className:'',html:'<svg width="30" height="40" viewBox="0 0 30 40" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));display:block"><path d="M15 1C7.3 1 1 7.2 1 14.9 1 25.4 15 39 15 39s14-13.6 14-24.1C29 7.2 22.7 1 15 1z" fill="#F28C00" stroke="#fff" stroke-width="2"/><circle cx="15" cy="15" r="5.5" fill="#fff"/></svg>',iconSize:[30,40],iconAnchor:[15,39]});
     L.marker([sLat,sLng],{icon:storeIcon,interactive:false}).addTo(_mostDelMap);
-    const mk=L.marker([d.lat,d.lng],{draggable:true,icon:pinIcon}).addTo(_mostDelMap);
+    const mk=L.marker([d.lat,d.lng],{draggable:!modern,icon:pinIcon}).addTo(_mostDelMap);
     const moveTo=async(ll)=>{ _mostSetDeliveryPoint(ll.lat,ll.lng,null); try{ const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&accept-language=es&lat='+ll.lat+'&lon='+ll.lng); const j=await r.json(); if(j) mostradorDelivery.address=_mostShortAddr(j); }catch(e){} _renderCartExtras(); _renderCartTotals(); };
-    mk.on('dragend',()=>moveTo(mk.getLatLng()));
-    _mostDelMap.on('click',e=>moveTo(e.latlng));
+    if(!modern){mk.on('dragend',()=>moveTo(mk.getLatLng()));_mostDelMap.on('click',e=>moveTo(e.latlng));}
     _mostDelMap.fitBounds(L.latLngBounds([[sLat,sLng],[d.lat,d.lng]]).pad(0.35));
     setTimeout(()=>_mostDelMap&&_mostDelMap.invalidateSize(),150);
   };
@@ -495,19 +503,29 @@ function _mostInitDelMap(){
 // ═══════════════════════════════════════════════════════════
 // CHECKOUT → CREATE ORDER
 // ═══════════════════════════════════════════════════════════
-function mostradorCheckout() {
+let _deliveryChecking=false;
+async function mostradorCheckout() {
+  if(_deliveryChecking)return;
   const t = _calcCartTotals(); if (t.items.length === 0) return;
+  const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
+  if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
+    if(!_mostSelectedPayment()){alert('Elegí un medio de pago antes de confirmar el delivery.');return;}
+    const fingerprint=JSON.stringify(_mostDeliveryRequest());_deliveryChecking=true;
+    try{const result=await SAHTEN.delivery.client.validate({..._mostDeliveryRequest(),localOrderId});if(fingerprint!==JSON.stringify(_mostDeliveryRequest())){alert('El pedido cambió durante la validación. Revisá el total y volvé a confirmar.');return;}deliverySnapshot=result.order.deliverySnapshot;deliveryValidationId=result.validationId;validatedItems=result.order.items;}
+    catch(e){alert(e.message);return;}finally{_deliveryChecking=false;}
+  }
   const benefitPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
   if(benefitPolicy.enabled&&benefitPolicy.channels.mostrador&&!_mostSelectedPayment()){alert('Elegí cómo se paga para calcular el descuento correcto.');document.querySelector('#most-cart-extras [data-payment-choice]')?.focus();return;}
   if (mostradorOrderType === 'delivery' && !(mostradorDelivery && mostradorDelivery.address)) { alert('Cargá la dirección de entrega para el delivery.'); document.getElementById('most-addr-input')?.focus(); return; }
-  if (mostradorOrderType === 'delivery' && !mostradorDelivery.zone && !mostradorShipManual) { alert('Seleccioná una dirección sugerida o indicá el envío manual (0 si es gratis).'); document.getElementById('most-ship-val')?.focus(); return; }
+  if (mostradorOrderType === 'delivery' && !_mostTiendaCfg().deliveryV2?.active && !mostradorDelivery.zone && !mostradorShipManual) { alert('Seleccioná una dirección sugerida o indicá el envío manual (0 si es gratis).'); document.getElementById('most-ship-val')?.focus(); return; }
   const pay = _mostSelectedPayment();
   const cust = SAHTEN_CUSTOMERS.find(c => c.id === mostradorActiveCustomerId);
   const del = mostradorOrderType === 'delivery' ? mostradorDelivery : null;
   const order = {
-    id: 'ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    id: localOrderId,
     num: _nextOrderNum(),
-    items: t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
+    items: validatedItems || t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
     customerId: mostradorActiveCustomerId || null,
     customerName: cust ? cust.name : 'Consumidor Final',
     customerPhone: cust ? cust.phone || '' : '',
@@ -518,6 +536,7 @@ function mostradorCheckout() {
     discount: t.discount,
     paymentDiscount: t.paymentDiscount,
     shipping: t.shipping,
+    ...(deliverySnapshot?{deliverySnapshot,deliveryValidationId}:{}),
     paymentId: mostradorActivePaymentId || null,
     paymentName: pay ? pay.label : null,
     paymentMethod: pay ? pay.method : null,
@@ -529,7 +548,7 @@ function mostradorCheckout() {
     updatedAt: new Date().toISOString(),
     notes: del && del.note ? del.note : '',
     orderType: mostradorOrderType,
-    ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: del.zone ? del.zone.name : null } : {}),
+    ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: deliverySnapshot?.effectiveZone?.name || (del.zone ? del.zone.name : null) } : {}),
   };
   SAHTEN.pricing?.capture(order);
   SAHTEN_ORDERS.unshift(order); _saveOrders();
@@ -625,6 +644,7 @@ function openOrderDetail(orderId) {
     '<div class="most-cart-row"><span>Subtotal</span><span class="val">$'+_fmt(o.subtotal)+'</span></div>' +
     (o.discountAmount>0?'<div class="most-cart-row discount"><span>'+_esc(o.discountName||'Descuento')+'</span><span class="val">−$'+_fmt(o.discountAmount)+'</span></div>':'') +
     (o.shipping>0?'<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(o.shipping)+'</span></div>':'') +
+    (o.deliverySnapshot?'<div class="most-cart-row"><span>'+_esc(o.deliverySnapshot.effectiveZone?.name||'Delivery')+' · '+Number(o.deliverySnapshot.routeKm).toFixed(2)+' km por calles</span><span class="val">Ahorro $'+_fmt(o.deliverySnapshot.discount)+'</span></div><div style="font-size:12px">Tarifa: '+_esc(o.deliverySnapshot.revision)+(o.deliverySnapshot.authorization?.approved?' · Autorizada: '+_esc(o.deliverySnapshot.authorization.reason):'')+'</div>':'') +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(o.total)+'</span></div>' +
     (o.paymentName?'<div style="font-size:12px;color:var(--muted);margin-top:6px">Pago: '+_esc(o.paymentName)+'</div>':'') +
     (o.paymentStatusLabel?'<div style="font-size:13px;font-weight:600;margin-top:8px" role="status">Mercado Pago: '+_esc(o.paymentStatusLabel)+'</div>':'') +
@@ -762,6 +782,7 @@ ${logoHtml}
 <tr class="sub-row"><td>Subtotal</td><td style="text-align:right">$${_fmt(o.subtotal)}</td></tr>
 ${o.discountAmount>0?'<tr class="sub-row"><td>'+_esc(o.discountName||'Dto.')+'</td><td style="text-align:right">−$'+_fmt(o.discountAmount)+'</td></tr>':''}
 ${o.shipping>0?'<tr class="sub-row"><td>Envío</td><td style="text-align:right">$'+_fmt(o.shipping)+'</td></tr>':''}
+${o.deliverySnapshot?.discount>0?'<tr class="sub-row"><td>Ahorro envío</td><td style="text-align:right">$'+_fmt(o.deliverySnapshot.discount)+'</td></tr>':''}
 <tr class="total-row"><td>TOTAL</td><td style="text-align:right">$${_fmt(o.total)}</td></tr>
 </table>
 ${o.paymentName?'<div class="sep"></div><div class="payment">Pago: '+_esc(o.paymentName)+'</div>':''}

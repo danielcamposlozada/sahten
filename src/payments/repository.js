@@ -1,4 +1,5 @@
 import { createPaymentService } from './service.js';
+import { createDeliveryRepository } from '../delivery/repository.js';
 
 /** Las claves de servicio solo existen en el proceso de Edge Functions. */
 export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) {
@@ -29,5 +30,6 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip)))].map(b => b.toString(16).padStart(2, '0')).join('');
   }
-  return createPaymentService({ repo, authenticate, originKey, fetchImpl, endpoint: url + '/functions/v1/sahten-payments' });
+  const delivery = createDeliveryRepository({url,serviceKey,anonKey,fetchImpl});
+  return createPaymentService({ repo, authenticate, originKey, fetchImpl, endpoint: url + '/functions/v1/sahten-payments', resolveDelivery:delivery.resolveDelivery });
 }

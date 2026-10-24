@@ -1,1 +1,14 @@
-{"compilerOptions":{"allowJs":true,"checkJs":false,"lib":["deno.ns","dom","esnext"]}}
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "lib": [
+      "deno.ns",
+      "dom",
+      "esnext"
+    ]
+  },
+  "imports": {
+    "polygon-clipping": "npm:polygon-clipping@0.15.7"
+  }
+}

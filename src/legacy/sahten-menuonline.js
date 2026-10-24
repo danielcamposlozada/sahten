@@ -457,6 +457,7 @@ function _onlineBoardCard(o, recent = false) {
     (o.notes ? '<div class="online-board-note"><strong>Indicaciones</strong> ' + _esc(o.notes) + '</div>' : '') +
     '<div class="online-board-payment' + (warning ? ' is-warning' : paid ? ' is-paid' : '') + '"><strong>' + _esc(payment) + '</strong><span>' + _esc(o.paymentName || o.paymentMethod || 'Medio de pago sin especificar') + '</span></div>' +
     (delivery ? '<span class="online-board-shipping">Incluye envío: $' + _fmtN(o.shipping) + '</span>' : '') +
+    (o.deliverySnapshot ? '<div>'+_esc(o.deliverySnapshot.effectiveZone?.name||'Delivery')+' · '+Number(o.deliverySnapshot.routeKm).toFixed(2)+' km por calles · Ahorro en envío: $'+_fmtN(o.deliverySnapshot.discount)+(o.deliverySnapshot.authorization?.approved?' · Autorización registrada':'')+'</div>' : '') +
     '<div class="online-board-actions">' +
       '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Abrir pedido completo</button>' +
       '<button type="button" class="online-board-detail" data-online-action="print" data-id="' + id + '" aria-label="Imprimir orden ' + _esc(num) + '">Imprimir</button></div></div></details>' +

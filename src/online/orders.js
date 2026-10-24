@@ -31,6 +31,7 @@ export function toLocalOrder(row, existing = []) {
     customerName: String(p.customerName || 'Cliente online'), customerPhone: String(p.customerPhone || ''), customerEmail: String(p.customerEmail || ''), customerId: null,
     address: String(p.address || ''), lat: p.lat ?? null, lng: p.lng ?? null, paymentMethod: p.paymentMethod || '', paymentId: null, paymentName: ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago',tarjeta:'Tarjeta'})[p.paymentMethod] || p.paymentMethod || '',
     items, subtotal: +p.subtotal || items.reduce((s, i) => s + i.lineTotal, 0), discount, discountAmount: discount, discountId: paymentDiscount ? 'cash-transfer' : null, discountName: paymentDiscount?.label || (discount ? String(p.discountName || 'Descuento').slice(0,150) : null), paymentDiscount,
+    ...(p.deliverySnapshot?.version===2?{deliverySnapshot:JSON.parse(JSON.stringify(p.deliverySnapshot))}:{}),
     shipping: +p.shipping || 0, _zoneName: p.zoneName || '', total: +p.total || 0, notes: String(p.notes || ''),
   };
 }

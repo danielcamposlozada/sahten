@@ -35,6 +35,7 @@ export function buildWaMessage(o, { symbol = '$', locale = 'es-AR' } = {}) {
   msg += '\nSubtotal: ' + m(o.subtotal) + '\n';
   if (Number(o.discountAmount ?? o.discount) > 0) msg += (o.discountName || 'Descuento') + ': −' + m(o.discountAmount ?? o.discount) + '\n';
   if (o.source === 'delivery') msg += 'Envío: ' + (o.shipping ? m(o.shipping) : 'Gratis') + '\n';
+  if (o.deliverySnapshot?.discount > 0) msg += 'Ahorro en envío: ' + m(o.deliverySnapshot.discount) + '\n';
   msg += '*Total: ' + m(o.total) + '*\n';
   msg += 'Pago: ' + (PAY_LABELS[o.paymentMethod] || o.paymentMethod || '') + '\n';
   if (o.notes) msg += 'Notas: ' + o.notes + '\n';

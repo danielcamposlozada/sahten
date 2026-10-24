@@ -38,7 +38,7 @@ function _defaultTiendaConfig() {
 function _getTiendaConfig() {
   const saved = _loadTiendaConfig();
   const def = _defaultTiendaConfig();
-  return { ...def, ...saved, paymentMethods:{...def.paymentMethods,...(saved.paymentMethods||{})}, bankDetails:{...def.bankDetails,...(saved.bankDetails||{})} };
+  return SAHTEN.delivery.prepare({ ...def, ...saved, paymentMethods:{...def.paymentMethods,...(saved.paymentMethods||{})}, bankDetails:{...def.bankDetails,...(saved.bankDetails||{})} },window.SAHTEN_SUPABASE?.slug||'');
 }
 
 // ─── Main render ─────────────────────────────────────
@@ -56,6 +56,8 @@ function _renderTiendaOnline() {
       <strong>Tienda Online:</strong> Configurá tu tienda web — zonas de delivery, métodos de pago y datos bancarios.
     </div>
 
+    <div id="delivery-admin"></div>
+    <div id="delivery-legacy" ${cfg.deliveryV2?'hidden':''}>
     <!-- UBICACIÓN + MAPA -->
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title" style="display:flex;align-items:center;gap:8px">
@@ -127,6 +129,7 @@ function _renderTiendaOnline() {
       </div>
     </div>
 
+    </div>
     <!-- MÉTODOS DE PAGO -->
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title" style="display:flex;align-items:center;gap:8px">
@@ -217,8 +220,9 @@ function _renderTiendaOnline() {
   `;
 
   SAHTEN.online.payments?.render();
+  SAHTEN.delivery.admin.mount();
   // Init Leaflet map after DOM is ready
-  setTimeout(_initLeafletMap, 100);
+  if(!cfg.deliveryV2)setTimeout(_initLeafletMap, 100);
 }
 
 // ─── Leaflet Map ─────────────────────────────────────

@@ -5,6 +5,7 @@ import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptPr
 import { installPricing } from './ui/pricing-editor.js';
 import { installInterfaceScale } from './ui/interface-scale.js';
 import { installCustomerImport } from './ui/customer-import.js';
+import { installDelivery } from './delivery/app.js';
 import { paymentBenefitPolicy, paymentDiscountQuote, paymentBenefitReport, savedPaymentDiscount } from './core/payment-benefit.js';
 import { paymentChoiceHtml } from './ui/payment-choice.js';
 import './styles/payment-choice.css';
@@ -95,6 +96,7 @@ window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;
+window.SAHTEN.delivery = installDelivery(window);
 registerModules();
 
 const RENDERS = ['showPanel', 'recalcAll', 'applyData', 'renderDashboard', 'renderProductos', 'renderProyeccion',
