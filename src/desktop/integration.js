@@ -84,6 +84,8 @@ export function installDesktop({ apis, project, config, w = window, now = () => 
       try { await fs.mkdir(base + sep + 'img', { recursive: true }); } catch (e) { /* ya existe */ }
       for (const f of files) {
         const target = base + sep + f.path.split('/').join(sep);
+        const parent = target.slice(0, target.lastIndexOf(sep));
+        await fs.mkdir(parent, { recursive: true });
         if (typeof f.data === 'string') await fs.writeTextFile(target, f.data); else await fs.writeFile(target, f.data);
       }
       return { dir: base, files: files.length };

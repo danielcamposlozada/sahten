@@ -249,3 +249,13 @@ Zonas, tarifas y mínimos solicitados están precargados pero la política y sus
 La tarjeta de beneficio se prepara con fondo verde claro tanto para tienda como para POS. Fórmula, tabla propuesta, pruebas, fuentes, requisitos del proveedor y orden de activación: [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md). Antes de publicación falta aprobar configuración, disponer de clave de rutas, aplicar migración, desplegar y verificar en ensayo, actualizar app/web y activar la revisión acordada.
 
 La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta para el repartidor (copiar, abrir Maps o compartir). Solo para deliveries aceptados; no expone pedidos en una URL pública ni cambia el sitio publicado, pagos, estado de envío o datos SEO. Sin API adicional de Google.
+
+
+### 24/10/2026 — Precios fijados publicados por solicitud del dueño
+
+- Se tomó el catálogo de la app instalada mediante su exportación y se sincronizó desde «Nube y usuarios → Sincronizar menú», con confirmación de sus 36 productos. No se modificaron precios, visibilidad ni ventas mediante SQL. Combo Fatay continúa oculto.
+- 28 precios cambiaron respecto de la carpeta anterior. Ejemplos: Shawarma de Carne $18.600, Shawarma de Pollo $16.000, Shawarma Mixto $16.100, Hummus $9.900 y Fatay $5.850. Los 36 precios de la nube coinciden con la exportación de la app.
+- Cloudflare Pages Production: despliegue **fa054caf-c8f5-4072-a5be-ecaad779dc0f**, éxito, 24/10/2026 20:04:58 UTC. Se publicaron 17 archivos, incluyendo respaldo menu.json y páginas de precios/SEO. Se preservaron logos, diseño, crédito, fotos públicas, conexión de pedidos y beneficio por pago del 10 %. La política delivery v2 continúa desactivada.
+- Chrome confirma los precios nuevos en la portada y tienda. No se enviaron compras ni se usaron fondos reales. Evidencias y ZIP en entregables/web-precios-2026-10-24/ del espacio del dueño.
+- La exportación nativa fallaba al escribir subcarpetas nuevas de páginas/marca. Se prepara corrección y actualización 0.4.22 con 583 pruebas aprobadas y compilación correcta; publicación de instaladores pendiente de completar.
+- El dueño pidió configurar el proveedor de rutas. OpenRouteService requiere acceso/clave de una cuenta; acceso con GitHub pendiente de autorización específica. La revisión automática rechazó aplicar la migración del delivery hasta obtener autorización explícita para tablas privadas y controles de pedidos/proyectos productivos; no se aplicó ni se desplegaron funciones.

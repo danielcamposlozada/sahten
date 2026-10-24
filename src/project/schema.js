@@ -20,7 +20,7 @@
 import { prepareDeliveryConfig } from '../delivery/preset.js';
 export const SAHTEN_FORMAT = 'sahten';
 export const SCHEMA_VERSION = 2;
-export const APP_VERSION = '0.4.21';
+export const APP_VERSION = '0.4.22';
 
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);

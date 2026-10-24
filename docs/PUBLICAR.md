@@ -108,3 +108,12 @@ En este modo, los productos, precios y condiciones de venta siguen actualizándo
 «Publicar menú» sigue exportando una carpeta o ZIP; no sube automáticamente al hosting. La publicación directa puede conectarse a un proveedor con autorización por negocio y estado de progreso, pero esa conexión aún no está implementada.
 
 La tienda independiente conserva la barra de navegación y el logo configurado. «Menú» identifica la página actual y «Mi pedido» muestra la cantidad de productos; los otros enlaces vuelven a las secciones de la portada. En pantallas chicas se agrupan en «Secciones».
+
+
+## Cambiar precios y sincronizar con la tienda publicada
+
+Con la conexión de Supabase configurada, guardar el proyecto no equivale a publicar el catálogo comercial. Para mostrar los precios/productos actuales en la tienda: **Nube y usuarios → Sincronizar menú**, revisar el proyecto y la cantidad de productos, y confirmar. Esperar «Completado». Al abrir o recargar la web, el catálogo se lee de la nube; la página que un cliente ya tiene abierta no recibe cambios instantáneos de precios.
+
+La carpeta de Cloudflare conserva una copia de respaldo y páginas estáticas para buscadores. Para actualizarlas, o cambiar diseño, logos, navegación o secciones, se vuelve a generar y subir la carpeta completa. La publicación automática de fotos sincroniza también el menú cuando cambia una foto; no es un publicador automático de cada edición de precio.
+
+Se puede añadir publicación directa por negocio: un botón que sincronice el catálogo, genere todos los archivos y los entregue a un servicio autenticado que publique en Cloudflare, con progreso, resultado y posibilidad de volver al despliegue anterior. La credencial de Cloudflare debe quedar en el servidor; no en el HTML, menu.json, proyecto compartido ni aplicación de caja. Esa conexión automática todavía no está implementada. Referencia oficial: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/

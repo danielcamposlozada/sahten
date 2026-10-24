@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+## 0.4.22
+
+- **Publicar menú en escritorio**: crea las subcarpetas de tienda, páginas informativas y marca antes de escribir sus archivos. Corrige la exportación incompleta que fallaba con «undefined».
+
 - **Ruta para el repartidor**: las tarjetas de delivery aceptado ofrecen icono de mapa, copiar ruta, abrir Google Maps y compartir. Destino ya cargado, GPS del repartidor como origen, sin clave de Google ni envío automático de mensajes. Disponible desde En preparación, Listo para enviar y En camino; fallback para equipos sin compartir/portapapeles y pedidos anteriores con dirección.
 
 - **Delivery geográfico preparado**: zonas 1–5 y excepcional exclusivas del proyecto Sahten, con tarifas, mínimos y beneficios precargados. Editor de anillos y polígonos con huecos, vértices, previsualización, reversión, pausas y validación de superposiciones. Activación y promociones inicialmente apagadas.
