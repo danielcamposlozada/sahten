@@ -136,6 +136,7 @@ it.each([true,false])('el pie configurado se conserva al comprar, independiente=
  expect(d.querySelector('#foot').textContent).toBe('');
  d.querySelector('#grid [data-inc]').click();expect(d.body.classList.contains('has-cart')).toBe(true);
  d.querySelector('#grid [data-dec]').click();expect(d.body.classList.contains('has-cart')).toBe(false);
+ if(standalone){d.querySelector('#cats button:last-child').click();d.querySelector('#grid [data-inc]').click();expect(new URL(dom.window.location.href).pathname).toBe('/tienda/pedir/');expect(d.querySelector('#s-contact a[href="menu/"]').href).toBe('https://local.example/tienda/menu/');}
  if(!standalone){dom.window.location.hash='';await new Promise(r=>setTimeout(r,20));expect(d.querySelectorAll('#s-contact')).toHaveLength(1);expect(d.querySelector('#s-top .sfoot')).not.toBeNull();}
  dom.window.close();
 });
