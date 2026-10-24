@@ -1,0 +1,90 @@
+/* Menú: cuatro vistas del mismo precio efectivo, sin miniaturizar las columnas. */
+#panel-productos [hidden]{display:none!important}
+.mpv-toolbar-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;min-width:0}
+#prod-view-select{min-width:180px;max-width:100%;font-size:14px;min-height:44px}
+#panel-productos .ptb-search-wrap{min-height:44px;border:1px solid var(--border);border-radius:8px;background:var(--card);padding-inline:10px;flex:1 1 210px;min-width:140px}
+#panel-productos .ptb-search{min-height:42px;font-size:15px;width:100%;min-width:0}
+.mpv-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:12px 0 18px;font-size:14px}
+.mpv-cost-summary{margin:8px 0 18px;color:var(--ink)}
+.mpv-cost-summary>summary{cursor:pointer;font-size:14px;font-weight:600;padding:10px 0;min-height:44px}
+.role-no-costs .mpv-cost-summary{display:none}
+.mpv-controls select{font:inherit;min-height:44px;padding:8px 30px 8px 10px;max-width:100%;color:var(--ink);background:var(--card);border:1px solid var(--border);border-radius:8px}
+#prod-price-count{color:var(--muted);margin-left:auto}
+#prod-view-feedback{color:var(--ink);flex-basis:100%}
+#prod-view-feedback:empty{display:none}
+#prod-compare-controls summary{cursor:pointer;padding:10px 0;font-weight:600;min-height:44px}
+#prod-compare-options{display:flex;gap:8px 16px;flex-wrap:wrap;padding-top:6px}
+#prod-compare-options label{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+#prod-compare-controls p{font-size:13px;color:var(--muted);margin:4px 0}
+#prod-views-container{max-width:100%;min-width:0;font-size:15px;line-height:1.45}
+#prod-views-container [data-menu-list],#prod-views-container [data-menu-editor]{min-width:0}
+#prod-views-container button{font-family:inherit;cursor:pointer}
+#prod-views-container :focus-visible,.mpv-controls :focus-visible,#prod-view-select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.mpv-list,.mpv-card,.mpv-master,.mpv-compare-wrap,[data-menu-editor]{border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--ink)}
+.mpv-list-head,.mpv-list-row{display:grid;grid-template-columns:26px minmax(160px,1fr) minmax(120px,.55fr) 120px 130px;align-items:center;gap:14px;padding:14px 18px}
+.mpv-list-head{font-size:13px;color:color-mix(in srgb,var(--ink) 78%,var(--card));background:var(--sand);border-radius:12px 12px 0 0}
+.mpv-list-row+.mpv-list-row{border-top:1px solid var(--border)}
+.mpv-check{display:flex;align-items:center;justify-content:center;min-height:44px}
+.mpv-check input,#prod-compare-options input{width:18px;height:18px;accent-color:var(--primary);cursor:pointer}
+.mpv-identity{display:flex;align-items:center;gap:10px;min-width:0}
+.mpv-identity>div{min-width:0}
+.mpv-identity>div:first-child:has(img){flex-shrink:0}
+.mpv-name{display:block;border:0;background:none;text-align:left;font:inherit;font-weight:700;color:var(--ink);padding:4px 0;min-height:32px;overflow-wrap:anywhere}
+.mpv-name:hover{text-decoration:underline;text-underline-offset:3px}
+.mpv-category{display:block;color:color-mix(in srgb,var(--ink) 78%,var(--card));font-size:13px;font-weight:400;margin-top:3px;overflow-wrap:anywhere}
+.mpv-price{font-size:19px;font-weight:750;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.mpv-status{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:color-mix(in srgb,var(--ink) 78%,var(--card))}
+.mpv-status svg{width:16px;height:16px;flex-shrink:0}
+.mpv-status.is-fixed{font-weight:700;color:var(--primary)}
+.mpv-edit{font:inherit;font-size:14px;font-weight:600;min-height:44px;border:1px solid var(--primary);background:var(--card);color:var(--primary);border-radius:8px;padding:9px 12px}
+.mpv-edit:hover{background:var(--sand)}
+.mpv-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
+.mpv-card{padding:18px;min-width:0}
+.mpv-card-heading{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start}
+.mpv-card-price{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0 16px}
+.mpv-card-price .mpv-price{font-size:26px}
+.mpv-card>.mpv-edit{width:100%}
+.mpv-breakdown{margin-top:16px;border-top:1px solid var(--border);padding-top:10px;font-size:14px}
+.mpv-breakdown summary{min-height:36px;cursor:pointer;font-weight:600}
+.mpv-breakdown dl{margin:8px 0 14px}
+.mpv-breakdown dl>div{display:flex;gap:12px;justify-content:space-between;margin:8px 0}
+.mpv-breakdown dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.mpv-compare{width:100%;min-width:0;max-width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+.mpv-compare th,.mpv-compare td{padding:14px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;overflow-wrap:anywhere}
+.mpv-compare thead th{font-size:14px;background:var(--sand);color:var(--ink);font-weight:600;white-space:normal;position:static;letter-spacing:normal}
+.mpv-compare thead th:first-child{border-radius:12px 0 0 0;width:31%}
+.mpv-compare thead th:last-child{border-radius:0 12px 0 0}
+.mpv-compare tbody tr:last-child>*{border-bottom:0}
+.mpv-compare-name{display:grid;grid-template-columns:22px minmax(0,1fr);gap:9px;align-items:center}
+.mpv-cell-price{display:flex;flex-direction:column;align-items:flex-start;gap:7px;width:100%;padding:10px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink);text-align:left;min-height:96px}
+.mpv-cell-price:hover{border-color:var(--primary);background:var(--sand)}
+.mpv-cell-price .mpv-price{font-size:18px}
+.mpv-cell-hint{color:var(--primary);font-size:13px;text-decoration:underline;text-underline-offset:3px}
+#prod-views-container[data-view=lateral]{display:grid;grid-template-columns:minmax(230px,.8fr) minmax(360px,1.2fr);gap:18px;align-items:start}
+.mpv-master-row{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.mpv-master-row:last-child{border-bottom:0}
+.mpv-master-row.is-selected{background:var(--sand);box-shadow:inset 3px 0 var(--primary)}
+.mpv-master-button{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;width:100%;border:0;color:var(--ink);background:none;padding:5px 0;min-height:56px;font:inherit}
+.mpv-master-button>span{min-width:0;overflow-wrap:anywhere}
+.mpv-master-button .mpv-price{font-size:17px}
+.mpv-master-button .mpv-status{margin-top:6px}
+.mpv-empty{padding:32px 20px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--muted)}
+.pricing-inline{width:100%;max-height:none;overflow:visible;box-shadow:none;border-radius:12px;padding:18px;--pricing-pad:18px;font-size:15px}
+.pricing-inline .pricing-heading,.pricing-inline .pricing-actions{position:static;margin:0;padding-top:0}
+.pricing-inline .pricing-heading h2{font-size:20px}
+.pricing-inline .pricing-primary .pricing-controls{grid-template-columns:1fr}
+.pricing-inline .pricing-primary input[type=number]{grid-row:1}
+.pricing-inline .pricing-secondary{grid-column:1/-1}
+.pricing-inline-costs{grid-column:1/-1;min-width:0}
+.pricing-inline-costs>summary{min-height:44px;padding:10px 0;cursor:pointer;font-weight:600}
+.pricing-inline .pricing-secondary p{min-height:0}
+.pricing-inline .pricing-controls{grid-template-columns:minmax(0,1fr) minmax(90px,130px)}
+.pricing-inline .pricing-actions{padding-top:14px;margin-top:16px}
+.pricing-inline .pricing-breakdown>div{flex-wrap:wrap;gap:2px 12px}
+.pricing-inline .pricing-breakdown dd{margin-left:auto}
+[data-theme="dark"] .mpv-status.is-fixed,[data-theme="dark"] .mpv-edit,[data-theme="dark"] .mpv-cell-hint{color:var(--ink)}
+[data-theme="dark"] .mpv-edit{border-color:color-mix(in srgb,var(--ink) 60%,var(--card))}
+[data-theme="dark"] .pricing-dialog .pricing-fields [data-mode=fixed] .pricing-mode{color:var(--ink)}
+@media(max-width:1150px){.mpv-list-head,.mpv-list-row{grid-template-columns:22px minmax(120px,1fr) 110px 106px 112px;gap:10px;padding:12px}.mpv-list-row .mpv-identity>[data-photo]{display:none}#prod-views-container[data-view=lateral]{grid-template-columns:minmax(200px,.8fr) minmax(320px,1.2fr);gap:12px}}
+@media(max-width:850px){#prod-views-container[data-view=lateral]{grid-template-columns:1fr}.mpv-master-button{justify-content:space-between}.mpv-list-head{display:none}.mpv-list-row{grid-template-columns:24px minmax(0,1fr) auto;gap:8px 12px;padding:14px}.mpv-list-row .mpv-check{grid-row:1/3}.mpv-list-row .mpv-status{grid-column:2;grid-row:2}.mpv-list-row>.mpv-edit{grid-column:3;grid-row:2}.mpv-list-row>.mpv-price{grid-column:3;grid-row:1;text-align:right}.mpv-compare .mpv-identity>div:first-child:has(img){display:none}.mpv-compare-name{grid-template-columns:1fr;gap:0}.mpv-compare-name>.mpv-check{justify-content:flex-start;min-height:30px}}
+@media(max-width:600px){#prod-view-select{min-width:0;width:100%}#panel-productos .panel-toolbar>.mpv-toolbar-label{width:100%}#panel-productos .ptb-search-wrap{flex-basis:100%}.mpv-controls{align-items:stretch;gap:10px}.mpv-controls>.mpv-toolbar-label{width:100%;flex-wrap:wrap}.mpv-controls select{flex:1;min-width:0}#prod-price-count{margin-left:0}.mpv-list-row{grid-template-columns:20px minmax(0,1fr);padding:12px}.mpv-list-row>.mpv-price{grid-column:2;grid-row:2;text-align:left}.mpv-list-row>.mpv-status{grid-column:2;grid-row:3}.mpv-list-row>.mpv-edit{grid-column:2;grid-row:4;justify-self:start}.mpv-list-row .mpv-check{grid-row:1}.mpv-compare thead{display:none}.mpv-compare,.mpv-compare tbody{display:block;width:100%}.mpv-compare tr{display:block;border-bottom:1px solid var(--border);padding:12px}.mpv-compare tbody tr:last-child{border-bottom:0}.mpv-compare tr>*{display:block;width:100%!important;border:0;padding:6px 0}.mpv-compare-name{grid-template-columns:24px minmax(0,1fr);gap:8px}.mpv-compare td[data-label]:before{content:attr(data-label);font-weight:600;font-size:14px;display:block;margin:6px 10px}.mpv-cell-price{min-height:44px;display:grid;grid-template-columns:1fr auto;gap:7px}.mpv-cell-price .mpv-status{grid-column:1}.mpv-cell-hint{grid-column:2;grid-row:1/3;align-self:center}.mpv-cell-price .mpv-price{font-size:19px}.pricing-inline{padding:14px;--pricing-pad:14px}.mpv-cards{grid-template-columns:1fr}}

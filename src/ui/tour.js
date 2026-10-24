@@ -6,7 +6,7 @@ export const TOUR_STEPS = [
   { panel: 'ingredientes', title: '1 · Ingredientes', text: 'Cargás cada insumo con el precio del paquete y su tamaño. Si el precio de la mozzarella sube, se actualizan todas las recetas y todos los precios.' },
   { panel: 'envases', title: '2 · Envases', text: 'Cajas, bolsas y servilletas. Se suman al costo de cada producto que los usa.' },
   { panel: 'costreceta', title: '3 · Costo de receta', text: 'Armás cada plato con ingredientes y envases. Sahten calcula el costo por porción, incluso con sub-recetas como la masa o la salsa.' },
-  { panel: 'productos', title: '4 · Menú y precios', text: 'Acá está el precio final de cada plato por canal. Elegís el nivel de ganancia (tier) y el precio sale solo. Tocá «¿De dónde sale este precio?» para ver el desglose.' },
+  { panel: 'productos', title: '4 · Menú y precios', text: 'Elegí lista, editor lateral, tarjetas o comparador desde Vista. Pulsá Editar precio o el importe de un canal para ver el desglose, fijar el precio y consultar su historial.' },
   { panel: 'stock', title: '5 · Stock', text: 'Cantidades actuales y mínimos de ingredientes y envases. Registrás ingresos, egresos y mermas, y te avisa cuando algo está por acabarse.' },
   { panel: 'gastos', title: '6 · Gastos fijos', text: 'Alquiler, sueldos, servicios. Se reparten en el precio de lo que vendés, así que ningún plato «se come» el gasto del local.' },
   { panel: 'ventas', title: '7 · Ventas + GF', text: 'Cuántas unidades vendés de cada plato por mes. Define cuánto gasto fijo absorbe cada unidad.' },

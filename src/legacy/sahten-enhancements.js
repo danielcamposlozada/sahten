@@ -80,9 +80,9 @@ const TUTORIAL_STEPS = {
     { sel: '#chart-gf', title: 'Gastos fijos', text: 'Distribución de gastos fijos entre operativos y sueldos. Este total se divide entre los productos.' },
   ],
   productos: [
-    { sel: '.panel-toolbar', title: 'Barra de herramientas', text: 'Buscá productos, cambiá la vista (tabla/grilla), ordená y filtrá. Usá "Columnas" para elegir qué datos mostrar.' },
-    { sel: '.ptb-actions', title: 'Acciones', text: '"Columnas" te permite personalizar las columnas visibles. "+ Agregar" crea un nuevo producto.' },
-    { sel: '#prod-tbody', title: 'Tabla de productos', text: 'Cada fila es un producto. Hacé clic en el nombre para ver el detalle completo con receta, costos y precios por canal.' },
+    { sel: '#prod-view-select', title: 'Elegí tu vista', text: 'Alterná entre lista esencial, editor lateral, tarjetas o comparador de canales. La tabla avanzada conserva las columnas anteriores.' },
+    { sel: '#prod-search', title: 'Encontrá un producto', text: 'Buscá por nombre o categoría, con o sin tildes. La búsqueda se conserva al cambiar de vista.' },
+    { sel: '.panel-toolbar', title: 'Precios y detalles', text: 'Editar precio abre el editor directamente. En el comparador, pulsá el precio de un canal. El nombre del producto abre su ficha. Agregar crea un producto nuevo.' },
   ],
   proyeccion: [
     { sel: '.info-banner', title: '¿Qué es la Proyección?', text: 'Estimá tus ingresos mensuales. Podés usar las unidades de Ventas+GF o ingresar valores manuales por producto.' },

@@ -3,6 +3,7 @@ import { printDocument } from './ui/print.js';
 import { installNotificationSound } from './ui/notification-sound.js';
 import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptProfile } from './ui/receipt-paper.js';
 import { installPricing } from './ui/pricing-editor.js';
+import { installMenuPriceViews } from './ui/menu-price-views.js';
 import { installInterfaceScale } from './ui/interface-scale.js';
 import { installCustomerImport } from './ui/customer-import.js';
 import { paymentBenefitPolicy, paymentDiscountQuote, paymentBenefitReport, savedPaymentDiscount } from './core/payment-benefit.js';
@@ -88,6 +89,7 @@ window.SAHTEN.notificationSound = installNotificationSound(window);
 window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth, current: currentReceiptProfile, save: saveReceiptProfile };
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN.pricing = installPricing(window);
+window.SAHTEN.menuViews = installMenuPriceViews(window);
 window.SAHTEN.customersImport = installCustomerImport(window);
 window.SAHTEN.paymentChoices = { policy: paymentBenefitPolicy, quote: paymentDiscountQuote, report: paymentBenefitReport, snapshot: savedPaymentDiscount, html: paymentChoiceHtml };
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)

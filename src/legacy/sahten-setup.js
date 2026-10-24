@@ -205,7 +205,7 @@ window.sahtenDismissChecklist=()=>{ SAHTEN_PROJECT.checklistDismissed=true; sche
 // ── Guía por sección (primera visita) ─────────────────────
 const GUIDE={
   dashboard:['Dashboard','Resumen del negocio: precios promedio, márgenes, gastos fijos y la proyección activa.','Se alimenta de todas las demás secciones.'],
-  productos:['Menú','Tus platos con su precio final por canal. Acá asignás el tier (nivel de precio) y los descuentos.','El costo viene de Costo de Receta; el gasto fijo, de Gastos Fijos y Ventas + GF.'],
+  productos:['Menú','Elegí una vista y un canal. Editar precio abre los candados, costos e historial; el nombre abre la ficha del producto.','La tabla avanzada conserva tiers y columnas. Los precios se calculan con las mismas reglas en todas las vistas.'],
   costreceta:['Costo de Receta','Armá cada receta con ingredientes, envases y sub-recetas. Calcula el costo por porción.','Usa los precios de Ingredientes y Envases.'],
   ingredientes:['Ingredientes','Cargá cada insumo con el precio y el tamaño del paquete. Si cambia un precio, se actualizan todas las recetas.','Alimenta Costo de Receta y Stock.'],
   envases:['Envases','Cajas, bolsas, servilletas y papelería, con su precio por paquete.','Se suman al costo de cada receta.'],
