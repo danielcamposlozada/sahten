@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+## 0.4.19
+
+- **Pie de la tienda restaurado**: la página de pedidos conserva contacto, horarios, enlaces y crédito configurados. También funciona en la vista de pedido de la portada, sin duplicar el pie; la barra del carrito no tapa el crédito.
+
 ## 0.4.18
 
 - **Navegación dentro de la tienda**: `/pedir/` conserva logo, secciones del sitio, Menú activo y botón «Mi pedido» con cantidad. Enlaces compatibles con subcarpetas y menú desplegable en pantallas chicas. El carrito conserva cantidades al visitar otras secciones durante la sesión, sin guardar datos personales ni precios anteriores.

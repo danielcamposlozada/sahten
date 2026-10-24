@@ -185,3 +185,9 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - El actualizador (`releases/latest/download/latest.json`) devuelve 0.4.18: Windows x64 (MSI y NSIS), macOS Apple Silicon e Intel, enlaces de la versión y firmas presentes. Instaladores `.exe`, `.msi` y `.dmg` disponibles por HTTPS (200). No se afirma validación criptográfica manual de las firmas ni instalación nativa en este equipo.
 - Incluye editor de precio con jerarquía y candados claros, costos por canal e historial privado, importación de clientes con direcciones, perfil IT01 y escala de interfaz. La web ya usa el despliegue `2e85becf`; no se escribieron datos en Supabase ni se activó Mercado Pago.
 - Pendientes reales: ticket físico IT01 y lectura de QR; zoom nativo de Windows; lista real de clientes; checkout con identificación de clientes. Para referencias de costos históricos en futuras compras de MP se requiere actualizar su función por separado; la próxima compra ficticia aprobada sigue pendiente.
+
+## Corrección del pie en la tienda (23/10/2026)
+- El dueño señaló que `/pedir/` no mostraba el pie. La plantilla omitía el bloque «Contacto y pie» al separar la compra de la portada.
+- Se restaura el mismo pie configurado: contacto, dirección, horarios, páginas informativas y crédito aprobado a Daniel J. Campos Lozada · Noamdan con enlace https://noamdan.com/. También se conserva en la vista de compra `#pedido`, sin duplicar IDs ni módulos de portada.
+- La barra del carrito dispone de espacio para no tapar el crédito; se evita dejar el espacio reservado del catálogo antes del pie cuando éste está presente. Se respeta el módulo de contacto desactivado en otros negocios.
+- Se prepara publicación de la web y actualización correctiva 0.4.19 del generador, dentro de la publicación de ambas solicitada por el dueño. No modifica datos del negocio, Supabase ni Mercado Pago. Estado de publicación se registra al verificar.
