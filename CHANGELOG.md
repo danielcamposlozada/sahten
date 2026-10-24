@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Ruta para el repartidor**: las tarjetas de delivery aceptado ofrecen icono de mapa, copiar ruta, abrir Google Maps y compartir. Destino ya cargado, GPS del repartidor como origen, sin clave de Google ni envío automático de mensajes. Disponible desde En preparación, Listo para enviar y En camino; fallback para equipos sin compartir/portapapeles y pedidos anteriores con dirección.
+
 - **Delivery geográfico preparado**: zonas 1–5 y excepcional exclusivas del proyecto Sahten, con tarifas, mínimos y beneficios precargados. Editor de anillos y polígonos con huecos, vértices, previsualización, reversión, pausas y validación de superposiciones. Activación y promociones inicialmente apagadas.
 - **Una sola cuenta para web y Mostrador**: ruta comprobada por calles, piso tarifario efectivo y autorización administrativa entre 8 y 8,5 km. Backend para todos los medios; el 10 % de pago sigue aplicándose solo a productos. Tarjeta de progreso compartida con fondo verde claro, ahorro y próximo beneficio.
 - **Delivery con horario**: horario argentino confirmado de Sahten, turnos y fechas especiales editables; web, POS y servidor bloquean nuevas entregas fuera de horario. Retiro y pedidos ya aceptados conservan su flujo.

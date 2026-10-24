@@ -1,3 +1,4 @@
+import { installDeliveryHandoff } from './handoff.js';
 import { createDeliveryClient } from './client.js';
 import { zoneRings } from './geometry.js';
 import { installDeliveryAdmin } from './admin.js';
@@ -8,7 +9,7 @@ import './incentive.css';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function installDelivery(w){
  const client=createDeliveryClient(w),admin=installDeliveryAdmin(w,client),d=w.document;
- const api={client,admin,rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
+ const api={client,admin,handoff:installDeliveryHandoff(w),rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
   async refreshPos(){const dest=w.mostradorDeliveryValue?.();if(!dest||dest.lat==null)return;const context=w.SAHTEN.project.session.id,body=w._mostDeliveryRequest();dest.routeLoading=true;dest.routeError='';w._renderCartTotals();
    try{const v=await client.quote(body);if(context!==w.SAHTEN.project.session.id||w.mostradorDeliveryValue()!==dest)return;Object.assign(dest,{route:v.route,quoteId:v.quoteId,authorization:v.authorization,serverOffset:Number.isFinite(v.serverNow)?v.serverNow-Date.now():0});}
    catch(e){if(w.mostradorDeliveryValue()===dest)dest.routeError=e.message;}

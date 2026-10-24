@@ -87,7 +87,7 @@ Pruebas nuevas de motor, geometría, horarios, servidor, base de datos local, ap
 
 Las rutas de verificación son muestras puntuales del demo de OSRM, no una dependencia de producción ni garantía para motos. Los casos de frontera usan fixtures deterministas claramente identificados. Las pruebas PostgreSQL usan PGlite y Vault ficticio, sin conectarse a Supabase real.
 
-Validación final: **575 pruebas en 60 archivos, todas aprobadas** (`npx vitest run`); compilación Vite/PWA, verificación de scripts clásicos y versiones 0.4.21, revisión de diferencias y comprobación Deno de ambas funciones correctas. `npm audit --omit=dev`: cero vulnerabilidades de producción. Deno avisa que ignora la opción heredada `allowJs` en pagos; no es un error de compilación. No se generaron instaladores ni se ejecutó una impresión física en esta tarea.
+Validación final: **582 pruebas en 61 archivos, todas aprobadas** (`npx vitest run`); compilación Vite/PWA, verificación de scripts clásicos y versiones 0.4.21, revisión de diferencias y comprobación Deno de ambas funciones correctas. `npm audit --omit=dev`: cero vulnerabilidades de producción. Deno avisa que ignora la opción heredada `allowJs` en pagos; no es un error de compilación. No se generaron instaladores ni se ejecutó una impresión física en esta tarea.
 
 Chrome real: web a 320 × 640; Mostrador a 1366 × 768 y 1024 × 600, sin desbordamiento horizontal en esas vistas y con total/cobro visibles. Tarjeta con fondo calculado `rgb(237,247,238)` y texto `rgb(24,61,36)`, también en tema oscuro. Las capturas usan una demo local con productos/contacto ficticios y rutas registradas; los escenarios de beneficio desactivan el horario únicamente en esa demo para poder revisarlos de día. La captura de cierre simula todos los días cerrados; el preset real conserva el horario confirmado.
 
@@ -118,3 +118,24 @@ Las otras evidencias locales (1366, oscuro y cierre) están en `entregables/deli
 8. Verificar la tienda publicada y los reportes con una operación autorizada. No activar producción, cambiar tarifas o publicar desde esta revisión sin aprobación.
 
 Los pedidos históricos conservan los importes originales. Cada nuevo delivery guarda revisión, zonas geográfica/efectiva, radio, recorrido, proveedor, tarifa base/cobrada/ahorro, validación horaria y autorización. Los reportes suman descuentos comerciales de envío por separado de gastos reales de reparto.
+
+
+## Ruta lista para el repartidor — ampliación del 24/10/2026
+
+En **Mostrador → Pedidos**, cada tarjeta de delivery aceptado ofrece, sin abrir detalles:
+
+- **Copiar ruta** (icono de mapa): copia un enlace universal de Google Maps para pegarlo al repartidor.
+- **Abrir en Maps**: abre ese destino directamente, también desde la app de escritorio.
+- **Compartir**: abre el selector de aplicaciones del equipo; el usuario elige WhatsApp u otro destino. Si no está disponible, copia el enlace. Si el portapapeles no permite copiar, muestra un campo seleccionado de solo lectura.
+
+En el flujo existente, la aceptación operativa corresponde a **En preparación**; los controles siguen en **Listo para enviar** y **En camino**. No aparecen en pendientes por aceptar, retiro, cancelados o completados. Copiar/compartir no marca enviado ni cambia pagos. La acción vuelve a comprobar el estado actual del pedido.
+
+El enlace usa las coordenadas guardadas como destino y omite un origen fijo para que Maps use el GPS del repartidor. `dir_action=navigate` solicita navegación: según dispositivo, ubicación y permisos, Maps inicia la navegación o muestra su vista previa; puede requerir pulsar “Iniciar”. No se necesita buscar la dirección. Pedidos anteriores sin coordenadas utilizan la dirección escrita, con un aviso para revisar el punto. Si falta todo destino, no se inventa una ubicación ni se ofrece una ruta vacía.
+
+El enlace y el mensaje de compartir no incluyen nombre, teléfono, importes, credenciales ni acceso al pedido. Solo el número identificador y el destino de reparto. La selección del destinatario y el envío los hace el operador; no se envían mensajes automáticamente ni se contrata otro servicio.
+
+[Documentación oficial de Maps URLs](https://developers.google.com/maps/documentation/urls/get-started): enlaces universales sin clave API. Se usa `travelmode=driving`; no se promete un perfil de moto en todos los países. La ruta que elija Google no reemplaza ni recalcula la tarifa/recorrido ya validados para la compra. Este acceso sirve también con delivery anterior y no requiere activar la política v2 ni conectar una API de Google.
+
+Pruebas: coordenadas exactas, dirección antigua codificada, destino ausente, estados permitidos, retiro/cancelación, portapapeles denegado, equipo sin compartir y cancelación voluntaria del selector; prueba con la app real verifica los controles en la tarjeta cerrada y que compartir no cambia el estado. No se envió información de un cliente real ni se contactó a un repartidor.
+
+![Tarjeta de delivery lista para el repartidor, ejemplo ficticio](delivery/tarjeta-ruta-repartidor.png)
