@@ -139,7 +139,7 @@ describe('catálogo del Mostrador', () => {
     details.querySelector('summary').click(); expect(details.open).toBe(true);
     w._renderDeliveryTab();
     expect(d.querySelector('.online-board-column details').open).toBe(true);
-    expect(d.querySelector('.online-board-column a').getAttribute('href')).toBe('tel:123456');
+    expect(d.querySelector('.online-board-column a[href^="tel:"]').getAttribute('href')).toBe('tel:123456');
     d.querySelector('.online-board-column [data-online-action="next"]').click();
     expect(w.eval('SAHTEN_ORDERS[0].status')).toBe('entregado');
     w.close();

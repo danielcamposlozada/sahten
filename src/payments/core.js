@@ -1,4 +1,5 @@
-import { shippingFor } from '../core/delivery.js';
+import { shippingFor, deliverySnapshot } from '../core/delivery.js';
+import { paymentDiscountQuote } from '../core/payment-benefit.js';
 
 export class PaymentError extends Error {
   constructor(message, status = 400, code = 'invalid_request') { super(message); this.status = status; this.code = code; }
@@ -18,9 +19,10 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
-  if (menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta Mercado Pago en este menú.', 409, 'not_configured');
+  const method=allowOtherPayments?input.paymentMethod:'mercadopago';
+  if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
   const currency = menu.store?.currency;
   if (currency && ((currency.symbol && currency.symbol !== '$') || (currency.locale && currency.locale !== 'es-AR') || (currency.code && currency.code !== 'ARS'))) fail('Esta conexión permite cobros en pesos argentinos.', 409);
   if (!Array.isArray(input.items) || !input.items.length || input.items.length > 100) fail('Revisá los productos del pedido.');
@@ -41,19 +43,23 @@ export function quoteOrder(menu, input) {
   const source = input.source;
   if (!['pickup', 'delivery'].includes(source)) fail('Elegí retiro o delivery.');
   const name = text(input.customerName, 100), phone = text(input.customerPhone, 40);
-  if (name.length < 2 || phone.replace(/\D/g, '').length < 7) fail('Completá nombre y teléfono.');
-  let shipping = 0, zoneName = '', lat = null, lng = null, address = 'Retiro en local';
+  if (validateCustomer && requireCustomer && (name.length < 2 || phone.replace(/\D/g, '').length < 7)) fail('Completá nombre y teléfono.');
+  const benefit=paymentDiscountQuote(sub/100,method,menu.payments?.benefit,salesChannel,commercialDiscount);
+  let shipping = 0, zoneName = '', lat = null, lng = null, address = 'Retiro en local', shippingQuote=null;
   if (source === 'delivery') {
     lat = Number(input.lat); lng = Number(input.lng); address = text(input.address, 300);
     if (input.lat == null || input.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || address.length < 5) fail('Seleccioná una dirección de entrega válida.');
-    const ship = shippingFor(menu.delivery, lat, lng, sub / 100);
-    if (!ship.ok) fail(ship.belowMin ? 'No se alcanza el pedido mínimo de delivery.' : 'La dirección está fuera de la zona de entrega.');
-    shipping = cents(ship.cost); zoneName = text(ship.zone.name, 100);
+    const modern=menu.delivery?.deliveryV2?.active;
+    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:!!benefit.paymentDiscount});
+    if (!ship.ok && validateCustomer) fail(ship.belowMin ? 'No se alcanza el pedido mínimo de delivery.' : ship.status==='closed'?'El delivery está fuera de horario. Volvé durante el horario de atención.':ship.status==='hours_invalid'?'El horario de delivery necesita revisión del local.':ship.status==='authorization_required'?'La entrega requiere autorización del local.':ship.status==='route_unverified'?'No se pudo validar la ruta por calles.':'La dirección está fuera de cobertura o no está habilitada para entrega.',409,ship.status||'invalid_delivery');
+    shippingQuote=ship;
+    shipping = cents(ship.cost); zoneName = text(ship.zone?.name, 100);
   }
-  const total = sub + shipping;
+  const total = sub - cents(benefit.amount) + shipping;
   if (!Number.isSafeInteger(total) || total < 1 || total > 10000000000) fail('Total fuera de rango.');
   return { source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
-    paymentMethod: 'mercadopago', items, subtotal: sub / 100, shipping: shipping / 100, discount: 0, total: total / 100, notes: text(input.notes, 1000) };
+    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), total: total / 100, notes: text(input.notes, 1000),
+    ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
 
 export function buildPreference(checkout, account, endpoint, now = Date.now()) {

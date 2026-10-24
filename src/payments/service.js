@@ -1,3 +1,4 @@
+import { deliveryHours } from '../core/delivery.js';
 import { PaymentError, fail, validUuid, siteUrl, quoteOrder, buildPreference, checkoutUrl, sha256, verifyWebhook, verifiedPayment, cents } from './core.js';
 
 const uuid = value => { if (!validUuid(value)) fail('Identificador no válido.'); return value; };
@@ -6,7 +7,7 @@ const publicAccount = a => a ? { connected: true, mode: a.mode, accountLabel: a.
 const publicCheckout = c => ({ id: c.id, mode: c.mode, paymentStatus: c.payment_status, total: c.order.total, currency: 'ARS', checkoutUrl: ['pending','rejected'].includes(c.payment_status) ? c.checkout_url : null });
 
 /** Inyectable para probar cuentas, importes, permisos y notificaciones sin hacer cobros. */
-export function createPaymentService({ repo, authenticate, fetchImpl = fetch, endpoint, now = () => Date.now(), originKey = async () => 'unknown' }) {
+export function createPaymentService({ repo, authenticate, fetchImpl = fetch, endpoint, now = () => Date.now(), originKey = async () => 'unknown', resolveDelivery = async () => ({}) }) {
   const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization,apikey,content-type', 'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' };
   const response = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
   async function mp(path, token, options = {}) {
@@ -74,9 +75,12 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         const active = await repo.run('account', { store_id: sid }); if (!active) fail('Este negocio todavía no habilitó Mercado Pago.', 409, 'not_configured');
         checkOrigin(req, active);
         await limited('store:' + sid, 120); await limited('buyer:' + sid + ':' + await originKey(req), 20);
-        const order = quoteOrder(await repo.menu(sid), body.order || {});
+        const menu=await repo.menu(sid);
+        if(body.order?.source==='delivery'&&menu.delivery?.deliveryV2?.active){const h=deliveryHours(menu.delivery.deliveryV2.hours,now());if(!h.open)fail('El delivery está fuera de horario. Volvé durante el horario de atención.',409,h.valid?'closed':'hours_invalid');}
+        const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
+        const order = quoteOrder(menu, body.order || {},{...delivery,now:now()});
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
-        const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify(order)), order });
+        const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
         if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
         const a = await repo.run('secrets', { account_id: c.account_id });
         try {

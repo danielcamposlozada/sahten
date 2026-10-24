@@ -1,0 +1,263 @@
+[
+  {
+    "query": "Plaza Vicente López, Vicente López, Buenos Aires, Argentina",
+    "label": "Plaza Vicente López y Planes, 1636, Olivos, Partido de Vicente López, Buenos Aires, 1636, Argentina",
+    "destination": {
+      "lat": -34.5089405,
+      "lng": -58.4861967
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "way",
+      "osmId": 79289272
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.5089405,
+        "lng": -58.4861967
+      },
+      "distanceMeters": 2338.6,
+      "durationSeconds": 230,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.4861967,-34.5089405?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Estación Olivos, Olivos, Buenos Aires, Argentina",
+    "label": "Estación Olivos, Comandante Leonardo Rosales, Olivos, Partido de Vicente López, Buenos Aires, 1637, Argentina",
+    "destination": {
+      "lat": -34.5088584,
+      "lng": -58.4807283
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "node",
+      "osmId": 4824048811
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.5088584,
+        "lng": -58.4807283
+      },
+      "distanceMeters": 2666.5,
+      "durationSeconds": 296.4,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.4807283,-34.5088584?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Estación La Lucila, La Lucila, Buenos Aires, Argentina",
+    "label": "Estación La Lucila, Doctor Guillermo Rawson, La Lucila, Partido de Vicente López, Buenos Aires, B1637, Argentina",
+    "destination": {
+      "lat": -34.4970518,
+      "lng": -58.4899007
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "node",
+      "osmId": 9987302214
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4970518,
+        "lng": -58.4899007
+      },
+      "distanceMeters": 3949.8,
+      "durationSeconds": 393.1,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.4899007,-34.4970518?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Estación Acassuso, Acassuso, Buenos Aires, Argentina",
+    "label": "Estacion de Bombeo Los Álamos, Camino de la Ribera, Barrio Parque Aguirre, Acassuso, Partido de San Isidro, Buenos Aires, B1642DBB, Argentina",
+    "destination": {
+      "lat": -34.4706311,
+      "lng": -58.4950925
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "way",
+      "osmId": 1505735946
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4706311,
+        "lng": -58.4950925
+      },
+      "distanceMeters": 8402.7,
+      "durationSeconds": 795.2,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.4950925,-34.4706311?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Estación San Isidro, San Isidro, Buenos Aires, Argentina",
+    "label": "Estación San Isidro, Avenida Centenario, Carreras, San Isidro, Partido de San Isidro, Buenos Aires, 1642, Argentina",
+    "destination": {
+      "lat": -34.4718788,
+      "lng": -58.5148042
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "node",
+      "osmId": 3922942202
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4718788,
+        "lng": -58.5148042
+      },
+      "distanceMeters": 6859.9,
+      "durationSeconds": 628,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.5148042,-34.4718788?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Martínez",
+    "label": "Martínez, Partido de San Isidro, Buenos Aires, Argentina",
+    "destination": {
+      "lat": -34.4939666,
+      "lng": -58.510352
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "relation",
+      "osmId": 1770849
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4939666,
+        "lng": -58.510352
+      },
+      "distanceMeters": 5524.9,
+      "durationSeconds": 515.2,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.510352,-34.4939666?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Acassuso",
+    "label": "Acassuso, Partido de San Isidro, Buenos Aires, Argentina",
+    "destination": {
+      "lat": -34.4763507,
+      "lng": -58.5044291
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "relation",
+      "osmId": 1877206
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4763507,
+        "lng": -58.5044291
+      },
+      "distanceMeters": 6423.6,
+      "durationSeconds": 644.7,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.5044291,-34.4763507?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "Hospital Bernardo Houssay",
+    "label": "Hospital Municipal Profesor Doctor Bernardo Houssay, 1757, Presidente Hipólito Yrigoyen, Florida, Partido de Vicente López, Buenos Aires, 1602, Argentina",
+    "destination": {
+      "lat": -34.5220891,
+      "lng": -58.4897272
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "way",
+      "osmId": 516880609
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.5220891,
+        "lng": -58.4897272
+      },
+      "distanceMeters": 1694.4,
+      "durationSeconds": 214.9,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.4897272,-34.5220891?overview=false&radiuses=100;100"
+    }
+  },
+  {
+    "query": "San Fernando",
+    "label": "San Fernando, Partido de San Fernando, Buenos Aires, Argentina",
+    "destination": {
+      "lat": -34.4471919,
+      "lng": -58.5701505
+    },
+    "geocoding": {
+      "provider": "Nominatim / OpenStreetMap",
+      "osmType": "relation",
+      "osmId": 1898365
+    },
+    "route": {
+      "provider": "OSRM public demo (verification only)",
+      "profile": "driving-car",
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4471919,
+        "lng": -58.5701505
+      },
+      "distanceMeters": 15015.5,
+      "durationSeconds": 923,
+      "validatedAt": "2026-10-24",
+      "source": "https://router.project-osrm.org/route/v1/driving/-58.4818959,-34.5264314;-58.5701505,-34.4471919?overview=false&radiuses=100;100"
+    }
+  }
+]

@@ -238,3 +238,24 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Chrome en vivo: dos opciones principales de idénticas dimensiones (251,5 × 132,89 px). Shawarma de Carne $16.000 → efectivo/transferencia $14.400, descuento $1.600; Mercado Pago $16.000 sin ese descuento. Transferencia conserva $14.400. Las acciones muestran «Enviar pedido» e «Ir a Mercado Pago» según corresponda. Navegación, fotos y pie presentes. Se limpió el producto de la comprobación sin enviar ninguna orden.
 - Mercado Pago productivo conectado a MARCELTKAMISSO (326689208), con conexiones ficticias deshabilitadas, tal como se verificó antes. No se realizó una compra con fondos reales: queda pendiente la comprobación supervisada del titular de un cobro productivo, su notificación y su orden recibida.
 - Reemplaza los estados anteriores de espera por la elección 36/37. Sahten 0.4.21 para Windows/Mac ya publicada, manifiesto del actualizador verificado y 521 pruebas aprobadas antes de publicar. Capturas, ZIP final y estado en `entregables/checkout-descuento/` del espacio de trabajo del dueño.
+
+
+## Delivery geográfico y horario — preparado el 24/10/2026, sin publicar
+
+Rama `codex/delivery-geografico`. Se verificó el centro −34.5264314, −58.4818959 contra la dirección de la tabla y OSM way 369183696. El horario publicado coincide con la tabla: lun–jue 18–22, vie–sáb 18–23, domingo cerrado, zona Argentina. La integración nueva lo aplica a web, Mostrador y servidor, con excepciones por fecha editables; no se inventaron feriados, cortes anticipados ni pedidos programados.
+
+Zonas, tarifas y mínimos solicitados están precargados pero la política y sus promociones permanecen apagadas. No se modificaron Supabase, el hosting ni perfiles públicos. La lectura de `menu.json` encontró tarifas anteriores $1.500/$2.500/$6.000 y umbral global gratis $60.000; no confundir ese estado observado con las referencias históricas de la tabla o con la propuesta nueva. No anunciar los nuevos valores como activos.
+
+La tarjeta de beneficio se prepara con fondo verde claro tanto para tienda como para POS. Fórmula, tabla propuesta, pruebas, fuentes, requisitos del proveedor y orden de activación: [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md). Antes de publicación falta aprobar configuración, disponer de clave de rutas, aplicar migración, desplegar y verificar en ensayo, actualizar app/web y activar la revisión acordada.
+
+La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta para el repartidor (copiar, abrir Maps o compartir). Solo para deliveries aceptados; no expone pedidos en una URL pública ni cambia el sitio publicado, pagos, estado de envío o datos SEO. Sin API adicional de Google.
+
+
+### 24/10/2026 — Precios fijados publicados por solicitud del dueño
+
+- Se tomó el catálogo de la app instalada mediante su exportación y se sincronizó desde «Nube y usuarios → Sincronizar menú», con confirmación de sus 36 productos. No se modificaron precios, visibilidad ni ventas mediante SQL. Combo Fatay continúa oculto.
+- 28 precios cambiaron respecto de la carpeta anterior. Ejemplos: Shawarma de Carne $18.600, Shawarma de Pollo $16.000, Shawarma Mixto $16.100, Hummus $9.900 y Fatay $5.850. Los 36 precios de la nube coinciden con la exportación de la app.
+- Cloudflare Pages Production: despliegue **fa054caf-c8f5-4072-a5be-ecaad779dc0f**, éxito, 24/10/2026 20:04:58 UTC. Se publicaron 17 archivos, incluyendo respaldo menu.json y páginas de precios/SEO. Se preservaron logos, diseño, crédito, fotos públicas, conexión de pedidos y beneficio por pago del 10 %. La política delivery v2 continúa desactivada.
+- Chrome confirma los precios nuevos en la portada y tienda. No se enviaron compras ni se usaron fondos reales. Evidencias y ZIP en entregables/web-precios-2026-10-24/ del espacio del dueño.
+- La exportación nativa fallaba al escribir subcarpetas nuevas de páginas/marca. Se prepara corrección y actualización 0.4.22 con 583 pruebas aprobadas y compilación correcta; publicación de instaladores pendiente de completar.
+- El dueño pidió configurar el proveedor de rutas. OpenRouteService requiere acceso/clave de una cuenta; acceso con GitHub pendiente de autorización específica. La revisión automática rechazó aplicar la migración del delivery hasta obtener autorización explícita para tablas privadas y controles de pedidos/proyectos productivos; no se aplicó ni se desplegaron funciones.

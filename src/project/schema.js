@@ -17,9 +17,10 @@
 // Mismo formato con o sin online: lo que esta versión no conoce se conserva al guardar (mergeUnknown).
 // ═══════════════════════════════════════════════════════════
 
+import { prepareDeliveryConfig } from '../delivery/preset.js';
 export const SAHTEN_FORMAT = 'sahten';
 export const SCHEMA_VERSION = 2;
-export const APP_VERSION = '0.4.21';
+export const APP_VERSION = '0.4.22';
 
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -83,6 +84,7 @@ export function legacyToFile(L, { modifiedAt = null, prev = null } = {}) {
     channelLocked: clone(obj(L.projChannelLocked)), manualMode: !!L.projManualMode, manualUnits: clone(obj(L.projManualUnits)),
   };
   f.online = { menuConfig: clone(obj(L.menuConfig)), tiendaConfig: clone(obj(L.tiendaConfig)), supabase: { ...emptySupabase(), ...obj(L.supabase) } };
+  f.online.tiendaConfig = prepareDeliveryConfig(f.online.tiendaConfig, f.online.supabase.slug);
   f.images = clone(obj(L.images));
   f.ui = {};
   UI_KEYS.forEach(k => { if (L[k] !== undefined) f.ui[k] = clone(L[k]); });
@@ -150,6 +152,7 @@ function migrateFile(file) {
   if (v > SCHEMA_VERSION) notes.push(`El archivo se guardó con una versión más nueva de Sahten (esquema ${v}). Se abre igual y se conserva lo que esta versión no conoce.`);
   while (v < SCHEMA_VERSION) { if (MIGRATIONS[v]) f = MIGRATIONS[v](f); v++; notes.push(`Esquema ${v - 1} → ${v}`); }
   f.format = SAHTEN_FORMAT; f.schemaVersion = Math.max(f.schemaVersion || 0, SCHEMA_VERSION);
+  if (f.online) f.online.tiendaConfig = prepareDeliveryConfig(f.online.tiendaConfig, f.online.supabase?.slug);
   return { file: f, notes };
 }
 

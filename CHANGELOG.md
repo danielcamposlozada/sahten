@@ -2,6 +2,17 @@
 
 ## Sin publicar
 
+## 0.4.22
+
+- **Publicar menú en escritorio**: crea las subcarpetas de tienda, páginas informativas y marca antes de escribir sus archivos. Corrige la exportación incompleta que fallaba con «undefined».
+
+- **Ruta para el repartidor**: las tarjetas de delivery aceptado ofrecen icono de mapa, copiar ruta, abrir Google Maps y compartir. Destino ya cargado, GPS del repartidor como origen, sin clave de Google ni envío automático de mensajes. Disponible desde En preparación, Listo para enviar y En camino; fallback para equipos sin compartir/portapapeles y pedidos anteriores con dirección.
+
+- **Delivery geográfico preparado**: zonas 1–5 y excepcional exclusivas del proyecto Sahten, con tarifas, mínimos y beneficios precargados. Editor de anillos y polígonos con huecos, vértices, previsualización, reversión, pausas y validación de superposiciones. Activación y promociones inicialmente apagadas.
+- **Una sola cuenta para web y Mostrador**: ruta comprobada por calles, piso tarifario efectivo y autorización administrativa entre 8 y 8,5 km. Backend para todos los medios; el 10 % de pago sigue aplicándose solo a productos. Tarjeta de progreso compartida con fondo verde claro, ahorro y próximo beneficio.
+- **Delivery con horario**: horario argentino confirmado de Sahten, turnos y fechas especiales editables; web, POS y servidor bloquean nuevas entregas fuera de horario. Retiro y pedidos ya aceptados conservan su flujo.
+- **Históricos de envío**: tarifa base/cobrada, ahorro comercial, revisión, zonas, ruta y autorización en pedidos, comprobantes y reportes. Migración y funciones preparadas, sin despliegue automático; ver `docs/DELIVERY-GEOGRAFICO.md`.
+
 ## 0.4.21
 
 - **Medios de pago visibles**: en la tienda, dos opciones grandes del mismo tamaño para efectivo/transferencia y Mercado Pago con su símbolo oficial, sin desplegable. En Mostrador, una opción compacta por medio real, incluidos QR y medios personalizados, sin botones duplicados. El total se actualiza al elegir y conserva los datos de contacto y entrega.

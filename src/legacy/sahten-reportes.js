@@ -1103,6 +1103,7 @@ function _renderMostradorReport(){
   ${showFudoToggle}
   ${_historicalCostsBlock(filtered)}
   ${_paymentBenefitBlock(filtered)}
+  ${_deliveryBenefitBlock(filtered)}
 
   <div class="rep-kpis">
     ${_kpi('Total vendido','$'+_f(totalVentas),null,'accent')}
@@ -1230,6 +1231,10 @@ function _historicalCostsBlock(orders) {
   const s = SAHTEN.pricing.summary(orders);
   return '<details class="rep-chart-card full" style="padding:16px;margin-bottom:16px"><summary style="cursor:pointer;font-weight:700;font-size:16px">Costos históricos · '+s.covered+' órdenes con desglose</summary><p style="font-size:14px">Valores conservados al vender o desde la versión publicada del precio. Excluye órdenes canceladas. No confirma cobros ni representa el resultado contable del mes.</p><div class="rep-kpis">'+_kpi('Costo variable asignado','$'+_f(s.variable),null,'primary')+_kpi('Comisión estimada','$'+_f(s.commission),null,'primary')+_kpi('Aporte antes de GF','$'+_f(s.contribution),null,'green')+_kpi('GF asignado','$'+_f(s.fixed),null,'primary')+_kpi('Resto tras GF asignado','$'+_f(s.afterAssigned),null,'green')+'</div><p style="font-size:14px">'+s.missing+' órdenes sin desglose histórico: se muestran sus ventas, pero no se inventa su costo. Los datos importados de Fudo quedan fuera de este desglose. El envío y su costo operativo no están incluidos. Los gastos mensuales reales se consultan en Gastos Fijos.</p></details>';
 }
+function _deliveryBenefitBlock(orders){
+  const r=SAHTEN.core.deliveryReport(orders);if(!r.orders)return '';
+  return '<details class="rep-chart-card full" style="padding:16px;margin-bottom:16px"><summary style="cursor:pointer;font-weight:700;font-size:16px">Beneficios de delivery · '+r.orders+' órdenes</summary><div class="rep-kpis">'+_kpi('Tarifa normal','$'+_f(r.base),null,'primary')+_kpi('Envío cobrado','$'+_f(r.charged),null,'primary')+_kpi('Beneficio comercial de envío','$'+_f(r.discount),null,'accent')+_kpi('Entregas autorizadas',r.authorized,null,'primary')+'</div><p style="font-size:14px">Valores históricos de las órdenes, excluidas las canceladas. El beneficio de envío no es el costo del repartidor ni se vuelve a registrar como gasto. Las ventas anteriores sin desglose no se recalculan.</p></details>';
+}
 function _exportMostradorXLSX(){
   const orders=(typeof SAHTEN_ORDERS!=='undefined')?SAHTEN_ORDERS:[];
   if(!orders.length){alert('No hay órdenes.');return;}
@@ -1244,7 +1249,7 @@ function _exportMostradorXLSX(){
 
   // Build CSV rows
   const showCosts = !document.body.classList.contains('role-no-costs');
-  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento (total orden)','Envío (total orden)','Método Pago','Total Orden','Estado','Motivo descuento','Beneficio por pago %','Beneficio por pago $ (primera línea)','Revisión beneficio',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
+  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento (total orden)','Envío (total orden)','Método Pago','Total Orden','Estado','Motivo descuento','Beneficio por pago %','Beneficio por pago $ (primera línea)','Revisión beneficio','Zona de envío','Zona tarifaria efectiva','Tarifa normal envío','Beneficio envío $ (primera línea)','Revisión envío','Distancia radial km','Recorrido km','Autorización envío',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
 
   filtered.forEach(o=>{
     const num=String(o.num||0).padStart(4,'0');
@@ -1260,7 +1265,7 @@ function _exportMostradorXLSX(){
     (o.items||[]).forEach((it,lineIndex)=>{
       const entry = SAHTEN.state.saleCosts[o.id];
       const saved = entry?.items.find(x=>x.productId===it.productId);
-      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,o.discountName||'',benefit?.percent||'',lineIndex===0?(benefit?.amount||0):0,benefit?.revision||'',...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
+      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,o.discountName||'',benefit?.percent||'',lineIndex===0?(benefit?.amount||0):0,benefit?.revision||'',o.deliverySnapshot?.geographicZone?.name||'',o.deliverySnapshot?.effectiveZone?.name||'',o.deliverySnapshot?.baseCost??'',lineIndex===0?(o.deliverySnapshot?.discount||0):0,o.deliverySnapshot?.revision||'',o.deliverySnapshot?.radialKm??'',o.deliverySnapshot?.routeKm??'',o.deliverySnapshot?.authorization?.reason||'',...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
     });
   });
 

@@ -283,4 +283,18 @@ describe('integración con el sistema', () => {
     await d.openPreview('<p>hola</p>');
     expect(a.fs.files['/tmp/sahten-menu-preview.html']).toBe('<p>hola</p>'); expect(a.opener.opened.at(-1)).toBe('path:/tmp/sahten-menu-preview.html');
   });
+  it('publica la tienda y las páginas en subcarpetas que todavía no existen', async () => {
+    const { w } = page(); const a = apis({ dialog: { open: '/Menu nuevo' } });
+    const dirs = new Set(['/Menu nuevo']);
+    a.fs.mkdir = async p => { dirs.add(p); };
+    a.fs.writeTextFile = async (p, text) => {
+      if (!dirs.has(dirname(p))) throw new Error('Carpeta inexistente');
+      a.fs.files[p] = text;
+    };
+    const d = installDesktop({ apis: a, project: {}, config: createMemoryConfig(), w });
+    await d.writeFolder([{path:'pedir/index.html',data:'tienda'}, {path:'menu/index.html',data:'precios'}, {path:'brand/logo.svg',data:'logo'}]);
+    expect(a.fs.files['/Menu nuevo/pedir/index.html']).toBe('tienda');
+    expect(a.fs.files['/Menu nuevo/menu/index.html']).toBe('precios');
+    expect(a.fs.files['/Menu nuevo/brand/logo.svg']).toBe('logo');
+  });
 });

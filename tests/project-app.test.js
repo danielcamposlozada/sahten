@@ -369,11 +369,11 @@ describe('la app arranca siempre limpia', () => {
     expect(a.ev('Object.keys(STOCK).length')).toBe(0); expect(a.ev('_getTiendaConfig().address')).toBe('');
     a.window.close();
   }, 60000);
-  it('el programa compilado no trae datos de ningún negocio', async () => {
+  it('el programa compilado no trae productos, clientes ni contactos de ningún negocio', async () => {
     const { build } = await import('vite'); const out = path.join(root, '.tmp/dist-check');
     await build({ root, logLevel: 'silent', build: { outDir: out, emptyOutDir: true } });
     const dist = fs.readdirSync(path.join(out, 'assets')).filter(f => f.endsWith('.js')).map(f => fs.readFileSync(path.join(out, 'assets', f), 'utf8')).join('\n');
-    expect(dist).not.toMatch(/Shawarma|Choukri|kibbe|2393-7295|Roca 1489/i);   // solo queda el ejemplo ficticio de la pizzería
+    expect(dist).not.toMatch(/Shawarma|Choukri|kibbe|2393-7295/i); // El preset público de delivery de Sahten es optativo; nunca carga catálogo, clientes o contactos.
   });
 });
 

@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 // menu.json: lo que ve el menú publicado. Puro (sin DOM). Nunca incluye costos, márgenes ni datos de clientes.
 // ═══════════════════════════════════════════════════════════
+import { deliveryHoursText } from '../core/delivery.js';
 import { channelPriceWithDisc } from '../core/pricing.js';
 import { buildSite } from './site.js';
 import { paymentBenefitPolicy } from '../core/payment-benefit.js';
@@ -41,6 +42,8 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   const categoryImages = {};   // { categoría: 'img/cat_x.jpg' } — la foto de cada categoría, si la cargaron
   if (showImages) for (const c of cats) { const k = categoryPhotoKey(c); if (k && images[k]) categoryImages[c] = 'img/' + k + '.jpg'; }
   const sb = supabase && supabase.url && supabase.anonKey && supabase.storeId ? { url: supabase.url, anonKey: supabase.anonKey, storeId: supabase.storeId, slug: supabase.slug || '' } : null;
+  const site=buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia });
+  if(site&&tienda.deliveryV2?.active&&tienda.deliveryV2.hours?.enabled)site.delivery={...site.delivery,hours:deliveryHoursText(tienda.deliveryV2.hours)};
   return {
     version: MENU_VERSION, generatedAt: now.toISOString(),
     store: {
@@ -54,8 +57,9 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       categories: cats, categoryImages,
     },
     products: items,
-    site: buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia }),
+    site,
     delivery: {
+      ...(tienda.deliveryV2 ? {deliveryV2: JSON.parse(JSON.stringify(tienda.deliveryV2))} : {}),
       lat: tienda.lat ?? null, lng: tienda.lng ?? null, zones: (tienda.zones || []).map(z => ({ id: z.id, name: z.name, type: z.type || 'circle', radiusKm: z.radiusKm || 0, points: z.points || [], baseCost: z.baseCost || 0 })),
       freeShippingMin: tienda.freeShippingMin || 0, deliveryMinOrder: tienda.deliveryMinOrder || 0, costPerKm: tienda.costPerKm || 0,
     },

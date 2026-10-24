@@ -436,6 +436,7 @@ function _onlineBoardCard(o, recent = false) {
   const phone = String(o.customerPhone || '').trim();
   const dial = phone.replace(/[^0-9+]/g, '');
   const payment = o.paymentStatusLabel || (o.paymentStatus ? 'Estado de pago: ' + o.paymentStatus : 'Cobro sin confirmar');
+  const route = !recent ? SAHTEN.delivery.handoff.details(o) : null;
   const paid = ['paid', 'overpaid'].includes(o.paymentStatus);
   const warning = ['rejected', 'partial', 'in_mediation', 'charged_back', 'refunded', 'partially_refunded', 'overpaid'].includes(o.paymentStatus);
   return '<article class="online-board-card online-board-card--' + statusClass + '">' +
@@ -447,6 +448,7 @@ function _onlineBoardCard(o, recent = false) {
     '<div class="online-board-name">' + _esc(o.customerName || 'Consumidor Final') + '</div>' +
     '<div class="online-board-card-bottom"><div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
       (!recent ? ' <span class="online-board-age" data-order-age="' + id + '">' + _esc(workflow.orderAgeLabel(o)) + '</span>' : '') + '</div><strong class="online-board-total">$' + _fmtN(o.total) + '</strong></div>' +
+    (route ? '<div class="online-board-route-actions" role="group" aria-label="Reparto de la orden '+_esc(num)+'"><button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button><a class="online-board-detail" href="'+_esc(route.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ruta de la orden '+_esc(num)+' en Google Maps">Abrir en Maps</a><button type="button" class="online-board-detail" data-online-action="route-share" data-id="'+id+'" aria-label="Compartir ruta de la orden '+_esc(num)+'">Compartir</button>'+(!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'')+'</div>' : '') +
     (warning ? '<div class="online-board-payment is-warning"><strong>' + _esc(payment) + '</strong></div>' : '') +
     '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
     '<div class="online-board-time"><time datetime="' + _esc(o.createdAt || '') + '">Creado ' + _esc(time) + '</time></div>' +
@@ -457,6 +459,7 @@ function _onlineBoardCard(o, recent = false) {
     (o.notes ? '<div class="online-board-note"><strong>Indicaciones</strong> ' + _esc(o.notes) + '</div>' : '') +
     '<div class="online-board-payment' + (warning ? ' is-warning' : paid ? ' is-paid' : '') + '"><strong>' + _esc(payment) + '</strong><span>' + _esc(o.paymentName || o.paymentMethod || 'Medio de pago sin especificar') + '</span></div>' +
     (delivery ? '<span class="online-board-shipping">Incluye envío: $' + _fmtN(o.shipping) + '</span>' : '') +
+    (o.deliverySnapshot ? '<div>'+_esc(o.deliverySnapshot.effectiveZone?.name||'Delivery')+' · '+Number(o.deliverySnapshot.routeKm).toFixed(2)+' km por calles · Ahorro en envío: $'+_fmtN(o.deliverySnapshot.discount)+(o.deliverySnapshot.authorization?.approved?' · Autorización registrada':'')+'</div>' : '') +
     '<div class="online-board-actions">' +
       '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Abrir pedido completo</button>' +
       '<button type="button" class="online-board-detail" data-online-action="print" data-id="' + id + '" aria-label="Imprimir orden ' + _esc(num) + '">Imprimir</button></div></div></details>' +
@@ -495,6 +498,7 @@ function _onlineBoardClick(event) {
   if (!order) return;
   if (action === 'open') { openOrderDetail(order.id); return; }
   if (action === 'print') { printComanda(order.id); return; }
+  if (action === 'route-copy' || action === 'route-share') { button.disabled=true;const task=action==='route-copy'?SAHTEN.delivery.handoff.copy(order.id):SAHTEN.delivery.handoff.share(order.id);Promise.resolve(task).finally(()=>{button.disabled=false;});return; }
   if (action === 'next') {
     const next = SAHTEN.orderWorkflow.nextOnlineStatus(order);
     if (next) {
