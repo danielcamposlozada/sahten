@@ -38,6 +38,7 @@ label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10p
 .cta{width:100%;margin-top:14px;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:15px;background:var(--primary);color:#fff;cursor:pointer}.cta.wa{background:#25D366}.cta.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--border)}.cta[disabled]{opacity:.5;cursor:not-allowed}
 .empty{text-align:center;color:var(--muted);padding:60px 16px}
 #foot:empty{display:none}
+.footer-in-view .fab{display:none}
 .has-order-footer #menu{padding-bottom:32px}
 .has-site.view-order.has-cart #s-rest .sfoot{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
@@ -306,8 +307,10 @@ var MOD={
   contacto:function(S,m){var f=m.contacto,wa=waHref(),name=MENU.store.name||'',hrs=(S.delivery&&S.delivery.hours)||'',credit=f.creditText||'Hecho con Sahten',creditLink=publicWebUrl(f.creditUrl),pg=sitePageList(MENU).map(function(p){return '<a href="'+esc(p.slug)+'/">'+esc(p.label)+'</a>'}).join('<br>');
     return '<footer class="sfoot" id="s-contact"><div class="cols"><div><b>'+esc(name)+'</b>'+(f.note?'<div>'+esc(f.note)+'</div>':'')+'</div>'+(MENU.store.address?'<div><h4>Dónde</h4>'+esc(MENU.store.address)+'</div>':'')+(hrs?'<div><h4>Horarios</h4>'+esc(hrs).replace(/\n/g,'<br>')+'</div>':'')+(pg?'<div><h4>Más información</h4>'+pg+'</div>':'')+((wa||f.instagram)?'<div><h4>Escribinos</h4>'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">' +waIcon()+'WhatsApp</a>':'')+(f.instagram?(wa?'<br>':'')+'<a href="https://instagram.com/'+esc(f.instagram)+'" target="_blank" rel="noopener">@'+esc(f.instagram)+'</a>':'')+'</div>':'')+'</div><div class="by">'+(creditLink?'<a href="'+esc(creditLink)+'" target="_blank" rel="noopener noreferrer">'+esc(credit)+'</a>':esc(credit))+'</div></footer>';}
 };
-var navResizeObserver=null;
+var navResizeObserver=null,footerVisibilityObserver=null;
 function site(){
+  if(footerVisibilityObserver){footerVisibilityObserver.disconnect();footerVisibilityObserver=null;}
+  document.body.classList.remove('footer-in-view');
   if(navResizeObserver){navResizeObserver.disconnect();navResizeObserver=null;}
   var S=MENU.site,c=MENU.config||{},on=!!(S&&S.enabled&&c.enabled!==false),top=$('s-top'),rest=$('s-rest');
   document.body.classList.toggle('has-site',on);
@@ -330,6 +333,7 @@ function site(){
   document.body.classList.toggle('has-order-footer',orderView&&hasContact);
   top.innerHTML=ORDER_PAGE?'':before;rest.innerHTML=orderView?orderFooter:after;$('foot').textContent=hasContact?'':[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   var f=$('fab');if(wa&&!f){f=document.createElement('a');f.id='fab';f.className='fab';f.target='_blank';f.rel='noopener';f.setAttribute('aria-label','Escribinos por WhatsApp');f.innerHTML=waIcon();document.body.appendChild(f);}if(f)f.href=wa;
+  var contact=$('s-contact');if(f&&contact&&window.IntersectionObserver){var observer=new IntersectionObserver(function(entries){if(footerVisibilityObserver===observer)document.body.classList.toggle('footer-in-view',entries.some(function(entry){return entry.isIntersecting;}));});footerVisibilityObserver=observer;observer.observe(contact);}
   var nv=$('snav');if(nv){var setH=function(){document.documentElement.style.setProperty('--navh',nv.offsetHeight+'px');};setH();if(window.ResizeObserver){navResizeObserver=new ResizeObserver(setH);navResizeObserver.observe(nv);}}
 }
 function idOf(h){return ({'#pedido':'menu','#s-how':'como','#s-about':'historia','#s-reviews':'resenas','#s-catering':'catering','#s-faq':'faq','#s-contact':'contacto'})[h]||'';}
