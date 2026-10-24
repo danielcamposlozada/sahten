@@ -48,3 +48,15 @@ Supabase Edge Function `sahten-payments`, base de datos con separación por `sto
 Aplicar `supabase/payments.sql` después de `supabase/schema.sql`, con la extensión Vault habilitada. Desplegar `supabase/functions/sahten-payments/index.ts` con sus dependencias relativas y `deno.json`. El gateway JWT se desactiva porque la función valida JWT para configuración, HMAC para Webhooks y pruebas de sesión para consultar compras. No cambiar los permisos de las columnas verificadas de `orders`. Cada negocio carga su propia cuenta desde la app.
 
 Las devoluciones y los contracargos se consultan y reflejan; esta versión no inicia devoluciones desde Sahten.
+
+## Validación de compra acreditada · 24/10/2026
+
+- Compra desde `https://sahten.online/pedir/?mp_test=1` en Chrome incógnito, con comprador y vendedor ficticios separados. Una unidad de Shawarma de Carne, retiro, ARS 16.000. Datos de contacto ficticios; no se usaron fondos ni tarjetas reales.
+- Tarjeta oficial de prueba Mastercard terminada en 0604, titular de escenario `APRO`, una cuota. No se guardaron credenciales del comprador ni datos de tarjeta en el repositorio o en la app.
+- Checkout `e73e3519-4c4f-4eed-be0f-b6fde4dfea1c`; pago `184807337731`, estado del proveedor `approved`. Mercado Pago mostró «Tu pago ya se acreditó» y regresó a la tienda, que mostró «Pago de prueba acreditado. No se creó una venta real» y total $16.000.
+- Webhook firmado `data.id=184807337731&type=payment`: respuesta HTTP 200 a las 05:28:13.450 UTC. Llegó antes de la consulta de retorno `/status` (HTTP 200 a las 05:28:21.683 UTC). Confirmación independiente del enlace de retorno.
+- Lectura de base: checkout `paid`, pago `approved`, `amount_cents=1600000`, `refunded_cents=0`, `order_id=null`; una fila de pago. Se preservó la separación de pruebas respecto de pedidos y contabilidad reales.
+- También llegaron avisos del formato anterior IPN (`id`/`topic`), rechazados con HTTP 401 por la ruta que exige la firma de Webhooks. No bloquearon la confirmación firmada correcta. No se desactivaron las validaciones para aceptarlos.
+- La cuenta activa sigue en modo `test`. Producción sigue pendiente de credenciales reales y firma correspondiente, autorización expresa del titular y una validación supervisada de pedido real. No se desplegó una nueva Edge Function en esta prueba; la propagación de `priceRevision` a la función desplegada continúa pendiente para conservar el historial privado de costos de las futuras órdenes productivas.
+
+Evidencia local: `entregables/mercadopago-2026-10-24/pago-prueba-resultado.png` en el espacio de trabajo de este chat.
