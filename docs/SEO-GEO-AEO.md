@@ -193,3 +193,9 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - Se prepara publicación de la web y actualización correctiva 0.4.19 del generador, dentro de la publicación de ambas solicitada por el dueño. No modifica datos del negocio, Supabase ni Mercado Pago. Estado de publicación se registra al verificar.
 - La revisión del pie detectó además que filtrar categorías cambiaba la ruta de `/pedir/` a su carpeta base, desplazando enlaces relativos en subcarpetas. Se conserva la ruta y los parámetros actuales al actualizar solo el fragmento de categoría. Cubierto por regresión junto al pie.
 - En la revisión móvil se evita además que el acceso flotante de WhatsApp cubra el crédito: se oculta mientras el pie está en pantalla, donde permanece el enlace de contacto.
+
+### 24/10/2026 — Pie publicado y retomada de Mercado Pago
+
+- El pie ya está visible en la tienda publicada, conserva contacto y crédito aprobados. Publicación Cloudflare Pages `4558e615` desde `bdf88816bf59f55db202bf2ea961c2f009299ca6`; no se modificaron datos de Supabase.
+- Los instaladores de 0.4.19 fallaron antes de publicarse: el cambio de versión alteró por error `regex-automata` en Cargo.lock y dejó la entrada de Sahten con la versión anterior. La última versión pública verificada sigue siendo 0.4.18. Corrección preparada como 0.4.20, conservando la etiqueta e historia de 0.4.19; se amplía la comprobación de versiones a ambos archivos de bloqueo.
+- Mercado Pago continúa habilitado solo en Pruebas (vendedor ficticio 3782799792). El intento 700280a2-0f40-4f45-866e-f0f02dff00d8 terminó rechazado; los intentos posteriores no registraron pago. Se retomó la prueba y el panel exige validar identidad por QR antes de consultar el comprador ficticio. No se activó producción, no se usaron tarjetas reales ni se modificaron pedidos.
