@@ -341,16 +341,28 @@ function _cartItemsWithPrice() {
 }
 function _calcCartTotals() {
   const items=_cartItemsWithPrice(); const subtotal=items.reduce((s,it)=>s+it.lineTotal,0);
-  let discount=0; const disc=MOSTRADOR_DISCOUNTS.find(d=>d.id===mostradorActiveDiscountId);
-  if(disc){ if(disc.type==='pct') discount=subtotal*(disc.value/100); else discount=disc.value; discount=Math.min(discount,subtotal); }
+  const manual=MOSTRADOR_DISCOUNTS.find(d=>d.id===mostradorActiveDiscountId);
+  const benefit=SAHTEN.paymentChoices.quote(subtotal,_mostSelectedPayment()?.method,_mostTiendaCfg().paymentBenefit,'mostrador',manual);
+  const discount=benefit.amount, disc=discount?{name:benefit.label}:null;
   let shipping=0, freeShip=false;
   if(mostradorOrderType==='delivery'){
     if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
-    else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-discount)>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
+    else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
-  const total=subtotal-discount+shipping;
-  return {items,subtotal,discount,shipping,total,disc,freeShip};
+  const total=Math.round((subtotal-discount+shipping)*100)/100;
+  return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount};
 }
+
+function _mostPaymentOptions() {
+  const labels={efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago',tarjeta:'Tarjeta'};
+  const normalize=name=>String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const options=MOSTRADOR_PAYMENTS.map(p=>({id:p.id,label:p.name,method:p.method||({efectivo:'efectivo',transferencia:'transferencia','mercado pago':'mercadopago',mercadopago:'mercadopago',tarjeta:'tarjeta'})[normalize(p.name)]||'other'}));
+  Object.entries(_mostTiendaCfg().paymentMethods||{efectivo:true}).forEach(([method,enabled])=>{if(enabled&&!options.some(o=>o.method===method))options.push({id:'standard:'+method,method,label:labels[method]||method});});
+  const priority={efectivo:0,transferencia:1,mercadopago:2,tarjeta:3,qr:4,other:5};
+  return options.sort((a,b)=>(priority[a.method]??5)-(priority[b.method]??5));
+}
+function _mostSelectedPayment(){return _mostPaymentOptions().find(p=>p.id===mostradorActivePaymentId);}
+function mostradorSetPayment(id){mostradorActivePaymentId=id||null;_renderCartExtras();_renderCartTotals();const b=[...document.querySelectorAll('#most-cart-extras [data-payment-choice]')].find(b=>b.dataset.paymentChoice===id);b?.focus({preventScroll:true});}
 
 function _renderCartItems() {
   const focused=document.activeElement, pid=focused?.dataset.productId, action=focused?.dataset.cartAction;
@@ -370,14 +382,15 @@ function _renderCartExtras() {
   const f = document.getElementById('most-cart-extras'); if(!f) return;
   if (_mostDelMap) { try { _mostDelMap.remove(); } catch(e) {} _mostDelMap = null; }
   const discOpts = MOSTRADOR_DISCOUNTS.map(d => { const l=d.type==='pct'?d.name+' ('+d.value+'%)':d.name+' (-$'+_fmt(d.value)+')'; return '<option value="'+d.id+'" '+(d.id===mostradorActiveDiscountId?'selected':'')+'>'+_esc(l)+'</option>'; }).join('');
-  const payOpts = MOSTRADOR_PAYMENTS.map(p => '<option value="'+p.id+'" '+(p.id===mostradorActivePaymentId?'selected':'')+'>'+_esc(p.name)+'</option>').join('');
+  const payPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
   const custOpts = SAHTEN_CUSTOMERS.map(c => '<option value="'+c.id+'" '+(c.id===mostradorActiveCustomerId?'selected':'')+'>'+_esc(c.name)+(c.phone?' · '+c.phone:'')+'</option>').join('');
   f.innerHTML = '<div class="most-extras">' +
     '<div class="most-extras-row"><label for="most-customer">Cliente</label><select id="most-customer" class="most-disc-select" onchange="mostradorActiveCustomerId=this.value||null"><option value="">Consumidor Final</option>'+custOpts+'</select><button class="most-add-btn" onclick="mostQuickAddClient()" title="Nuevo cliente">+</button></div>' +
     '<div class="most-extras-row"><label for="most-discount">Descuento</label><select id="most-discount" class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
     _mostDeliveryExtrasHtml() +
-    '<div class="most-extras-row"><label for="most-payment">Pago</label><select id="most-payment" class="most-disc-select" onchange="mostradorActivePaymentId=this.value||null">'+(MOSTRADOR_PAYMENTS.length===0?'<option value="">Crear método…</option>':'<option value="">Sin especificar</option>')+payOpts+'</select><button class="most-add-btn" onclick="openPaymentManager()" title="Gestionar métodos de pago">+</button></div>' +
+    SAHTEN.paymentChoices.html({methods:_mostPaymentOptions(),selected:mostradorActivePaymentId,percent:payPolicy.enabled&&payPolicy.channels.mostrador?payPolicy.percent:0,compact:true})+'<button class="btn" type="button" onclick="openPaymentManager()">Gestionar métodos de pago</button>' +
     '</div>';
+  f.querySelectorAll('[data-payment-choice]').forEach(b=>b.addEventListener('click',()=>mostradorSetPayment(b.dataset.paymentChoice)));
   if (mostradorOrderType==='delivery' && mostradorDelivery && mostradorDelivery.lat!=null) setTimeout(_mostInitDelMap, 30);
 }
 
@@ -484,9 +497,11 @@ function _mostInitDelMap(){
 // ═══════════════════════════════════════════════════════════
 function mostradorCheckout() {
   const t = _calcCartTotals(); if (t.items.length === 0) return;
+  const benefitPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
+  if(benefitPolicy.enabled&&benefitPolicy.channels.mostrador&&!_mostSelectedPayment()){alert('Elegí cómo se paga para calcular el descuento correcto.');document.querySelector('#most-cart-extras [data-payment-choice]')?.focus();return;}
   if (mostradorOrderType === 'delivery' && !(mostradorDelivery && mostradorDelivery.address)) { alert('Cargá la dirección de entrega para el delivery.'); document.getElementById('most-addr-input')?.focus(); return; }
   if (mostradorOrderType === 'delivery' && !mostradorDelivery.zone && !mostradorShipManual) { alert('Seleccioná una dirección sugerida o indicá el envío manual (0 si es gratis).'); document.getElementById('most-ship-val')?.focus(); return; }
-  const pay = MOSTRADOR_PAYMENTS.find(p => p.id === mostradorActivePaymentId);
+  const pay = _mostSelectedPayment();
   const cust = SAHTEN_CUSTOMERS.find(c => c.id === mostradorActiveCustomerId);
   const del = mostradorOrderType === 'delivery' ? mostradorDelivery : null;
   const order = {
@@ -497,12 +512,16 @@ function mostradorCheckout() {
     customerName: cust ? cust.name : 'Consumidor Final',
     customerPhone: cust ? cust.phone || '' : '',
     origin: 'mostrador',
-    discountId: mostradorActiveDiscountId || null,
+    discountId: t.paymentDiscount ? 'cash-transfer' : mostradorActiveDiscountId || null,
     discountName: t.disc ? t.disc.name : null,
     discountAmount: t.discount,
+    discount: t.discount,
+    paymentDiscount: t.paymentDiscount,
     shipping: t.shipping,
     paymentId: mostradorActivePaymentId || null,
-    paymentName: pay ? pay.name : null,
+    paymentName: pay ? pay.label : null,
+    paymentMethod: pay ? pay.method : null,
+    ...(pay?.method==='mercadopago'?{paymentStatus:'unverified',paymentStatusLabel:'Sin pago verificado'}:{}),
     subtotal: t.subtotal,
     total: t.total,
     status: 'pendiente', // pendiente | en_preparacion | listo
@@ -855,13 +874,13 @@ async function discDelete(id){const d=MOSTRADOR_DISCOUNTS.find(x=>x.id===id);if(
 // ═══════════════════════════════════════════════════════════
 function openPaymentManager(){let ov=document.getElementById('pay-mgr-overlay');if(ov)ov.remove();ov=document.createElement('div');ov.id='pay-mgr-overlay';ov.className='modal-overlay open';ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
 ov.innerHTML='<div class="modal" style="max-width:500px"><div class="modal-header"><div class="modal-title">Métodos de pago</div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="modal-body">' +
-'<div class="info-banner" style="margin-bottom:14px"><strong>Métodos de pago:</strong> agregá los que aceptás.</div><div class="disc-list" id="pay-list"></div>' +
+'<div class="info-banner" style="margin-bottom:14px"><strong>Métodos de Mostrador:</strong> agregá QR, débito u otros. Cada uno aparecerá como una opción junto a los demás. Elegirlo registra el medio; no acredita automáticamente un cobro. El descuento configurado solo corresponde a efectivo o transferencia si el beneficio está activo.</div><div class="disc-list" id="pay-list"></div>' +
 '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px">Crear nuevo</div>' +
-'<div class="disc-form" style="grid-template-columns:1fr auto"><div class="disc-form-field"><label>Nombre</label><input type="text" class="disc-form-input" id="pay-new-name" placeholder="ej. Efectivo, MercadoPago…"></div><button class="disc-form-add" onclick="payAddNew()">+ Agregar</button></div></div></div>';
+'<div class="disc-form" style="grid-template-columns:1fr auto"><div class="disc-form-field"><label for="pay-new-name">Nombre</label><input type="text" class="disc-form-input" id="pay-new-name" placeholder="ej. QR, Débito, Cuenta corriente…"><label for="pay-new-method">Tipo de pago</label><select id="pay-new-method" class="disc-form-input"><option value="other">Otro (sin beneficio por pago)</option><option value="qr">QR (sin beneficio por pago)</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option><option value="mercadopago">Mercado Pago</option></select></div><button class="disc-form-add" onclick="payAddNew()">+ Agregar</button></div></div></div>';
 document.body.appendChild(ov);_renderPayList();}
 function _renderPayList(){const l=document.getElementById('pay-list');if(!l)return;if(!MOSTRADOR_PAYMENTS.length){l.innerHTML='<div style="color:var(--muted);font-size:13px;padding:14px;text-align:center">No hay métodos.</div>';return;}
 l.innerHTML=MOSTRADOR_PAYMENTS.map(p=>'<div class="disc-list-item" style="grid-template-columns:1fr auto"><div class="disc-list-item-name">'+_esc(p.name)+'</div><div class="disc-list-item-actions"><button class="disc-action-btn" onclick="payEdit(\''+p.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="disc-action-btn danger" onclick="payDelete(\''+p.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div></div>').join('');}
-function payAddNew(){const n=(document.getElementById('pay-new-name')?.value||'').trim();if(!n){alert('Poné un nombre.');return;}const id='pay_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);MOSTRADOR_PAYMENTS.push({id,name:n});_savePayments();document.getElementById('pay-new-name').value='';_renderPayList();_renderCartExtras();}
+function payAddNew(){const n=(document.getElementById('pay-new-name')?.value||'').trim();if(!n){alert('Poné un nombre.');return;}const id='pay_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);MOSTRADOR_PAYMENTS.push({id,name:n,method:document.getElementById('pay-new-method')?.value||'other'});_savePayments();document.getElementById('pay-new-name').value='';_renderPayList();_renderCartExtras();}
 async function payEdit(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p)return;const n=await sahtenAsk('Nombre:',p.name);if(n===null)return;p.name=n.trim()||p.name;_savePayments();_renderPayList();_renderCartExtras();}
 async function payDelete(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p)return;if(!(await sahtenConfirm('¿Eliminar "'+p.name+'"?', { okLabel: 'Eliminar', danger: true })))return;MOSTRADOR_PAYMENTS=MOSTRADOR_PAYMENTS.filter(x=>x.id!==id);if(mostradorActivePaymentId===id)mostradorActivePaymentId=null;_savePayments();_renderPayList();_renderCartExtras();}
 
@@ -869,7 +888,7 @@ async function payDelete(id){const p=MOSTRADOR_PAYMENTS.find(x=>x.id===id);if(!p
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 function _esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-function _fmt(n){return Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:0});}
+function _fmt(n){return Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:2});}
 function _posToast(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.25);z-index:10000;opacity:0;transition:opacity 0.2s,transform 0.2s;display:flex;align-items:center;gap:10px';t.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> '+msg;document.body.appendChild(t);requestAnimationFrame(()=>{t.style.opacity='1';});setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';setTimeout(()=>t.remove(),250);},2800);}
 
 // ═══════════════════════════════════════════════════════════
@@ -949,7 +968,7 @@ function mostQuickAddClientSave() {
 Object.assign(window, {
   renderMostrador, mostSetTab, mostradorDismissBanner, mostradorOnSearch, mostradorSetCategory,
   mostradorAddToCart, mostradorRemoveItem, mostradorChangeQty, mostradorClearCart, mostradorToggleCart,
-  mostradorSetDiscount, mostradorSetShipping, mostradorCheckout,
+  mostradorSetDiscount, mostradorSetPayment, mostradorSetShipping, mostradorCheckout,
   openDiscountManager, discAddNew, discEdit, discDelete,
   openPaymentManager, payAddNew, payEdit, payDelete,
   mostradorSetView, openOrderDetail, orderSetStatus, orderReopen, orderDelete, printComanda,

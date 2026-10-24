@@ -16,7 +16,7 @@ function _dc(id){if(_rc[id]){_rc[id].destroy();delete _rc[id];}}
 
 // ─── Helpers ──────────────────────────────────────────
 function _e(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-function _f(n){return Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:0});}
+function _f(n){return Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:2});}
 function _fk(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'k':String(n);}
 function _pn(v){if(typeof v==='number')return v;const s=String(v||'').replace(/[\$\s]/g,'').replace(/\./g,'').replace(',','.');return parseFloat(s)||0;}
 function _isoToday(){return new Date().toISOString().split('T')[0];}
@@ -1024,7 +1024,7 @@ function _renderMostradorReport(){
   filtered.forEach(o=>{
     const total=o.total||0;
     totalVentas+=total;
-    totalDesc+=(o.discount||0);
+    totalDesc+=(o.discountAmount??o.discount??0);
     totalEnvio+=(o.shipping||0);
     const itemCount=(o.items||[]).reduce((s,it)=>s+(it.qty||0),0);
     totalItems+=itemCount;
@@ -1102,6 +1102,7 @@ function _renderMostradorReport(){
   </div>
   ${showFudoToggle}
   ${_historicalCostsBlock(filtered)}
+  ${_paymentBenefitBlock(filtered)}
 
   <div class="rep-kpis">
     ${_kpi('Total vendido','$'+_f(totalVentas),null,'accent')}
@@ -1243,7 +1244,7 @@ function _exportMostradorXLSX(){
 
   // Build CSV rows
   const showCosts = !document.body.classList.contains('role-no-costs');
-  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento','Envío','Método Pago','Total Orden','Estado',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
+  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento (total orden)','Envío (total orden)','Método Pago','Total Orden','Estado','Motivo descuento','Beneficio por pago %','Beneficio por pago $ (primera línea)','Revisión beneficio',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
 
   filtered.forEach(o=>{
     const num=String(o.num||0).padStart(4,'0');
@@ -1253,12 +1254,13 @@ function _exportMostradorXLSX(){
     const custName=o.customerName||'Consumidor Final';
     const custPhone=o.customerPhone||'';
     const payName=o.paymentName||'';
+    const benefit=SAHTEN.paymentChoices.snapshot(o);
     const status={pendiente:'Pendiente',en_preparacion:'En preparación',listo:'Listo'}[o.status]||o.status;
 
-    (o.items||[]).forEach(it=>{
+    (o.items||[]).forEach((it,lineIndex)=>{
       const entry = SAHTEN.state.saleCosts[o.id];
       const saved = entry?.items.find(x=>x.productId===it.productId);
-      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
+      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,o.discountName||'',benefit?.percent||'',lineIndex===0?(benefit?.amount||0):0,benefit?.revision||'',...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
     });
   });
 
@@ -1326,3 +1328,8 @@ Object.assign(window,{
   _exportMostradorXLSX,
   setStockCat,_renderStockTabs,
 });
+
+function _paymentBenefitBlock(orders){
+  const summary=SAHTEN.paymentChoices.report(orders);
+  return '<section class="payment-discount-summary" aria-label="Descuentos por medio de pago"><strong>Beneficio por efectivo o transferencia</strong><p>'+summary.count+' órdenes · descuento concedido: <b>$'+_f(summary.discount)+'</b> · productos antes del descuento: $'+_f(summary.gross)+' · venta neta de productos: $'+_f(summary.netProducts)+'</p><p>Reduce la venta neta; no se suma nuevamente como gasto. Excluye órdenes canceladas. Un medio de pago elegido no confirma un cobro.</p>'+(summary.count?'<details><summary>Ver operaciones con descuento por pago</summary><div style="overflow:auto;max-height:360px"><table><thead><tr><th>Orden</th><th>Fecha</th><th>Medio</th><th>Beneficio</th><th>Descuento</th></tr></thead><tbody>'+summary.orders.map(o=>'<tr><td>#'+_e(String(o.num||0).padStart(4,'0'))+'</td><td>'+_e((o.createdAt||'').slice(0,10))+'</td><td>'+_e(o.paymentName||o.paymentMethod||'')+'</td><td>'+_e(o.paymentDiscount.percent)+' %</td><td>$'+_f(o.paymentDiscount.amount)+'</td></tr>').join('')+'</tbody></table></div></details>':'<p>Las órdenes anteriores sin este registro no se clasifican automáticamente.</p>')+'</section>';
+}

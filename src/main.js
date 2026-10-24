@@ -5,6 +5,9 @@ import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptPr
 import { installPricing } from './ui/pricing-editor.js';
 import { installInterfaceScale } from './ui/interface-scale.js';
 import { installCustomerImport } from './ui/customer-import.js';
+import { paymentBenefitPolicy, paymentDiscountQuote, paymentBenefitReport, savedPaymentDiscount } from './core/payment-benefit.js';
+import { paymentChoiceHtml } from './ui/payment-choice.js';
+import './styles/payment-choice.css';
 // ═══════════════════════════════════════════════════════════
 // Sahten · punto de entrada
 // 1) estilos  2) núcleo + estado + puente  3) código legado como scripts clásicos
@@ -86,6 +89,7 @@ window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN.pricing = installPricing(window);
 window.SAHTEN.customersImport = installCustomerImport(window);
+window.SAHTEN.paymentChoices = { policy: paymentBenefitPolicy, quote: paymentDiscountQuote, report: paymentBenefitReport, snapshot: savedPaymentDiscount, html: paymentChoiceHtml };
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.online = { publish: onlinePublish };

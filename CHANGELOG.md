@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+## 0.4.21 · preparada, pendiente de publicación
+
+- **Medios de pago visibles**: en la tienda, dos opciones grandes del mismo tamaño para efectivo/transferencia y Mercado Pago con su símbolo oficial, sin desplegable. En Mostrador, una opción compacta por medio real, incluidos QR y medios personalizados, sin botones duplicados. El total se actualiza al elegir y conserva los datos de contacto y entrega.
+- **Beneficio configurable por negocio**: descuento por efectivo o transferencia sobre productos, con alcance independiente para web y Mostrador. Aplica el mayor descuento de la orden, sin acumular; no reduce el envío. Desactivado por defecto para otros negocios.
+- **Descuentos trazables**: cada orden nueva conserva porcentaje, base, importe y revisión de la promoción. Mostrador importa el descuento web, el ticket y WhatsApp lo detallan, y Reportes identifica operaciones y monto concedido; no reclasifica ventas anteriores ni duplica el descuento como gasto. Corrige el total de descuentos del reporte que leía un campo anterior.
+
 ## 0.4.20
 
 - **Instaladores corregidos**: restaura la versión original de una dependencia de Rust y alinea el registro de la app. Incluye el pie de la tienda de 0.4.19, cuyos instaladores no llegaron a publicarse. La validación de versiones ahora comprueba también Cargo.lock y package-lock.json.

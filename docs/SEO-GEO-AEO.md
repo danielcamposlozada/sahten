@@ -17,6 +17,7 @@ correctos y coherentes. Lo que más pesa: datos idénticos en todos lados (NAP),
 | Horarios | Lun–Jue 18:00–22:00 · Vie–Sáb 18:00–23:00 · Dom cerrado. Cargar horarios especiales de feriados |
 | Zona de delivery | Belgrano, Núñez, Florida, Vicente López, Olivos, Martínez y La Lucila (~6 km). Mínimo $15.000, envío gratis desde $45.000 |
 | Retiro | En el local, Roca 1489 |
+| Beneficio confirmado el 24/10/2026 | 10 % con efectivo o transferencia, solo productos (envío sin descuento), en web y Mostrador. No acumulable: aplicar el mayor descuento de la orden. Pendiente de activación/publicación |
 | Catering | Mesas árabes para eventos, 48 horas de anticipación |
 | Instagram | sahten.ar |
 | Sitio | https://sahten.online/ — en Google usar `?utm_source=google&utm_medium=organic&utm_campaign=gbp` (y `utm_content=pedidos` / `menu` en esos botones) |
@@ -85,7 +86,7 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 2. ¿Ficha de Google verificada y qué categorías tiene hoy?
 3. Horario real frente al continuo que muestra TodoResto.
 4. ¿Siguen vigentes el Fatay Hour (18:30–21:30) y el envío gratis en Vicente López?
-5. Porcentaje del descuento por pagar en efectivo.
+5. Resuelto el 24/10/2026: 10 % por efectivo o transferencia; solo productos, web y Mostrador, sin acumular (se aplica el mayor). Activación pendiente.
 6. Tiempo de entrega y costo de envío por zona.
 7. Platos vegetarianos y aptos para celíacos; qué es «Aristilos».
 8. Año de apertura; fotos de fachada y equipo.
@@ -199,3 +200,21 @@ Textos listos para pegar (descripción de 631 caracteres, productos, publicacion
 - El pie ya está visible en la tienda publicada, conserva contacto y crédito aprobados. Publicación Cloudflare Pages `4558e615` desde `bdf88816bf59f55db202bf2ea961c2f009299ca6`; no se modificaron datos de Supabase.
 - Los instaladores de 0.4.19 fallaron antes de publicarse: el cambio de versión alteró por error `regex-automata` en Cargo.lock y dejó la entrada de Sahten con la versión anterior. La última versión pública verificada sigue siendo 0.4.18. Corrección preparada como 0.4.20, conservando la etiqueta e historia de 0.4.19; se amplía la comprobación de versiones a ambos archivos de bloqueo.
 - Mercado Pago continúa habilitado solo en Pruebas (vendedor ficticio 3782799792). El intento 700280a2-0f40-4f45-866e-f0f02dff00d8 terminó rechazado; los intentos posteriores no registraron pago. Se retomó la prueba y el panel exige validar identidad por QR antes de consultar el comprador ficticio. No se activó producción, no se usaron tarjetas reales ni se modificaron pedidos.
+
+### 24/10/2026 — Mercado Pago: primera compra nueva aprobada y notificada
+
+- Se completó la compra ficticia por ARS 16.000 en Chrome incógnito. Checkout `e73e3519-4c4f-4eed-be0f-b6fde4dfea1c`, pago `184807337731` aprobado; la tienda mostró la acreditación de prueba al regresar.
+- La notificación firmada respondió HTTP 200 antes de la consulta del navegador. Base verificada solo en lectura: `paid` / `approved`, importe 1.600.000 centavos, sin reembolso y sin `order_id`. No creó ventas ni pedidos reales. Los avisos anteriores IPN fueron rechazados y no se relajó la seguridad del receptor.
+- Cobros reales sin activar. Antes de producción: actualizar la Edge Function para conservar `priceRevision` de las órdenes nuevas; preparar y mostrar los valores productivos al dueño para su confirmación. El seguimiento automático del intento antiguo está pausado y no se reactivó.
+- Dueño autorizó integrar y publicar 0.4.20: PR #20 fusionado normalmente (`510b467d045a94568a7c16d75c4252b6bc8e9d3a`), etiqueta `v0.4.20` creada sin cambiar etiquetas anteriores. Pruebas de release aprobadas; instaladores Windows/macOS en construcción (run 40066236369). Publicación todavía no confirmada.
+
+### 24/10/2026 — Preparación de producción y beneficio por pago
+
+- Sahten 0.4.20 ya publicada: release pública y última versión, run `40066236369` correcto, instaladores Windows y Mac universal y manifiesto `latest.json` 0.4.20 con enlaces y firmas presentes. No incluye todavía los botones nuevos ni la promoción.
+- El dueño autorizó actualizar únicamente `sahten-payments` para conservar `priceRevision` de cada producto. Versión 5 activa, sin cambios en la cuenta: sigue en Pruebas. El retorno de la compra ficticia aprobada sigue verificándose correctamente.
+- El titular activó personalmente las credenciales productivas en Mercado Pago (aplicación `1680445440969879`). Aún no se conectaron a Sahten: no se guardaron secretos productivos ni se habilitaron cobros reales en la app. URL de Webhooks preparada en modo productivo, sin guardar; evento Pagos (legacy), correspondiente a Preferences API.
+- Beneficio confirmado: 10 % en efectivo o transferencia, sobre productos; envío íntegro, web y Mostrador, mayor descuento sin acumular. Configurable por negocio y desactivado de forma predeterminada. Nuevas órdenes guardan porcentaje, base, importe, medio, revisión y fecha de vigencia; no se recalculan ventas anteriores. Reportes/CSV, ticket y WhatsApp conservan el descuento. Se reduce la venta neta sin volver a cargarlo como gasto.
+- Diseño preparado para 0.4.21: la tienda usa dos opciones grandes de igual tamaño, con el símbolo oficial de Mercado Pago y totales por opción. Mostrador usa una opción por medio real, sin grupo duplicado: efectivo, transferencia, Mercado Pago, QR u otros. Crear un medio permite indicar su tipo; QR y otros no reciben el beneficio por pago. Elegir un medio no acredita automáticamente el cobro ni crea una integración de QR.
+- Validación visual local con datos ficticios, sin conexión al negocio: tienda a 320 px y Mostrador a 1366 × 768 y 1024 × 600. El descuento no altera precios publicados ni costos fijos/variables. Pendiente de aprobación concreta: conexión productiva, activación del beneficio, publicación web e instaladores 0.4.21. No se modificaron menús, proyectos u órdenes en Supabase para esta preparación.
+
+- Validación final de 0.4.21 preparada: `npx vitest run` — 521 pruebas en 54 archivos; compilación, scripts clásicos, versiones y diff sin errores. Incluye prueba de QR personalizado sin beneficio, cambio entre efectivo/MP, persistencia de la política sin alterar ventas, costos históricos netos, ticket y exportación sin duplicar el importe del beneficio. La prueba antigua de guardado espera ahora la escritura automática observable, sin forzarla, para evitar un fallo por espera fija en equipos lentos.

@@ -1,0 +1,83 @@
+import { describe, it, expect, beforeAll } from 'vitest';
+import { paymentDiscountQuote, paymentBenefitReport, savedPaymentDiscount } from '../src/core/payment-benefit.js';
+import { toLocalOrder } from '../src/online/orders.js';
+import { quoteOrder } from '../src/payments/core.js';
+import { buildTestBundle, openApp, loadRawDemo } from './app-harness.js';
+const policy={enabled:true,percent:10,channels:{online:true,mostrador:true},revision:'revision-1',effectiveFrom:'2026-10-24T05:00:00Z'};
+describe('beneficio por medio de pago e historial',()=>{
+  it('aplica 10 % solo a productos, redondea centavos y conserva el mayor sin acumular',()=>{
+    expect(paymentDiscountQuote(123.45,'efectivo',policy).amount).toBe(12.35);
+    expect(paymentDiscountQuote(10000,'transferencia',policy,'mostrador',{type:'pct',value:5,name:'Cupón'})).toMatchObject({amount:1000,manualAmount:0,paymentDiscount:{percent:10,baseAmount:10000}});
+    expect(paymentDiscountQuote(10000,'efectivo',policy,'mostrador',{type:'pct',value:15,name:'Empleado'})).toMatchObject({amount:1500,label:'Empleado',paymentDiscount:null});
+    expect(paymentDiscountQuote(10000,'mercadopago',policy).amount).toBe(0);
+    expect(paymentDiscountQuote(10000,'efectivo',{}).amount).toBe(0);
+    expect(paymentDiscountQuote(10000,'efectivo',{...policy,channels:{online:false}}).amount).toBe(0);
+  });
+  it('conserva un descuento web válido en caja, ticket y registro histórico sin reconstruir órdenes antiguas',()=>{
+    const q=paymentDiscountQuote(10000,'transferencia',policy);
+    const payload={paymentMethod:'transferencia',items:[{productId:'p',name:'Plato',qty:1,unitPrice:10000,lineTotal:10000}],subtotal:10000,discount:q.amount,discountAmount:q.amount,discountName:q.label,paymentDiscount:q.paymentDiscount,shipping:1500,total:10500};
+    const order=toLocalOrder({id:'remote1',status:'pendiente',payload});
+    expect(order).toMatchObject({paymentName:'Transferencia',discount:1000,discountAmount:1000,total:10500,paymentDiscount:{revision:'revision-1',amount:1000}});
+    expect(savedPaymentDiscount({...payload,paymentMethod:'mercadopago'})).toBeNull();
+    expect(savedPaymentDiscount({...payload,total:100})).toBeNull();
+    expect(savedPaymentDiscount({...payload,discountAmount:1500,total:10000})).toBeNull();
+    const old={id:'old',status:'listo',paymentName:'Efectivo',discountAmount:1000};
+    expect(paymentBenefitReport([order,old,{...order,status:'cancelado'}])).toMatchObject({count:1,discount:1000,gross:10000,netProducts:9000});
+    const newPolicy={...policy,percent:20};paymentDiscountQuote(10000,'transferencia',newPolicy);
+    expect(order.paymentDiscount.percent).toBe(10);
+  });
+  it('Mercado Pago recalcula el precio completo e ignora un descuento directo enviado por el cliente',()=>{
+    const menu={products:[{id:'p',name:'Plato',price:10000}],payments:{methods:{mercadopago:true},benefit:policy}};
+    const order=quoteOrder(menu,{items:[{productId:'p',qty:1}],source:'pickup',customerName:'Prueba',customerPhone:'1100000000',discount:1000,paymentDiscount:{amount:1000}});
+    expect(order.total).toBe(10000);expect(order.discount).toBe(0);
+  });
+});
+beforeAll(()=>buildTestBundle(),120000);
+it('Mostrador recalcula al cambiar botones, guarda el beneficio y los reportes lo identifican',async()=>{
+  const {window:w}=await openApp();loadRawDemo(w);
+  w.eval('_saveTiendaConfig({..._getTiendaConfig(),paymentMethods:{efectivo:true,transferencia:true,mercadopago:true},paymentBenefit:'+JSON.stringify(policy)+'})');
+  w.showPanel('mostrador');const d=w.document;d.querySelectorAll('.most-product-add')[0].click();d.querySelectorAll('.most-product-add')[1].click();
+  expect(d.querySelector('.payment-choice-direct')).toBeNull();
+  w.openPaymentManager();d.getElementById('pay-new-name').value='QR';d.getElementById('pay-new-method').value='qr';w.payAddNew();
+  d.getElementById('pay-mgr-overlay').remove();
+  expect(d.querySelectorAll('.payment-choice')).toHaveLength(4);
+  const qr=[...d.querySelectorAll('.payment-choice')].find(b=>b.textContent.trim()==='QR');
+  expect(qr).toBeTruthy();qr.click();expect(w.eval('_calcCartTotals().discount')).toBe(0);
+  expect(w.eval('_mostSelectedPayment().label')).toBe('QR');
+  const subtotal=w.eval('_calcCartTotals().subtotal');
+  d.querySelector('[data-payment-choice="standard:efectivo"]').click();
+  expect(w.eval('_calcCartTotals().discount')).toBe(Math.round(subtotal*10)/100);
+  expect(d.querySelector('[aria-pressed=true][data-payment-choice]')).toBeTruthy();
+  d.querySelector('[data-payment-choice="standard:mercadopago"]').click();
+  expect(w.eval('_calcCartTotals().discount')).toBe(0);
+  d.querySelector('[data-payment-choice="standard:efectivo"]').click();
+  d.querySelector('.most-checkout').click();
+  const order=w.sahtenOrders()[0];expect(order.paymentDiscount).toMatchObject({percent:10,revision:'revision-1'});
+  expect(order.total).toBe(subtotal-order.discountAmount);
+  expect(w.SAHTEN.state.saleCosts[order.id].items.reduce((n,it)=>n+it.revenue,0)).toBe(order.total);
+  expect(w._paymentBenefitBlock([order])).toContain('Ver operaciones con descuento por pago');
+  let ticket='';w.SAHTEN.printDocument=async h=>{ticket=h;};await w.printComanda(order.id);
+  expect(ticket).toContain('10 % por efectivo o transferencia');
+  // La exportación cuenta el beneficio una sola vez por orden, aunque haya varias líneas.
+  let csv='';w.Blob=class{constructor(parts){csv=parts.join('');}};
+  w.URL.createObjectURL=()=> 'blob:preview';w.URL.revokeObjectURL=()=>{};
+  w.HTMLAnchorElement.prototype.click=()=>{};
+  w._exportMostradorXLSX();
+  const csvRows=csv.trim().split('\n').slice(1).map(row=>row.split(','));
+  expect(csvRows.reduce((sum,row)=>sum+Number(row[16]),0)).toBe(order.paymentDiscount.amount);
+  expect(csvRows[0][17]).toBe('revision-1');
+  // Guardar otra política afecta próximas operaciones, nunca reescribe el historial.
+  const old=JSON.stringify(order);
+  w._renderTiendaOnline();
+  d.getElementById('tienda-benefit-percent').value='20';
+  d.getElementById('tienda-benefit-enabled').checked=true;
+  d.getElementById('tienda-benefit-online').checked=true;
+  d.getElementById('tienda-benefit-pos').checked=true;
+  w._tiendaSaveBenefit();
+  const saved=w.eval('_getTiendaConfig().paymentBenefit');
+  expect(saved).toMatchObject({enabled:true,percent:20,channels:{online:true,mostrador:true}});
+  expect(saved.revision).not.toBe('revision-1');
+  expect(JSON.stringify(w.sahtenOrders()[0])).toBe(old);
+  w._renderTiendaOnline();expect(d.getElementById('tienda-benefit-percent').value).toBe('20');
+  w.close();
+});

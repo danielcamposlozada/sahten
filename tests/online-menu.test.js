@@ -379,7 +379,8 @@ describe('Mercado Pago en la web sin claves privadas',()=>{
   function menuMP(){const m=buildMenuJson(demoState(),{menuConfig:{whatsappNumber:'5491155550123'},tienda:TIENDA,store:{name:'Mi local'},supabase:{url:'https://abcd1234.supabase.co',anonKey:'sb_publishable_test',storeId:'store-1'}});m.payments.methods={mercadopago:true,efectivo:true};return m;}
   it('oculta Mercado Pago cuando el servidor no está conectado y conserva efectivo',async()=>{
     const a=await web({menu:menuMP()});a.click('[data-inc]');a.w.document.querySelector('.bar button').click();
-    expect([...a.d.querySelector('#f-pay').options].map(o=>o.value)).toEqual(['efectivo']);a.w.close();
+    expect(a.d.querySelector('#f-pay')).toBeNull();
+    expect([...a.d.querySelectorAll('[data-payment-choice]')].map(o=>o.dataset.paymentChoice)).toEqual(['efectivo']);a.w.close();
   });
   it('ofrece checkout cuando la cuenta del negocio está habilitada y no inserta un pedido sin verificar pago',async()=>{
     const a=await web({menu:menuMP(),fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'/sahten-payments/checkout':{status:503,ok:false,body:{message:'Prueba sin cobro real'}}}});
@@ -393,6 +394,30 @@ describe('Mercado Pago en la web sin claves privadas',()=>{
     const a=await web({menu:menuMP(),search:'?mp_checkout=00000000-0000-4000-8000-000000000001&status=approved',fetchMap:{'/sahten-payments/config':{body:{enabled:true}}}});
     expect(a.d.querySelector('#sheet').textContent).toContain('no confirma por sí solo');
     expect(a.d.querySelector('#sheet').textContent).not.toContain('Pago acreditado.');a.w.close();
+  });
+});
+
+describe('opciones de pago visibles y beneficio histórico',()=>{
+  it('alterna métodos con botones, conserva los datos y envía productos con descuento y envío completo',async()=>{
+    const m=buildMenuJson(demoState(),{tienda:{...TIENDA,deliveryMinOrder:0,freeShippingMin:0,paymentBenefit:{enabled:true,percent:10,revision:'promo-1',channels:{online:true,mostrador:true}}},supabase:{url:'https://test.supabase.co',anonKey:'sb_publishable_test',storeId:'store1'}});
+    m.products=[{id:'plato',name:'Plato ficticio',price:10000}];m.config.categories=[];
+    m.payments.methods={efectivo:true,transferencia:true,mercadopago:true};
+    const a=await web({menu:m,fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'nominatim.openstreetmap.org':{body:[{display_name:'Calle ficticia 123, Ciudad',lat:TIENDA.lat,lon:TIENDA.lng}]},'/rest/v1/orders':{status:201,body:[]}}});
+    a.click('[data-inc]');a.click('#bar button');a.type('#f-name','Cliente ficticio');a.type('#f-phone','1100000000');a.type('#f-addr','Calle ficticia 123');await a.wait(560);a.click('[data-sug="0"]');
+    expect(a.d.querySelector('#f-pay')).toBeNull();
+    expect(a.d.querySelector('.payment-choices').textContent).toContain('10 % de descuento');
+    expect(a.d.querySelector('[data-payment-choice="mercadopago"] svg')).toBeTruthy();
+    expect(a.d.querySelector('#send').textContent).toContain('$10.500');
+    a.click('[data-payment-choice="mercadopago"]');
+    expect(a.d.querySelector('#send').textContent).toContain('$11.500');
+    expect(a.d.querySelector('#f-name').value).toBe('Cliente ficticio');
+    a.click('[data-payment-choice="efectivo"]');a.click('[data-payment-choice="transferencia"]');
+    expect(a.d.querySelector('#send').textContent).toContain('$10.500');a.click('#send');await a.wait(20);
+    const request=a.calls.find(c=>c.url.includes('/rest/v1/orders')&&c.opts.method==='POST');
+    const o=JSON.parse(request.opts.body).payload;
+    expect(o).toMatchObject({paymentMethod:'transferencia',subtotal:10000,shipping:1500,discountAmount:1000,total:10500,paymentDiscount:{percent:10,revision:'promo-1',amount:1000}});
+    expect(a.d.querySelector('#sheet').textContent).toContain('Datos para la transferencia');
+    expect(a.d.querySelector('#sheet').textContent).toContain('10 % por efectivo o transferencia');a.w.close();
   });
 });
 

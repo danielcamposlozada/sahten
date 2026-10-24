@@ -8,6 +8,9 @@ import messageSrc from './orderMessage.js?raw';
 import contrastSrc from '../ui/contrast.js?raw';
 import reviewLinkSrc from '../ui/review-link.js?raw';
 import storefrontSrc from './storefront.js?raw';
+import paymentBenefitSrc from '../core/payment-benefit.js?raw';
+import paymentChoiceSrc from '../ui/payment-choice.js?raw';
+import paymentChoiceCss from '../styles/payment-choice.css?raw';
 import { imageFileName, categoryPhotoKey } from './menuJson.js';
 import { createZip } from './zip.js';
 import seoSrc from './seo.js?raw';
@@ -16,12 +19,13 @@ import { buildSitePages } from './pages.js';
 import { brandFiles, brandInline } from './brand.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
-export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc].map(s => s.replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
+export const sharedScript = () => [deliverySrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc, paymentBenefitSrc, paymentChoiceSrc].map(s => s.replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
 
 const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028').replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
 
 export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
+    .replace('/*__PAYMENT_CSS__*/', () => paymentChoiceCss)
     .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
     .replace('<body>', storefront ? '<body data-storefront>' : preview ? '<body data-preview>' : '<body>')
     .replace('<!--__SEARCH_CONTENT__-->', () => renderSearchContent(menu))
