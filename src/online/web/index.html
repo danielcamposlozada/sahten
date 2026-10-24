@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
+/*__PAYMENT_CSS__*/
 :root{--primary:#235328;--accent:#F28C00;--ink:#1e2c1f;--muted:#6f7f71;--bg:#faf8f5;--card:#fff;--border:#e2ddd5;--red:#c0392b;--r:14px}
 *{box-sizing:border-box}body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -181,7 +182,7 @@ function brandMark(label,placement){var s=MENU&&MENU.site,h=s&&s.hero,custom=s&&
   return BRAND&&BRAND.d?'<svg class="brand-mark" viewBox="'+esc(BRAND.viewBox)+'" role="img" aria-label="'+esc(label)+'"><path d="'+esc(BRAND.d)+'" fill="currentColor"/></svg>':'';}
 
 var cur=function(){return (MENU&&MENU.store&&MENU.store.currency)||{symbol:'$',locale:'es-AR'}};
-var fmt=function(n){return cur().symbol+Number(n||0).toLocaleString(cur().locale,{maximumFractionDigits:0})};
+var fmt=function(n){return cur().symbol+Number(n||0).toLocaleString(cur().locale,{maximumFractionDigits:2})};
 var q=new URLSearchParams(location.search);
 
 // ── carga: menú en vivo (Supabase, si hay) y respaldo en menu.json ──
@@ -387,7 +388,8 @@ function sendStatus(){
   return 'Revisá el total y enviá tu pedido.';
 }
 function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]&&(k!=='mercadopago'||mpAvailable)});}
-function total(){return subtotal()+(type==='delivery'&&ship&&ship.ok?ship.cost:0);}
+function cartBenefit(method){return paymentDiscountQuote(subtotal(),method||pay,MENU.payments&&MENU.payments.benefit,'online');}
+function total(){return Math.round((subtotal()-cartBenefit().amount+(type==='delivery'&&ship&&ship.ok?ship.cost:0))*100)/100;}
 function shipNote(){
   if(type!=='delivery')return '';
   if(!geo)return '<div class="note">Escribí tu dirección y elegí una de las sugerencias para calcular el envío.</div>';
@@ -404,19 +406,19 @@ function sheet(){
   var labels=PAY_LABELS;
   var canSend=!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok));
   var body=ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('')+
-   '<div class="row"><span>Subtotal</span><span>'+fmt(subtotal())+'</span></div>'+(type==='delivery'&&ship&&ship.ok?'<div class="row"><span>Envío</span><span>'+(ship.cost?fmt(ship.cost):'Gratis')+'</span></div>':'')+'<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div>'+
+   '<div class="row"><span>Subtotal</span><span>'+fmt(subtotal())+'</span></div>'+(cartBenefit().amount?'<div class="row"><span>'+esc(cartBenefit().label)+'</span><span>−'+fmt(cartBenefit().amount)+'</span></div>':'')+(type==='delivery'&&ship&&ship.ok?'<div class="row"><span>Envío</span><span>'+(ship.cost?fmt(ship.cost):'Gratis')+'</span></div>':'')+'<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div>'+
    '<div class="seg"><button data-type="delivery" class="'+(type==='delivery'?'on':'')+'">🛵 Delivery</button><button data-type="pickup" class="'+(type==='pickup'?'on':'')+'">🏠 Retiro en local</button></div>'+
    (MENU.config.deliveryNote&&type==='delivery'?'<div class="note">'+esc(MENU.config.deliveryNote)+'</div>':'')+
    '<label for="f-name">Nombre</label><input id="f-name" autocomplete="name" value="'+esc(form.name)+'"><label for="f-phone">Teléfono</label><input id="f-phone" type="tel" autocomplete="tel" value="'+esc(form.phone)+'">'+
    (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'"><div id="sugs"></div>'+shipNote():'<div class="note">Retiro: '+esc(MENU.store.address||'en el local')+'</div>')+
-   '<label for="f-pay">Forma de pago</label><select id="f-pay">'+payMethods().map(function(k){return '<option value="'+k+'"'+(k===pay?' selected':'')+'>'+(labels[k]||k)+'</option>'}).join('')+'</select>'+
+   paymentChoiceHtml({methods:payMethods(),selected:pay,percent:paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).enabled&&paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).channels.online?paymentBenefitPolicy(MENU.payments.benefit).percent:0,amounts:Object.fromEntries(payMethods().map(function(k){return [k,fmt(subtotal()-cartBenefit(k).amount+(type==='delivery'&&ship&&ship.ok?ship.cost:0))]}))})+
    '<label for="f-notes">Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea>'+
    '';
   var footer='<div class="row t"><span>Total</span><span>'+fmt(total())+'</span></div><div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="cta ghost" data-close>Seguir viendo el menú</button>';
   setSheetContent(body,footer);
   var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
   bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');
-  if($('f-pay'))$('f-pay').addEventListener('change',function(){pay=this.value;sheet();});
+  s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
   if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;suggest(this.value);refreshSend();});
   renderSugs();
 }
@@ -432,7 +434,7 @@ function buildOrder(){
   var ls=lines(),sub=subtotal(),sh=type==='delivery'&&ship&&ship.ok?ship.cost:0;
   return {id:'web_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),num:Math.floor(Math.random()*9000)+1000,createdAt:new Date().toISOString(),source:type,status:'pendiente',
     customerName:form.name.trim(),customerPhone:form.phone.trim(),customerEmail:form.email.trim(),address:type==='delivery'?form.address:'Retiro en local',zoneName:type==='delivery'&&ship&&ship.zone?ship.zone.name:'',
-    lat:geo?geo.lat:null,lng:geo?geo.lng:null,paymentMethod:pay,items:ls,subtotal:sub,discount:0,shipping:sh,total:sub+sh,notes:form.notes.trim()};
+    lat:geo?geo.lat:null,lng:geo?geo.lng:null,paymentMethod:pay,items:ls,subtotal:sub,discount:cartBenefit().amount,discountAmount:cartBenefit().amount,discountName:cartBenefit().label||null,paymentDiscount:cartBenefit().paymentDiscount,shipping:sh,total:total(),notes:form.notes.trim()};
 }
 function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
@@ -449,7 +451,7 @@ function done(){
   var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
   var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';
   return '<h2>¡Gracias, '+esc(o.customerName)+'!</h2><div class="note ok">'+(sent?'Recibimos tu pedido <b>#'+String(o.num).padStart(4,'0')+'</b>. Te vamos a avisar por teléfono.':'Se abrió WhatsApp con tu pedido <b>#'+String(o.num).padStart(4,'0')+'</b>. Enviá el mensaje para confirmarlo.')+'</div>'+bankHtml+
-   '<div class="row t"><span>Total</span><span>'+fmt(o.total)+'</span></div>'+(MENU.store.whatsapp?'<a class="cta wa" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+esc(waLink(o))+'">'+waIcon()+(sent?'Avisar por WhatsApp':'Abrir WhatsApp de nuevo')+'</a>':'')+'<button class="cta ghost" data-close>Volver al menú</button>';
+   (o.discountAmount?'<div class="row"><span>'+esc(o.discountName)+'</span><span>−'+fmt(o.discountAmount)+'</span></div>':'')+'<div class="row t"><span>Total</span><span>'+fmt(o.total)+'</span></div>'+(MENU.store.whatsapp?'<a class="cta wa" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+esc(waLink(o))+'">'+waIcon()+(sent?'Avisar por WhatsApp':'Abrir WhatsApp de nuevo')+'</a>':'')+'<button class="cta ghost" data-close>Volver al menú</button>';
 }
 
 // ── vistas: el inicio muestra un resumen y «Pedir online» abre la carta completa (#pedido o #pedido/Categoría) ──

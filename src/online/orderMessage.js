@@ -1,7 +1,7 @@
 // Pedido del menú publicado → mensaje de WhatsApp. Puro. Se inyecta tal cual en la web publicada (sin imports).
 export const PAY_LABELS = { efectivo: 'Efectivo', transferencia: 'Transferencia', mercadopago: 'Mercado Pago', tarjeta: 'Tarjeta' };
 
-const money = (n, symbol = '$', locale = 'es-AR') => symbol + Number(n || 0).toLocaleString(locale, { maximumFractionDigits: 0 });
+const money = (n, symbol = '$', locale = 'es-AR') => symbol + Number(n || 0).toLocaleString(locale, { maximumFractionDigits: 2 });
 
 /** Solo dígitos, con el 54 9 de Argentina si viene un número local de 10 dígitos. */
 export function normalizePhone(raw, defaultCountry = '549') {
@@ -33,6 +33,7 @@ export function buildWaMessage(o, { symbol = '$', locale = 'es-AR' } = {}) {
   msg += '\n*Detalle:*\n';
   (o.items || []).forEach(it => { msg += '  • ' + it.name + ' ×' + it.qty + ' — ' + m(it.lineTotal) + '\n'; });
   msg += '\nSubtotal: ' + m(o.subtotal) + '\n';
+  if (Number(o.discountAmount ?? o.discount) > 0) msg += (o.discountName || 'Descuento') + ': −' + m(o.discountAmount ?? o.discount) + '\n';
   if (o.source === 'delivery') msg += 'Envío: ' + (o.shipping ? m(o.shipping) : 'Gratis') + '\n';
   msg += '*Total: ' + m(o.total) + '*\n';
   msg += 'Pago: ' + (PAY_LABELS[o.paymentMethod] || o.paymentMethod || '') + '\n';

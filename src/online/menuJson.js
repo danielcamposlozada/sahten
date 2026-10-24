@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════
 import { channelPriceWithDisc } from '../core/pricing.js';
 import { buildSite } from './site.js';
+import { paymentBenefitPolicy } from '../core/payment-benefit.js';
 
 export const MENU_VERSION = 1;
 
@@ -58,7 +59,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       lat: tienda.lat ?? null, lng: tienda.lng ?? null, zones: (tienda.zones || []).map(z => ({ id: z.id, name: z.name, type: z.type || 'circle', radiusKm: z.radiusKm || 0, points: z.points || [], baseCost: z.baseCost || 0 })),
       freeShippingMin: tienda.freeShippingMin || 0, deliveryMinOrder: tienda.deliveryMinOrder || 0, costPerKm: tienda.costPerKm || 0,
     },
-    payments: { methods: tienda.paymentMethods || { efectivo: true }, bank: tienda.paymentMethods && tienda.paymentMethods.transferencia ? (tienda.bankDetails || {}) : {} },
+    payments: { methods: tienda.paymentMethods || { efectivo: true }, bank: tienda.paymentMethods && tienda.paymentMethods.transferencia ? (tienda.bankDetails || {}) : {}, benefit: paymentBenefitPolicy(tienda.paymentBenefit) },
     supabase: sb,
   };
 }

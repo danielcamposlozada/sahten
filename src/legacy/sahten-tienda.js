@@ -30,6 +30,7 @@ function _defaultTiendaConfig() {
       { id:'z3', name:'Zona C', type:'circle', radiusKm:6, baseCost:4500, color:'#F44336', points:[] },
     ],
     paymentMethods: { efectivo:true, transferencia:true, mercadopago:false, tarjeta:false },
+    paymentBenefit: { enabled:false, percent:10, channels:{online:true,mostrador:true} },
     bankDetails: { bankName:'', accountHolder:'', cbu:'', alias:'', notes:'' },
     deliveryMinOrder: 15000,
   };
@@ -151,6 +152,20 @@ function _renderTiendaOnline() {
     </div>
 
     <div id="mp-account-slot"></div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Descuento por efectivo o transferencia</div></div>
+      <div class="card-body" style="display:grid;gap:12px">
+        <label style="display:flex;gap:10px;align-items:center"><input id="tienda-benefit-enabled" type="checkbox" style="width:20px;height:20px" ${cfg.paymentBenefit?.enabled?'checked':''}> Activar beneficio en nuevas órdenes</label>
+        <label for="tienda-benefit-percent">Porcentaje de descuento sobre productos</label>
+        <input id="tienda-benefit-percent" class="form-input" type="number" min="0" max="100" step="0.01" value="${Number(cfg.paymentBenefit?.percent)||10}">
+        <label style="display:flex;gap:10px;align-items:center"><input id="tienda-benefit-online" type="checkbox" style="width:20px;height:20px" ${cfg.paymentBenefit?.channels?.online!==false?'checked':''}> Tienda online</label>
+        <label style="display:flex;gap:10px;align-items:center"><input id="tienda-benefit-pos" type="checkbox" style="width:20px;height:20px" ${cfg.paymentBenefit?.channels?.mostrador!==false?'checked':''}> Mostrador</label>
+        <p style="font-size:14px;line-height:1.5;margin:0">El envío no tiene descuento. No se acumula con otros descuentos de la orden: se aplica el mayor. Cada operación conserva su porcentaje e importe; las ventas anteriores no cambian. Se registra como descuento comercial, sin duplicarlo como gasto.</p>
+        <button type="button" class="btn btn-primary" onclick="_tiendaSaveBenefit()">Guardar beneficio</button>
+        <p id="tienda-benefit-status" role="status" style="margin:0;font-size:14px"></p>
+      </div>
+    </div>
 
     <!-- DATOS BANCARIOS -->
     <div class="card" style="margin-bottom:16px">
@@ -339,6 +354,17 @@ function _tiendaSaveField(key, val) {
   const cfg = _getTiendaConfig();
   cfg[key] = val;
   _saveTiendaConfig(cfg);
+}
+function _tiendaSaveBenefit(){
+  const percent=Number(document.getElementById('tienda-benefit-percent').value);
+  const status=document.getElementById('tienda-benefit-status');
+  if(!Number.isFinite(percent)||percent<=0||percent>100){status.textContent='Indicá un porcentaje mayor a 0 y hasta 100.';return;}
+  const cfg=_getTiendaConfig();
+  cfg.paymentBenefit={enabled:document.getElementById('tienda-benefit-enabled').checked,percent,channels:{online:document.getElementById('tienda-benefit-online').checked,mostrador:document.getElementById('tienda-benefit-pos').checked},revision:crypto.randomUUID(),effectiveFrom:new Date().toISOString()};
+  _saveTiendaConfig(cfg);
+  status.textContent='Beneficio guardado. Rige para nuevas órdenes en este proyecto. Sincronizá el menú para actualizar la tienda online.';
+  if(typeof _renderCartExtras==='function')_renderCartExtras();
+  if(typeof _renderCartTotals==='function')_renderCartTotals();
 }
 function _tiendaTogglePay(method, enabled) {
   const cfg = _getTiendaConfig();

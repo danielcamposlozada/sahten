@@ -51,8 +51,9 @@ describe('el proyecto es un archivo', () => {
     a.ev("PRODUCTS[0].priceAdj=1.1");
     a.p.markDirty();
     expect(a.s.info().status).toBe('dirty');
-    await wait(2300);
-    expect(a.s.info().status).toBe('saved');
+    // Verificar el archivo que escribió el guardado automático, sin forzarlo.
+    // El render puede reprogramar el debounce y un margen fijo de 300 ms no alcanza.
+    await expect.poll(()=>({status:a.s.info().status,price:JSON.parse(disk['Mi local.sahten']).catalog.productos[0].priceAdj}),{timeout:8000}).toEqual({status:'saved',price:1.1});
     const saved = JSON.parse(disk['Mi local.sahten']);
     expect(saved.catalog.productos[0].priceAdj).toBe(1.1);
     expect(saved.sales.orders).toHaveLength(1);

@@ -57,6 +57,16 @@ Las devoluciones y los contracargos se consultan y reflejan; esta versión no in
 - Webhook firmado `data.id=184807337731&type=payment`: respuesta HTTP 200 a las 05:28:13.450 UTC. Llegó antes de la consulta de retorno `/status` (HTTP 200 a las 05:28:21.683 UTC). Confirmación independiente del enlace de retorno.
 - Lectura de base: checkout `paid`, pago `approved`, `amount_cents=1600000`, `refunded_cents=0`, `order_id=null`; una fila de pago. Se preservó la separación de pruebas respecto de pedidos y contabilidad reales.
 - También llegaron avisos del formato anterior IPN (`id`/`topic`), rechazados con HTTP 401 por la ruta que exige la firma de Webhooks. No bloquearon la confirmación firmada correcta. No se desactivaron las validaciones para aceptarlos.
-- La cuenta activa sigue en modo `test`. Producción sigue pendiente de credenciales reales y firma correspondiente, autorización expresa del titular y una validación supervisada de pedido real. No se desplegó una nueva Edge Function en esta prueba; la propagación de `priceRevision` a la función desplegada continúa pendiente para conservar el historial privado de costos de las futuras órdenes productivas.
+- La cuenta activa sigue en modo `test`. Después de esta compra, el dueño autorizó y se desplegó la versión 5 de `sahten-payments`, cuya única diferencia funcional conserva `priceRevision` en los productos de futuras órdenes. El titular activó las credenciales reales en el panel. La conexión productiva en Sahten, guardar Webhooks productivos y una validación supervisada con fondos reales siguen pendientes. No se usaron claves productivas en esta validación.
 
 Evidencia local: `entregables/mercadopago-2026-10-24/pago-prueba-resultado.png` en el espacio de trabajo de este chat.
+
+## Descuento y selección de medios · preparado para 0.4.21
+
+La tienda presenta dos opciones del mismo tamaño: efectivo/transferencia y Mercado Pago. Elegir pago directo permite precisar efectivo o transferencia para registrar el medio real. Mostrador muestra una opción compacta por medio, sin duplicación; los medios personalizados (QR, débito, otros) se incorporan en el mismo grupo y declaran su tipo. Esto registra una elección, no una confirmación bancaria ni una nueva integración QR.
+
+En Ajustes → Negocio → Tienda online y delivery se configura el porcentaje y su alcance para web/Mostrador. Por defecto está desactivado. Sahten confirmó 10 %, solo productos, envío sin descuento y sin acumulación: se aplica el mayor descuento de la orden. Tras guardar, sincronizar el menú para que la web reciba la política. La revisión y vigencia cambian al guardar; las órdenes anteriores mantienen su registro original.
+
+Ejemplo ilustrativo: productos $10.000 + envío $1.500 → efectivo/transferencia $10.500 (descuento $1.000); Mercado Pago $11.500. Con otro descuento de 15 %, se aplica ese mayor beneficio y no se clasifica como descuento por pago. Mercado Pago siempre recalcula en servidor desde precios del menú; ignora descuentos enviados por el navegador. Los pedidos directos conservan el flujo de recepción existente y requieren verificar el cobro por el negocio.
+
+Reportes permite desplegar las operaciones beneficiadas y exportarlas con porcentaje, importe y revisión. El importe específico del beneficio se exporta una sola vez por orden, en la primera línea; no sumar las columnas rotuladas «total orden» por cada producto. Se excluyen las canceladas del resumen y no se infieren beneficios de ventas antiguas por coincidencia de importe.
