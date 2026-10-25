@@ -137,7 +137,7 @@ let mostradorOrderType = 'retiro'; // retiro | delivery
 let mostradorCashTendered = '';
 let mostradorDelivery = null;     // {address, note, lat, lng, distKm, zone, out}
 let mostradorShipManual = false;
-let _mostDelMap = null, _mostAddrTimer = null, _mostAddrSugs = [];
+let _mostDelMap = null, _mostAddrTimer = null, _mostAddrSugs = [], _mostAddrAbort = null, _mostAddrGeneration = 0;
 function _nextOrderNum(){ const max = SAHTEN_ORDERS.reduce((m,o)=>Math.max(m,o.num||0),0); return max+1; }
 
 // ═══════════════════════════════════════════════════════════
@@ -444,36 +444,42 @@ function _mostDeliveryExtrasHtml(){
     '<div style="position:relative"><input type="text" id="most-addr-input" aria-label="Dirección de entrega" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
     '<div id="most-addr-sugs" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:40;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden"></div></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+['addressFloor','addressApartment'].map((key,i)=>'<label style="min-width:0">'+(i?'Departamento':'Piso')+'<input class="custom-input" style="width:100%" aria-label="'+(i?'Departamento':'Piso')+'" maxlength="30" value="'+_esc(d?.[key]||'')+'" oninput="_mostDeliveryField(\''+key+'\',this.value)"></label>').join('')+'</div><label>Referencia de entrega<input class="custom-input" aria-label="Referencia de entrega" maxlength="200" value="'+_esc(d?.deliveryReference||'')+'" oninput="_mostDeliveryField(\'deliveryReference\',this.value)"></label><label>Notas del pedido<input class="custom-input" aria-label="Notas del pedido" maxlength="1000" value="'+_esc(d?.note||'')+'" oninput="_mostDeliveryField(\'note\',this.value)"></label>' +
-    (cfg.deliveryV2?.active?'<button class="btn" type="button" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar dirección</button><div id="most-delivery-incentive"></div>':info) +
+    '<button class="btn" id="most-addr-retry" type="button" hidden style="display:none" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar de otra forma</button>'+(cfg.deliveryV2?.active?'<div id="most-delivery-incentive"></div>':info) +
     (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">'+(cfg.deliveryV2?.active?'La ubicación corresponde a la dirección elegida en Buscar dirección.':'Podés mover el pin para ajustar la ubicación.')+'</div>':'') +
     '</div>' +
     (cfg.deliveryV2?.active?'':'<div class="most-extras-row"><label for="most-ship-val">Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>');
   return h;
 }
+function _mostAddressFallback(visible){const b=document.getElementById('most-addr-retry');if(b){b.hidden=!visible;b.style.display=visible?'inline-flex':'none';}}
 function _mostAddrInput(v,explicit=false){
   clearTimeout(_mostAddrTimer);
+  if(_mostAddrAbort)_mostAddrAbort.abort();_mostAddrAbort=new AbortController();
+  const signal=_mostAddrAbort.signal,generation=++_mostAddrGeneration,project=SAHTEN.project?.session.id;
   // Una dirección editada nunca conserva la ubicación ni la tarifa automática de la anterior.
   mostradorDelivery={...SAHTEN.orderDetails.deliveryDetails(mostradorDelivery,'delivery'),address:String(v||'').trim(),note:mostradorDelivery?.note||'',lat:null,lng:null,zone:null};
   _mostAddrSugs=[];
   _renderCartTotals();
+  _mostAddressFallback(false);
   const shipping=document.getElementById('most-ship-val'); if(shipping&&!mostradorShipManual) shipping.placeholder='Indicá el envío manual';
   const box=document.getElementById('most-addr-sugs');
   if(box) box.style.display='none';
-  if(_mostTiendaCfg().deliveryV2?.active&&!explicit)return;
   if(!v || v.trim().length<4){ if(box) box.style.display='none'; return; }
+  if(!explicit&&!/\d/.test(v))return;
+  if(box){box.innerHTML='<div role="status" style="padding:10px 12px;font-size:12px">Buscando dirección…</div>';box.style.display='block';}
   _mostAddrTimer=setTimeout(async()=>{
     const cfg=_mostTiendaCfg(); const lat=cfg.lat||-34.6037, lng=cfg.lng||-58.3816;
     const vb=[lng-0.3,lat+0.3,lng+0.3,lat-0.3].join(',');
     try{
-      const data=cfg.deliveryV2?.active?await SAHTEN.delivery.client.geocode(v):await (await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&accept-language=es&viewbox='+vb+'&q='+encodeURIComponent(v))).json();
-      if(document.getElementById('most-addr-input')?.value!==v) return;
+      const data=!explicit?await SAHTEN.delivery.client.suggest(v,cfg.deliveryV2?.center||{lat,lng},{signal}):cfg.deliveryV2?.active?await SAHTEN.delivery.client.geocode(v):await (await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&accept-language=es&viewbox='+vb+'&q='+encodeURIComponent(v))).json();
+      if(generation!==_mostAddrGeneration||project!==SAHTEN.project?.session.id||document.getElementById('most-addr-input')?.value!==v) return;
       _mostAddrSugs=(data||[]).map(x=>({label:_mostShortAddr(x),full:x.display_name,lat:+x.lat,lng:+x.lon}));
       const b=document.getElementById('most-addr-sugs'); if(!b) return;
-      if(!_mostAddrSugs.length){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Sin resultados. Probá con calle y altura.</div>'; b.style.display='block'; return; }
+      if(!_mostAddrSugs.length){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">Agregá la localidad o probá otra búsqueda.</div>'; b.style.display='block'; _mostAddressFallback(true); return; }
       b.innerHTML=_mostAddrSugs.map((s,i)=>{ const z=_mostZoneFor(s.lat,s.lng); return '<div onmousedown="_mostPickSug('+i+')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;align-items:center" onmouseover="this.style.background=\'var(--sand)\'" onmouseout="this.style.background=\'\'"><div style="min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(s.label)+'</div><div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(s.full)+'</div></div><div style="font-size:11px;font-weight:600;white-space:nowrap;color:'+(z.zone?'var(--green)':'var(--red)')+'">'+(z.zone?'$'+_fmt(z.zone.baseCost||0):'Fuera')+'</div></div>'; }).join('');
       b.style.display='block';
-    }catch(e){ const b=document.getElementById('most-addr-sugs'); if(b){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">'+(cfg.deliveryV2?.active?'No se pudo buscar la dirección. Reintentá o elegí retiro.':'Sin conexión para buscar direcciones. Cargá el envío a mano.')+'</div>'; b.style.display='block'; } }
-  },400);
+      if(data.some(x=>x.provider==='georef'))b.innerHTML+='<div style="padding:5px 12px;font-size:10px;color:var(--muted)">Direcciones: Georef · Revisá calle, altura y localidad.</div>';
+    }catch(e){if(e.name==='AbortError'||generation!==_mostAddrGeneration||project!==SAHTEN.project?.session.id)return;_mostAddressFallback(true);const b=document.getElementById('most-addr-sugs'); if(b){ b.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">'+_esc(e.message||'No se pudo buscar la dirección. Reintentá o elegí retiro.')+'</div>'; b.style.display='block'; } }
+  },explicit?0:350);
 }
 function _mostSetDeliveryPoint(lat,lng,address){
   const z=_mostZoneFor(lat,lng);

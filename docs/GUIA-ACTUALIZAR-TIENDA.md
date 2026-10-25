@@ -65,6 +65,7 @@ Esta publicación actualiza también la copia estática del catálogo y las pág
 
 ## Cómo comprobar el beneficio de delivery
 
+- Desde 0.4.25, web y Mostrador sugieren direcciones al escribir calle y altura, después de una pausa breve. Elegí la opción correcta. Si no aparece, agregá la localidad. Solo si falla la consulta o no hay resultados aparece **Buscar de otra forma**. La sugerencia por sí sola no confirma un envío.
 - Elegí **Delivery**, dentro del horario de reparto, buscá y seleccioná una dirección válida. El motor necesita validar zona y recorrido.
 - Si cumple las condiciones, aparece la tarjeta verde clara con el costo, el próximo beneficio y el progreso. Al agregar productos o cambiar el medio de pago, se recalcula.
 - En retiro no se muestra incentivo de envío. Fuera de horario aparece el aviso de cierre, no un beneficio disponible.
