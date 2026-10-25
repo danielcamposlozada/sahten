@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+## 0.4.25
+
+- **Búsqueda de direcciones recuperada**: si el servidor no obtiene una dirección precisa, web y Mostrador usan la búsqueda directa de OpenStreetMap ya disponible, manteniendo la validación de rutas en el servidor. Descarta resultados generales de ciudad del proveedor de ubicaciones; los errores del buscador ya no se etiquetan siempre como «sin conexión». Conserva límites, horarios, tarifas y autorizaciones.
+
+- **Tutorial de administración de la tienda**: guía visual y escrita en `docs/`, con los recorridos para cambiar precios/envíos, sincronizar el catálogo y subir la carpeta completa a Cloudflare. Distingue la copia del proyecto del menú publicado y explica la verificación de horarios/beneficios. Es documentación independiente; no agrega una pantalla a los instaladores 0.4.24 ya publicados.
+
 ## 0.4.24
 
 - **Pedido editable antes de pagar**: la tienda separa «Pedido» y «Entrega y pago». Desde el carrito se pueden sumar/restar unidades o quitar un producto completo, sin volver al catálogo. El segundo paso permite regresar y conserva datos, dirección, notas y efectivo; recalcula el total, el descuento y el envío tras cada edición. Un carrito vacío no permite continuar ni enviar.

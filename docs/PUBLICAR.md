@@ -1,5 +1,7 @@
 # Publicar tu menú online (gratis)
 
+**Tutorial paso a paso:** [Guía visual](TUTORIAL-TIENDA.html) · [Guía escrita](GUIA-ACTUALIZAR-TIENDA.md). Incluye la diferencia entre guardar el proyecto, sincronizar el menú y subir la carpeta a Cloudflare.
+
 Sahten genera una carpeta estática con tu menú. Los clientes arman el pedido y **te lo mandan por WhatsApp** con el detalle,
 el total, el envío calculado según la zona y sus datos. Ese modo básico funciona sin servidor.
 

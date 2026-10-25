@@ -1,4 +1,21 @@
 import { validDeliveryPoint, haversineKm } from '../core/delivery.js';
+
+/** Solo servidor: nunca presentar una localidad como si fuera una dirección exacta. */
+export async function geocodeAddress(query,center,{key,fetchImpl=fetch}={}) {
+  if(!key)throw new Error('routing_not_configured');
+  if(!validDeliveryPoint(center))throw new Error('routing_invalid_coordinates');
+  const u=new URL('https://api.heigit.org/pelias/v1/search');
+  Object.entries({text:query,size:'5',layers:'address,venue','boundary.country':'ARG','focus.point.lat':center.lat,'focus.point.lon':center.lng}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+  let r;try{r=await fetchImpl(u.href,{headers:{Authorization:key,Accept:'application/geo+json'},signal:AbortSignal.timeout(10000)});}catch{throw new Error('routing_geocoder_unavailable');}
+  if(!r.ok)throw new Error(r.status===429?'routing_geocoder_rate_limited':'routing_geocoder_unavailable');
+  let j;try{j=await r.json();}catch{throw new Error('routing_geocoder_unavailable');}
+  if(!Array.isArray(j.features))throw new Error('routing_geocoder_unavailable');
+  return j.features.flatMap(f=>{
+    const xy=f?.geometry?.coordinates,p=f?.properties,label=p?.label;
+    if(!['address','venue'].includes(p?.layer)||f?.geometry?.type!=='Point'||!Array.isArray(xy)||typeof label!=='string'||!label.trim()||!validDeliveryPoint({lat:xy[1],lng:xy[0]}))return [];
+    return [{display_name:label.trim().slice(0,300),lat:String(xy[1]),lon:String(xy[0])}];
+  }).slice(0,5);
+}
 /** Solo servidor. No tiene respaldo radial; si falla el proveedor, no hay ruta validada. */
 export async function roadRoute(origin,destination,{key,fetchImpl=fetch,now=()=>new Date().toISOString()}={}) {
   if(!key)throw new Error('routing_not_configured');
