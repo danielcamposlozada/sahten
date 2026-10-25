@@ -298,3 +298,8 @@ La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta p
 - Muestras ficticias verificadas en Chrome: contenido de 35,2 mm en IT01 y 48 mm en papel de 58 mm, sin desbordes horizontales y QR de 113,38 px (30 mm). La escala de interfaz no altera la plantilla impresa. No se usó ni modificó información de pedidos reales.
 - 593 pruebas / 62 archivos y compilación Vite aprobadas. Se retiró la expectativa anterior que obligaba cuerpo de 14 px y se verifica la independencia entre escala de pantalla y CSS de impresión.
 - Preparado en PR #26; **no publicado ni probado físicamente en IT01**. No cambia la web activa, Supabase, tarifas ni la versión 0.4.22. Evidencia local: entregables/impresion-entrega-efectivo/comparacion-tipografia.html y tipografia-metricas.json. Esta actualización reemplaza la medida de texto de 14 px de la preparación anterior para 48/58 mm.
+
+
+### 25/10/2026 — Publicación 0.4.23 autorizada
+
+El dueño aprobó la tipografía compacta y pidió integrar y desplegar todos los cambios preparados del PR #26: actualización de app Windows/macOS, carpeta web y ambas funciones para dirección/piso/departamento/referencia y efectivo/vuelto. Incluye Ajustes de impresión e impresión automática opcional por equipo. La publicación conserva los 36 productos/precios vigentes, logos y contenido aprobado, cobros productivos existentes y delivery v2 apagado. No activa zonas/tarifas nuevas ni crea órdenes o pagos reales. Comprobación de instaladores y despliegues en curso; se registra el resultado al finalizar.

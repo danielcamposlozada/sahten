@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.23
+
 - **Proveedor de rutas actualizado**: usa el dominio vigente `api.heigit.org/openrouteservice/v2`, reemplazando el dominio que ORS retira en noviembre de 2026. Conserva el mismo perfil y las validaciones de recorrido, sin activar zonas ni beneficios.
 
 - **Impresión en un solo lugar**: Ajustes → Negocio → Impresión reúne perfil de impresora, papel, calibración, logo, QR y vista previa. Impresión automática opcional y local por equipo para pedidos de Mostrador y pedidos web nuevos; cola sin duplicados ni impresión del historial al conectar. Puede requerir confirmar el diálogo del sistema.
