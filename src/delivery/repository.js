@@ -1,5 +1,5 @@
 import { createDeliveryService, authorizationFrom } from './service.js';
-import { roadRoute } from './routing.js';
+import { roadRoute, geocodeAddress } from './routing.js';
 import { validDeliveryPoint, haversineKm } from '../core/delivery.js';
 export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch}){
  async function request(path,{method='GET',body,token=serviceKey}={}){
@@ -19,9 +19,11 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
  // Caché breve por origen/destino exactos. No se mezclan negocios ni se reutiliza tras cambiar la clave.
  const cache=new Map();
  const addresses=new Map();
- async function geocode(query,center){
-  const k=query.toLocaleLowerCase()+':'+center.lat+':'+center.lng,cached=addresses.get(k);if(cached&&cached.until>Date.now())return cached.rows;
+ async function geocode(query,center,sid){
+  const account=sid?await run('provider',{store_id:sid}):null;
+  const k=sid+':'+account?.updated_at+':'+query.toLocaleLowerCase()+':'+center.lat+':'+center.lng,cached=addresses.get(k);if(cached&&cached.until>Date.now()){if(!cached.rows.length&&!await run('geocode_slot',{}))throw new Error('routing_rate_limited');return cached.rows;}
   if(!await run('geocode_slot',{}))throw new Error('routing_rate_limited');
+  if(account?.key){const rows=await geocodeAddress(query,center,{key:account.key,fetchImpl});if(addresses.size>300)addresses.clear();addresses.set(k,{rows,until:Date.now()+30*60000});return rows;}
   const u=new URL('https://nominatim.openstreetmap.org/search');Object.entries({format:'json',addressdetails:'1',limit:'5',countrycodes:'ar','accept-language':'es',q:query,viewbox:[center.lng-.15,center.lat+.15,center.lng+.15,center.lat-.15].join(',')}).forEach(([k,v])=>u.searchParams.set(k,v));
   const r=await fetchImpl(u.href,{headers:{'User-Agent':'Sahten/0.4 (https://sahten.online)'},signal:AbortSignal.timeout(8000)});if(!r.ok)throw new Error('routing_geocoder_unavailable');
   const rows=(await r.json()).filter(a=>validDeliveryPoint({lat:+a.lat,lng:+a.lon})).slice(0,5);if(addresses.size>300)addresses.clear();addresses.set(k,{rows,until:Date.now()+30*60000});return rows;

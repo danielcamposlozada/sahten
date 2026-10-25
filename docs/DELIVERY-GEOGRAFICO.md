@@ -1,6 +1,6 @@
 # Delivery geográfico, beneficios y horarios
 
-Estado: preparado en `codex/delivery-geografico`, sin fusionar, desplegar funciones, aplicar SQL ni modificar la tienda real. La auditoría general de UX continúa pausada. No se encontró un módulo de Zoho en `src/`, `supabase/` o `docs/`; no se añadió una integración externa.
+Estado vigente al 25/10/2026: código integrado, migración aplicada, proveedor ORS conectado y funciones `sahten-delivery` v3 / `sahten-payments` v8 desplegadas. El dueño aprobó **activar la configuración local actual**, distinta del preset inicial: zonas 1–4 y beneficios activos; Zona 5 y Excepcional pausadas; Zona 1 requiere autorización. Se guardó y sincronizó desde la app, sin SQL directo sobre menú/proyecto/pedidos. Ver [tabla vigente al pie](#configuración-local-activada--25102026). La auditoría general de UX continúa pausada. Las secciones de preparación siguientes documentan el proceso histórico, no sustituyen el estado vigente.
 
 ## 1. Módulos modificados
 
@@ -12,7 +12,7 @@ Estado: preparado en `codex/delivery-geografico`, sin fusionar, desplegar funcio
 - Pedidos, historial, WhatsApp, comanda, reportes y CSV: conservan y muestran tarifa normal, tarifa cobrada, ahorro comercial, zonas, recorrido y revisión. El ahorro de envío no se duplica como gasto de repartidor.
 - `supabase/migrations/20261024_delivery.sql` y función nueva `sahten-delivery`: preparados, **no aplicados**. También se necesita actualizar `sahten-payments`.
 
-## 2. Configuración preparada
+## 2. Preset inicial preparado (histórico; no es la tarifa vigente)
 
 El centro coincide con la dirección publicada y con [OSM way 369183696](https://www.openstreetmap.org/way/369183696): **−34.5264314, −58.4818959**, General Julio Argentino Roca 1489, Vicente López. Consulta de geocodificación y verificación del 24/10/2026.
 
@@ -158,3 +158,38 @@ Se usa **api.heigit.org/openrouteservice/v2**. El [aviso oficial del cambio de d
 [Resultados de tres recorridos reales](delivery/rutas-ors-2026-10-25.json), desde el centro confirmado: Houssay 1,7074 km; Plaza Vicente López y Planes 2,5515 km; La Lucila 4,0622 km. La plaza tiene radio 1,9844 km: el recorrido confirma por qué corresponde considerar el piso tarifario de la zona 2. Los resultados son muestras puntuales, no tarifas activadas ni una garantía de tiempos/tráfico.
 
 La prueba usa los mismos módulos del servidor en un diagnóstico local, con la clave solo en memoria y sin crear órdenes. Backend accesible y credencial cifrada verificados por separado. Falta probar una orden completa en ensayo, revisar las tarifas/horarios con el dueño, comprobar todas las cajas y recién entonces activar una revisión comercial. **La política publicada sigue apagada y los 36 productos permanecen iguales.** Esta sección reemplaza el pendiente de alta/clave de las secciones anteriores.
+
+## Configuración local activada — 25/10/2026
+
+El dueño pidió activar las reglas y confirmó explícitamente **«Activar la configuración local actual»** después de revisar sus importes y diferencias frente al preset. Se guardó con el editor normal, se validó sin huecos/superposiciones, se exportó una copia y se ejecutó **Nube y usuarios → Sincronizar menú**, confirmando tienda `sahten`, proyecto correcto y 36 productos. La app terminó con **Actualizando el menú de la web → Completado**. No se escribieron tablas públicas con SQL.
+
+Revisión vigente: `2d0d93c3-5e24-4aeb-85f2-dc197876513f`, efectiva `2026-10-25T15:13:44.946Z`; active/promotionsEnabled/stackWithPayment = true. Centro, geometrías radiales, proveedor ORS, horario argentino y máximos de recorrido 8/8,5 km conservados. La política del catálogo público coincide íntegramente con la exportada de la app.
+
+| Zona | Radio geográfico | Tarifa base | Mínimo neto | Beneficios | Estado |
+|---|---|---:|---:|---|---|
+| 1 | 0–2 km | $1.500 | $17.000 | Gratis desde $25.000 | Activa; autorización obligatoria |
+| 2 | >2–3,5 km | $3.000 | $25.000 | Gratis desde $35.000 | Activa |
+| 3 | >3,5–5 km | $4.000 | $35.000 | $2.000 desde $42.000; gratis desde $50.000 | Activa |
+| 4 | >5–6,5 km | $5.500 | $45.000 | $2.750 desde $62.000; gratis desde $80.000 | Activa |
+| 5 | >6,5–8 km | $6.990 | $40.000 | $3.500 desde $80.000 (sin aplicar mientras esté pausada) | Pausada |
+| Excepcional | >8–8,5 km | $9.000 | $15.000 | Sin beneficio | Pausada |
+
+No se restauró la tabla original. El recorrido real puede imponer las condiciones de una zona superior; estas cifras no prometen cobertura por barrio. El 10 % de pago se aplica antes de calcular los umbrales de envío, solo a productos, con la regla ya aprobada de no acumular descuentos de productos y aplicar el mayor.
+
+App 0.4.24 publicada y carpeta web actualizada en Cloudflare `b06a9f7d-f120-4ffa-a46d-c65666b39986`, éxito, `2026-10-25T15:22:34.673874Z`; catálogo y copia estática contienen la misma revisión activa. Se conservaron los 36 productos y sus precios.
+
+Comprobación productiva del domingo: tienda muestra **Delivery fuera de horario · Volvemos el lunes 26-10, 18:00**; el endpoint quote devuelve 200 con quote.status=closed, la misma revisión y próxima apertura `2026-10-26T21:00:00Z`. No consultó una ruta ni creó una cotización persistida, pedido o pago. Retiro conserva su formulario y al quitar todo queda bloqueado continuar. La barra de incentivo en horario abierto está cubierta por las pruebas y la demo local; falta observar una operación operativa en horario real. No se alteró el reloj ni se desactivaron horarios para la comprobación productiva.
+
+**Textos pospuestos:** FAQ y «Delivery y retiro» todavía anuncian el régimen anterior ($15.000 / gratis $45.000). Se mostró al dueño una propuesta de reemplazo y eligió **«Dejar los textos para después»**; no se modificaron esos textos en la app ni en la web. Pendiente explícito, separado de las reglas que sí están activas.
+
+Tutorial del dueño: [guía visual](TUTORIAL-TIENDA.html) y [pasos escritos](GUIA-ACTUALIZAR-TIENDA.md). Evidencia del chat en `entregables/publicacion-0.4.24/` y `entregables/activacion-delivery-2026-10-25/`.
+
+## Buscador de direcciones corregido — 25/10/2026
+
+El geocodificador público falló desde el servidor (503 `routing_geocoder_unavailable`), aunque la consulta del mismo domicilio público desde este equipo devolvió el punto exacto. El texto web «sin conexión» era genérico y no demostraba una desconexión del cliente.
+
+Se desplegó `sahten-delivery` v5: Pelias del proveedor ORS conectado, clave solo en servidor, caché por tienda/revisión y selección limitada a address/venue. Una localidad general no se presenta como una dirección precisa. Cuando no hay resultado preciso o el buscador falla, web y cliente de Mostrador 0.4.25 recurren a la búsqueda directa Nominatim ya existente, después de pasar los límites del servidor. No se saltean cuotas ni se usa un respaldo de rutas. El servidor sigue siendo la autoridad sobre recorrido, tarifa, horario y autorización.
+
+Web corregida en Cloudflare `0eabc917-487c-4e13-973e-c538d0bd88a8`. Chrome devuelve la dirección pública exacta del local; no se confirmó una compra. 602 pruebas aprobadas en 63 archivos, sin omitir casos. Política, importes y horas activadas permanecen iguales. La actualización de app que incorpora el respaldo requiere instalar 0.4.25 cuando termine su publicación.
+
+Referencias oficiales: [cambio de URL de Pelias/ORS](https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912), [política de Nominatim](https://operations.osmfoundation.org/policies/nominatim/). Se mantiene búsqueda explícita, caché y límite global; no se añadió autocompletado ni proveedor pago. La disponibilidad y cobertura de los servicios públicos no constituyen un SLA comercial.

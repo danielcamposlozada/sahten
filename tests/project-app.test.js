@@ -1,5 +1,5 @@
 // El proyecto como archivo, con la app real (jsdom): abrir, editar, guardar solo, reabrir, respaldos.
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildTestBundle, openApp } from './app-harness.js';
@@ -244,8 +244,8 @@ describe('«Nuevo proyecto» sin window.prompt (la app de escritorio no lo tiene
     const input = w.document.querySelector('[role=dialog] input'); expect(input).toBeTruthy();
     input.value = 'Mi negocio';
     [...w.document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Aceptar').click();
-    await run; await new Promise(r => setTimeout(r, 60));
-    expect(a.p.session.info()).toMatchObject({ name: 'Mi negocio', status: 'saved' });
+    await run;
+    await vi.waitFor(() => expect(a.p.session.info()).toMatchObject({ name: 'Mi negocio', status: 'saved' }), { timeout: 5000, interval: 25 });
     expect(w.document.getElementById('sw-ov')).toBeTruthy();       // asistente de configuración
     w.close();
   }, 60000);

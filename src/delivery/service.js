@@ -57,7 +57,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     return response({approved:true});
    }
    await limited(sid,req);
-   if(action==='geocode'){const menu=await repo.menu(sid),query=String(b.query||'').trim();if(query.length<5||query.length>200)fail('Escribí calle, altura y localidad.');if(!menu?.delivery?.deliveryV2)fail('Falta configurar las zonas.',409);return response(await geocode(query,menu.delivery.deliveryV2.center));}
+   if(action==='geocode'){const menu=await repo.menu(sid),query=String(b.query||'').trim();if(query.length<5||query.length>200)fail('Escribí calle, altura y localidad.');if(!menu?.delivery?.deliveryV2)fail('Falta configurar las zonas.',409);return response(await geocode(query,menu.delivery.deliveryV2.center,sid));}
    if(!['quote','request','order','validate-pos'].includes(action))fail('Acción no disponible.',404);
    const operator=action==='validate-pos'||b.pos===true?await access(req,sid):null;
    const input=b.order||{};
@@ -82,7 +82,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
   }catch(e){
    const known=e instanceof PaymentError;
    const routing=String(e.message||'').startsWith('routing_');
-   return response({error:known?e.code:routing?e.message:'delivery_unavailable',message:known?e.message:e.message==='routing_not_configured'?'Falta conectar openrouteservice en Ajustes. No se confirmó el envío.':routing?'No se pudo validar el recorrido por calles. Reintentá o elegí retiro.':'No se pudo completar la consulta de envío. Reintentá sin duplicar el pedido.'},known?e.status:503);
+   return response({error:known?e.code:routing?e.message:'delivery_unavailable',message:known?e.message:e.message==='routing_geocoder_rate_limited'?'La búsqueda de direcciones alcanzó su límite temporal. Esperá un momento y volvé a buscar.':e.message==='routing_geocoder_unavailable'?'El buscador de direcciones no está disponible en este momento. Reintentá en unos minutos o elegí retiro.':e.message==='routing_not_configured'?'Falta conectar openrouteservice en Ajustes. No se confirmó el envío.':routing?'No se pudo validar el recorrido por calles. Reintentá o elegí retiro.':'No se pudo completar la consulta de envío. Reintentá sin duplicar el pedido.'},known?e.status:503);
   }
  };
 }
