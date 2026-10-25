@@ -259,3 +259,47 @@ La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta p
 - Chrome confirma los precios nuevos en la portada y tienda. No se enviaron compras ni se usaron fondos reales. Evidencias y ZIP en entregables/web-precios-2026-10-24/ del espacio del dueño.
 - La exportación nativa fallaba al escribir subcarpetas nuevas de páginas/marca. Se prepara corrección y actualización 0.4.22 con 583 pruebas aprobadas y compilación correcta; publicación de instaladores pendiente de completar.
 - El dueño pidió configurar el proveedor de rutas. OpenRouteService requiere acceso/clave de una cuenta; acceso con GitHub pendiente de autorización específica. La revisión automática rechazó aplicar la migración del delivery hasta obtener autorización explícita para tablas privadas y controles de pedidos/proyectos productivos; no se aplicó ni se desplegaron funciones.
+
+
+### 24/10/2026 — 0.4.22 y servidor de rutas verificados
+
+- Sahten 0.4.22 publicada: PR #25, merge `15c99175bfb766c165d80afcdce744dfec5dc7ff`, etiqueta v0.4.22. Proceso `40128751674` correcto en pruebas, Windows, Mac universal y publicación. `latest.json` anuncia 0.4.22 con enlaces y firmas; la app de este equipo ya muestra 0.4.22.
+- El dueño autorizó expresamente iniciar OpenRouteService con GitHub y aplicar la migración/desplegar ambas funciones de envíos/pagos. Se aplicó `delivery_geografico_y_rutas` y el ajuste `delivery_function_search_paths`; tablas privadas con RLS y RPC solo para service_role. Se fijó `search_path=pg_catalog, public` en las dos funciones nuevas señaladas por el asesor.
+- `sahten-delivery` v1 y `sahten-payments` v6 activas, con autenticación propia por acción. No se alteraron precios, menús, proyectos, órdenes existentes ni credenciales productivas de Mercado Pago. La política delivery v2 publicada sigue desactivada.
+- OpenRouteService: ingreso con GitHub autorizado; formulario de alta con Daniel J. / Campos Lozada y uso Logistics. Términos/verificación completados por el titular; al comprobar sigue pendiente el botón final «Complete Sign-Up». No hay clave configurada ni una ruta real verificada con ese proveedor todavía. No se contrató un plan pago.
+- Reemplaza las notas anteriores de instaladores pendientes y migración bloqueada. La web mantiene `fa054caf-c8f5-4072-a5be-ecaad779dc0f`, 36 productos y precios verificados.
+
+### 24/10/2026 — Entrega, vuelto y ticket preparados, sin publicar
+
+- Por solicitud del dueño: piso, departamento y referencia separados en web/Mostrador y conservados en servidor, órdenes, proyecto, detalle, WhatsApp, ticket y CSV. Se preservan notas del pedido.
+- Campo opcional de efectivo y vuelto sobre el total final (descuento en productos, envío íntegro). No aumenta ventas ni acredita un pago. Cambio a transferencia/MP omite efectivo; retiro omite datos de piso/departamento.
+- Ticket compacto para 48/58 mm con Arial, dirección completa, QR conservado y sin estado de la comanda. Nueva pestaña Impresión con perfiles y autoimpresión local de órdenes nuevas, sin historial ni duplicados y con posible diálogo del sistema.
+- No se publicó todavía esta plantilla/formulario ni un instalador con estas novedades. No se crearon compras ni se escribieron órdenes reales para probarlo. La prueba física IT01 permanece pendiente. Detalles y límites en [IMPRESION.md](IMPRESION.md).
+
+- Validación final de esta preparación: **593 pruebas / 62 archivos** aprobadas, compilación Vite, scripts clásicos, versiones 0.4.22 y diferencias sin errores; ambas funciones pasan Deno. La advertencia heredada `allowJs` de pagos se ignora y no impide comprobarla.
+- Chrome con datos ficticios: Mostrador y Ajustes de impresión a 1024 × 600; tienda a 320 × 640. Piso/departamento/referencia conservados y efectivo $20.000 sobre total $8.550 muestra vuelto $11.450; no se envió la orden. Tickets de 48/58 mm revisados, QR completo de 30 mm y sin desborde horizontal en IT01. Los archivos nuevos de servidor que conservan estos campos **están preparados, todavía no desplegados**; los despliegues activos v1/v6 son los de la integración de rutas 0.4.22. Actualizarlos junto con la futura app/web.
+- Comprobación HTTP del servidor actual: configuración de Mercado Pago 200 y modo production habilitado; consulta de proveedor sin sesión 403; cálculo de delivery v2 apagado 409. Consulta de solo lectura confirma 36 productos, política v2=false y cero conexiones ORS. No se crearon pedidos ni se alteró la cuenta de pagos.
+
+### 25/10/2026 — OpenRouteService conectado y comprobado
+
+- El titular completó el alta HeiGIT y autorizó guardar su Basic Key cifrada en Supabase y realizar tres consultas de prueba con destinos públicos. La conexión se guardó desde **Ajustes → Negocio → Tienda online y delivery → Servicio de rutas por calles**, en la app instalada 0.4.22. La clave no se pegó en el chat, proyecto, menú ni archivos de trabajo; se retiró de la memoria de la prueba al terminar.
+- Plan Standard gratuito confirmado en el panel oficial: **0 €**, Directions V2 **2.000 consultas diarias / 40 por minuto**. No son 2.000 pedidos: una compra puede consultar varias veces. No se contrató un plan pago. Referencia: https://account.heigit.org/info/plans.
+- Se detectó el dominio de API deprecado. Se corrigió a `https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson`, según el aviso oficial (retiro del dominio anterior previsto para el 2–6/11/2026): https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912.
+- Despliegue limitado a la base publicada 0.4.22 y **solo ese cambio de URL**: `sahten-delivery` **v2** y `sahten-payments` **v7**, ambas activas. No incluye todavía los campos nuevos de impresión/efectivo/dirección preparados en PR #26. Deno correcto en ambos paquetes; 593 pruebas aprobadas y regresión de la URL nueva. La conexión productiva de MP conserva su configuración.
+- Tres consultas reales con la misma clave y el mismo motor de rutas: Hospital Houssay **1.707,4 m**, Plaza Vicente López y Planes **2.551,5 m**, estación La Lucila **4.062,2 m**. Perfil driving-car, extremos validados a 100 m. Son estimaciones por calles sin tráfico, no un perfil específico de moto. Evidencia pública: [rutas-ors-2026-10-25.json](delivery/rutas-ors-2026-10-25.json).
+- La comprobación directa del proveedor se hizo en una página de diagnóstico local con los mismos módulos del servidor; no fue un pedido ni una compra. Queda pendiente la validación de una orden completa en ensayo al activar una política acordada. No afirmar que ya esté probada la operativa nueva de punta a punta.
+- Lectura de base: conexión privada guardada (25/10/2026 03:11:19 UTC), catálogo **36 productos**, **delivery v2=false**. Comprobaciones HTTP: pagos/config 200, proveedor sin sesión 403 y cálculo v2 apagado 409. No se cambiaron menús, proyectos, órdenes ni tarifas para realizar estas pruebas. Este estado reemplaza el alta/clave pendiente y las versiones v1/v6 anotadas antes.
+
+
+### 25/10/2026 — Tipografía de ticket más compacta (preparada, sin publicar)
+
+- A pedido del dueño, papel de 48/58 mm usa cuerpo de 11 px, productos de 11,5 px, número de orden de 14 px y total de 13 px. Reduce la negrita general y los espacios; el total puede entrar en una línea y se acomoda si el importe es largo. No se comprime ni recorta texto ni se modifica la calibración IT01 al 88 %.
+- Dirección, piso/departamento, referencia, teléfono, descuentos, efectivo/vuelto y QR permanecen completos; QR conserva 30 mm. Los estados de comanda siguen fuera del ticket. Papel de mayor ancho conserva cuerpo de 14 px.
+- Muestras ficticias verificadas en Chrome: contenido de 35,2 mm en IT01 y 48 mm en papel de 58 mm, sin desbordes horizontales y QR de 113,38 px (30 mm). La escala de interfaz no altera la plantilla impresa. No se usó ni modificó información de pedidos reales.
+- 593 pruebas / 62 archivos y compilación Vite aprobadas. Se retiró la expectativa anterior que obligaba cuerpo de 14 px y se verifica la independencia entre escala de pantalla y CSS de impresión.
+- Preparado en PR #26; **no publicado ni probado físicamente en IT01**. No cambia la web activa, Supabase, tarifas ni la versión 0.4.22. Evidencia local: entregables/impresion-entrega-efectivo/comparacion-tipografia.html y tipografia-metricas.json. Esta actualización reemplaza la medida de texto de 14 px de la preparación anterior para 48/58 mm.
+
+
+### 25/10/2026 — Publicación 0.4.23 autorizada
+
+El dueño aprobó la tipografía compacta y pidió integrar y desplegar todos los cambios preparados del PR #26: actualización de app Windows/macOS, carpeta web y ambas funciones para dirección/piso/departamento/referencia y efectivo/vuelto. Incluye Ajustes de impresión e impresión automática opcional por equipo. La publicación conserva los 36 productos/precios vigentes, logos y contenido aprobado, cobros productivos existentes y delivery v2 apagado. No activa zonas/tarifas nuevas ni crea órdenes o pagos reales. Comprobación de instaladores y despliegues en curso; se registra el resultado al finalizar.

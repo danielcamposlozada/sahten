@@ -5,7 +5,7 @@ const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const owner='00000000-0000-4000-8000-000000000001',cashier='00000000-0000-4000-8000-000000000002';let db,sid,pid,other;
 async function as(role,fn,user=owner){await db.exec("reset role;select set_config('request.jwt.claims','',false);select set_config('request.jwt.claim.sub','"+(role==='authenticated'?user:'')+"',false);set role "+role);try{return await fn();}finally{await db.exec('reset role');}}
 const rpc=(action,args)=>db.query('select public.sahten_delivery_backend($1,$2) result',[action,args]).then(r=>r.rows[0].result);
-const migration=read('supabase/migrations/20261024_delivery.sql');
+const migration=read('supabase/migrations/20261024_delivery.sql')+'\n'+read('supabase/migrations/20261025015321_delivery_function_search_paths.sql');
 const old={id:'legacy',source:'delivery',items:[],shipping:100,subtotal:100,total:200,discount:0};
 beforeAll(async()=>{
  db=new PGlite();await db.exec(read('tests/fixtures/supabase-prelude.sql'));await db.exec('create role service_role nologin bypassrls;');await db.exec(read('supabase/schema.sql'));

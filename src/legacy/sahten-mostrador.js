@@ -134,6 +134,7 @@ let SAHTEN_ORDERS = _loadOrders();
 window.sahtenOrders = () => SAHTEN_ORDERS;   // acceso desde src/online (la variable es privada del script)
 // v3: tipo de pedido + delivery local
 let mostradorOrderType = 'retiro'; // retiro | delivery
+let mostradorCashTendered = '';
 let mostradorDelivery = null;     // {address, note, lat, lng, distKm, zone, out}
 let mostradorShipManual = false;
 let _mostDelMap = null, _mostAddrTimer = null, _mostAddrSugs = [];
@@ -314,7 +315,7 @@ function mostradorAddToCart(pid, cardEl) {
 }
 function mostradorRemoveItem(pid) { mostradorCart = mostradorCart.filter(it=>it.productId!==pid); _renderCartItems(); _renderCartTotals(); }
 function mostradorChangeQty(pid, delta) { const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
-function mostradorClearCart() { if(!mostradorCart.length) return; mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
+function mostradorClearCart() { if(!mostradorCart.length) return; mostradorCashTendered='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
 function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(!c.classList.contains('expanded')); }
 function _mostCartIsOverlay() { return document.documentElement.dataset.orderLayout === 'overlay'; }
 function mostradorSetCartOpen(open, restoreFocus=true) {
@@ -364,7 +365,7 @@ function _mostPaymentOptions() {
   return options.sort((a,b)=>(priority[a.method]??5)-(priority[b.method]??5));
 }
 function _mostSelectedPayment(){return _mostPaymentOptions().find(p=>p.id===mostradorActivePaymentId);}
-function mostradorSetPayment(id){mostradorActivePaymentId=id||null;_renderCartExtras();_renderCartTotals();const b=[...document.querySelectorAll('#most-cart-extras [data-payment-choice]')].find(b=>b.dataset.paymentChoice===id);b?.focus({preventScroll:true});}
+function mostradorSetPayment(id){mostradorActivePaymentId=id||null;if(_mostSelectedPayment()?.method!=='efectivo')mostradorCashTendered='';_renderCartExtras();_renderCartTotals();const b=[...document.querySelectorAll('#most-cart-extras [data-payment-choice]')].find(b=>b.dataset.paymentChoice===id);b?.focus({preventScroll:true});}
 
 function _renderCartItems() {
   const focused=document.activeElement, pid=focused?.dataset.productId, action=focused?.dataset.cartAction;
@@ -390,25 +391,30 @@ function _renderCartExtras() {
     '<div class="most-extras-row"><label for="most-customer">Cliente</label><select id="most-customer" class="most-disc-select" onchange="mostradorActiveCustomerId=this.value||null"><option value="">Consumidor Final</option>'+custOpts+'</select><button class="most-add-btn" onclick="mostQuickAddClient()" title="Nuevo cliente">+</button></div>' +
     '<div class="most-extras-row"><label for="most-discount">Descuento</label><select id="most-discount" class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
     _mostDeliveryExtrasHtml() +
-    SAHTEN.paymentChoices.html({methods:_mostPaymentOptions(),selected:mostradorActivePaymentId,percent:payPolicy.enabled&&payPolicy.channels.mostrador?payPolicy.percent:0,compact:true})+'<button class="btn" type="button" onclick="openPaymentManager()">Gestionar métodos de pago</button>' +
+    SAHTEN.paymentChoices.html({methods:_mostPaymentOptions(),selected:mostradorActivePaymentId,percent:payPolicy.enabled&&payPolicy.channels.mostrador?payPolicy.percent:0,compact:true})+_mostCashHtml()+'<button class="btn" type="button" onclick="openPaymentManager()">Gestionar métodos de pago</button>' +
     '</div>';
   f.querySelectorAll('[data-payment-choice]').forEach(b=>b.addEventListener('click',()=>mostradorSetPayment(b.dataset.paymentChoice)));
   if (mostradorOrderType==='delivery' && mostradorDelivery && mostradorDelivery.lat!=null) setTimeout(_mostInitDelMap, 30);
 }
 
 // Totals — lightweight, called on every change
+function _mostCashHtml(){return _mostSelectedPayment()?.method==='efectivo'?'<label for="most-cash-tendered">Con cuánto paga (opcional)</label><input id="most-cash-tendered" class="most-ship-input" type="number" inputmode="decimal" min="0" max="100000000" step="0.01" value="'+_esc(mostradorCashTendered)+'" oninput="mostradorSetCash(this.value)"><p id="most-cash-change" role="status"></p>':'';}
+function mostradorSetCash(value){mostradorCashTendered=value;_renderCartTotals();}
+function _mostDeliveryField(key,value){mostradorDelivery ||= {address:'',note:'',lat:null,lng:null,zone:null};mostradorDelivery[key]=value;}
 function _renderCartTotals() {
   const f = document.getElementById('most-cart-totals'); if(!f) return;
   const t = _calcCartTotals();
   const count=document.getElementById('most-cart-open-count'), total=document.getElementById('most-cart-open-total');
   if(count) count.textContent=t.items.reduce((s,it)=>s+it.qty,0);
   if(total) total.textContent='$'+_fmt(t.total);
+  const cash=SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method);
+  const cashStatus=document.getElementById('most-cash-change');if(cashStatus){cashStatus.textContent=!cash.specified?'Sin importe indicado':cash.valid?'Vuelto: $'+_fmt(cash.change):cash.shortfall?'Faltan $'+_fmt(cash.shortfall):'Revisá el importe';cashStatus.style.color=cash.valid?'var(--green)':'var(--red)';}
   const totalsHtml =
     '<div class="most-cart-row"><span>Subtotal</span><span class="val">$'+_fmt(t.subtotal)+'</span></div>' +
     (t.discount > 0 ? '<div class="most-cart-row discount"><span>'+_esc(t.disc?.name||'Descuento')+'</span><span class="val">−$'+_fmt(t.discount)+'</span></div>' : '') +
     (t.shipping > 0 ? '<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(t.shipping)+'</span></div>' : (t.freeShip ? '<div class="most-cart-row"><span>Envío</span><span class="val" style="color:var(--green)">Gratis</span></div>' : '')) +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(t.total)+'</span></div>' +
-    '<button class="most-checkout" '+(t.items.length===0||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
+    '<button class="most-checkout" '+(t.items.length===0||!cash.valid||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
   if(f._totalsMarkup!==totalsHtml){f.innerHTML=totalsHtml;f._totalsMarkup=totalsHtml;}
   const incentive=document.getElementById('most-delivery-incentive');
   if(incentive){const html=SAHTEN.delivery.incentive(mostradorDelivery?.routeLoading?{status:'loading'}:t.deliveryQuote,{pos:true})+(mostradorDelivery?.routeError?'<p role="status">'+_esc(mostradorDelivery.routeError)+'</p><button class="btn" onclick="SAHTEN.delivery.refreshPos()">Reintentar ruta</button>':'')+(t.deliveryQuote?.status==='authorization_required'&&(!document.body.dataset.role||['owner','admin'].includes(document.body.dataset.role))?'<button class="btn" onclick="SAHTEN.delivery.authorizePos()">Autorizar esta entrega</button>':'');if(incentive._deliveryMarkup!==html){const open=incentive.querySelector('details')?.open;incentive.innerHTML=html;incentive._deliveryMarkup=html;if(open&&incentive.querySelector('details'))incentive.querySelector('details').open=true;}}
@@ -437,7 +443,7 @@ function _mostDeliveryExtrasHtml(){
   h+='<div style="padding:4px 0 6px">' +
     '<div style="position:relative"><input type="text" id="most-addr-input" aria-label="Dirección de entrega" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
     '<div id="most-addr-sugs" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:40;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden"></div></div>' +
-    (d?'<input type="text" placeholder="Piso, depto, referencias (opcional)" value="'+_esc(d.note||'')+'" oninput="mostradorDelivery.note=this.value" style="width:100%;margin-top:6px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:12px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">':'') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+['addressFloor','addressApartment'].map((key,i)=>'<label style="min-width:0">'+(i?'Departamento':'Piso')+'<input class="custom-input" style="width:100%" aria-label="'+(i?'Departamento':'Piso')+'" maxlength="30" value="'+_esc(d?.[key]||'')+'" oninput="_mostDeliveryField(\''+key+'\',this.value)"></label>').join('')+'</div><label>Referencia de entrega<input class="custom-input" aria-label="Referencia de entrega" maxlength="200" value="'+_esc(d?.deliveryReference||'')+'" oninput="_mostDeliveryField(\'deliveryReference\',this.value)"></label><label>Notas del pedido<input class="custom-input" aria-label="Notas del pedido" maxlength="1000" value="'+_esc(d?.note||'')+'" oninput="_mostDeliveryField(\'note\',this.value)"></label>' +
     (cfg.deliveryV2?.active?'<button class="btn" type="button" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar dirección</button><div id="most-delivery-incentive"></div>':info) +
     (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">'+(cfg.deliveryV2?.active?'La ubicación corresponde a la dirección elegida en Buscar dirección.':'Podés mover el pin para ajustar la ubicación.')+'</div>':'') +
     '</div>' +
@@ -447,7 +453,7 @@ function _mostDeliveryExtrasHtml(){
 function _mostAddrInput(v,explicit=false){
   clearTimeout(_mostAddrTimer);
   // Una dirección editada nunca conserva la ubicación ni la tarifa automática de la anterior.
-  mostradorDelivery={address:String(v||'').trim(),note:mostradorDelivery?.note||'',lat:null,lng:null,zone:null};
+  mostradorDelivery={...SAHTEN.orderDetails.deliveryDetails(mostradorDelivery,'delivery'),address:String(v||'').trim(),note:mostradorDelivery?.note||'',lat:null,lng:null,zone:null};
   _mostAddrSugs=[];
   _renderCartTotals();
   const shipping=document.getElementById('most-ship-val'); if(shipping&&!mostradorShipManual) shipping.placeholder='Indicá el envío manual';
@@ -471,12 +477,12 @@ function _mostAddrInput(v,explicit=false){
 }
 function _mostSetDeliveryPoint(lat,lng,address){
   const z=_mostZoneFor(lat,lng);
-  mostradorDelivery={ address: address!=null?address:(mostradorDelivery?mostradorDelivery.address:''), note: mostradorDelivery?mostradorDelivery.note:'', lat, lng, distKm:z.distKm, zone:z.zone, out:!!z.out };
+  mostradorDelivery={ ...SAHTEN.orderDetails.deliveryDetails(mostradorDelivery,'delivery'), address: address!=null?address:(mostradorDelivery?mostradorDelivery.address:''), note: mostradorDelivery?mostradorDelivery.note:'', lat, lng, distKm:z.distKm, zone:z.zone, out:!!z.out };
   mostradorShipManual=false;
   if(_mostTiendaCfg().deliveryV2?.active)SAHTEN.delivery.refreshPos();
 }
 window.mostradorDeliveryValue=()=>mostradorDelivery;
-function _mostDeliveryRequest(){const t=_calcCartTotals(),p=_mostSelectedPayment()||_mostPaymentOptions()[0];return {source:'delivery',items:t.items.map(it=>({productId:it.product.id,qty:it.qty})),lat:mostradorDelivery?.lat,lng:mostradorDelivery?.lng,address:mostradorDelivery?.address||'',customerName:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.name||'Consumidor Final',customerPhone:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.phone||'',paymentMethod:p?.method||'efectivo',total:t.total,deliveryQuoteId:mostradorDelivery?.quoteId,manualDiscountId:mostradorActiveDiscountId};}
+function _mostDeliveryRequest(){const t=_calcCartTotals(),p=_mostSelectedPayment()||_mostPaymentOptions()[0];return {...SAHTEN.orderDetails.deliveryDetails(mostradorDelivery,'delivery'),cashTendered:mostradorCashTendered,notes:mostradorDelivery?.note||'',source:'delivery',items:t.items.map(it=>({productId:it.product.id,qty:it.qty})),lat:mostradorDelivery?.lat,lng:mostradorDelivery?.lng,address:mostradorDelivery?.address||'',customerName:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.name||'Consumidor Final',customerPhone:SAHTEN_CUSTOMERS.find(c=>c.id===mostradorActiveCustomerId)?.phone||'',paymentMethod:p?.method||'efectivo',total:t.total,deliveryQuoteId:mostradorDelivery?.quoteId,manualDiscountId:mostradorActiveDiscountId};}
 function _mostPickSug(i){ const s=_mostAddrSugs[i]; if(!s) return; _mostSetDeliveryPoint(s.lat,s.lng,s.label); _renderCartExtras(); _renderCartTotals(); }
 function _mostInitDelMap(){
   const el=document.getElementById('most-del-map'); if(!el||!mostradorDelivery) return;
@@ -507,6 +513,7 @@ let _deliveryChecking=false;
 async function mostradorCheckout() {
   if(_deliveryChecking)return;
   const t = _calcCartTotals(); if (t.items.length === 0) return;
+  if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){alert('El efectivo indicado no alcanza el total.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
   if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
@@ -523,6 +530,8 @@ async function mostradorCheckout() {
   const cust = SAHTEN_CUSTOMERS.find(c => c.id === mostradorActiveCustomerId);
   const del = mostradorOrderType === 'delivery' ? mostradorDelivery : null;
   const order = {
+    ...(del?SAHTEN.orderDetails.deliveryDetails(del,'delivery'):{}),
+    ...SAHTEN.orderDetails.cashOrderFields(t.total,mostradorCashTendered,pay?.method),
     id: localOrderId,
     num: _nextOrderNum(),
     items: validatedItems || t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
@@ -552,8 +561,9 @@ async function mostradorCheckout() {
   };
   SAHTEN.pricing?.capture(order);
   SAHTEN_ORDERS.unshift(order); _saveOrders();
+  SAHTEN.receipts.enqueue(order,{origin:'local'});
   // Reset cart
-  mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
+  mostradorCashTendered=''; mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
   mostradorShipManual = false; mostradorDelivery = null; mostradorOrderType = 'retiro';
   // El pedido creado entra en la misma cola operativa que los de la web.
   _posToast('Orden #' + String(order.num).padStart(4,'0') + ' creada · $' + _fmt(order.total));
@@ -634,7 +644,7 @@ function openOrderDetail(orderId) {
     '<div class="modal-header"><div class="modal-title">Orden #'+String(o.num).padStart(4,'0')+'</div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>' +
     '<div class="modal-body">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">' +
-    '<div><div style="font-size:12px;color:var(--muted)">'+dateStr+'</div><div style="font-size:14px;font-weight:600;margin-top:4px">'+_esc(o.customerName||'Consumidor Final')+'</div>'+(o.customerPhone?'<div style="font-size:12px;color:var(--muted);margin-top:2px">📞 '+_esc(o.customerPhone)+'</div>':'')+(o.customerEmail?'<div style="font-size:12px;color:var(--muted);margin-top:1px">✉️ '+_esc(o.customerEmail)+'</div>':'')+(o.address&&o.source==='delivery'?'<div style="font-size:12px;color:var(--muted);margin-top:1px">📍 '+_esc(o.address)+'</div>':'')+(o.source==='delivery'?'<span style="display:inline-block;margin-top:4px;background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="display:inline-block;margin-top:4px;background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'</div>' +
+    '<div><div style="font-size:12px;color:var(--muted)">'+dateStr+'</div><div style="font-size:14px;font-weight:600;margin-top:4px">'+_esc(o.customerName||'Consumidor Final')+'</div>'+(o.customerPhone?'<div style="font-size:12px;color:var(--muted);margin-top:2px">📞 '+_esc(o.customerPhone)+'</div>':'')+(o.customerEmail?'<div style="font-size:12px;color:var(--muted);margin-top:1px">✉️ '+_esc(o.customerEmail)+'</div>':'')+(o.address&&o.source==='delivery'?'<div style="font-size:12px;color:var(--muted);margin-top:1px">📍 '+SAHTEN.orderDetails.deliveryAddressLines(o).map(_esc).join('<br>')+'</div>':'')+(o.source==='delivery'?'<span style="display:inline-block;margin-top:4px;background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="display:inline-block;margin-top:4px;background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'</div>' +
     '<select class="most-disc-select" style="width:auto" onchange="orderSetStatus(\''+o.id+'\',this.value);this.closest(\'.modal-overlay\').remove();openOrderDetail(\''+o.id+'\')">' +
     (window.SAHTEN.orderWorkflow.allowedStatuses(o).map(value => '<option value="'+value+'" '+(o.status===value?'selected':'')+'>'+_esc(window.SAHTEN.orderWorkflow.onlineStatusLabel({...o,status:value}))+'</option>').join('')) + '</select></div>' +
     '<table class="order-detail-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit.</th><th>Total</th></tr></thead><tbody>' +
@@ -649,6 +659,7 @@ function openOrderDetail(orderId) {
     (o.paymentName?'<div style="font-size:12px;color:var(--muted);margin-top:6px">Pago: '+_esc(o.paymentName)+'</div>':'') +
     (o.paymentStatusLabel?'<div style="font-size:13px;font-weight:600;margin-top:8px" role="status">Mercado Pago: '+_esc(o.paymentStatusLabel)+'</div>':'') +
     '</div>' +
+    (o.paymentMethod==='efectivo'&&o.cashTendered!=null?'<p>Paga con: $'+_fmt(o.cashTendered)+' · Vuelto: $'+_fmt(o.cashChange)+'</p>':'')+
     SAHTEN.pricing.orderDetail(o) +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">' +
     (o.stockDeducted?'<button class="btn" onclick="orderRestoreStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Devuelve al stock lo descontado por esta orden">↩ Revertir stock</button>':'<button class="btn" onclick="orderDeductStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Descuenta ingredientes y envases según las recetas">📦 Descontar stock</button>') +
@@ -664,9 +675,10 @@ async function orderReopen(orderId) {
   if(!(await sahtenConfirm('¿Reabrir la orden #'+String(o.num).padStart(4,'0')+' y cargarla en el carrito? La orden original se eliminará.', { okLabel: 'Reabrir' }))) return;
   mostradorCart = o.items.map(it => ({productId:it.productId, qty:it.qty}));
   mostradorActiveDiscountId = o.discountId; mostradorActiveCustomerId = o.customerId;
+  mostradorCashTendered=o.cashTendered??'';
   mostradorShipping = o.shipping||0; mostradorActivePaymentId = o.paymentId;
   mostradorOrderType = o.orderType || (o.source==='delivery' ? 'delivery' : 'retiro');
-  mostradorDelivery = (mostradorOrderType==='delivery' && o.lat!=null) ? (()=>{ const z=_mostZoneFor(o.lat,o.lng); return {address:o.address||'',note:'',lat:o.lat,lng:o.lng,distKm:z.distKm,zone:z.zone,out:!!z.out}; })() : (mostradorOrderType==='delivery' ? {address:o.address||'',note:'',lat:null,lng:null,distKm:0,zone:null,out:false} : null);
+  mostradorDelivery = (mostradorOrderType==='delivery' && o.lat!=null) ? (()=>{ const z=_mostZoneFor(o.lat,o.lng); return {...SAHTEN.orderDetails.deliveryDetails(o),address:o.address||'',note:o.notes||'',lat:o.lat,lng:o.lng,distKm:z.distKm,zone:z.zone,out:!!z.out}; })() : (mostradorOrderType==='delivery' ? {...SAHTEN.orderDetails.deliveryDetails(o),address:o.address||'',note:o.notes||'',lat:null,lng:null,distKm:0,zone:null,out:false} : null);
   mostradorShipManual = mostradorOrderType==='delivery';
   if (o.stockDeducted) orderRestoreStock(orderId, true);
   SAHTEN_ORDERS = SAHTEN_ORDERS.filter(x=>x.id!==orderId); _saveOrders();
@@ -686,7 +698,7 @@ async function orderDelete(orderId) {
 // ═══════════════════════════════════════════════════════════
 // COMANDA PRINTING
 // ═══════════════════════════════════════════════════════════
-function printComanda(orderId) {
+function printComanda(orderId, options = {}) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
 
   // ── Resolve logo for printing ──
@@ -730,69 +742,9 @@ function printComanda(orderId) {
     logoHtml = '<div class="brand">' + _esc(brandName) + '</div>';
   }
 
-  const date = new Date(o.createdAt);
-  const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  const itemsHtml = o.items.map(it => '<tr><td class="item-name">' + it.qty + '× ' + _esc(it.name) + '</td><td class="item-price">$' + _fmt(it.lineTotal) + '</td></tr>').join('');
-  const orderNum = String(o.num).padStart(4,'0');
   const paper = SAHTEN.receiptPaper.current();
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comanda #${orderNum}</title>
-<style>
-/* Ancho explícito: no depender del viewport que informa el controlador. */
-@page { margin: 0; size: ${paper.pageSize || 'auto'}; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: #fff; }
-body { width: ${paper.contentMm}mm; max-width: ${paper.contentMm}mm; padding: 1mm; margin: 0;
-  font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #000; line-height: 1.4; -webkit-print-color-adjust: exact; }
-.logo-wrap { text-align: center; margin-bottom: 6px; padding: 2px 0; }
-.logo-svg { width: 100%; max-width: 38mm; height: auto; max-height: 16mm; display: block; margin: 0 auto; }
-.logo-img { max-width: 100%; max-height: 16mm; height: auto; display: block; margin: 0 auto; object-fit: contain; }
-.brand { text-align: center; font-size: 21px; font-weight: 800; margin-bottom: 4px; overflow-wrap: anywhere; }
-.order-num { text-align: center; font-size: 22px; font-weight: 800; margin: 6px 0; }
-.meta { text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.sep { border-top: 1px dashed #000; margin: 6px 0; }
-.sep-bold { border-top: 2px solid #000; margin: 6px 0; }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-td { padding: 3px 0; font-size: 14px; vertical-align: top; font-weight: 600; overflow-wrap: anywhere; }
-td:first-child { width: 38%; } td:last-child { width: 62%; }
-.receipt-items tr { break-inside: avoid; }
-.item-name { text-align: left; padding-right: 4px; font-weight: 700; }
-.item-price { text-align: right; font-weight: 800; }
-${paper.contentMm <= 48 ? '.receipt-items tr,.receipt-items td:first-child,.receipt-items td:last-child{display:block;width:100%}.receipt-items .item-price{padding-top:0;padding-bottom:7px}' : ''}
-${paper.contentMm <= 40 ? '.receipt-totals,.receipt-totals tbody,.receipt-totals tr{display:block;width:100%}.receipt-totals .sub-row{display:flex}.total-row td{display:block;width:100%}.total-row td:last-child{border-top:0;padding-top:0}' : ''}
-.sub-row td { font-size: 13px; }
-.total-row td { font-size: 17px; font-weight: 800; padding-top: 6px; border-top: 2px solid #000; }
-.status { text-align: center; font-size: 15px; font-weight: 800; text-transform: uppercase; margin: 8px 0; padding: 6px 3px; border: 2px solid #000; }
-.meta,.payment,.status,.receipt-review,.footer { overflow-wrap: anywhere; }
-.receipt-review { text-align: center; border-top: 1px dashed #000; margin-top: 12px; padding-top: 10px; break-inside: avoid; font-size: 13px; line-height: 1.45; font-weight: 700; }
-.receipt-google-brand { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 7px; font-size: 17px; font-weight: 700; }
-.receipt-google-logo { width: 6mm; height: 6mm; filter: grayscale(1) brightness(0); }
-.receipt-review-qr { display: block; width: 30mm; height: 30mm; max-width: 100%; margin: 6px auto; }
-.receipt-review-help { font-size: 12px; font-weight: 600; }
-.footer { text-align: center; font-size: 12px; font-weight: 600; margin-top: 10px; padding-top: 4px; }
-.payment { text-align: center; font-size: 13px; font-weight: 700; margin-top: 4px; }
-</style></head><body>
-${logoHtml}
-<div class="order-num">ORDEN #${orderNum}</div>
-<div class="meta">${dateStr}<br>${_esc(o.customerName||'Consumidor Final')}</div>
-<div class="sep-bold"></div>
-<table class="receipt-items">${itemsHtml}</table>
-<div class="sep"></div>
-<table class="receipt-totals">
-<tr class="sub-row"><td>Subtotal</td><td style="text-align:right">$${_fmt(o.subtotal)}</td></tr>
-${o.discountAmount>0?'<tr class="sub-row"><td>'+_esc(o.discountName||'Dto.')+'</td><td style="text-align:right">−$'+_fmt(o.discountAmount)+'</td></tr>':''}
-${o.shipping>0?'<tr class="sub-row"><td>Envío</td><td style="text-align:right">$'+_fmt(o.shipping)+'</td></tr>':''}
-${o.deliverySnapshot?.discount>0?'<tr class="sub-row"><td>Ahorro envío</td><td style="text-align:right">$'+_fmt(o.deliverySnapshot.discount)+'</td></tr>':''}
-<tr class="total-row"><td>TOTAL</td><td style="text-align:right">$${_fmt(o.total)}</td></tr>
-</table>
-${o.paymentName?'<div class="sep"></div><div class="payment">Pago: '+_esc(o.paymentName)+'</div>':''}
-<div class="sep-bold"></div>
-<div class="status">${{pendiente:'PENDIENTE',en_preparacion:'EN PREPARACIÓN',listo:'LISTO',enviado:'EN CAMINO',retirado:'RETIRADO',entregado:'ENTREGADO',cancelado:'CANCELADO'}[o.status]||o.status}</div>
-<div class="footer">Gracias por tu compra</div>
-${SAHTEN.receiptReviews.footer(_custData)}
-</body></html>`;
-
-  return SAHTEN.printDocument(html, { paperWidthMm: paper.paperMm }).catch(e => alert('No se pudo imprimir la comanda. ' + (e.message || 'Volvé a intentarlo.')));
+  const html = SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)});
+  return SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm}).then(()=>true).catch(e=>{ if(options.automatic)throw e;alert('No se pudo imprimir la comanda. '+(e.message || 'Volvé a intentarlo.')); return false; });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -931,7 +883,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 // Preview comanda from Settings — uses dummy order data
 function previewComandaFromSettings() {
   const dummyOrder = {
-    id: 'preview',
+    id: 'preview', source:'delivery', orderType:'delivery',address:'Calle de ejemplo 1234, Ciudad',addressFloor:'2',addressApartment:'B',deliveryReference:'Tocar timbre 2B',customerPhone:'Teléfono de ejemplo',paymentMethod:'efectivo',cashTendered:40000,cashChange:9115,
     num: 1234,
     items: [
       { productId: 'demo1', name: 'Pizza Muzzarella', qty: 2, unitPrice: 9550, lineTotal: 19100 },

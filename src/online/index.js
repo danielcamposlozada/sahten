@@ -32,7 +32,7 @@ export function createOnline({ w = window, project, events }) {
     conn: new Proxy({}, { get: (_, k) => conn()[k], set: (_, k, v) => { conn()[k] = v; return true; }, ownKeys: () => Reflect.ownKeys(conn()), getOwnPropertyDescriptor: (_, k) => Object.getOwnPropertyDescriptor(conn(), k), deleteProperty: (_, k) => delete conn()[k] }),
     images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
-    orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: o => { w.SAHTEN.pricing?.capture(o, { basis: 'from-quote' }); w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); } },
+    orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: (o, { initial = false } = {}) => { w.SAHTEN.pricing?.capture(o, { basis: 'from-quote' }); w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); w.SAHTEN.receipts?.enqueue(o, {origin:'online', initial}); } },
     notify: n => { try { w.pushNotification({ type: 'delivery', source: 'delivery', title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
     refresh: () => { try { if (w.currentPanel === 'mostrador') w.renderMostrador(); } catch (e) { /* */ } },
     storage: config,

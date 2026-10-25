@@ -28,7 +28,7 @@ export function createController(host) {
   const sessKey = () => 'online-session:' + (host.projectId() || 'x');
   const mk = (conn, session) => createClient({ url: conn.url, anonKey: conn.anonKey, fetchImpl: host.fetchImpl, WebSocketImpl: host.WebSocketImpl, session, onSession: s => host.storage.set(sessKey(), s) });
 
-  function importRow(row) {
+  function importRow(row, { initial = false } = {}) {
     const existing = host.orders.list().find(o => o.remoteId === row.id);
     if (existing) {
       const fields = paymentFields(row);
@@ -45,7 +45,7 @@ export function createController(host) {
     if (!['pendiente', 'preparando'].includes(row.status)) return;
     const o = toLocalOrder(row, host.orders.list());
     if (!o) return;
-    host.orders.add(o);
+    host.orders.add(o, { initial });
     host.notify({ title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'), body: o.customerName + ' · $' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' · delivery' : ' · retiro') });
     host.refresh();
   }
@@ -53,7 +53,7 @@ export function createController(host) {
   async function startFeed() {
     stopFeed();
     if (!client || !host.conn.storeId) return;
-    try { (await client.orders.list(host.conn.storeId)).reverse().forEach(importRow); } catch (e) { set('conectado', e.message); }
+    try { (await client.orders.list(host.conn.storeId)).reverse().forEach(row => importRow(row, { initial: true })); } catch (e) { set('conectado', e.message); }
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
   }
   let lastFeed = '';

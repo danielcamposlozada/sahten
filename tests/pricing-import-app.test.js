@@ -30,9 +30,10 @@ it('prueba perfil IT01 y escala como preferencias locales independientes del neg
   const {window:w}=await trackedOpen();loadRawDemo(w);w.renderCustPanel();const d=w.document;
   d.getElementById('cust-receipt-printer').value='it01';w.custUpdateReceiptPrinter();
   expect(w.SAHTEN.receiptPaper.current().contentMm).toBe(35.2);
-  await w.SAHTEN.interfaceScale.set(90);
   let html;w.SAHTEN.printDocument=async h=>{html=h;};w.previewComandaFromSettings();
-  expect(html).toContain('width: 35.2mm');expect(html).toContain('font-size: 14px');expect(html).not.toMatch(/transform:\s*scale/);
+  const initialPrintStyle=html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  await w.SAHTEN.interfaceScale.set(90);w.previewComandaFromSettings();
+  expect(html).toContain('width: 35.2mm');expect(html.match(/<style>([\s\S]*?)<\/style>/)[1]).toBe(initialPrintStyle);expect(html).not.toMatch(/transform:\s*scale/);
   const file=JSON.stringify(w.SAHTEN.project.collect());expect(file).not.toContain('sahten-interface-scale');expect(file).not.toContain('sahten-receipt-calibration');w.close();
 });
 it('importa Excel con direcciones, muestra vista previa y no guarda hasta confirmar; reimportar no duplica',async()=>{

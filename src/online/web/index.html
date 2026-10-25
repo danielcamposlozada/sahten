@@ -173,7 +173,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 var ORDER_PAGE=document.body.hasAttribute('data-storefront'), PREVIEW=document.body.hasAttribute('data-preview');
 var deliveryServerOffset=0,addressGeneration=0;
 var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null;
-var MENU=null, cart={}, type='delivery', geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
+var MENU=null, cart={}, type='delivery', geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
 /* Caligrafía de la marca sola (vector incrustado al publicar; solo con kit de marca). Devuelve '' si no hay. */
@@ -229,7 +229,7 @@ function mpStart(o){
   if(!mpAvailable){sending=false;refreshSend();$('err').textContent='Este negocio todavía no habilitó Mercado Pago.';return;}
   try{
     if(mpResult&&['paid','overpaid','refunded','partially_refunded','charged_back'].includes(mpResult.paymentStatus)){mpPending=null;mpResult=null;}
-    var fingerprint=JSON.stringify(o.items.map(function(i){return [i.id,i.qty];}))+JSON.stringify([o.source,o.address,o.lat,o.lng,o.total,o.customerName,o.customerPhone,o.notes]);
+    var fingerprint=JSON.stringify(o.items.map(function(i){return [i.id,i.qty];}))+JSON.stringify([o.source,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.lat,o.lng,o.total,o.customerName,o.customerPhone,o.notes]);
     if(!mpPending||mpPending.fingerprint!==fingerprint){var bytes=new Uint8Array(32);crypto.getRandomValues(bytes);mpSavePending({requestId:crypto.randomUUID(),proof:Array.from(bytes,function(b){return b.toString(16).padStart(2,'0');}).join(''),fingerprint:fingerprint,cart:cart,createdAt:Date.now()});}
   }catch(e){sending=false;refreshSend();$('err').textContent='Habilitá el almacenamiento de esta página para continuar con el pago.';return;}
   mpCall('checkout',{storeId:sb().storeId,requestId:mpPending.requestId,proof:mpPending.proof,order:o}).then(function(c){
@@ -386,6 +386,7 @@ function sendStatus(){
   if(!payMethods().length)return 'La tienda todavía no habilitó un medio de pago.';
   if(!form.name.trim())return 'Completá tu nombre para enviar el pedido.';
   if(!form.phone.trim())return 'Completá tu teléfono para enviar el pedido.';
+  if(!cashChangeQuote(total(),form.cashTendered,pay).valid)return 'Revisá con cuánto vas a pagar: debe alcanzar el total final.';
   if(type==='delivery'&&ship&&ship.status==='closed')return 'El delivery está fuera de horario. Podés seguir viendo el menú o elegir retiro.';
   if(type==='delivery'&&deliveryLoading)return 'Esperá la validación del recorrido.';
   if(type==='delivery'&&!(geo&&ship&&ship.ok&&!deliveryLoading))return 'Elegí una dirección dentro de la zona de entrega o seleccioná retiro.';
@@ -419,27 +420,30 @@ function sheet(){
   if(!ls.length){setSheetContent('<div class="empty">El carrito está vacío.</div>','<button class="cta ghost" data-close>Seguir viendo el menú</button>');return;}
   if(payMethods().indexOf(pay)<0)pay=payMethods()[0]||'';
   var labels=PAY_LABELS;recalcDelivery();
-  var canSend=!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
+  var canSend=cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
   var body=ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('')+
    '<div class="row"><span>Subtotal</span><span>'+fmt(subtotal())+'</span></div>'+(cartBenefit().amount?'<div class="row"><span>'+esc(cartBenefit().label)+'</span><span>−'+fmt(cartBenefit().amount)+'</span></div>':'')+(type==='delivery'&&ship&&ship.ok?'<div class="row" data-shipping-total><span>Envío</span><span>'+(ship.cost?fmt(ship.cost):'Gratis')+'</span></div>':'')+'<div class="row t"><span>Total</span><span data-order-total>'+fmt(total())+'</span></div>'+
    '<div class="seg"><button data-type="delivery" class="'+(type==='delivery'?'on':'')+'">🛵 Delivery</button><button data-type="pickup" class="'+(type==='pickup'?'on':'')+'">🏠 Retiro en local</button></div>'+
    (MENU.config.deliveryNote&&type==='delivery'?'<div class="note">'+esc(MENU.config.deliveryNote)+'</div>':'')+
    '<label for="f-name">Nombre</label><input id="f-name" autocomplete="name" value="'+esc(form.name)+'"><label for="f-phone">Teléfono</label><input id="f-phone" type="tel" autocomplete="tel" value="'+esc(form.phone)+'">'+
-   (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'">'+(modernDelivery()?'<button type="button" class="cta ghost" data-delivery-search>Buscar dirección</button>':'')+'<div id="sugs"></div><div id="delivery-card">'+shipNote()+'</div>':'<div class="note">Retiro: '+esc(MENU.store.address||'en el local')+'</div>')+
+   (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'">'+(modernDelivery()?'<button type="button" class="cta ghost" data-delivery-search>Buscar dirección</button>':'')+'<div id="sugs"></div><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end"><div><label for="f-floor">Piso (opcional)</label><input id="f-floor" maxlength="30" value="'+esc(form.addressFloor)+'"></div><div><label for="f-apartment">Departamento (opcional)</label><input id="f-apartment" maxlength="30" value="'+esc(form.addressApartment)+'"></div></div><label for="f-reference">Referencia para la entrega (opcional)</label><input id="f-reference" maxlength="200" placeholder="Timbre, entrada, entre calles…" value="'+esc(form.deliveryReference)+'"><div id="delivery-card">'+shipNote()+'</div>':'<div class="note">Retiro: '+esc(MENU.store.address||'en el local')+'</div>')+
    paymentChoiceHtml({methods:payMethods(),selected:pay,percent:paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).enabled&&paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).channels.online?paymentBenefitPolicy(MENU.payments.benefit).percent:0,amounts:Object.fromEntries(payMethods().map(function(k){return [k,fmt(subtotal()-cartBenefit(k).amount+(type==='delivery'&&shippingForMethod(k)?shippingForMethod(k).cost:0))]}))})+
+   (pay==='efectivo'?'<label for="f-cash">¿Con cuánto vas a pagar? (opcional)</label><input id="f-cash" type="number" inputmode="decimal" min="0" max="100000000" step="0.01" placeholder="Por ejemplo, 20000" value="'+esc(form.cashTendered)+'"><p id="cash-status" role="status"></p>':'')+
    '<label for="f-notes">Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea>'+
    '';
   var footer='<div class="row t"><span>Total</span><span data-order-total>'+fmt(total())+'</span></div><div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="cta ghost" data-close>Seguir viendo el menú</button>';
   setSheetContent(body,footer);
   var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
-  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');
+  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');bind('f-floor','addressFloor');bind('f-apartment','addressApartment');bind('f-reference','deliveryReference');
+  if($('f-cash'))$('f-cash').addEventListener('input',function(){form.cashTendered=this.value;refreshCashStatus();refreshSend();});refreshCashStatus();
   s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
   if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;deliveryRoute=null;deliveryAuthorization=null;deliveryQuoteId=null;deliveryGeneration++;addressGeneration++;deliveryLoading=false;deliveryError='';recalcDelivery();var card=$('delivery-card');if(card)card.innerHTML=shipNote();document.querySelectorAll('[data-shipping-total]').forEach(function(el){el.remove()});refreshTotals();if(!modernDelivery())suggest(this.value);else{sugs=[];renderSugs();}refreshSend();});
   renderSugs();
 }
-function refreshTotals(){document.querySelectorAll('[data-order-total]').forEach(function(el){el.textContent=fmt(total())});var b=$('send');if(b)b.textContent=(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total());}
+function refreshCashStatus(){var q=cashChangeQuote(total(),form.cashTendered,pay),el=$('cash-status');if(el)el.textContent=!q.specified?'Avisanos para preparar el vuelto.':q.valid?'Vuelto a preparar: '+fmt(q.change):q.shortfall?'El importe no alcanza. Faltan '+fmt(q.shortfall):'Revisá el importe.';if($('f-cash'))$('f-cash').setAttribute('aria-invalid',String(!q.valid));}
+function refreshTotals(){refreshCashStatus();document.querySelectorAll('[data-order-total]').forEach(function(el){el.textContent=fmt(total())});var b=$('send');if(b)b.textContent=(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total());}
 setInterval(function(){if(!modernDelivery()||type!=='delivery'||!$('ov').classList.contains('on')||step==='done'||step==='mp')return;var previous=ship&&ship.status;recalcDelivery();if(previous!==(ship&&ship.status)){var card=$('delivery-card');if(card)card.innerHTML=shipNote();if(!ship.ok)document.querySelectorAll('[data-shipping-total]').forEach(function(el){el.remove()});refreshTotals();refreshSend();}},15000);
-function refreshSend(){var b=$('send');if(!b)return;b.disabled=sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
+function refreshSend(){var b=$('send');if(!b)return;b.disabled=!cashChangeQuote(total(),form.cashTendered,pay).valid||sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
 function suggest(v){clearTimeout(sugTimer);var generation=++addressGeneration;sugs=[];renderSugs();if(!v||v.length<5)return;if(modernDelivery()&&$('sugs'))$('sugs').innerHTML='<p role="status">Buscando dirección…</p>';sugTimer=setTimeout(function(){
   var near=MENU.delivery&&MENU.delivery.lat!=null?'&viewbox='+[MENU.delivery.lng-0.4,MENU.delivery.lat+0.4,MENU.delivery.lng+0.4,MENU.delivery.lat-0.4].join(',')+'&bounded=0':'';
   (modernDelivery()?deliveryApi('geocode',{query:v}):fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=es&addressdetails=1&q='+encodeURIComponent(v)+near).then(function(r){return r.json()})).then(function(rows){
@@ -449,25 +453,25 @@ function pickSug(i){var s=sugs[i];if(!s)return;form.address=s.label;geo={lat:s.l
 
 function buildOrder(){
   var ls=lines(),sub=subtotal(),sh=type==='delivery'&&ship&&ship.ok?ship.cost:0;
-  return {id:'web_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),num:Math.floor(Math.random()*9000)+1000,createdAt:new Date().toISOString(),source:type,status:'pendiente',
+  return Object.assign({},deliveryDetails(form,type),cashOrderFields(total(),form.cashTendered,pay),{id:'web_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),num:Math.floor(Math.random()*9000)+1000,createdAt:new Date().toISOString(),source:type,status:'pendiente',
     customerName:form.name.trim(),customerPhone:form.phone.trim(),customerEmail:form.email.trim(),address:type==='delivery'?form.address:'Retiro en local',zoneName:type==='delivery'&&ship&&ship.zone?ship.zone.name:'',
-    lat:geo?geo.lat:null,lng:geo?geo.lng:null,paymentMethod:pay,items:ls,subtotal:sub,discount:cartBenefit().amount,discountAmount:cartBenefit().amount,discountName:cartBenefit().label||null,paymentDiscount:cartBenefit().paymentDiscount,shipping:sh,total:total(),notes:form.notes.trim(),deliveryQuoteId:deliveryQuoteId,deliverySnapshot:modernDelivery()&&ship&&ship.ok?deliverySnapshot(ship,deliveryRoute,deliveryAuthorization):null};
+    lat:geo?geo.lat:null,lng:geo?geo.lng:null,paymentMethod:pay,items:ls,subtotal:sub,discount:cartBenefit().amount,discountAmount:cartBenefit().amount,discountName:cartBenefit().label||null,paymentDiscount:cartBenefit().paymentDiscount,shipping:sh,total:total(),notes:form.notes.trim(),deliveryQuoteId:deliveryQuoteId,deliverySnapshot:modernDelivery()&&ship&&ship.ok?deliverySnapshot(ship,deliveryRoute,deliveryAuthorization):null});
 }
 function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
-  if(sending)return;recalcDelivery();if(type==='delivery'&&modernDelivery()&&(!ship?.ok||deliveryLoading)){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
+  if(sending)return;recalcDelivery();if(!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&modernDelivery()&&(!ship?.ok||deliveryLoading)){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
   if(pay==='mercadopago'){mpStart(o);return;}
   var s=sb();
   if(modernDelivery()){
-    var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
+    var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.cashTendered,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
     deliveryApi('order',{order:o,requestId:deliverySubmission.id}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='cart';sheet();$('err').textContent=e.message;});return;
   }
   fetch(s.url+'/rest/v1/orders',{method:'POST',headers:sbHeaders({Prefer:'return=minimal'}),body:JSON.stringify({store_id:s.storeId,payload:o})})
    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);sending=false;finish(o,true);})
    .catch(function(){sending=false;step='cart';sheet();var e=$('err');if(e)e.innerHTML='<div class="note err"><b>No pudimos enviar tu pedido.</b> Revisá tu conexión y reintentá'+(MENU.store.whatsapp?', o pedilo por WhatsApp.':'.')+(MENU.store.whatsapp?'<br><a href="'+esc(waLink(o))+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>':'')+'</div>';});
 }
-function finish(o,sent){deliverySubmission=null;cart={};step='done';render();sheet();showSheet();}
+function finish(o,sent){deliverySubmission=null;cart={};form.cashTendered='';step='done';render();sheet();showSheet();}
 function done(){
   var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
   var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';

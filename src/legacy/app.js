@@ -3619,6 +3619,7 @@ function addTier(){if(TIERS.filter(t=>t.id.startsWith('TC')).length>=4) return a
 const AJ_GROUPS = [
   { id: 'negocio', label: 'Negocio', tabs: [
     { id: 'personal', label: 'Marca y apariencia', panel: 'personalizacion' },
+    { id: 'impresion', label: 'Impresión', panel: 'ajustes' },
     { id: 'canales', label: 'Canales de venta', panel: 'canales' },
     { id: 'tiers', label: 'Niveles de ganancia', panel: 'ajustes' },
     { id: 'tienda', label: 'Tienda online y delivery', panel: 'ajustes' } ] },
@@ -3682,7 +3683,7 @@ function _ajNavTab(tabId) {
   if (['archivo','respaldos','app','ayuda'].includes(tabId) && SAHTEN.projectUi) SAHTEN.projectUi.renderBackupPanel();
   if (tabId === 'tiers') renderTiers();
   if (tabId === 'canales') renderChannels();
-  if (tabId === 'personal' && typeof renderCustPanel === 'function') setTimeout(renderCustPanel, 100);
+  if (['personal','impresion'].includes(tabId) && typeof renderCustPanel === 'function') setTimeout(renderCustPanel, 100);
 }
 
 // ═══════════════════════════════════════════════════════

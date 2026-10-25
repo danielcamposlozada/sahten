@@ -453,11 +453,12 @@ function _onlineBoardCard(o, recent = false) {
     '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
     '<div class="online-board-time"><time datetime="' + _esc(o.createdAt || '') + '">Creado ' + _esc(time) + '</time></div>' +
     (items ? '<ul class="online-board-items">' + items + '</ul>' : '') +
-    (delivery ? '<div class="online-board-address' + (o.address ? '' : ' online-board-missing') + '"><strong>Entrega</strong><span>' + _esc(o.address || 'Falta dirección de entrega') + '</span>' +
+    (delivery ? '<div class="online-board-address' + (o.address ? '' : ' online-board-missing') + '"><strong>Entrega</strong><span>' + (SAHTEN.orderDetails.deliveryAddressLines(o).map(_esc).join('<br>') || 'Falta dirección de entrega') + '</span>' +
       ((o.deliveryZone || o._zoneName) ? '<span>Zona: ' + _esc(o.deliveryZone || o._zoneName) + '</span>' : '') + '</div>' : '') +
     (phone ? '<a class="online-board-phone" href="tel:' + _esc(dial) + '">Llamar: ' + _esc(phone) + '</a>' : delivery ? '<div class="online-board-missing">Sin teléfono de contacto</div>' : '') +
     (o.notes ? '<div class="online-board-note"><strong>Indicaciones</strong> ' + _esc(o.notes) + '</div>' : '') +
     '<div class="online-board-payment' + (warning ? ' is-warning' : paid ? ' is-paid' : '') + '"><strong>' + _esc(payment) + '</strong><span>' + _esc(o.paymentName || o.paymentMethod || 'Medio de pago sin especificar') + '</span></div>' +
+    (o.paymentMethod==='efectivo'&&o.cashTendered!=null?'<div class="online-board-payment">Paga con: $'+_fmtN(o.cashTendered)+' · Vuelto: $'+_fmtN(o.cashChange)+'</div>':'')+
     (delivery ? '<span class="online-board-shipping">Incluye envío: $' + _fmtN(o.shipping) + '</span>' : '') +
     (o.deliverySnapshot ? '<div>'+_esc(o.deliverySnapshot.effectiveZone?.name||'Delivery')+' · '+Number(o.deliverySnapshot.routeKm).toFixed(2)+' km por calles · Ahorro en envío: $'+_fmtN(o.deliverySnapshot.discount)+(o.deliverySnapshot.authorization?.approved?' · Autorización registrada':'')+'</div>' : '') +
     '<div class="online-board-actions">' +

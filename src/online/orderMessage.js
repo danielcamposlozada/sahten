@@ -1,4 +1,5 @@
-// Pedido del menú publicado → mensaje de WhatsApp. Puro. Se inyecta tal cual en la web publicada (sin imports).
+import {deliveryAddressLines,cashChangeQuote} from '../core/order-details.js';
+// Pedido del menú publicado → mensaje de WhatsApp. El generador inyecta también sus dependencias y elimina los imports.
 export const PAY_LABELS = { efectivo: 'Efectivo', transferencia: 'Transferencia', mercadopago: 'Mercado Pago', tarjeta: 'Tarjeta' };
 
 const money = (n, symbol = '$', locale = 'es-AR') => symbol + Number(n || 0).toLocaleString(locale, { maximumFractionDigits: 2 });
@@ -29,7 +30,7 @@ export function buildWaMessage(o, { symbol = '$', locale = 'es-AR' } = {}) {
   msg += '\nCliente: *' + (o.customerName || 'Cliente') + '*\n';
   if (o.customerPhone) msg += 'Tel: ' + o.customerPhone + '\n';
   if (o.customerEmail) msg += 'Email: ' + o.customerEmail + '\n';
-  if (o.source === 'delivery' && o.address) msg += 'Dirección: ' + o.address + (o.zoneName ? ' (' + o.zoneName + ')' : '') + '\n';
+  if (o.source === 'delivery' && o.address) msg += 'Dirección: ' + o.address + (o.zoneName ? ' (' + o.zoneName + ')' : '') + '\n' + deliveryAddressLines(o).slice(1).join('\n') + (deliveryAddressLines(o).length>1?'\n':'');
   msg += '\n*Detalle:*\n';
   (o.items || []).forEach(it => { msg += '  • ' + it.name + ' ×' + it.qty + ' — ' + m(it.lineTotal) + '\n'; });
   msg += '\nSubtotal: ' + m(o.subtotal) + '\n';
@@ -39,6 +40,8 @@ export function buildWaMessage(o, { symbol = '$', locale = 'es-AR' } = {}) {
   msg += '*Total: ' + m(o.total) + '*\n';
   msg += 'Pago: ' + (PAY_LABELS[o.paymentMethod] || o.paymentMethod || '') + '\n';
   if (o.notes) msg += 'Notas: ' + o.notes + '\n';
+  const cash = cashChangeQuote(o.total, o.cashTendered, o.paymentMethod);
+  if(cash.specified && cash.valid) msg += 'Paga con: ' + m(cash.tendered) + '\nVuelto: ' + m(cash.change) + '\n';
   return msg;
 }
 

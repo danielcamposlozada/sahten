@@ -1,0 +1,59 @@
+{
+  "endpoint": "https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson",
+  "routes": [
+    {
+      "place": "Hospital Municipal Profesor Doctor Bernardo Houssay, 1757, Presidente Hipólito Yrigoyen, Florida, Partido de Vicente López, Buenos Aires, 1602, Argentina",
+      "ok": true,
+      "radialKm": 0.8647875603879562,
+      "provider": "openrouteservice",
+      "profile": "driving-car",
+      "distanceMeters": 1707.4,
+      "durationSeconds": 216.5,
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.5220891,
+        "lng": -58.4897272
+      },
+      "validatedAt": "2026-10-25T03:11:39.811Z"
+    },
+    {
+      "place": "Plaza Vicente López y Planes, 1636, Olivos, Partido de Vicente López, Buenos Aires, 1636, Argentina",
+      "ok": true,
+      "radialKm": 1.9844136977953548,
+      "provider": "openrouteservice",
+      "profile": "driving-car",
+      "distanceMeters": 2551.5,
+      "durationSeconds": 366.3,
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.5089405,
+        "lng": -58.4861967
+      },
+      "validatedAt": "2026-10-25T03:11:40.097Z"
+    },
+    {
+      "place": "Estación La Lucila, Doctor Guillermo Rawson, La Lucila, Partido de Vicente López, Buenos Aires, B1637, Argentina",
+      "ok": true,
+      "radialKm": 3.3481835382790304,
+      "provider": "openrouteservice",
+      "profile": "driving-car",
+      "distanceMeters": 4062.2,
+      "durationSeconds": 511.6,
+      "origin": {
+        "lat": -34.5264314,
+        "lng": -58.4818959
+      },
+      "destination": {
+        "lat": -34.4970518,
+        "lng": -58.4899007
+      },
+      "validatedAt": "2026-10-25T03:11:40.378Z"
+    }
+  ]
+}

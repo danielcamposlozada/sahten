@@ -1249,7 +1249,7 @@ function _exportMostradorXLSX(){
 
   // Build CSV rows
   const showCosts = !document.body.classList.contains('role-no-costs');
-  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento (total orden)','Envío (total orden)','Método Pago','Total Orden','Estado','Motivo descuento','Beneficio por pago %','Beneficio por pago $ (primera línea)','Revisión beneficio','Zona de envío','Zona tarifaria efectiva','Tarifa normal envío','Beneficio envío $ (primera línea)','Revisión envío','Distancia radial km','Recorrido km','Autorización envío',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
+  const rows=[['#Orden','Fecha','Hora','Cliente','Teléfono','Producto','Cantidad','Precio Unit.','Subtotal Línea','Descuento (total orden)','Envío (total orden)','Método Pago','Total Orden','Estado','Motivo descuento','Beneficio por pago %','Beneficio por pago $ (primera línea)','Revisión beneficio','Zona de envío','Zona tarifaria efectiva','Tarifa normal envío','Beneficio envío $ (primera línea)','Revisión envío','Distancia radial km','Recorrido km','Autorización envío','Dirección entrega','Piso','Departamento','Referencia entrega','Efectivo indicado (primera línea)','Vuelto (primera línea)',...(showCosts?['Costo variable unit. histórico','GF unit. histórico','Comisión histórica %','Revisión de precio','Origen del desglose']:[])]];
 
   filtered.forEach(o=>{
     const num=String(o.num||0).padStart(4,'0');
@@ -1265,7 +1265,7 @@ function _exportMostradorXLSX(){
     (o.items||[]).forEach((it,lineIndex)=>{
       const entry = SAHTEN.state.saleCosts[o.id];
       const saved = entry?.items.find(x=>x.productId===it.productId);
-      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,o.discountName||'',benefit?.percent||'',lineIndex===0?(benefit?.amount||0):0,benefit?.revision||'',o.deliverySnapshot?.geographicZone?.name||'',o.deliverySnapshot?.effectiveZone?.name||'',o.deliverySnapshot?.baseCost??'',lineIndex===0?(o.deliverySnapshot?.discount||0):0,o.deliverySnapshot?.revision||'',o.deliverySnapshot?.radialKm??'',o.deliverySnapshot?.routeKm??'',o.deliverySnapshot?.authorization?.reason||'',...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
+      rows.push([num,fecha,hora,custName,custPhone,it.name||'?',it.qty||0,it.unitPrice||0,it.lineTotal||0,o.discountAmount??o.discount??0,o.shipping||0,payName,o.total||0,status,o.discountName||'',benefit?.percent||'',lineIndex===0?(benefit?.amount||0):0,benefit?.revision||'',o.deliverySnapshot?.geographicZone?.name||'',o.deliverySnapshot?.effectiveZone?.name||'',o.deliverySnapshot?.baseCost??'',lineIndex===0?(o.deliverySnapshot?.discount||0):0,o.deliverySnapshot?.revision||'',o.deliverySnapshot?.radialKm??'',o.deliverySnapshot?.routeKm??'',o.deliverySnapshot?.authorization?.reason||'',o.address||'',o.addressFloor||'',o.addressApartment||'',o.deliveryReference||'',lineIndex===0?(o.cashTendered??''):'',lineIndex===0?(o.cashChange??''):'',...(showCosts?[saved?.unitVariable??'',saved?.unitFixed??'',saved?(saved.commissionRate*100):'',saved?.revision||'',entry?.basis||'Sin desglose histórico']:[])]);
     });
   });
 

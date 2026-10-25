@@ -161,3 +161,17 @@ describe('catálogo del Mostrador', () => {
   });
 
 });
+
+it('guarda entrega y vuelto en Mostrador, imprime solo una vez y agrupa opciones en Impresión',async()=>{
+ const {window:w}=await openApp();try{
+ await w.SAHTEN.project.newProject('Prueba de impresión');loadRawDemo(w);w.showPanel('mostrador');
+ const d=w.document;w.eval("_saveTiendaConfig({..._getTiendaConfig(),paymentMethods:{efectivo:true,transferencia:true}});");w.mostradorSetPayment('standard:efectivo');
+ d.querySelector('.most-product-add').click();w.mostradorSetOrderType('delivery');
+ w.eval("_mostDeliveryField('address','Calle de ejemplo 1234');_mostDeliveryField('addressFloor','3');_mostDeliveryField('addressApartment','A');_mostDeliveryField('deliveryReference','Timbre 3A');_mostDeliveryField('note','Sin sal');mostradorSetShipping('1000');mostradorSetCash('1');");
+ expect(d.querySelector('.most-checkout').disabled).toBe(true);w.eval("mostradorSetCash('50000');");expect(d.getElementById('most-cash-change').textContent).toContain('Vuelto');
+ let prints=0,ticket='';w.SAHTEN.printDocument=async h=>{prints++;ticket=h;};w.SAHTEN.receipts.save({autoLocal:true,autoOnline:true});await w.mostradorCheckout();await new Promise(r=>setTimeout(r,0));
+ const o=w.sahtenOrders()[0];expect(o).toMatchObject({addressFloor:'3',addressApartment:'A',deliveryReference:'Timbre 3A',cashTendered:50000,notes:'Sin sal'});expect(o.cashChange).toBe(50000-o.total);expect(prints).toBe(1);expect(ticket).toContain('Piso 3 · Depto A');expect(ticket).not.toContain('PENDIENTE');w.SAHTEN.receipts.enqueue(o);await new Promise(r=>setTimeout(r,0));expect(prints).toBe(1);
+ w._ajNavTab('impresion');await new Promise(r=>setTimeout(r,120));expect(d.getElementById('aj-tab-impresion').style.display).toBe('');expect(d.querySelectorAll('#cust-receipt-paper')).toHaveLength(1);expect(d.getElementById('receipt-auto-local').checked).toBe(true);
+ const f=w.SAHTEN.project.collect();expect(f.sales.orders[0]).toMatchObject({addressFloor:'3',cashTendered:50000});expect(JSON.stringify(f)).not.toContain('sahten-receipt-options');
+ }finally{w.close();}
+});

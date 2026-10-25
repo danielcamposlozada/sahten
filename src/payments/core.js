@@ -1,3 +1,4 @@
+import { deliveryDetails, cashChangeQuote, cashOrderFields } from '../core/order-details.js';
 import { shippingFor, deliverySnapshot } from '../core/delivery.js';
 import { paymentDiscountQuote } from '../core/payment-benefit.js';
 
@@ -57,7 +58,9 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   }
   const total = sub - cents(benefit.amount) + shipping;
   if (!Number.isSafeInteger(total) || total < 1 || total > 10000000000) fail('Total fuera de rango.');
-  return { source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
+  const cash = cashChangeQuote(total / 100, input.cashTendered, method);
+  if (validateCustomer && !cash.valid) fail('El efectivo indicado no alcanza el total del pedido.');
+  return { ...deliveryDetails(input, source), ...cashOrderFields(total / 100, input.cashTendered, method), source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
     paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), total: total / 100, notes: text(input.notes, 1000),
     ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
