@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+## 0.4.24
+
+- **Pedido editable antes de pagar**: la tienda separa «Pedido» y «Entrega y pago». Desde el carrito se pueden sumar/restar unidades o quitar un producto completo, sin volver al catálogo. El segundo paso permite regresar y conserva datos, dirección, notas y efectivo; recalcula el total, el descuento y el envío tras cada edición. Un carrito vacío no permite continuar ni enviar.
+
 ## 0.4.23
 
 - **Proveedor de rutas actualizado**: usa el dominio vigente `api.heigit.org/openrouteservice/v2`, reemplazando el dominio que ORS retira en noviembre de 2026. Conserva el mismo perfil y las validaciones de recorrido, sin activar zonas ni beneficios.

@@ -170,6 +170,7 @@ describe('web publicada', () => {
     const sheet = a.d.getElementById('sheet');
     expect(sheet.getAttribute('role')).toBe('dialog');
     expect(a.d.activeElement).toBe(sheet);
+    a.click('#cart-next');
     expect(a.d.getElementById('menuwrap').inert).toBe(true);
     expect(a.d.querySelector('label[for="f-name"]').control).toBe(a.d.getElementById('f-name'));
     a.type('#f-name', 'Pedido de prueba'); a.type('#f-phone', '1100000000');
@@ -180,8 +181,36 @@ describe('web publicada', () => {
     expect(a.d.getElementById('ov').classList.contains('on')).toBe(false);
     expect(a.d.getElementById('menuwrap').inert).toBe(false);
     expect(a.d.activeElement).toBe(trigger);
-    trigger.click(); expect(a.d.getElementById('f-name').value).toBe('Pedido de prueba');
+    trigger.click(); a.click('#cart-next'); expect(a.d.getElementById('f-name').value).toBe('Pedido de prueba');
     a.w.close();
+  });
+
+  it('el primer paso permite sumar, restar y quitar productos sin enviar pedidos ni pedir datos', async () => {
+    const a=await web({menu:baseMenu()});try{
+      a.click('[data-inc]');a.click('#bar button');
+      expect(a.d.querySelector('#f-name')).toBeNull();expect(a.d.querySelector('#send')).toBeNull();
+      expect(a.d.querySelector('[aria-current="step"]').textContent).toContain('Pedido');
+      let plus=a.d.querySelector('.cart-items [data-inc]');const id=plus.id;plus.focus();plus.click();
+      expect(a.d.querySelector('.cart-quantity output').textContent).toBe('2');expect(a.d.activeElement.id).toBe(id);
+      const amount=a.d.querySelector('.cart-item-price').textContent;
+      a.click('.cart-items [data-dec]');expect(a.d.querySelector('.cart-quantity output').textContent).toBe('1');expect(a.d.querySelector('.cart-item-price').textContent).not.toBe(amount);
+      expect(a.d.querySelector('.cart-items [data-dec]').disabled).toBe(true);
+      a.click('[data-remove]');expect(a.d.querySelector('#sheet').textContent).toContain('Tu pedido está vacío');expect(a.d.querySelector('#cart-next')).toBeNull();expect(a.d.querySelector('#send')).toBeNull();
+      expect(a.d.querySelector('#bar-n').textContent).toBe('0 productos');expect(a.calls.some(c=>c.opts.method==='POST')).toBe(false);
+    }finally{a.w.close();}
+  });
+  it('volver a editar conserva datos y efectivo; la orden final usa la cantidad y total nuevos',async()=>{
+    const m=baseMenu({supabase:{url:'https://abc.supabase.co',anonKey:'anon',storeId:'store-1'}});m.products=[{id:'p',name:'Plato de prueba',price:10000,category:'Platos'}];m.payments.benefit={enabled:true,percent:10,channels:{online:true,mostrador:true}};
+    const a=await web({menu:m,fetchMap:{'/rest/v1/stores':{body:[]},'/rest/v1/orders':{status:201,body:null}}});try{
+      a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');
+      a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-floor','2');a.type('#f-apartment','B');a.type('#f-reference','Timbre 2B');a.type('#f-notes','Sin cebolla');a.type('#f-cash','20000');
+      a.click('[data-checkout-step="cart"]');a.click('.cart-items [data-inc]');a.click('#cart-next');
+      for(const [selector,value] of [['#f-name','Cliente de prueba'],['#f-phone','1112345678'],['#f-floor','2'],['#f-apartment','B'],['#f-reference','Timbre 2B'],['#f-notes','Sin cebolla'],['#f-cash','20000']])expect(a.d.querySelector(selector).value).toBe(value);
+      a.click('[data-type="pickup"]');expect(a.d.getElementById('cash-status').textContent).toContain('$2.000');expect(a.d.querySelector('#send').textContent).toContain('$18.000');
+      a.click('#send');await a.wait(30);const posts=a.calls.filter(c=>c.url.includes('/rest/v1/orders'));
+      expect(posts).toHaveLength(1);const order=JSON.parse(posts[0].opts.body).payload;
+      expect(order.items[0].qty).toBe(2);expect(order).toMatchObject({subtotal:20000,discountAmount:2000,total:18000,cashTendered:20000,cashChange:2000,notes:'Sin cebolla'});
+    }finally{a.w.close();}
   });
 
   it('muestra categorías y productos con precio; agrega al carrito', async () => {
@@ -203,7 +232,7 @@ describe('web publicada', () => {
   });
   it('retiro: el pedido sale por wa.me con detalle y total', async () => {
     const m = baseMenu(); const a = await web({ menu: m });
-    a.click('[data-inc]'); a.click('#bar button');
+    a.click('[data-inc]'); a.click('#bar button');a.click('#cart-next');
     a.click('[data-type="pickup"]');
     a.type('#f-name', 'Ana'); a.type('#f-phone', '11 5555-1234');
     expect(a.d.querySelector('#send').disabled).toBe(false);
@@ -218,7 +247,7 @@ describe('web publicada', () => {
   it('delivery: calcula el envío por zona (misma cuenta que el Mostrador) y bloquea fuera de zona', async () => {
     const m = baseMenu();
     const a = await web({ menu: m, fetchMap: { 'nominatim': { body: [{ display_name: 'Siempreviva 750, Buenos Aires, Buenos Aires', lat: '-34.6040', lon: '-58.3820' }, { display_name: 'Lejos 1, Mar del Plata', lat: '-38.0', lon: '-57.55' }] } } });
-    a.click('[data-inc]'); a.click('[data-inc]'); a.click('[data-inc]'); a.click('#bar button');
+    a.click('[data-inc]'); a.click('[data-inc]'); a.click('[data-inc]'); a.click('#bar button');a.click('#cart-next');
     a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234');
     a.type('#f-addr', 'Siempreviva 750'); await a.wait(650);
     expect(a.d.querySelectorAll('[data-sug]').length).toBe(2);
@@ -234,7 +263,7 @@ describe('web publicada', () => {
   it('con Supabase: guarda el pedido en la tabla orders con el store_id', async () => {
     const m = baseMenu({ supabase: { url: 'https://abc.supabase.co', anonKey: 'anon', storeId: 'store-1', slug: 'mi-local' } });
     const a = await web({ menu: m, fetchMap: { '/rest/v1/stores': { body: [] }, '/rest/v1/orders': { status: 201, body: null } } });
-    a.click('[data-inc]'); a.click('#bar button'); a.click('[data-type="pickup"]'); a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234'); a.click('#send');
+    a.click('[data-inc]'); a.click('#bar button');a.click('#cart-next'); a.click('[data-type="pickup"]'); a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234'); a.click('#send');
     await a.wait(30);
     const post = a.calls.find(c => c.url.includes('/rest/v1/orders'));
     expect(post.opts.method).toBe('POST');
@@ -247,7 +276,7 @@ describe('web publicada', () => {
   it('con Supabase y sin conexión: avisa al cliente y ofrece WhatsApp; no da el pedido por enviado', async () => {
     const m = baseMenu({ supabase: { url: 'https://abc.supabase.co', anonKey: 'anon', storeId: 'store-1' } });
     const a = await web({ menu: m, fetchMap: { '/rest/v1/orders': new Error('Failed to fetch') } });
-    a.click('[data-inc]'); a.click('#bar button'); a.click('[data-type="pickup"]'); a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234'); a.click('#send');
+    a.click('[data-inc]'); a.click('#bar button');a.click('#cart-next'); a.click('[data-type="pickup"]'); a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234'); a.click('#send');
     await a.wait(30);
     expect(a.d.querySelector('#err').textContent).toMatch(/No pudimos enviar tu pedido/);
     expect(a.d.querySelector('#err a').href).toContain('wa.me/5491155550123');
@@ -378,15 +407,18 @@ describe('sitio web: reseñas de Google y contenido exportable', () => {
 describe('Mercado Pago en la web sin claves privadas',()=>{
   function menuMP(){const m=buildMenuJson(demoState(),{menuConfig:{whatsappNumber:'5491155550123'},tienda:TIENDA,store:{name:'Mi local'},supabase:{url:'https://abcd1234.supabase.co',anonKey:'sb_publishable_test',storeId:'store-1'}});m.payments.methods={mercadopago:true,efectivo:true};return m;}
   it('oculta Mercado Pago cuando el servidor no está conectado y conserva efectivo',async()=>{
-    const a=await web({menu:menuMP()});a.click('[data-inc]');a.w.document.querySelector('.bar button').click();
+    const a=await web({menu:menuMP()});a.click('[data-inc]');a.w.document.querySelector('.bar button').click();a.click('#cart-next');
     expect(a.d.querySelector('#f-pay')).toBeNull();
     expect([...a.d.querySelectorAll('[data-payment-choice]')].map(o=>o.dataset.paymentChoice)).toEqual(['efectivo']);a.w.close();
   });
   it('ofrece checkout cuando la cuenta del negocio está habilitada y no inserta un pedido sin verificar pago',async()=>{
     const a=await web({menu:menuMP(),fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'/sahten-payments/checkout':{status:503,ok:false,body:{message:'Prueba sin cobro real'}}}});
-    a.click('[data-inc]');a.w.document.querySelector('.bar button').click();a.click('[data-type="pickup"]');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
+    a.click('[data-inc]');a.w.document.querySelector('.bar button').click();a.click('#cart-next');a.click('[data-type="pickup"]');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
+    a.click('[data-checkout-step="cart"]');a.click('.cart-items [data-inc]');a.click('#cart-next');
+    expect(a.d.querySelector('#f-name').value).toBe('Cliente de prueba');
     expect(a.d.querySelector('#send').textContent).toContain('Ir a Mercado Pago');a.click('#send');await a.wait(10);
-    expect(a.calls.some(c=>c.url.includes('/sahten-payments/checkout'))).toBe(true);
+    const checkout=a.calls.find(c=>c.url.includes('/sahten-payments/checkout'));
+    expect(checkout).toBeTruthy();const order=JSON.parse(checkout.opts.body).order;expect(order.items[0].qty).toBe(2);expect(order.total).toBe(order.items[0].unitPrice*2);
     expect(a.calls.some(c=>c.url.includes('/rest/v1/orders')&&c.opts.method==='POST')).toBe(false);
     expect(a.d.querySelector('#err').textContent).toContain('Prueba sin cobro real');a.w.close();
   });
@@ -403,7 +435,7 @@ describe('opciones de pago visibles y beneficio histórico',()=>{
     m.products=[{id:'plato',name:'Plato ficticio',price:10000}];m.config.categories=[];
     m.payments.methods={efectivo:true,transferencia:true,mercadopago:true};
     const a=await web({menu:m,fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'nominatim.openstreetmap.org':{body:[{display_name:'Calle ficticia 123, Ciudad',lat:TIENDA.lat,lon:TIENDA.lng}]},'/rest/v1/orders':{status:201,body:[]}}});
-    a.click('[data-inc]');a.click('#bar button');a.type('#f-name','Cliente ficticio');a.type('#f-phone','1100000000');a.type('#f-addr','Calle ficticia 123');await a.wait(560);a.click('[data-sug="0"]');
+    a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente ficticio');a.type('#f-phone','1100000000');a.type('#f-addr','Calle ficticia 123');await a.wait(560);a.click('[data-sug="0"]');
     expect(a.d.querySelector('#f-pay')).toBeNull();
     expect(a.d.querySelector('.payment-choices').textContent).toContain('10 % de descuento');
     expect(a.d.querySelector('[data-payment-choice="mercadopago"] svg')).toBeTruthy();
