@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import * as C from '../src/core/index.js';
 import { buildMenuJson, orderedCategories } from '../src/online/menuJson.js';
@@ -156,7 +156,8 @@ async function web({ menu, fetchMap = {}, fallbackOnly = false, search = '' }) {
   const w = dom.window, d = w.document;
   const click = sel => d.querySelector(sel).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
   const type = (sel, v) => { const el = d.querySelector(sel); el.value = v; el.dispatchEvent(new w.Event('input', { bubbles: true })); };
-  return { w, d, calls, opened, click, type, wait: ms => new Promise(r => setTimeout(r, ms)) };
+  const searchAddress=async()=>{await vi.waitFor(()=>expect(d.querySelector('[data-delivery-search]').hidden).toBe(false));click('[data-delivery-search]');};
+  return { w, d, calls, opened, click, type, search:searchAddress, wait: ms => new Promise(r => setTimeout(r, ms)) };
 }
 
 describe('web publicada', () => {
@@ -249,14 +250,14 @@ describe('web publicada', () => {
     const a = await web({ menu: m, fetchMap: { 'nominatim': { body: [{ display_name: 'Siempreviva 750, Buenos Aires, Buenos Aires', lat: '-34.6040', lon: '-58.3820' }, { display_name: 'Lejos 1, Mar del Plata', lat: '-38.0', lon: '-57.55' }] } } });
     a.click('[data-inc]'); a.click('[data-inc]'); a.click('[data-inc]'); a.click('#bar button');a.click('#cart-next');
     a.type('#f-name', 'Ana'); a.type('#f-phone', '1155551234');
-    a.type('#f-addr', 'Siempreviva 750'); await a.wait(650);
+    a.type('#f-addr', 'Siempreviva 750'); await a.search(); await a.wait(650);
     expect(a.d.querySelectorAll('[data-sug]').length).toBe(2);
     a.click('[data-sug="0"]');
     const sub = a.w.eval('document.querySelector("#sheet").textContent');
     expect(sub).toMatch(/Zona A/); expect(sub).toMatch(/Envío/);
     expect(a.d.querySelector('#send').disabled).toBe(false);
     // fuera de zona
-    a.type('#f-addr', 'Lejos 1'); await a.wait(650); a.click('[data-sug="1"]');
+    a.type('#f-addr', 'Lejos 1'); await a.search(); await a.wait(650); a.click('[data-sug="1"]');
     expect(a.d.querySelector('#sheet').textContent).toMatch(/fuera de la zona/);
     expect(a.d.querySelector('#send').disabled).toBe(true);
   });
@@ -435,7 +436,7 @@ describe('opciones de pago visibles y beneficio histórico',()=>{
     m.products=[{id:'plato',name:'Plato ficticio',price:10000}];m.config.categories=[];
     m.payments.methods={efectivo:true,transferencia:true,mercadopago:true};
     const a=await web({menu:m,fetchMap:{'/sahten-payments/config':{body:{enabled:true,mode:'test'}},'nominatim.openstreetmap.org':{body:[{display_name:'Calle ficticia 123, Ciudad',lat:TIENDA.lat,lon:TIENDA.lng}]},'/rest/v1/orders':{status:201,body:[]}}});
-    a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente ficticio');a.type('#f-phone','1100000000');a.type('#f-addr','Calle ficticia 123');await a.wait(560);a.click('[data-sug="0"]');
+    a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente ficticio');a.type('#f-phone','1100000000');a.type('#f-addr','Calle ficticia 123');await a.search();await a.wait(560);a.click('[data-sug="0"]');
     expect(a.d.querySelector('#f-pay')).toBeNull();
     expect(a.d.querySelector('.payment-choices').textContent).toContain('10 % de descuento');
     expect(a.d.querySelector('[data-payment-choice="mercadopago"] svg')).toBeTruthy();

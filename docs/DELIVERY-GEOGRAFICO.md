@@ -193,3 +193,11 @@ Se desplegó `sahten-delivery` v5: Pelias del proveedor ORS conectado, clave sol
 Web corregida en Cloudflare `0eabc917-487c-4e13-973e-c538d0bd88a8`. Chrome devuelve la dirección pública exacta del local; no se confirmó una compra. 602 pruebas aprobadas en 63 archivos, sin omitir casos. Política, importes y horas activadas permanecen iguales. La actualización de app que incorpora el respaldo requiere instalar 0.4.25 cuando termine su publicación.
 
 Referencias oficiales: [cambio de URL de Pelias/ORS](https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912), [política de Nominatim](https://operations.osmfoundation.org/policies/nominatim/). Se mantiene búsqueda explícita, caché y límite global; no se añadió autocompletado ni proveedor pago. La disponibilidad y cobertura de los servicios públicos no constituyen un SLA comercial.
+
+## Sugerencias automáticas — ampliación antes de publicar 0.4.25
+
+Por solicitud posterior del dueño, web y Mostrador sugieren al escribir calle y altura después de 350 ms. Comparten Georef oficial para direcciones argentinas; la caché es de memoria (5 minutos para consultas, contexto de municipios/departamentos por centro), no persistente. Se cancelan solicitudes anteriores y no se aceptan resultados tardíos de otra dirección/proyecto. Solo se proponen filas con altura y coordenadas, priorizando coincidencia de calle y cercanía; la localidad opcional reduce ambigüedad. El punto de Georef es estimado: el cliente selecciona la opción y el servidor vuelve a validar el reparto antes de aceptar una compra.
+
+El botón manual se conserva; no se transforma Nominatim en autocompletado. El motor de sugerencias no requiere credenciales, no envía nombre/teléfono y no modifica límites, horas, zonas, tarifas ni históricos. Ver [documentación oficial de Georef](https://www.argentina.gob.ar/georef/normalizacion-de-direcciones). Cobertura automática argentina; si no hay ubicación válida, se invita a incluir localidad o usar la búsqueda explícita.
+
+Chrome real: «Roca 1489» en la tienda de revisión y «Corrientes 1234» en Mostrador con una pizzería ficticia, sin confirmar pedidos. Función técnica: 543 ms inicial / 0 ms repetida; interfaz web alrededor de 1 segundo incluyendo pausa de 350 ms. Son mediciones puntuales, no un SLA. Evidencia en `entregables/publicacion-0.4.25/`.

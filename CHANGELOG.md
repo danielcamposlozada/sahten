@@ -4,6 +4,8 @@
 
 ## 0.4.25
 
+- **Direcciones automáticas y más rápidas**: web y Mostrador vuelven a sugerir al escribir calle y altura, sin pulsar un botón. Espera de 350 ms, cancelación de consultas anteriores, resultados cercanos al local y caché temporal en memoria. Usa Georef para sugerencias argentinas y muestra «Buscar de otra forma» solo si falla la consulta o no hay resultados; elegir la sugerencia sigue siendo necesario para validar recorrido y envío.
+
 - **Búsqueda de direcciones recuperada**: si el servidor no obtiene una dirección precisa, web y Mostrador usan la búsqueda directa de OpenStreetMap ya disponible, manteniendo la validación de rutas en el servidor. Descarta resultados generales de ciudad del proveedor de ubicaciones; los errores del buscador ya no se etiquetan siempre como «sin conexión». Conserva límites, horarios, tarifas y autorizaciones.
 
 - **Tutorial de administración de la tienda**: guía visual y escrita en `docs/`, con los recorridos para cambiar precios/envíos, sincronizar el catálogo y subir la carpeta completa a Cloudflare. Distingue la copia del proyecto del menú publicado y explica la verificación de horarios/beneficios. Es documentación independiente; no agrega una pantalla a los instaladores 0.4.24 ya publicados.

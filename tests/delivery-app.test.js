@@ -43,6 +43,15 @@ it('Mostrador muestra cierre de delivery sin dirección; retiro no muestra promo
  expect(w.document.getElementById('most-delivery-incentive').textContent).toContain('Delivery fuera de horario');w.eval("mostradorSetOrderType('retiro')");expect(w.document.getElementById('most-delivery-incentive')).toBeNull();w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();expect(w.sahtenOrders()).toHaveLength(1);
  }finally{w.close();}
 });
+it('Mostrador busca al escribir calle/altura sin botón y descarta la respuesta anterior',async()=>{
+ const {window:w}=await openApp();try{loadRawDemo(w);configure(w);w.showPanel('mostrador');w.mostradorAddToCart(w.SAHTEN.state.products[0].id);w.eval("mostradorSetOrderType('delivery')");
+ const client=w.SAHTEN.delivery.client;let release;client.suggest=vi.fn(async q=>{if(q==='Roca 100')await new Promise(r=>release=r);return [{display_name:q+', Localidad ficticia',lat:'-34.527',lon:'-58.482',provider:'georef'}];});client.geocode=vi.fn();
+ const type=v=>{const input=w.document.getElementById('most-addr-input');input.focus();input.value=v;input.dispatchEvent(new w.Event('input',{bubbles:true}));};
+ expect(w.document.getElementById('most-addr-retry').hidden).toBe(true);type('Roca');await new Promise(r=>setTimeout(r,400));expect(client.suggest).not.toHaveBeenCalled();type('Roca 10');type('Roca 100');await vi.waitFor(()=>expect(client.suggest).toHaveBeenCalledTimes(1));type('Roca 200');await vi.waitFor(()=>expect(w.document.getElementById('most-addr-sugs').textContent).toContain('Roca 200'));
+ release();await wait();expect(w.document.getElementById('most-addr-sugs').textContent).not.toContain('Roca 100');expect(w.document.getElementById('most-addr-input').value).toBe('Roca 200');expect(w.document.activeElement.id).toBe('most-addr-input');expect(w.document.getElementById('most-addr-retry').hidden).toBe(true);expect(client.geocode).not.toHaveBeenCalled();expect(w.mostradorDeliveryValue().lat).toBeNull();expect(w.sahtenOrders()).toHaveLength(0);
+ client.suggest=vi.fn(async()=>[]);type('Sin resultado 123');await vi.waitFor(()=>expect(w.document.getElementById('most-addr-retry').hidden).toBe(false));type('Otra calle 123');expect(w.document.getElementById('most-addr-retry').hidden).toBe(true);
+ }finally{w.close();}
+});
 it('tarjetas de Pedidos ofrecen mapa, copiar y compartir al aceptar un delivery, sin desplegar detalles ni cambiar su estado',async()=>{
  const {window:w}=await openApp();try{loadRawDemo(w);const base={source:'delivery',createdAt:new Date().toISOString(),items:[],total:20000,lat:-34.4970518,lng:-58.4899007,address:'Destino ficticio',customerName:'Nombre privado',customerPhone:'1100000000'};
  w.eval('SAHTEN_ORDERS='+JSON.stringify([{...base,id:'pending',num:1,status:'pendiente'},{...base,id:'ready',num:2,status:'listo'},{...base,id:'pickup',num:3,source:'pickup',status:'listo'}]));w.showPanel('mostrador');w.mostSetTab('online');const d=w.document;
