@@ -303,3 +303,19 @@ La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta p
 ### 25/10/2026 — Publicación 0.4.23 autorizada
 
 El dueño aprobó la tipografía compacta y pidió integrar y desplegar todos los cambios preparados del PR #26: actualización de app Windows/macOS, carpeta web y ambas funciones para dirección/piso/departamento/referencia y efectivo/vuelto. Incluye Ajustes de impresión e impresión automática opcional por equipo. La publicación conserva los 36 productos/precios vigentes, logos y contenido aprobado, cobros productivos existentes y delivery v2 apagado. No activa zonas/tarifas nuevas ni crea órdenes o pagos reales. Comprobación de instaladores y despliegues en curso; se registra el resultado al finalizar.
+
+
+### 25/10/2026 — 0.4.23 publicada; carrito editable en preparación
+
+- PR #26 integrado por merge normal `2351085f9ca561d427162058da8fad3bd3c0420d`, tag `v0.4.23`. Release `40158899096` finalizó correctamente en pruebas, Windows, macOS universal y publicación. `latest.json` anuncia 0.4.23 con Windows y ambas arquitecturas Mac, enlaces correctos y firmas presentes. No se afirma prueba física en IT01 ni instalación nativa desde este chat.
+- Web productiva Cloudflare `78fdcc0c-6689-4e92-8b3c-3dcbd95e6b80`, éxito, 25/10/2026 03:38:36 UTC; 17 archivos generados desde el catálogo público vigente y el diseño aprobado, con 36 productos y precios coincidentes. Conexión pública y versión de esquema `menu.json` 1 conservadas.
+- Funciones activas `sahten-delivery` v3 y `sahten-payments` v8: incluyen piso/departamento/referencia y efectivo/vuelto preparados. HTTP: configuración productiva de pagos 200, proveedor sin sesión 403 y nueva política de envíos apagada 409. Credenciales y tarifas sin cambios; no se crearon pedidos ni pagos.
+- Chrome en producción: campos de piso, departamento, referencia y efectivo presentes. Retiro con producto $18.600, beneficio $1.860, total $16.740 y efectivo $20.000 muestra vuelto $3.260. Al elegir Mercado Pago desaparece efectivo y el total vuelve a $18.600. Se vació el carrito de comprobación sin enviar.
+- Después de publicar, el dueño solicitó un carrito editable y un proceso simple en dos pasos. Se prepara en rama `codex/checkout-editable-dos-pasos`; todavía no está publicado. La auditoría UX general continúa en pausa.
+
+
+### 25/10/2026 — Carrito en dos pasos, actualización 0.4.24 en preparación
+
+El dueño amplió la publicación solicitada con edición fácil del carrito antes de completar datos y pagar. Se prepara el primer paso «Pedido» con controles de sumar/restar unidades y quitar productos, subtotal de productos y acceso al catálogo; el segundo «Entrega y pago» conserva los campos, el medio elegido, las notas y el efectivo al regresar. Indicador de dos pasos, resumen plegable y regreso visible en móvil. Quitar todo bloquea continuar/enviar; los cambios de cantidad recalculan descuentos, mínimo y envío. No cambia catálogo, precios, credenciales, órdenes existentes ni la política de delivery apagada. La 0.4.23 continúa publicada; la nueva versión y carpeta web se publican una vez terminadas las comprobaciones.
+
+- Verificación de la preparación 0.4.24: 596 pruebas en 62 archivos y build aprobados. Prueba real de interfaz local en Chrome a 320 × 640: sumar una unidad actualiza subtotal, quitar Hummus reduce el pedido y volver conserva nombre/piso. Botones de cantidad, continuar y volver visibles; sin enviar una orden ni conectar datos privados. Las pruebas automatizadas cubren efectivo/vuelto, cantidades finales de Mercado Pago, bloqueo de carrito vacío y mínimo/envío tras editar.

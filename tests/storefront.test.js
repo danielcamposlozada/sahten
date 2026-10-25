@@ -80,6 +80,7 @@ it('la tienda abre la categoría elegida y conserva el carrito y las opciones re
   d.querySelector('#grid [data-inc]').click();
   expect(d.querySelector('#bar-n').textContent).toBe('1 producto');
   d.querySelector('#bar button').click();
+  d.querySelector('#cart-next').click();
   expect(d.querySelector('#sheet').textContent).toContain('Retiro');
   expect(d.querySelector('#sheet').textContent).toContain('Delivery');
   dom.window.close();
