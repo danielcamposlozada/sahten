@@ -17,13 +17,13 @@ function setup({ routes = {}, conn = {}, storage = {} } = {}) {
     if (r instanceof Error) throw r;
     return { ok: (r.status || 200) < 400, status: r.status || 200, json: async () => r.body };
   };
-  const orders = [], notes = []; let dirty = 0, refreshed = 0; const store = { ...storage };
+  const orders = [], notes = [], imports = []; let dirty = 0, refreshed = 0; const store = { ...storage };
   const host = {
     conn: { url: '', anonKey: '', storeId: '', ...conn }, projectId: () => 'p1', markDirty: () => { dirty++; }, menuJson: () => ({ store: { name: 'Mi Local' }, products: [{ id: 'a' }, { id: 'b' }], supabase: { x: 1 } }),
-    orders: { list: () => orders, add: o => orders.unshift(o) }, notify: n => notes.push(n), refresh: () => { refreshed++; },
+    orders: { list: () => orders, add: (o, options) => { orders.unshift(o); imports.push(options); } }, notify: n => notes.push(n), refresh: () => { refreshed++; },
     storage: { get: (k, d) => k in store ? store[k] : d, set: (k, v) => { store[k] = v; } }, fetchImpl, WebSocketImpl: FakeWS,
   };
-  return { host, calls, orders, notes, store, get dirty() { return dirty; }, get refreshed() { return refreshed; }, ctl: createController(host) };
+  return { host, calls, orders, notes, imports, store, get dirty() { return dirty; }, get refreshed() { return refreshed; }, ctl: createController(host) };
 }
 const LOGIN = { '/auth/v1/token?grant_type=password': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1', email: 'a@x.com' } } } };
 
@@ -97,6 +97,7 @@ describe('menú y pedidos', () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: rows } } });
     await s.ctl.resume();
     expect(s.orders.map(o => o.remoteId)).toEqual(['r1']);                       // el entregado no se trae
+    expect(s.imports).toEqual([{initial:true}]);                               // no imprimir el historial al reconectar
     expect(s.notes[0].title).toBe('Nuevo pedido online #0001'); expect(s.notes[0].body).toContain('Ana');
     await s.ctl.resume();
     expect(s.orders).toHaveLength(1);
@@ -106,6 +107,7 @@ describe('menú y pedidos', () => {
     await s.ctl.resume(); const ws = FakeWS.last; await ws.onopen();
     ws.onmessage({ data: JSON.stringify({ topic: ws.sent[0].topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'live-1', status: 'pendiente', created_at: new Date().toISOString(), payload: { source: 'pickup', customerName: 'Luis', total: 9000, items: [] } } } } }) });
     expect(s.orders[0]).toMatchObject({ remoteId: 'live-1', source: 'pickup', customerName: 'Luis' });
+    expect(s.imports).toEqual([{initial:false}]);                              // sí habilita la cola para pedidos nuevos
     expect(s.notes.at(-1).title).toMatch(/Nuevo pedido online/); expect(s.refreshed).toBeGreaterThan(0);
   });
   it('estado del pedido local → web (solo pedidos importados)', async () => {

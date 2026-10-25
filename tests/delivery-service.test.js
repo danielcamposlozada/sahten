@@ -26,6 +26,17 @@ it('el fallo del proveedor no se sustituye por un radio ni crea un pedido',async
  const r=await a.call('order',{order:a.input,requestId:qid});expect(r.status).toBe(503);expect(r.data.message).toContain('calles');expect(a.orders).toHaveLength(0);
  const pickup=await a.call('order',{order:{...a.input,source:'pickup',total:36000},requestId:qid});expect(pickup.status).toBe(200);
 });
+it('reintentar conserva la misma orden, incluso con campos nuevos vacíos, y detecta otro departamento o efectivo',async()=>{
+ const a=setup(),run=a.repo.run;let saved;
+ a.repo.run=vi.fn(async(action,args)=>{if(action==='submission')return saved;const r=await run(action,args);if(action==='order')return saved={...r,order:args.payload};return r;});
+ const first=await a.call('order',{order:a.input,requestId:qid});expect(first.status).toBe(200);
+ expect((await a.call('order',{order:a.input,requestId:qid})).status).toBe(200);expect(a.orders).toHaveLength(1);
+ expect((await a.call('order',{order:{...a.input,addressApartment:'B'},requestId:qid})).status).toBe(409);
+ expect((await a.call('order',{order:{...a.input,cashTendered:50000},requestId:qid})).status).toBe(409);
+ const b=setup(),runB=b.repo.run;let second;b.repo.run=async(action,args)=>{if(action==='submission')return second;const r=await runB(action,args);if(action==='order')return second={...r,order:args.payload};return r;};
+ expect((await b.call('order',{order:{...b.input,cashTendered:'50000',addressFloor:' 2 '},requestId:qid})).status).toBe(200);
+ expect((await b.call('order',{order:{...b.input,cashTendered:50000,addressFloor:'2'},requestId:qid})).status).toBe(200);expect(b.orders).toHaveLength(1);
+});
 it('solo administración autoriza y una aprobación no sobrevive a cambiar dirección, revisión o máximo',async()=>{
  const a=setup(8.2);a.input.items[0].qty=2;a.input.total=81000;
  const q=await a.call('request',{order:a.input});expect(q.data.quote.status).toBe('authorization_required');

@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+- **Impresión en un solo lugar**: Ajustes → Negocio → Impresión reúne perfil de impresora, papel, calibración, logo, QR y vista previa. Impresión automática opcional y local por equipo para pedidos de Mostrador y pedidos web nuevos; cola sin duplicados ni impresión del historial al conectar. Puede requerir confirmar el diálogo del sistema.
+- **Ticket compacto de delivery**: dirección, piso, departamento, referencia y notas completas, con texto legible y QR de 30 mm en 48/58 mm. Menos espacios y separadores; se elimina el estado de la comanda del papel, manteniéndolo en Pedidos.
+- **Efectivo y vuelto**: campo opcional «Con cuánto paga» en web y Mostrador, validación de importe suficiente y vuelto calculado sobre el total final, con descuento y envío. Se guarda con la orden y aparece en detalle, ticket, WhatsApp y CSV; no aumenta los ingresos ni acredita un pago automáticamente.
+- **Datos de entrega completos**: piso y departamento separados de referencias y notas, conservados entre web, caja, servidor y archivo del proyecto. Cambiar dirección invalida ruta y autorización anteriores.
+- **Servidor de envíos**: migración privada y funciones desplegadas con autorización del dueño, política delivery v2 desactivada. Se fijan los search_path de las funciones nuevas; conectar y validar el proveedor sigue siendo un paso separado.
+
 ## 0.4.22
 
 - **Publicar menú en escritorio**: crea las subcarpetas de tienda, páginas informativas y marca antes de escribir sus archivos. Corrige la exportación incompleta que fallaba con «undefined».

@@ -853,6 +853,52 @@
         </div>
 
         <!-- Proyecto y Esta app: se dibujan desde src/project/ui.js (renderBackupPanel) -->
+        <div id="aj-tab-impresion" class="aj-tab-panel" style="display:none"><div class="card"><div class="card-header"><h2 class="card-title">Impresión de pedidos</h2></div><div class="card-body"><p class="custom-hint">Formato compacto, dirección de delivery completa y efectivo/vuelto. Sin estado de la comanda.</p><section aria-label="Formato de impresión"><h3 style="margin-top:16px">Impresora y papel</h3>                <div style="display:grid;gap:8px;max-width:520px;margin-top:10px">
+                  <label class="custom-label" for="cust-receipt-printer">Perfil de impresora en este equipo</label>
+                  <select class="custom-input" id="cust-receipt-printer" onchange="custUpdateReceiptPrinter()"><option value="thermal">Térmica · ajuste manual</option><option value="it01">IT01 · 48 mm · calibración 88 %</option><option value="normal">Impresora normal · A4 / Carta</option></select>
+                  <label class="custom-label" for="cust-receipt-paper">Papel de la comendera en este equipo</label>
+                  <select class="custom-input" id="cust-receipt-paper" onchange="custUpdateReceiptPaper()">
+                    <option value="58">58 mm · contenido base 48 mm</option>
+                    <option value="48">48 mm · contenido hasta 40 mm</option>
+                    <option value="80">80 mm · contenido base 72 mm</option><option value="210">Normal · A4</option><option value="216">Normal · Carta</option>
+                  </select>
+                  <label class="custom-label" for="cust-receipt-calibration">Calibración horizontal (%)</label><input class="custom-input" id="cust-receipt-calibration" type="number" min="80" max="110" step="1" value="100" onchange="custUpdateReceiptPaper()"><p class="custom-hint" id="cust-receipt-width" role="status"></p>
+                  <p class="custom-hint">Se guarda solo en esta computadora. Elegí el mismo papel y escala 100 % en el diálogo de impresión, sin encabezados ni pies. El perfil no instala ni selecciona el controlador de Windows.</p>
+                </div>
+                <button class="btn" style="margin-top:12px" onclick="previewComandaFromSettings()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Previsualizar comanda
+                </button>
+</section><div class="receipt-auto-settings" style="display:grid;gap:12px;margin:16px 0;max-width:560px"><h3>Impresión automática</h3><label><input type="checkbox" id="receipt-auto-local" onchange="SAHTEN.receipts.save({autoLocal:this.checked,autoOnline:document.getElementById('receipt-auto-online').checked})"> Imprimir pedidos creados en Mostrador</label><label><input type="checkbox" id="receipt-auto-online" onchange="SAHTEN.receipts.save({autoOnline:this.checked,autoLocal:document.getElementById('receipt-auto-local').checked})"> Imprimir pedidos nuevos recibidos de la web</label><p class="custom-hint">Solo en este equipo. Abre la impresión al crear o recibir un pedido nuevo; puede requerir confirmar el diálogo del sistema. No imprime el historial al conectar, ni repite una orden al sincronizar. Activá estas opciones solo en la caja que tiene la impresora.</p></div>              <!-- Logo B&W para impresión de comandas -->
+              <div class="custom-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+                <label class="custom-label">Logo para impresión (B&N)</label>
+                <div class="custom-hint" style="margin-bottom:10px">Logo en blanco y negro para comandas e impresiones térmicas. Si no subís uno, se usa el logo principal en negro automáticamente.</div>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                  <div id="cust-bw-logo-preview" class="bw-logo-preview">
+                    <span class="bw-logo-empty">Sin logo B&N</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <button class="btn" onclick="document.getElementById('cust-bw-logo-upload').click()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Subir logo B&N
+                    </button>
+                    <button class="btn" id="cust-bw-logo-remove" style="display:none" onclick="custRemoveBwLogo()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                      Quitar
+                    </button>
+                  </div>
+                  <input type="file" id="cust-bw-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="custHandleBwLogoUpload(event)">
+                </div>
+                <div class="receipt-review-settings" style="display:grid;gap:10px;margin-top:18px;max-width:520px">
+                  <label class="custom-label"><input type="checkbox" id="cust-review-enabled" onchange="custUpdateReview()"> Invitar a dejar una reseña en el ticket</label>
+                  <label class="custom-label" for="cust-review-url">Enlace de reseñas de Google</label>
+                  <input class="custom-input" type="url" id="cust-review-url" placeholder="Pegá el enlace de Pedir reseñas" maxlength="400" onchange="custUpdateReview()" aria-describedby="cust-review-hint cust-review-error">
+                  <div class="custom-hint" id="cust-review-hint">Copialo desde tu Perfil de Empresa en Google → Pedir reseñas. El QR se genera en la app y queda guardado con este negocio.</div>
+                  <p id="cust-review-error" role="status" style="color:var(--red);margin:0" hidden></p>
+                  <label class="custom-label" for="cust-review-text">Texto al pie del ticket</label>
+                  <textarea class="custom-input" id="cust-review-text" rows="3" maxlength="140" onchange="custUpdateReview()"></textarea>
+                </div>
+              </div></div></div></div>
         <div id="aj-tab-archivo" class="aj-tab-panel" style="display:none"></div>
         <div id="aj-tab-respaldos" class="aj-tab-panel" style="display:none"></div>
         <div id="aj-tab-app" class="aj-tab-panel" style="display:none"></div>
@@ -1039,52 +1085,7 @@
                 <div class="custom-hint">PNG, JPG o SVG. Máx 300KB. Recomendado: fondo transparente.</div>
               </div>
 
-              <!-- Logo B&W para impresión de comandas -->
-              <div class="custom-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-                <label class="custom-label">Logo para impresión (B&N)</label>
-                <div class="custom-hint" style="margin-bottom:10px">Logo en blanco y negro para comandas e impresiones térmicas. Si no subís uno, se usa el logo principal en negro automáticamente.</div>
-                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-                  <div id="cust-bw-logo-preview" class="bw-logo-preview">
-                    <span class="bw-logo-empty">Sin logo B&N</span>
-                  </div>
-                  <div style="display:flex;flex-direction:column;gap:6px">
-                    <button class="btn" onclick="document.getElementById('cust-bw-logo-upload').click()">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      Subir logo B&N
-                    </button>
-                    <button class="btn" id="cust-bw-logo-remove" style="display:none" onclick="custRemoveBwLogo()">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                      Quitar
-                    </button>
-                  </div>
-                  <input type="file" id="cust-bw-logo-upload" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="custHandleBwLogoUpload(event)">
-                </div>
-                <div class="receipt-review-settings" style="display:grid;gap:10px;margin-top:18px;max-width:520px">
-                  <label class="custom-label"><input type="checkbox" id="cust-review-enabled" onchange="custUpdateReview()"> Invitar a dejar una reseña en el ticket</label>
-                  <label class="custom-label" for="cust-review-url">Enlace de reseñas de Google</label>
-                  <input class="custom-input" type="url" id="cust-review-url" placeholder="Pegá el enlace de Pedir reseñas" maxlength="400" onchange="custUpdateReview()" aria-describedby="cust-review-hint cust-review-error">
-                  <div class="custom-hint" id="cust-review-hint">Copialo desde tu Perfil de Empresa en Google → Pedir reseñas. El QR se genera en la app y queda guardado con este negocio.</div>
-                  <p id="cust-review-error" role="status" style="color:var(--red);margin:0" hidden></p>
-                  <label class="custom-label" for="cust-review-text">Texto al pie del ticket</label>
-                  <textarea class="custom-input" id="cust-review-text" rows="3" maxlength="140" onchange="custUpdateReview()"></textarea>
-                </div>
-                <div style="display:grid;gap:8px;max-width:520px;margin-top:18px">
-                  <label class="custom-label" for="cust-receipt-printer">Perfil de impresora en este equipo</label>
-                  <select class="custom-input" id="cust-receipt-printer" onchange="custUpdateReceiptPrinter()"><option value="thermal">Térmica · ajuste manual</option><option value="it01">IT01 · 48 mm · calibración 88 %</option><option value="normal">Impresora normal · A4 / Carta</option></select>
-                  <label class="custom-label" for="cust-receipt-paper">Papel de la comendera en este equipo</label>
-                  <select class="custom-input" id="cust-receipt-paper" onchange="custUpdateReceiptPaper()">
-                    <option value="58">58 mm · contenido base 48 mm</option>
-                    <option value="48">48 mm · contenido hasta 40 mm</option>
-                    <option value="80">80 mm · contenido base 72 mm</option><option value="210">Normal · A4</option><option value="216">Normal · Carta</option>
-                  </select>
-                  <label class="custom-label" for="cust-receipt-calibration">Calibración horizontal (%)</label><input class="custom-input" id="cust-receipt-calibration" type="number" min="80" max="110" step="1" value="100" onchange="custUpdateReceiptPaper()"><p class="custom-hint" id="cust-receipt-width" role="status"></p>
-                  <p class="custom-hint">Se guarda solo en esta computadora. Elegí el mismo papel y escala 100 % en el diálogo de impresión, sin encabezados ni pies. El perfil no instala ni selecciona el controlador de Windows.</p>
-                </div>
-                <button class="btn" style="margin-top:12px" onclick="previewComandaFromSettings()">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  Previsualizar comanda
-                </button>
-              </div>
+
             </div>
           </div>
 

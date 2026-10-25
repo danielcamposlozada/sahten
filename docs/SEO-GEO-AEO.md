@@ -259,3 +259,23 @@ La rama también prepara en las tarjetas internas de Pedidos el enlace de ruta p
 - Chrome confirma los precios nuevos en la portada y tienda. No se enviaron compras ni se usaron fondos reales. Evidencias y ZIP en entregables/web-precios-2026-10-24/ del espacio del dueño.
 - La exportación nativa fallaba al escribir subcarpetas nuevas de páginas/marca. Se prepara corrección y actualización 0.4.22 con 583 pruebas aprobadas y compilación correcta; publicación de instaladores pendiente de completar.
 - El dueño pidió configurar el proveedor de rutas. OpenRouteService requiere acceso/clave de una cuenta; acceso con GitHub pendiente de autorización específica. La revisión automática rechazó aplicar la migración del delivery hasta obtener autorización explícita para tablas privadas y controles de pedidos/proyectos productivos; no se aplicó ni se desplegaron funciones.
+
+
+### 24/10/2026 — 0.4.22 y servidor de rutas verificados
+
+- Sahten 0.4.22 publicada: PR #25, merge `15c99175bfb766c165d80afcdce744dfec5dc7ff`, etiqueta v0.4.22. Proceso `40128751674` correcto en pruebas, Windows, Mac universal y publicación. `latest.json` anuncia 0.4.22 con enlaces y firmas; la app de este equipo ya muestra 0.4.22.
+- El dueño autorizó expresamente iniciar OpenRouteService con GitHub y aplicar la migración/desplegar ambas funciones de envíos/pagos. Se aplicó `delivery_geografico_y_rutas` y el ajuste `delivery_function_search_paths`; tablas privadas con RLS y RPC solo para service_role. Se fijó `search_path=pg_catalog, public` en las dos funciones nuevas señaladas por el asesor.
+- `sahten-delivery` v1 y `sahten-payments` v6 activas, con autenticación propia por acción. No se alteraron precios, menús, proyectos, órdenes existentes ni credenciales productivas de Mercado Pago. La política delivery v2 publicada sigue desactivada.
+- OpenRouteService: ingreso con GitHub autorizado; formulario de alta con Daniel J. / Campos Lozada y uso Logistics. Términos/verificación completados por el titular; al comprobar sigue pendiente el botón final «Complete Sign-Up». No hay clave configurada ni una ruta real verificada con ese proveedor todavía. No se contrató un plan pago.
+- Reemplaza las notas anteriores de instaladores pendientes y migración bloqueada. La web mantiene `fa054caf-c8f5-4072-a5be-ecaad779dc0f`, 36 productos y precios verificados.
+
+### 24/10/2026 — Entrega, vuelto y ticket preparados, sin publicar
+
+- Por solicitud del dueño: piso, departamento y referencia separados en web/Mostrador y conservados en servidor, órdenes, proyecto, detalle, WhatsApp, ticket y CSV. Se preservan notas del pedido.
+- Campo opcional de efectivo y vuelto sobre el total final (descuento en productos, envío íntegro). No aumenta ventas ni acredita un pago. Cambio a transferencia/MP omite efectivo; retiro omite datos de piso/departamento.
+- Ticket compacto para 48/58 mm con Arial, dirección completa, QR conservado y sin estado de la comanda. Nueva pestaña Impresión con perfiles y autoimpresión local de órdenes nuevas, sin historial ni duplicados y con posible diálogo del sistema.
+- No se publicó todavía esta plantilla/formulario ni un instalador con estas novedades. No se crearon compras ni se escribieron órdenes reales para probarlo. La prueba física IT01 permanece pendiente. Detalles y límites en [IMPRESION.md](IMPRESION.md).
+
+- Validación final de esta preparación: **593 pruebas / 62 archivos** aprobadas, compilación Vite, scripts clásicos, versiones 0.4.22 y diferencias sin errores; ambas funciones pasan Deno. La advertencia heredada `allowJs` de pagos se ignora y no impide comprobarla.
+- Chrome con datos ficticios: Mostrador y Ajustes de impresión a 1024 × 600; tienda a 320 × 640. Piso/departamento/referencia conservados y efectivo $20.000 sobre total $8.550 muestra vuelto $11.450; no se envió la orden. Tickets de 48/58 mm revisados, QR completo de 30 mm y sin desborde horizontal en IT01. Los archivos nuevos de servidor que conservan estos campos **están preparados, todavía no desplegados**; los despliegues activos v1/v6 son los de la integración de rutas 0.4.22. Actualizarlos junto con la futura app/web.
+- Comprobación HTTP del servidor actual: configuración de Mercado Pago 200 y modo production habilitado; consulta de proveedor sin sesión 403; cálculo de delivery v2 apagado 409. Consulta de solo lectura confirma 36 productos, política v2=false y cero conexiones ORS. No se crearon pedidos ni se alteró la cuenta de pagos.

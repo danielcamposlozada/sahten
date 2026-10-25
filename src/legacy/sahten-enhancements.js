@@ -585,6 +585,8 @@ function custUpdateReview() {
   custSave(_cust);
 }
 function renderCustPanel() {
+  const receiptOptions = SAHTEN.receipts.options();
+  for (const [id,key] of [['receipt-auto-local','autoLocal'],['receipt-auto-online','autoOnline']]) {const el=document.getElementById(id);if(el)el.checked=receiptOptions[key];}
   const paper = document.getElementById('cust-receipt-paper');
   if (paper) paper.value = String(SAHTEN.receiptPaper.width());
   const receipt = SAHTEN.receiptPaper.current();

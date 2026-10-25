@@ -40,3 +40,15 @@ it('una búsqueda anterior no repone una dirección que el cliente ya cambió',a
  const a=await web({geocodeDelay:200});try{a.click('[data-inc]');a.click('#bar button');a.type('#f-addr','Primera dirección');a.click('[data-delivery-search]');await wait(40);a.type('#f-addr','Segunda dirección');await wait(350);expect(a.d.querySelector('[data-sug]')).toBeNull();expect(a.d.getElementById('f-addr').value).toBe('Segunda dirección');expect(a.d.getElementById('send').disabled).toBe(true);
  }finally{a.close();}
 });
+
+it('piso/depto/referencia y efectivo llegan al servidor; el vuelto usa descuento y envío sin alterar la venta',async()=>{
+ const a=await web();try{
+ a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia');a.type('#f-floor','2');a.type('#f-apartment','B');a.type('#f-reference','Timbre 2B');
+ a.click('[data-delivery-search]');await wait(650);a.click('[data-sug="0"]');await wait(150);
+ expect(a.d.getElementById('f-floor').value).toBe('2');a.type('#f-cash','10000');expect(a.d.getElementById('send').disabled).toBe(true);a.type('#f-cash','50000');expect(a.d.getElementById('cash-status').textContent).toContain('$12.010');
+ a.click('#send');await wait(120);expect(a.orders).toHaveLength(1);expect(a.orders[0]).toMatchObject({addressFloor:'2',addressApartment:'B',deliveryReference:'Timbre 2B',cashTendered:50000,cashChange:12010,total:37990,discountAmount:4000,shipping:1990});
+ }finally{a.close();}
+});
+it('cambiar a transferencia descarta efectivo y retiro no conserva piso ni departamento en la orden',async()=>{
+ const a=await web({closed:true});try{a.click('[data-inc]');a.click('#bar button');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-floor','8');a.type('#f-apartment','C');a.type('#f-cash','25000');a.click('[data-type="pickup"]');a.click('[data-payment-choice="transferencia"]');expect(a.d.getElementById('f-cash')).toBeNull();a.click('#send');await wait(100);expect(a.orders[0]).not.toHaveProperty('cashTendered');expect(a.orders[0]).not.toHaveProperty('addressFloor');}finally{a.close();}
+});

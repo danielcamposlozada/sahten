@@ -48,3 +48,14 @@ Verificación: cuatro pruebas específicas de carga, gesto del usuario, avisos s
 - Chrome: 1366 × 768, 1366 × 720, 1280 × 720 y 1024 × 600; catálogo y pestañas del mismo ancho, carrito desde arriba, cobro visible y sin desborde horizontal. En 390 × 844, selección Retiro/Delivery y cobro en diálogo con foco controlado.
 - Resultado final: `npx vitest run`, 480 pruebas en 48 archivos; compilación y revisión de scripts clásicos correctas.
 - Solo datos ficticios. Sin pedidos reales, cambios en Supabase ni despliegue web. La prueba física de la IT01 sigue pendiente para la futura versión instalada.
+
+
+## Entrega, efectivo e impresión — actualización preparada el 24/10/2026
+
+Web y Mostrador separan dirección, piso, departamento y referencia. Las notas del pedido se conservan aparte. Esos datos se ven al desplegar Pedidos y en el ticket; no se carga más información en la tarjeta plegada. Cambiar la dirección descarta coordenadas/ruta/autorización anteriores y conserva los campos de entrega escritos.
+
+Al elegir Efectivo aparece «Con cuánto paga» opcional y el vuelto. Un importe insuficiente impide confirmar; vacío permite continuar sin inventar el importe entregado. Se calcula después del descuento y del envío. Transferencia/MP no guardan efectivo. Guardar una orden o declarar efectivo no acredita automáticamente el pago. El total comercial y los reportes no suman el monto entregado.
+
+Nueva pestaña **Ajustes → Negocio → Impresión**, con ajustes por equipo y dos opciones para abrir impresión al crear o recibir pedidos nuevos. Desactivadas por defecto; no imprimen el historial al conectar ni cada actualización de estado. Puede aparecer el diálogo del sistema. Ver [IMPRESION.md](IMPRESION.md).
+
+Estas novedades requieren la próxima versión instalada y republicar la plantilla web. Todavía no se publicó ese instalador ni el nuevo formulario de sahten.online. Los pedidos anteriores se conservan; no se agregan retrospectivamente pisos, departamentos o efectivo desconocidos.

@@ -1,29 +1,54 @@
-# Comandas en impresoras térmicas
+# Comandas e impresión
 
-En **Ajustes → Personalización → Logo para impresión**, elegí **Papel de la comendera en este equipo**. La selección se guarda en esta computadora; cada caja puede usar su propia impresora.
+## Dónde configurarlo
 
-| Papel | Ancho máximo del documento | Uso |
+En la actualización preparada: **Ajustes → Negocio → Impresión**. Reúne perfil, papel, calibración, logo para imprimir, reseña de Google con QR, vista previa e impresión automática. Estas novedades todavía no están publicadas en un instalador; Sahten 0.4.22 es la última versión pública verificada.
+
+El perfil IT01 y la escala de interfaz ya están publicados desde 0.4.18. Hasta instalar la próxima actualización, sus controles siguen en **Ajustes → Marca y apariencia**. El formato de la impresora se guarda solo en esta computadora; el logo y la reseña pertenecen al negocio.
+
+| Perfil/papel | Ancho máximo del documento | Configuración |
 |---|---|---|
-| 58 mm (predeterminado) | 48 mm | Térmica de 58 mm |
-| 48 mm | 40 mm | Papel angosto |
-| 80 mm | 72 mm | Tiquetera ancha |
+| IT01 · 48 mm | 35,2 mm | Base 40 mm × calibración 88 % |
+| Térmica · 48 mm | 40 mm | Calibración 100 % |
+| Térmica · 58 mm (predeterminado) | 48 mm | Calibración 100 % |
+| Térmica · 80 mm | 72 mm | Calibración 100 % |
+| Normal A4 / Carta | 186 / 192 mm | Papel normal |
 
-El documento deja además 1 mm de espacio interno a cada lado. Los nombres e importes se presentan en líneas separadas en los formatos estrechos. El QR ocupa 30 × 30 mm y queda dentro del área útil.
+El documento deja 1 mm interno a cada lado. La calibración modifica el ancho disponible y reorganiza las líneas; no achica la fuente ni el QR. Permite ajuste horizontal 80–110 %, sin acumular reducciones al guardar. No instala ni detecta el controlador.
 
-En el diálogo de impresión seleccioná la impresora correcta, el mismo ancho del rollo, escala 100 % y desactivá encabezados/pies del navegador. Si el controlador muestra A4 u otro tamaño, configurá primero el papel en las preferencias de la impresora de Windows.
+En el diálogo de impresión seleccioná la impresora, el mismo ancho del papel, **escala 100 %**, sin encabezados/pies del navegador. El dueño confirmó que usaba 48 mm en Sahten y necesitaba 88 % en el controlador: por eso el perfil IT01 ya incorpora esa compensación. Mantener además 88 % en el sistema produciría una segunda reducción. Si el controlador muestra A4, configurá su papel en Windows.
 
-La comprobación de diseño en Chrome incluye textos largos, importes grandes y el QR, en 48 y 58 mm. **La validación física con la IT01 todavía requiere imprimir un ticket desde el equipo donde está conectada** y comprobar el borde derecho y el escaneo del QR. Una vista previa correcta no confirma cómo está configurado el controlador de Windows.
+## Ticket compacto preparado
 
-Esta corrección está publicada en Sahten 0.4.16. Es necesario instalar esa versión en la caja; la app 0.4.15 no recibe cambios por republicar sahten.online.
+- Número, entrega/retiro, fecha y cliente.
+- Delivery: dirección completa, piso/departamento, referencia y teléfono. Las notas del pedido se imprimen aparte. Los pedidos anteriores no inventan datos que no guardaron.
+- Productos y cantidades en 14 px, importes separados y total destacado. Arial, menos espacio y separadores; textos largos envuelven sin recortarse.
+- Descuento aplicado, envío y ahorro de envío cuando existe; medio elegido y efectivo/vuelto si se indicaron.
+- Se elimina el estado de la comanda del papel. El estado y sus acciones siguen en la app.
+- Se mantienen el logo configurado y la reseña de Google con QR de 30 × 30 mm. Se quita la instrucción duplicada debajo del QR.
 
-## Perfil IT01 y calibración (preparado, sin publicar)
+## Impresión automática opcional
 
-El dueño confirmó posteriormente que usa **48 mm seleccionados en Sahten** y necesita escala **88 % en el controlador** para evitar el corte. Se prepara el perfil **IT01 · 48 mm · calibración 88 %**, que reorganiza el contenido en **35,2 mm** (40 × 0,88), conservando texto de 14 px y QR de 30 mm. No aplica una transformación que encoja todo el ticket.
+Dos interruptores separados, desactivados de inicio: pedidos creados en Mostrador y pedidos nuevos recibidos de la web. **Solo afectan a este equipo** y no viajan con el proyecto ni activan otras cajas.
 
-Elegí el perfil en el mismo bloque de ajustes. El perfil manual permite papel 48/58/80 mm y calibración horizontal 80–110 %. También hay perfil normal A4/Carta. La calibración se aplica una vez sobre el ancho base, no se acumula al guardar. Preferencias locales por equipo; no instala ni detecta el controlador.
+La cola procesa un pedido a la vez, identifica las órdenes ya intentadas y no vuelve a imprimir por un cambio de estado o sincronización. Al abrir/reconectar no imprime el historial pendiente. Cambiar de proyecto descarta sus trabajos en espera. Si falla, avisa para reimprimir manualmente desde Pedidos; no reintenta en bucle. Los últimos 1.000 intentos se conservan por dispositivo.
 
-Al usar este perfil, seleccionar **escala 100 % en el diálogo del sistema**; mantener 88 % allí aplicaría una segunda reducción. La app no puede configurar ese diálogo por el usuario. Hace falta una nueva versión instalada y repetir prueba física de importes, borde derecho y escaneo del QR. No se afirma validación de hardware desde este equipo.
+Automático significa **abrir la impresión al recibir/crear el pedido**. El WebView/controlador puede exigir confirmar el diálogo. No se promete impresión silenciosa ni confirmación física de que salió el papel. Activarlo en varias cajas puede producir una copia por caja: elegí la que tiene la impresora.
 
-## Escala de la interfaz (preparado, sin publicar)
+## Efectivo y vuelto
 
-En **Ajustes → Personalización → Tema visual**, escala de interfaz 80–125 %, con accesos 85/90/100 %. En escritorio usa el zoom del WebView de Tauri; en el navegador de desarrollo, zoom CSS. La preferencia queda en el equipo, no en el proyecto ni la tienda. El ticket sigue usando sus medidas físicas propias. Es necesario comprobar también en Windows, porque el zoom nativo y el controlador de la IT01 no se ejecutan en la prueba de Chrome.
+El importe es opcional y aparece solo con Efectivo. Vacío = no informado. Si se ingresa, debe alcanzar el total final (productos menos descuento más envío). Por ejemplo: venta $21.395, paga con $30.000, vuelto $8.605. Transferencia y Mercado Pago no conservan esos campos.
+
+En la web es un aviso para preparar el cambio, no un cobro acreditado. Se conserva en las órdenes nuevas, detalle, ticket, WhatsApp y CSV. Reportes sigue sumando el total de venta, sin agregar efectivo entregado ni vuelto como ingresos/gastos extra. Los pedidos históricos no se recalculan.
+
+## Escala de interfaz
+
+**Ajustes → Marca y apariencia → Tema visual**, 80–125 %, accesos 85/90/100 %. Es independiente del ticket, del proyecto y de la tienda. En escritorio usa zoom del WebView; en navegador de desarrollo, zoom CSS.
+
+## Validación
+
+Pruebas con datos ficticios: dirección/piso/departamento de extremo a extremo, descuento y envío antes del vuelto, importación web, reapertura y archivo del proyecto, impresión sin pop-ups, deduplicación y exclusión del historial. Se revisa el ancho de 48 y 58 mm en Chrome.
+
+**La prueba física de la IT01 en Windows sigue pendiente**: imprimir con escala del sistema 100 %, comprobar borde derecho, lectura cómoda e intentar escanear el QR. Una vista previa correcta no confirma la configuración del controlador ni una impresión real.
+
+Preparación final verificada: **593 pruebas en 62 archivos**, compilación y scripts clásicos correctos; Deno comprueba ambas funciones. Chrome: tienda 320 × 640 y Mostrador/Ajustes 1024 × 600, datos ficticios y sin enviar pedidos. En IT01, ancho calculado 133,04 px (35,2 mm), QR 113,38 px (30 mm), sin elementos fuera del borde derecho. Se conservan las limitaciones de prueba física indicadas arriba. Los cambios de servidor que guardan estos campos se desplegarán con la futura publicación, antes de actualizar el formulario web.

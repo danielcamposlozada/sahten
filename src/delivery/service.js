@@ -1,8 +1,12 @@
 import { quoteOrder, PaymentError, fail, validUuid, cents } from '../payments/core.js';
 import { validateDeliveryPolicy } from './geometry.js';
 import { deliveryQuote } from '../core/delivery.js';
+import { deliveryDetails } from '../core/order-details.js';
 const uuid=v=>{if(!validUuid(v))fail('Identificador no válido.');return v;};
-const intent=o=>JSON.stringify([o.source,(o.items||[]).map(i=>[i.productId||i.id,i.qty]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))),o.paymentMethod,String(o.customerName||'').trim(),String(o.customerPhone||'').trim(),o.source==='delivery'?Number(o.lat):null,o.source==='delivery'?Number(o.lng):null,o.source==='delivery'?String(o.address||'').trim():'Retiro en local',cents(o.total),String(o.notes||'').trim()]);
+const intent=o=>{
+ const d=deliveryDetails(o),cash=o.paymentMethod==='efectivo'&&o.cashTendered!==''&&o.cashTendered!=null?cents(o.cashTendered):null;
+ return JSON.stringify([o.source,(o.items||[]).map(i=>[i.productId||i.id,i.qty]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))),o.paymentMethod,cash,d.addressFloor||'',d.addressApartment||'',d.deliveryReference||'',String(o.customerName||'').trim(),String(o.customerPhone||'').trim(),o.source==='delivery'?Number(o.lat):null,o.source==='delivery'?Number(o.lng):null,o.source==='delivery'?String(o.address||'').trim():'Retiro en local',cents(o.total),String(o.notes||'').trim()]);
+};
 export function authorizationFrom(record,policy,destination){
   if(!record?.authorized_at||record.revision!==policy.revision||record.route?.destination?.lat!==destination.lat||record.route?.destination?.lng!==destination.lng)return null;
   return {approved:true,revision:policy.revision,destination,actor:record.authorized_by,reason:record.authorization_reason,at:record.authorized_at,tariffFloorException:!!record.tariff_exception};

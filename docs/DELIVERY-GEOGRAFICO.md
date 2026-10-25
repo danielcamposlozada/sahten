@@ -139,3 +139,12 @@ El enlace y el mensaje de compartir no incluyen nombre, teléfono, importes, cre
 Pruebas: coordenadas exactas, dirección antigua codificada, destino ausente, estados permitidos, retiro/cancelación, portapapeles denegado, equipo sin compartir y cancelación voluntaria del selector; prueba con la app real verifica los controles en la tarjeta cerrada y que compartir no cambia el estado. No se envió información de un cliente real ni se contactó a un repartidor.
 
 ![Tarjeta de delivery lista para el repartidor, ejemplo ficticio](delivery/tarjeta-ruta-repartidor.png)
+
+
+## Servidor aplicado con autorización — 24/10/2026
+
+0.4.22 ya publicada y plantilla en Cloudflare `fa054caf-c8f5-4072-a5be-ecaad779dc0f`, con delivery v2 desactivado. El dueño autorizó iniciar sesión en OpenRouteService mediante GitHub y aplicar la migración/funciones en Supabase `dtnbokdrxojdcvguuidk`. Se aplicó la migración `delivery_geografico_y_rutas` y se desplegaron `sahten-delivery` v1 y `sahten-payments` v6. No se modificaron menús, proyectos, órdenes existentes ni tarifas comerciales.
+
+Las tablas de `sahten_delivery_private` tienen RLS y el RPC privado permite solo service_role; anon/authenticated no reciben acceso de backend. El asesor detectó search_path modificable en dos funciones nuevas: se aplicó `20261025015321_delivery_function_search_paths.sql` y se comprobó su configuración fija. No se afirma que las advertencias preexistentes de otras funciones se hayan corregido.
+
+El acceso GitHub llegó al alta HeiGIT; el titular debe terminarla. La cuenta todavía no aportó una clave, no hay proveedor configurado ni rutas reales verificadas mediante ORS. No activar las zonas nuevas ni anunciar sus promociones hasta guardar la conexión segura y completar la validación. Esta sección reemplaza los pendientes de autorización/despliegue anteriores, no los pendientes de verificación y activación.

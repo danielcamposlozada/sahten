@@ -57,7 +57,7 @@ it('Mostrador recalcula al cambiar botones, guarda el beneficio y los reportes l
   expect(w.SAHTEN.state.saleCosts[order.id].items.reduce((n,it)=>n+it.revenue,0)).toBe(order.total);
   expect(w._paymentBenefitBlock([order])).toContain('Ver operaciones con descuento por pago');
   let ticket='';w.SAHTEN.printDocument=async h=>{ticket=h;};await w.printComanda(order.id);
-  expect(ticket).toContain('10 % por efectivo o transferencia');
+  expect(ticket).toContain('Dto. 10 %'); expect(ticket).toContain('−$1.910');
   // La exportación cuenta el beneficio una sola vez por orden, aunque haya varias líneas.
   let csv='';w.Blob=class{constructor(parts){csv=parts.join('');}};
   w.URL.createObjectURL=()=> 'blob:preview';w.URL.revokeObjectURL=()=>{};

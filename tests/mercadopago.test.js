@@ -20,6 +20,13 @@ async function notification({timestamp=NOW,id='999',signedId=id,secret,query=tru
 }
 
 describe('importes y preferencias de cada negocio',()=>{
+  it('conserva piso y departamento, deriva el vuelto del total y descarta efectivo en Mercado Pago',()=>{
+    const m={...menu,payments:{methods:{efectivo:true,transferencia:true,mercadopago:true}}};
+    const input={...order,source:'delivery',address:'Calle de prueba 123',lat:-34.6,lng:-58.4,addressFloor:'2',addressApartment:'B',deliveryReference:'Timbre 2B',paymentMethod:'efectivo',cashTendered:3000,cashChange:99999};
+    expect(quoteOrder(m,input,{allowOtherPayments:true})).toMatchObject({addressFloor:'2',addressApartment:'B',deliveryReference:'Timbre 2B',total:2200,cashTendered:3000,cashChange:800});
+    expect(()=>quoteOrder(m,{...input,cashTendered:2000},{allowOtherPayments:true})).toThrow(/efectivo/);
+    const mp=quoteOrder(m,input);expect(mp.addressApartment).toBe('B');expect(mp).not.toHaveProperty('cashTendered');expect(mp).not.toHaveProperty('cashChange');
+  });
   it('conserva la revisión del catálogo privado sin aceptar una referencia suministrada por el comprador',()=>{
     const published={...menu,products:[{...menu.products[0],priceRevision:'revision-del-catalogo'}]};
     const q=quoteOrder(published,{...order,items:[{id:'p',qty:2,priceRevision:'inventada-por-el-cliente'}]});

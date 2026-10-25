@@ -1,4 +1,5 @@
 // Pedido que llega de la web (tabla orders de Supabase) → pedido del Mostrador. Puro.
+import { deliveryDetails, cashOrderFields } from '../core/order-details.js';
 import { savedPaymentDiscount } from '../core/payment-benefit.js';
 export const STATUS_FROM_REMOTE = { pendiente: 'pendiente', recibido: 'pendiente', preparando: 'en_preparacion', listo: 'listo', entregado: 'listo', cancelado: 'cancelado' };
 export const STATUS_TO_REMOTE = { pendiente: 'pendiente', en_preparacion: 'preparando', listo: 'listo', completada: 'entregado', cancelado: 'cancelado' };
@@ -25,7 +26,7 @@ export function toLocalOrder(row, existing = []) {
     ...(typeof i.priceRevision === 'string' ? { priceRevision: i.priceRevision.slice(0, 100) } : {}),
   }));
   return {
-    ...paymentFields(row),
+    ...paymentFields(row), ...deliveryDetails(p), ...cashOrderFields(p.total, p.cashTendered, p.paymentMethod),
     id: 'web_' + row.id, remoteId: row.id, num, webNum: p.num || null, source: p.source === 'pickup' ? 'pickup' : 'delivery', origin: 'menu-online',
     createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: STATUS_FROM_REMOTE[row.status] || 'pendiente', remoteStatus: row.status,
     customerName: String(p.customerName || 'Cliente online'), customerPhone: String(p.customerPhone || ''), customerEmail: String(p.customerEmail || ''), customerId: null,
