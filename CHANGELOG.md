@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Proveedor de rutas actualizado**: usa el dominio vigente `api.heigit.org/openrouteservice/v2`, reemplazando el dominio que ORS retira en noviembre de 2026. Conserva el mismo perfil y las validaciones de recorrido, sin activar zonas ni beneficios.
+
 - **Impresión en un solo lugar**: Ajustes → Negocio → Impresión reúne perfil de impresora, papel, calibración, logo, QR y vista previa. Impresión automática opcional y local por equipo para pedidos de Mostrador y pedidos web nuevos; cola sin duplicados ni impresión del historial al conectar. Puede requerir confirmar el diálogo del sistema.
 - **Ticket compacto de delivery**: dirección, piso, departamento, referencia y notas completas, con texto legible y QR de 30 mm en 48/58 mm. Menos espacios y separadores; se elimina el estado de la comanda del papel, manteniéndolo en Pedidos.
 - **Efectivo y vuelto**: campo opcional «Con cuánto paga» en web y Mostrador, validación de importe suficiente y vuelto calculado sobre el total final, con descuento y envío. Se guarda con la orden y aparece en detalle, ticket, WhatsApp y CSV; no aumenta los ingresos ni acredita un pago automáticamente.

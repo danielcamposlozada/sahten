@@ -3,7 +3,7 @@ import { validDeliveryPoint, haversineKm } from '../core/delivery.js';
 export async function roadRoute(origin,destination,{key,fetchImpl=fetch,now=()=>new Date().toISOString()}={}) {
   if(!key)throw new Error('routing_not_configured');
   if(!validDeliveryPoint(origin)||!validDeliveryPoint(destination))throw new Error('invalid_coordinates');
-  const r=await fetchImpl('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{method:'POST',headers:{Authorization:key,'Content-Type':'application/json'},body:JSON.stringify({coordinates:[[origin.lng,origin.lat],[destination.lng,destination.lat]],radiuses:[100,100],instructions:false,options:{avoid_features:['ferries']}}),signal:AbortSignal.timeout(10000)});
+  const r=await fetchImpl('https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson',{method:'POST',headers:{Authorization:key,'Content-Type':'application/json'},body:JSON.stringify({coordinates:[[origin.lng,origin.lat],[destination.lng,destination.lat]],radiuses:[100,100],instructions:false,options:{avoid_features:['ferries']}}),signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new Error(r.status===429?'routing_rate_limited':'routing_unavailable');
   const j=await r.json(),f=j.features?.[0],meters=f?.properties?.summary?.distance,seconds=f?.properties?.summary?.duration,coords=f?.geometry?.coordinates;
   if(!Number.isFinite(meters)||meters<0||!Number.isFinite(seconds)||!Array.isArray(coords)||coords.length<2||haversineKm(origin.lat,origin.lng,coords[0][1],coords[0][0])>.1||haversineKm(destination.lat,destination.lng,coords.at(-1)[1],coords.at(-1)[0])>.1||meters/1000<haversineKm(origin.lat,origin.lng,destination.lat,destination.lng)-.15)throw new Error('routing_invalid_result');

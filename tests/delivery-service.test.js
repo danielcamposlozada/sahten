@@ -57,6 +57,7 @@ it('consulta ORS en servidor, valida endpoints y no filtra la clave ni inventa u
  const a=setup(),key='fake-test-only-key-no-real';
  const f=vi.fn(async()=>new Response(JSON.stringify({features:[{properties:{summary:{distance:4500,duration:600}},geometry:{coordinates:[[a.p.center.lng,a.p.center.lat],[a.input.lng,a.input.lat]]}}]}),{status:200}));
  const r=await roadRoute(a.p.center,{lat:a.input.lat,lng:a.input.lng},{key,fetchImpl:f});expect(r.distanceMeters).toBe(4500);expect(JSON.stringify(r)).not.toContain(key);expect(JSON.parse(f.mock.calls[0][1].body).coordinates[0]).toEqual([a.p.center.lng,a.p.center.lat]);
+ expect(f.mock.calls[0][0]).toBe('https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson');
  await expect(roadRoute(a.p.center,r.destination,{key,fetchImpl:async()=>new Response('',{status:429})})).rejects.toThrow('routing_rate_limited');
  await expect(roadRoute(a.p.center,r.destination,{fetchImpl:f})).rejects.toThrow('routing_not_configured');
 });

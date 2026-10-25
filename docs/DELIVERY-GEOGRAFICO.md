@@ -148,3 +148,13 @@ Pruebas: coordenadas exactas, dirección antigua codificada, destino ausente, es
 Las tablas de `sahten_delivery_private` tienen RLS y el RPC privado permite solo service_role; anon/authenticated no reciben acceso de backend. El asesor detectó search_path modificable en dos funciones nuevas: se aplicó `20261025015321_delivery_function_search_paths.sql` y se comprobó su configuración fija. No se afirma que las advertencias preexistentes de otras funciones se hayan corregido.
 
 El acceso GitHub llegó al alta HeiGIT; el titular debe terminarla. La cuenta todavía no aportó una clave, no hay proveedor configurado ni rutas reales verificadas mediante ORS. No activar las zonas nuevas ni anunciar sus promociones hasta guardar la conexión segura y completar la validación. Esta sección reemplaza los pendientes de autorización/despliegue anteriores, no los pendientes de verificación y activación.
+
+## Conexión ORS verificada — 25/10/2026
+
+El titular completó el alta y autorizó guardar su clave y consultar tres rutas. Clave guardada desde la app 0.4.22 en Vault; comprobada únicamente su existencia y fecha, sin leer secretos en SQL. Plan Standard oficial 0 €, 2.000 consultas diarias de Directions / 40 por minuto. [Planes oficiales](https://account.heigit.org/info/plans).
+
+Se usa **api.heigit.org/openrouteservice/v2**. El [aviso oficial del cambio de dominio](https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912) anuncia cerrar la dirección anterior entre el 2 y el 6 de noviembre de 2026. La clave actual sirve para la URL nueva. La corrección de una sola URL se desplegó sobre la base 0.4.22: delivery v2 / payments v7. No se desplegaron los campos nuevos de impresión/efectivo del PR #26.
+
+[Resultados de tres recorridos reales](delivery/rutas-ors-2026-10-25.json), desde el centro confirmado: Houssay 1,7074 km; Plaza Vicente López y Planes 2,5515 km; La Lucila 4,0622 km. La plaza tiene radio 1,9844 km: el recorrido confirma por qué corresponde considerar el piso tarifario de la zona 2. Los resultados son muestras puntuales, no tarifas activadas ni una garantía de tiempos/tráfico.
+
+La prueba usa los mismos módulos del servidor en un diagnóstico local, con la clave solo en memoria y sin crear órdenes. Backend accesible y credencial cifrada verificados por separado. Falta probar una orden completa en ensayo, revisar las tarifas/horarios con el dueño, comprobar todas las cajas y recién entonces activar una revisión comercial. **La política publicada sigue apagada y los 36 productos permanecen iguales.** Esta sección reemplaza el pendiente de alta/clave de las secciones anteriores.
