@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.27
 
 - **Recetas, Productos y Tienda online**: nombres y funciones separados. Habilitar una receta para venta requiere confirmación y la deja pausada y fuera de la tienda; las internas no aparecen en las pantallas de venta.
 - **Pausa compartida de ventas**: por hoy, hasta una fecha/hora o sin vencimiento; gris y «No disponible» en Mostrador y web, con protección del carrito y del servidor. Conserva precios, costos, stock e historial.
