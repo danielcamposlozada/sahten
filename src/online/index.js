@@ -2,6 +2,7 @@
 // Online opcional: une el controlador (pedidos en vivo), la sincronización y los roles con la app.
 // Con SAHTEN_ONLINE=false (build) todo esto queda deshabilitado y el panel dice «No disponible en esta versión».
 // ═══════════════════════════════════════════════════════════
+import { createAvailabilityPublisher } from './availability.js';
 import { createPhotoPublisher } from './photoPublisher.js';
 import { createController } from './controller.js';
 import { createSync } from './sync.js';
@@ -79,20 +80,53 @@ export function createOnline({ w = window, project, events }) {
   w.addEventListener && w.addEventListener('sahten:photo', () => photoPublisher.schedule());
   photoPublisher.onChange(() => ui.render());
 
+  const availability = createAvailabilityPublisher({
+    publish: (id, available, resumeAt) => controller.setAvailability(id, available, resumeAt),
+    context: () => conn()?.storeId && session.id ? JSON.stringify([session.id, conn().url, conn().storeId]) : '',
+    enabled: () => !!w.document && ONLINE_ENABLED && session.isOpen && controller.info().signedIn && !session.readOnly && !remoteViewing && writeScope(role()) === 'project',
+    store: config,
+  });
+  const salesPublisher=createAvailabilityPublisher({
+    namespace:'sales',publish:(id,available,resumeAt)=>controller.setSalesAvailability(id,available,resumeAt),
+    context:()=>conn()?.storeId&&session.id?JSON.stringify([session.id,conn().url,conn().storeId]):'',
+    enabled:()=>!!w.document&&ONLINE_ENABLED&&session.isOpen&&controller.info().signedIn&&!session.readOnly&&!remoteViewing&&writeScope(role())==='project',store:config,
+  });
+  salesPublisher.onChange(info=>{if(info.state==='publicado')readStates();if(w.document){w.SAHTEN.salesAvailability?.renderStatus();ui.renderAvailability();w._moAvailabilityStatus?.();}});
+  w.addEventListener('sahten:sales-availability',e=>{if(!conn()?.storeId||session.readOnly||writeScope(role())!=='project')return;const {id,available,resumeAt}=e.detail||{};salesPublisher.set(id,available,resumeAt);});
+  let readingStates=false;
+  async function readStates(){
+    if(readingStates||!w.document||!controller.info().signedIn||!conn()?.storeId||remoteViewing)return;
+    readingStates=true;const id=session.id,storeId=conn().storeId;
+    try{const remote=await controller.readAvailability();if(!w.document||id!==session.id||storeId!==conn()?.storeId)return;let changed=false;
+      for(const row of remote.sales||[]){const p=w.PRODUCTS?.find(p=>p.id===row.id);if(!p||salesPublisher.info().changes[row.id])continue;if(JSON.stringify(row.salesAvailability)!==JSON.stringify(p.salesAvailability)){p.salesAvailability=row.salesAvailability;changed=true;}}
+      for(const row of remote.visibility||[]){const p=w.PRODUCTS?.find(p=>p.id===row.id);if(!p||p.recetaOnly||availability.info().changes[row.id]||!w.MENU_CONFIG)continue;const hidden=w.MENU_CONFIG.hiddenProducts||[];if(hidden.includes(row.id)===row.visible){w.MENU_CONFIG.hiddenProducts=row.visible?hidden.filter(x=>x!==row.id):[...hidden,row.id];changed=true;}}
+      if(changed){w._saveMenuConfig?.();if(!session.readOnly)project.markDirty();w._moAvailabilityStatus?.();if(w.currentPanel==='mostrador')w.renderMostrador();if(w.currentPanel==='menuonline')w.renderMenuOnline?.();if(w.currentPanel==='productos')w.renderProductos();}
+    }catch{/* servidor anterior o desconectado: no cambia el proyecto ni publica datos */}finally{readingStates=false;}
+  }
+  const stateTimer=w.setInterval(()=>{if(w.document?.visibilityState!=='hidden')readStates();},30000);
+  w.addEventListener('beforeunload',()=>{w.clearInterval(stateTimer);availability.cancel();salesPublisher.cancel();});
+  w.addEventListener('focus',()=>readStates());
+  availability.onChange(() => { if (!w.document) return; ui.renderAvailability(); w._moAvailabilityStatus?.(); });
+  w.addEventListener('sahten:availability', e => {
+    if (!conn().storeId || session.readOnly || writeScope(role()) !== 'project') return;
+    const { id, available, resumeAt } = e.detail || {}; availability.set(id, available, resumeAt);
+  });
+  w.addEventListener('online', () => {availability.flush().catch(() => {});salesPublisher.flush().catch(() => {});readStates();});
+
   const api = {
-    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher, progress,
+    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher, availability, salesPublisher, readStates, progress,
     setAutoPhotos(on) { w.MENU_CONFIG.autoSyncPhotos = !!on; w._saveMenuConfig(); project.markDirty(); if (on) photoPublisher.schedule(); else photoPublisher.cancel(); },
     syncInfo: () => (sync ? sync.info() : { state: 'sin vincular', linked: !!conn().projectId, pending: false, conflict: null, version: null, role: role() }),
 
     /** Iniciar sesión en una tienda ya configurada (solo email y contraseña) y retomar la sincronización. */
     async signIn(email, password) {
-      await controller.signIn(email, password); ensureSync(); photoPublisher.schedule();
+      await controller.signIn(email, password); ensureSync(); availability.resume(); salesPublisher.resume(); readStates();
       if (conn().projectId) sync.sync().catch(() => { /* queda en cola */ });
     },
     /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
-    signOut() { photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
+    signOut() { availability.cancel(); salesPublisher.cancel(); photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 
-    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); photoPublisher.schedule(); return r; },
+    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); availability.resume(); salesPublisher.resume(); readStates(); return r; },
 
     /** Subir el proyecto: lo crea en la nube y lo vincula con la tienda (para que el personal vea sus pedidos). */
     async linkProject() {
@@ -101,7 +135,7 @@ export function createOnline({ w = window, project, events }) {
       if (conn().storeId) await cl.raw('/rest/v1/stores?id=eq.' + conn().storeId, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { project_id: id }, token: await cl.auth.token() });
       setRole('owner'); return id;
     },
-    async syncNow() { need(); return ensureSync().sync(); },
+    async syncNow() { need(); const result=await ensureSync().sync();await readStates();return result; },
     async resolve(choice) { return ensureSync().resolve(choice); },
 
     async listRemote() {
@@ -113,7 +147,7 @@ export function createOnline({ w = window, project, events }) {
 
     /** Abrir un proyecto de la nube según el rol: completo (dueño, admin, lectura) o sin costos (encargado, cajero). */
     async openRemote(id, roleName) {
-      const cl = need(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
+      const cl = need(); availability.cancel(); salesPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
       const task = progress.start('Abriendo proyecto de la nube');
       try {
       task.update({ detail: 'Descargando base de datos…' });
@@ -128,7 +162,7 @@ export function createOnline({ w = window, project, events }) {
       setRole(roleName); session.setReadOnly(roleName === 'lectura');
       await controller.resume(); ensureSync();
       if (writeScope(roleName) !== 'none') { try { await sync.sync(); } catch (e) { /* queda en cola */ } }
-      task.finish(); return true;
+      availability.resume(); salesPublisher.resume(); readStates(); task.finish(); return true;
       } catch (e) { task.fail(e); throw e; }
     },
 
@@ -140,7 +174,7 @@ export function createOnline({ w = window, project, events }) {
 
     /** Vista remota (dueño): una copia de solo lectura que se refresca sola cuando cambia la versión en la nube. */
     async remoteView() {
-      const cl = need(); photoPublisher.cancel(); if (sync) sync.cancel(); const id = rid(); let version = -1;
+      const cl = need(); availability.cancel(); salesPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); const id = rid(); let version = -1;
       const load = async () => {
         const r = await cl.rpc('get_project_data', { pid: id }); if (r.version === version) return;
         const file = await controller.restoreFile(clone(r.data), w.SAHTEN_IMAGES || {}); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
@@ -162,11 +196,11 @@ export function createOnline({ w = window, project, events }) {
 
     /** Al abrir un proyecto: retoma la conexión y el rol que tenía. */
     async onProjectOpened() {
-      api.payments.clear();
+      api.payments.clear(); availability.cancel(); salesPublisher.cancel();
       if (!ONLINE_ENABLED || remoteViewing) return;
       photoPublisher.cancel(); if (sync) { sync.cancel(); sync = null; }
       stopView(); applyRole(role(), w);
-      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } photoPublisher.schedule(); } catch (e) { /* sin conexión: sigue local */ }
+      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } availability.resume(); salesPublisher.resume(); readStates(); } catch (e) { availability.resume(); salesPublisher.resume(); /* sin conexión: sigue local */ }
     },
   };
   function stopView() { if (viewTimer) { clearInterval(viewTimer); viewTimer = null; } }
@@ -187,7 +221,8 @@ export function createOnline({ w = window, project, events }) {
   api.ui = ui;
   if (ONLINE_ENABLED) api.userMenu = createUserMenu({ online: api, project, w });
   installRoleGuard(role, events);
-  controller.onChange(() => ui.render());
+  let catalogPublishedAt = null;
+  controller.onChange(() => { ui.render(); const at = controller.info().lastSync; if (at && at !== catalogPublishedAt) { catalogPublishedAt = at; availability.resume(); salesPublisher.resume(); } });
   progress.onChange(() => ui.renderProgress());
 
   // el estado de un pedido importado se avisa a la nube

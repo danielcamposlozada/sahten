@@ -187,7 +187,7 @@ function checklist(){
     {t:'Crear tu primera receta',d:'Ingredientes + envases = costo por porción.',ok:PRODUCTS.some(p=>(p.ingredients||[]).some(r=>r.ingId)),p:'costreceta'},
     {t:'Asignar tier y revisar el precio',d:'Elegí el nivel de precio de cada plato.',ok:PRODUCTS.some(p=>!p.recetaOnly&&p.tier),p:'productos'},
     {t:'Cargar ventas por producto',d:'Mejora el reparto del gasto fijo.',ok:PRODUCTS.some(p=>(p.avgMes||0)>0),p:'ventas'},
-    ...(SAHTEN_PROJECT.online&&SAHTEN_PROJECT.online.enabled?[{t:'Revisar el Menú Online',d:'Qué productos y categorías se muestran.',ok:!!(mc.hiddenProducts&&SAHTEN_PROJECT.menuReviewed),p:'menuonline',mark:'menuReviewed'}]:[])
+    ...(SAHTEN_PROJECT.online&&SAHTEN_PROJECT.online.enabled?[{t:'Revisar la Tienda online',d:'Qué productos y categorías se muestran.',ok:!!(mc.hiddenProducts&&SAHTEN_PROJECT.menuReviewed),p:'menuonline',mark:'menuReviewed'}]:[])
   ];
 }
 window.sahtenRenderChecklist=function(){
@@ -205,7 +205,7 @@ window.sahtenDismissChecklist=()=>{ SAHTEN_PROJECT.checklistDismissed=true; sche
 // ── Guía por sección (primera visita) ─────────────────────
 const GUIDE={
   dashboard:['Dashboard','Resumen del negocio: precios promedio, márgenes, gastos fijos y la proyección activa.','Se alimenta de todas las demás secciones.'],
-  productos:['Menú','Tus platos con su precio final por canal. Acá asignás el tier (nivel de precio) y los descuentos.','El costo viene de Costo de Receta; el gasto fijo, de Gastos Fijos y Ventas + GF.'],
+  productos:['Productos','Tus platos con su precio final por canal. Acá asignás el tier (nivel de precio) y los descuentos.','El costo viene de Costo de Receta; el gasto fijo, de Gastos Fijos y Ventas + GF.'],
   costreceta:['Costo de Receta','Armá cada receta con ingredientes, envases y sub-recetas. Calcula el costo por porción.','Usa los precios de Ingredientes y Envases.'],
   ingredientes:['Ingredientes','Cargá cada insumo con el precio y el tamaño del paquete. Si cambia un precio, se actualizan todas las recetas.','Alimenta Costo de Receta y Stock.'],
   envases:['Envases','Cajas, bolsas, servilletas y papelería, con su precio por paquete.','Se suman al costo de cada receta.'],
@@ -215,7 +215,7 @@ const GUIDE={
   proyeccion:['Proyección','Simulá un mes: unidades, reparto por canal, ingreso neto, margen y punto de equilibrio.','Usa precios, costos y gastos fijos actuales.'],
   mostrador:['Mostrador','Cargá pedidos de retiro o delivery. El envío se calcula solo según la dirección y tus zonas.','Las órdenes alimentan Reportes.'],
   reportes:['Reportes','Ventas reales del Mostrador y de los archivos que importes.','Compará lo real con lo que proyectaste.'],
-  menuonline:['Menú Online','Elegí qué productos y categorías ve el cliente en tu carta web.','Los precios salen del Menú.'],
+  menuonline:['Tienda online','Elegí qué productos y categorías ve el cliente en tu carta web.','Los precios salen del Menú.'],
   ajustes:['Ajustes','Tiers, canales de venta, respaldo y datos del proyecto.','Los tiers y canales cambian todos los precios.'],
   personalizacion:['Personalización','Nombre, logo y colores de tu negocio.','Cada proyecto tiene su propia identidad.']
 };

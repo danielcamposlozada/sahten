@@ -2,6 +2,7 @@
 // Panel «Nube y usuarios»: conexión con Supabase, sincronización, usuarios, auditoría y vista remota.
 // ═══════════════════════════════════════════════════════════
 import { ROLE_LABEL, ROLE_DESC, INVITABLE, canManageUsers } from './roles.js';
+import { PROJECT_ACTION, CATALOG_ACTION, PROJECT_HELP, CATALOG_HELP, FILES_HELP, cloudHelp } from './cloud-help.js';
 import { publishMenuConfirmed } from './menuConfirm.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
@@ -17,6 +18,11 @@ export function createOnlineUi({ online, w = window }) {
   let inviting = false;
 
   const ui = {
+    renderAvailability() {
+      const slot=$('nube-availability');if(!slot)return;
+      const labels={'sin cambios':'Sin estados pendientes',pendiente:'Pendiente de publicar',publicando:'Publicando estados…',publicado:'Estados publicados','sin conexión':'Sin conexión: reintento automático',error:'Revisar estados pendientes'};
+      slot.innerHTML=[['Visibilidad en la tienda',online.availability],['Pausa de ventas en ambos canales',online.salesPublisher]].filter(([,q])=>q).map(([label,q])=>{const a=q.info();return `<p><strong>${label}</strong>: ${esc(labels[a.state]||a.state)}${a.pending?' · '+a.pending+' pendiente(s)':''}${a.error?' · '+esc(a.error):''}</p>`;}).join('');
+    },
     renderProgress() {
       const host = $('nube-progress'); if (!host) return;
       const p = online.progress?.info();
@@ -36,7 +42,7 @@ export function createOnlineUi({ online, w = window }) {
         ${connectCard(c)}
         ${c.signedIn ? syncCard(sy, role) : ''}
         <div id="nube-users"></div><div id="nube-audit"></div>`;
-      ui.renderProgress();
+      ui.renderProgress(); ui.renderAvailability();
       if (c.signedIn && sy.linked && canManageUsers(role)) ui.renderUsers();
       if (c.signedIn && sy.linked && ['owner', 'admin'].includes(role)) ui.renderAudit();
     },
@@ -46,7 +52,7 @@ export function createOnlineUi({ online, w = window }) {
         r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Pedidos online.');
     },
     async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
-    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.photoPublisher.cancel(); online.controller.disconnect(); ui.render(); } },
+    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.availability?.cancel(); online.salesPublisher?.cancel(); online.photoPublisher.cancel(); online.controller.disconnect(); ui.render(); } },
     async syncMenu() { await run('nube-msg', () => publishMenuConfirmed(online, w), n => (n == null ? 'No se cambió nada: el menú publicado sigue igual.' : `Menú actualizado en línea (${n} productos).`)); },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },
@@ -109,19 +115,19 @@ export function createOnlineUi({ online, w = window }) {
     return `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:10px">Conexión con Supabase</div>
       <div style="font-size:13px;margin-bottom:10px">Estado: <b>${esc(c.mode)}</b>${c.signedIn ? ' · ' + esc(c.email || '') : ''}${c.feed ? ' · pedidos: ' + esc(c.feed) : ''}${c.error ? `<br><span style="color:var(--red)">${esc(c.error)}</span>` : ''}</div>
       ${c.configured ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Proyecto: ${esc(conn.url)} · tienda web: <b>${esc(conn.slug || '—')}</b></div>
-        ${c.signedIn ? `<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncMenu()">🔄 Sincronizar menú</button> ` : `<div style="display:grid;gap:8px;max-width:420px;margin-bottom:10px">${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}</div><button class="btn btn-accent" onclick="SAHTEN.online.ui.signIn()">Iniciar sesión</button> `}
+        ${c.signedIn ? `<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncMenu()">Publicar catálogo en la tienda</button>${cloudHelp(CATALOG_ACTION,CATALOG_HELP)} ` : `<div style="display:grid;gap:8px;max-width:420px;margin-bottom:10px">${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}</div><button class="btn btn-accent" onclick="SAHTEN.online.ui.signIn()">Iniciar sesión</button> `}
         <button class="btn" onclick="SAHTEN.online.ui.disconnect()">Desconectar</button>`
       : `<div style="display:grid;gap:10px;max-width:460px">${f('nb-url', 'URL del proyecto', 'url', '', 'https://abcd1234.supabase.co')}${f('nb-key', 'Anon key (pública)', 'text', '', 'eyJ…')}${f('nb-slug', 'Nombre de tu tienda en la web', 'text', '', 'mi-local')}${f('nb-mail', 'Email', 'email')}${f('nb-pass', 'Contraseña', 'password')}
         <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="nb-new" type="checkbox"> Crear una cuenta nueva con este email</label>
         <div style="font-size:11px;color:var(--muted)">Usá solo la <b>anon key</b>. Nunca pegues la clave <b>service_role</b>: la app la rechaza. La contraseña no se guarda.</div>
         <div><button class="btn btn-accent" onclick="SAHTEN.online.ui.connect()">Conectar proyecto</button></div></div>`}
-      ${c.configured ? photoCard() : ''}
+      ${c.configured ? `<div class="cloud-state-summary"><strong>Estados automáticos</strong><p>Los interruptores de Tienda online cambian solo la publicación del producto. «Pausar ventas», en Productos, afecta Mostrador y web. Ninguno publica precios pendientes.</p><div id="nube-availability" role="status" aria-live="polite"></div></div>`+photoCard() : ''}
       <div id="nube-msg"></div></div>`;
   }
   function photoCard() {
     const info = online.photoPublisher.info();
     const labels = { 'sin cambios': 'Sin cambios pendientes', pendiente: 'Fotos pendientes de publicar', subiendo: 'Subiendo fotos…', 'al día': 'Fotos publicadas', 'sin conexión': 'Sin conexión: se reintentará automáticamente', error: 'No se pudieron publicar las fotos' };
-    return `<div style="margin-top:16px" role="status"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" ${w.MENU_CONFIG?.autoSyncPhotos ? 'checked' : ''} onchange="SAHTEN.online.setAutoPhotos(this.checked)"> Actualizar fotos automáticamente en la web</label>
+    return `<div style="margin-top:16px" role="status"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" ${w.MENU_CONFIG?.autoSyncPhotos ? 'checked' : ''} onchange="SAHTEN.online.setAutoPhotos(this.checked)"> Publicar catálogo automáticamente al cambiar fotos</label>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">Al cargar o quitar una foto se sincroniza el menú actual completo, incluidos sus precios y textos. Las fotos del menú son públicas. La web debe publicarse una vez con esta versión.</div>
       <div style="font-size:12px;margin-top:6px">${esc(labels[info.state] || info.state)}${info.error ? ' · ' + esc(info.error) : ''}</div>
       ${info.pending ? '<button class="btn" onclick="SAHTEN.online.photoPublisher.flush().catch(e=>sahtenAlert(e.message))">Reintentar fotos</button>' : ''}</div>`;
@@ -129,12 +135,13 @@ export function createOnlineUi({ online, w = window }) {
   function syncCard(sy, role) {
     const stateTxt = { 'al día': '✓ Al día', sincronizando: '⏳ Sincronizando…', conflicto: '⚠ Conflicto', 'sin conexión': '● Sin conexión (pendiente)', error: '⚠ Error', 'sin vincular': 'Todavía no está en la nube' }[sy.state] || sy.state;
     const canPush = ['owner', 'admin'].includes(role);
-    return `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Proyecto en la nube</div>
+    return `<div class="card" style="padding:20px;margin-bottom:16px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Proyecto compartido entre equipos</div>
       <div style="font-size:13px;margin-bottom:10px">${esc(stateTxt)}${sy.version ? ' · versión ' + sy.version : ''}${sy.lastAt ? ' · ' + new Date(sy.lastAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : ''}${role ? ' · tu rol: <b>' + esc(ROLE_LABEL[role] || role) + '</b>' : ''}</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px">El archivo .sahten siempre se guarda primero en tu equipo; la nube es una copia que se actualiza por detrás (con cola si no hay internet). Las fotos se suben a la nube y se descargan al abrir el proyecto en otro equipo; el archivo local conserva una copia.</div>
       ${sy.conflict ? `<div class="info-banner" style="background:rgba(242,140,0,.12);border-color:rgba(242,140,0,.4);margin-bottom:12px"><b>Alguien cambió el proyecto en la nube</b> mientras vos también lo cambiabas. ¿Qué versión querés conservar?<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.resolve('mine')">Quedarme con la mía</button><button class="btn" data-cloud-action onclick="SAHTEN.online.ui.resolve('theirs')">Usar la de la nube</button></div></div>` : ''}
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${sy.linked ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncNow()">Sincronizar ahora</button>' : (canPush || !role ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.link()">☁ Subir este proyecto a la nube</button>' : '')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${sy.linked ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.syncNow()">Actualizar proyecto entre equipos</button>'+cloudHelp(PROJECT_ACTION,PROJECT_HELP)+'' : (canPush || !role ? '<button class="btn btn-accent" data-cloud-action onclick="SAHTEN.online.ui.link()">☁ Subir este proyecto a la nube</button>' : '')}
         <button class="btn" onclick="SAHTEN.online.ui.listRemote()">Abrir proyecto de la nube…</button>${role === 'owner' && sy.linked ? '<button class="btn" onclick="SAHTEN.online.ui.remoteView()">👁 Vista remota en tiempo real</button>' : ''}</div>
+      <p class="cloud-secondary-help">Actualizar este proyecto no reemplaza el menú de la tienda. Publicar el catálogo no trae cambios de otros equipos.</p><details class="cloud-export-help"><summary>¿Y los archivos de Cloudflare?</summary><p>${FILES_HELP}</p></details>
       <div id="nube-remote" style="margin-top:12px"></div></div>`;
   }
   return ui;

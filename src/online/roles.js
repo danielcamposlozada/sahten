@@ -43,7 +43,7 @@ body.role-readonly .panel input, body.role-readonly .panel select, body.role-rea
 /** Productos públicos: sin costos, con los precios ya calculados por canal. */
 export function toPublicProject(file, priceOf, quoteOf = () => ({})) {
   const prods = file.catalog.productos.filter(p => !p.recetaOnly).map(p => ({
-    id: p.id, name: p.name, category: p.category || '', star: !!p.star, avgMes: undefined, tier: undefined,
+    id: p.id, name: p.name, category: p.category || '', star: !!p.star, salesAvailability: p.salesAvailability ? {...p.salesAvailability} : undefined, avgMes: undefined, tier: undefined,
     fixedPrices: priceOf(p), porciones: 1, ingredients: [], packaging: [], combos: [],
     priceFixedChannels: Object.entries(p.pricingPolicies || {}).filter(([, v]) => typeof v.price === 'number').map(([id]) => id),
     quoteIds: quoteOf(p),

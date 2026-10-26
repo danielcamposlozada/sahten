@@ -66,7 +66,7 @@ export const onlinePublish = {
     const problems = publishProblems(menu);
     if (!menu.products.length) return alert(problems[0]);
     const files = await buildPublishFiles(menu, w.SAHTEN_IMAGES || {}, optimizeImage);
-    if (w.SAHTEN.desktop) { const r = await w.SAHTEN.desktop.writeFolder(files); if (r) toast('Menú publicado en ' + r.dir + ': ' + r.files + ' archivos'); return r && { files: r.files, mode: 'folder' }; }
+    if (w.SAHTEN.desktop) { const r = await w.SAHTEN.desktop.writeFolder(files); if (r) toast('Archivos de la web guardados en ' + r.dir + ': ' + r.files + ' archivos'); return r && { files: r.files, mode: 'folder' }; }
     if (w.showDirectoryPicker) {
       try { const dir = await w.showDirectoryPicker({ mode: 'readwrite' }); await writeToDirectory(dir, files); toast('Menú publicado en la carpeta: ' + files.length + ' archivos'); return { files: files.length, mode: 'folder' }; }
       catch (e) { if (e.name === 'AbortError') return null; throw e; }

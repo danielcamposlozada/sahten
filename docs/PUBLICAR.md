@@ -119,3 +119,8 @@ Con la conexión de Supabase configurada, guardar el proyecto no equivale a publ
 La carpeta de Cloudflare conserva una copia de respaldo y páginas estáticas para buscadores. Para actualizarlas, o cambiar diseño, logos, navegación o secciones, se vuelve a generar y subir la carpeta completa. La publicación automática de fotos sincroniza también el menú cuando cambia una foto; no es un publicador automático de cada edición de precio.
 
 Se puede añadir publicación directa por negocio: un botón que sincronice el catálogo, genere todos los archivos y los entregue a un servicio autenticado que publique en Cloudflare, con progreso, resultado y posibilidad de volver al despliegue anterior. La credencial de Cloudflare debe quedar en el servidor; no en el HTML, menu.json, proyecto compartido ni aplicación de caja. Esa conexión automática todavía no está implementada. Referencia oficial: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
+
+
+## Próxima actualización: productos y disponibilidad
+
+Los nuevos nombres, la diferencia entre proyecto y catálogo y el funcionamiento de las pausas están documentados en [DISPONIBILIDAD.md](DISPONIBILIDAD.md). Esta mejora está preparada, todavía sin publicar; no describe controles ya disponibles en 0.4.26.

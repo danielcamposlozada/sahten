@@ -1,3 +1,4 @@
+import { salesPaused } from '../core/sales-availability.js';
 import { deliveryDetails, cashChangeQuote, cashOrderFields } from '../core/order-details.js';
 import { shippingFor, deliverySnapshot } from '../core/delivery.js';
 import { paymentDiscountQuote } from '../core/payment-benefit.js';
@@ -36,7 +37,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   }
   const items = [...quantities].map(([id, qty]) => {
     const p = menu.products.find(p => p.id === id);
-    if (!p || menu.config?.hiddenProducts?.includes(id) || menu.config?.hiddenCategories?.includes(p.category)) fail('Un producto ya no está disponible. Actualizá el menú.', 409, 'menu_changed');
+    if (!p || p.recetaOnly || salesPaused(p,now) || menu.config?.hiddenProducts?.includes(id) || menu.config?.hiddenCategories?.includes(p.category)) fail('Un producto ya no está disponible. Actualizá el menú.', 409, 'menu_changed');
     const price = cents(p.price); if (!price) fail('Un producto no tiene precio de venta.', 409);
     return { productId: id, name: text(p.name, 200), qty, unitPrice: price / 100, lineTotal: price * qty / 100, ...(p.priceRevision ? { priceRevision: text(p.priceRevision, 100) } : {}) };
   });

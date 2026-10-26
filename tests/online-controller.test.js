@@ -189,3 +189,10 @@ describe('subida de fotos antes de publicar el menú', () => {
     expect(s.calls.some(c => c.url.includes('/rest/v1/menus') && c.method === 'POST')).toBe(false);
   });
 });
+
+it('interruptores y pausas usan RPC solo de estados; nunca suben precios ni reemplazan el menú',async()=>{
+ const s=setup({conn:{url:URL_OK,anonKey:ANON,storeId:'st-1'},storage:{'online-session:p1':{access_token:'T',refresh_token:'R',expires_at:9e9,user:{id:'u1'}}},routes:{'/rest/v1/orders':{body:[]},'/rest/v1/rpc/set_menu_product_visibility':{body:{id:'a',visible:false}},'/rest/v1/rpc/set_product_sales_availability':{body:{id:'a',salesAvailability:{paused:true}}}}});
+ await s.ctl.resume();s.host.menuJson=()=>({products:[{id:'a',price:9999999}],store:{name:'Borrador'}});
+ await s.ctl.setAvailability('a',false);await s.ctl.setSalesAvailability('a',false,'2099-01-01T00:00:00Z');
+ expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_product_id:'a',p_visible:false},{p_store_id:'st-1',p_product_id:'a',p_paused:true,p_resume_at:'2099-01-01T00:00:00Z'}]);expect(s.calls.some(c=>c.url.includes('/menus')&&c.body)).toBe(false);
+});
