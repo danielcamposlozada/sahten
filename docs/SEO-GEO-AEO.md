@@ -377,3 +377,18 @@ Verificación local del 26/10/2026: 626 pruebas en 66 archivos aprobadas, sin er
 ### 26/10/2026 — Publicación 0.4.26 autorizada
 
 El dueño pidió «subelo» después de revisar el resumen y la captura del PR #30: autoriza integrar y publicar la app para Windows/Mac y actualizar la carpeta web. Incluye el buscador de clientes, estimación de retiro/delivery, confirmación preparada de WhatsApp, sonido exclusivo de pedidos web nuevos, cancelación conservando historial y el aviso de delivery debajo del selector. No cambia precios, catálogo, tarifas, horarios ni credenciales; no envía mensajes ni crea pedidos. Versiones alineadas en 0.4.26. Instaladores y despliegue web pendientes de verificación final.
+
+
+### 26/10/2026 — Web 0.4.26 publicada; instaladores en construcción
+
+- PR #30 integrado por merge normal `6cf1d7fa819ba2fb58dc172124a82cb46b4b9ea6`; etiqueta `v0.4.26`. CI del PR y del merge correctos. El proceso de instaladores `40388314196` aprobó las pruebas y construye Windows/macOS universal.
+- Cloudflare Production `2235109a-a4a5-4675-ba60-68a561989230`, éxito, 26/10/2026 19:35:56 UTC. Los 17 archivos publicados coinciden con la carpeta generada por SHA-256; cuatro fotos públicas devuelven 200. Se usan los **33 productos vigentes de la nube**, con sus precios actuales: el catálogo cambió respecto de los 36 de la carpeta previa, y no se restauraron productos anteriores. Sitio, conexión, horarios y política de delivery aprobada conservados.
+- Chrome productivo confirma el aviso «Delivery fuera de horario» inmediatamente debajo del selector Delivery/Retiro y antes de Nombre. Se revisó un Shawarma de Carne de $18.600, beneficio de $1.860 y total de $16.740 sin envío; no se completaron datos ni se envió el pedido. El producto de comprobación se quitó y el carrito quedó vacío.
+- No se escribieron tablas en Supabase, no se enviaron mensajes, no se crearon pedidos ni pagos y no se modificaron credenciales. La configuración de publicación automática de precios/disponibilidad continúa pendiente; hoy se usa «Sincronizar menú» sin tener que volver a subir la carpeta.
+
+
+### 26/10/2026 — Sahten 0.4.26 publicada y verificada
+
+- [Release 0.4.26](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.26) pública, publicada el 26/10/2026 a las 19:51:01 UTC. Proceso `40388314196` completo y correcto: pruebas, Windows, Mac universal y publicación. CI del merge también correcto. Se conservan las 626 pruebas aprobadas de esta implementación.
+- `releases/latest/download/latest.json` anuncia **0.4.26** con siete entradas de plataforma: Windows EXE/MSI y Mac Intel/Apple Silicon, URLs de la versión y firmas presentes. Las tres descargas únicas del actualizador devuelven 200. Incluye DMG universal y los instaladores Windows; no se afirma instalación nativa o impresión física desde este chat.
+- Este estado reemplaza «instaladores en construcción». La web continúa en el despliegue productivo `2235109a-a4a5-4675-ba60-68a561989230`, con 17 archivos y cuatro fotos verificados, 33 productos y precios coincidentes con el catálogo público actual. Evidencia, carpeta, ZIP y guía de operación en `entregables/publicacion-0.4.26/` del espacio de trabajo.
