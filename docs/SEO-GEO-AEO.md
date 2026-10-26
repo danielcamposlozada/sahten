@@ -364,3 +364,16 @@ Referencias: [Georef: normalización de direcciones](https://www.argentina.gob.a
 - Web final en Cloudflare `c20f3cd9-f0f0-4547-bbef-7264321d509b`, 17 archivos y fotos verificados. Se sugiere al escribir calle/altura y se quita el botón habitual en web y Mostrador; el reintento «Buscar de otra forma» solo se muestra ante fallo o sin resultados. 608 pruebas / 64 archivos y compilación aprobados.
 - Tutorial visual y escrito actualizado y empaquetado en `entregables/tutorial-tienda/tutorial-sahten.zip`; disponible sin conexión, independiente de la app. No se añaden pantallas de tutorial nuevas al instalador.
 - Sin nuevas órdenes, pagos, cambios de precios ni escritura directa en Supabase. Condiciones de delivery activadas antes permanecen intactas; textos informativos pospuestos por el dueño y prueba física IT01 siguen pendientes. Auditoría UX general continúa pausada.
+
+### 26/10/2026 — Mejoras de operación y ubicación del aviso de delivery (en preparación)
+
+Por solicitud del dueño: confirmar pedidos web y locales por WhatsApp con tiempo estimado, sonido solo para nuevos pedidos web, cancelación directa conservando historial y buscador de clientes en Mostrador. Se prepara también la tarjeta de disponibilidad de la web inmediatamente debajo de Delivery / Retiro, antes de los datos personales. Detalle en [MOSTRADOR.md](MOSTRADOR.md#confirmaciones-tiempos-y-cancelación--preparado-el-26102026).
+
+Cambios de código y pruebas locales; todavía no hay publicación de nuevos instaladores ni reemplazo de la carpeta productiva. No se escriben pedidos/precios/menús en Supabase, no se envían WhatsApp reales ni se hacen reembolsos. El contenido comercial, los logos y los textos libres de delivery pospuestos permanecen intactos.
+
+Verificación local del 26/10/2026: 626 pruebas en 66 archivos aprobadas, sin errores no controlados; compilación, scripts clásicos, versiones y revisión de diferencias correctos. Chrome real: búsqueda/alta de cliente, asignación por teclado, tiempo de retiro en la confirmación, cancelación preservando historial y aviso web inmediatamente debajo de la modalidad, con datos ficticios sin conexión al negocio. Capturas en `entregables/revision-pedidos-2026-10-26/`. Instaladores y web activa todavía sin cambios.
+
+
+### 26/10/2026 — Publicación 0.4.26 autorizada
+
+El dueño pidió «subelo» después de revisar el resumen y la captura del PR #30: autoriza integrar y publicar la app para Windows/Mac y actualizar la carpeta web. Incluye el buscador de clientes, estimación de retiro/delivery, confirmación preparada de WhatsApp, sonido exclusivo de pedidos web nuevos, cancelación conservando historial y el aviso de delivery debajo del selector. No cambia precios, catálogo, tarifas, horarios ni credenciales; no envía mensajes ni crea pedidos. Versiones alineadas en 0.4.26. Instaladores y despliegue web pendientes de verificación final.

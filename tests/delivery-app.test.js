@@ -40,7 +40,7 @@ it('Mostrador actualiza progreso, descuentos y cambio de dirección; valida ante
 });
 it('Mostrador muestra cierre de delivery sin dirección; retiro no muestra promociones y no consulta servidor',async()=>{
  const {window:w}=await openApp();try{loadRawDemo(w);configure(w);const cfg=w._getTiendaConfig();cfg.deliveryV2.hours={...sahtenDeliveryPolicy().hours,weekly:Array.from({length:7},()=>[])};w._saveTiendaConfig(cfg);w.showPanel('mostrador');const product=w.SAHTEN.state.products[0];w.mostradorAddToCart(product.id);w.eval("mostradorSetOrderType('delivery')");
- expect(w.document.getElementById('most-delivery-incentive').textContent).toContain('Delivery fuera de horario');w.eval("mostradorSetOrderType('retiro')");expect(w.document.getElementById('most-delivery-incentive')).toBeNull();w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();expect(w.sahtenOrders()).toHaveLength(1);
+ expect(w.document.getElementById('most-delivery-incentive').textContent).toContain('Delivery fuera de horario');expect(w.document.getElementById('most-delivery-incentive').compareDocumentPosition(w.document.getElementById('most-addr-input')) & w.Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();w.eval("mostradorSetOrderType('retiro')");expect(w.document.getElementById('most-delivery-incentive')).toBeNull();w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();expect(w.sahtenOrders()).toHaveLength(1);
  }finally{w.close();}
 });
 it('Mostrador busca al escribir calle/altura sin botón y descarta la respuesta anterior',async()=>{

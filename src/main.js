@@ -2,6 +2,8 @@ import { installReceipts } from './ui/receipt-settings.js';
 import * as orderDetails from './core/order-details.js';
 import { reviewFooter, reviewUrl, DEFAULT_REVIEW_TEXT } from './ui/receipt-reviews.js';
 import { printDocument } from './ui/print.js';
+import { installCustomerPicker } from './ui/customer-picker.js';
+import { installOrderActions } from './ui/order-actions.js';
 import { installNotificationSound } from './ui/notification-sound.js';
 import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptProfile } from './ui/receipt-paper.js';
 import { installPricing } from './ui/pricing-editor.js';
@@ -94,9 +96,12 @@ window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN.pricing = installPricing(window);
 window.SAHTEN.customersImport = installCustomerImport(window);
+window.SAHTEN.customerPicker = installCustomerPicker(window);
+events.beforeRender('applyData', () => window.SAHTEN.customerPicker.reset());
 window.SAHTEN.paymentChoices = { policy: paymentBenefitPolicy, quote: paymentDiscountQuote, report: paymentBenefitReport, snapshot: savedPaymentDiscount, html: paymentChoiceHtml };
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.orderWorkflow = orderWorkflow;
+window.SAHTEN.orderActions = installOrderActions(window);
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;

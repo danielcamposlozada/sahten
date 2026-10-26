@@ -1091,6 +1091,40 @@
 .online-board-card--cancelado { --order-action: #a42d35; --order-tint: #fdebee; --order-text: #a42d35; }
 .online-board-card .online-board-status { color: var(--order-text); background: var(--order-tint); border: 1px solid var(--order-action); border-radius: 7px; padding: 5px 8px; font-size: 13px; }
 .online-board-origin { margin-right: auto; font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; }
+.online-board-contact-actions,.order-detail-contact-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.online-board-contact-actions>button { flex:1 1 140px; min-height:44px; }
+.online-board-contact-actions .online-board-cancel { color:var(--red); border:1px solid var(--red); background:transparent; }
+.online-board-estimate { font-size:13px; font-weight:650; color:var(--ink); margin-top:6px; }
+.most-estimate-field { display:flex; align-items:center; gap:8px; }
+.most-estimate-field input { max-width:110px; }
+.most-estimate-field span { font-size:12px; color:var(--muted); }
+.most-customer-picker { display:grid; gap:8px; min-width:0; }
+.most-customer-picker>label { font-weight:600; font-size:13px; }
+.most-customer-search-row { display:flex; gap:8px; min-width:0; }
+.most-customer-search-row input { flex:1; min-width:0; width:100%; min-height:44px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--ink); padding:9px 10px; font:inherit; font-size:14px; }
+.most-customer-search-row button,.most-customer-create { min-height:44px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; font-size:13px; cursor:pointer; }
+.most-customer-picker [role=listbox] { max-height:230px; overflow:auto; border:1px solid var(--border); border-radius:8px; background:var(--card); }
+.most-customer-picker [role=option] { display:grid; gap:3px; min-height:44px; padding:9px 10px; cursor:pointer; border-bottom:1px solid var(--border); overflow-wrap:anywhere; }
+.most-customer-picker [role=option]:last-child { border-bottom:0; }
+.most-customer-picker [role=option]:hover,.most-customer-picker [role=option].is-active { background:var(--sand); color:var(--ink); box-shadow:inset 3px 0 var(--primary); }
+.most-customer-picker [role=option] strong { font-size:14px; }
+.most-customer-picker [role=option] span,.most-customer-selection { font-size:12px; line-height:1.45; color:inherit; }
+.most-customer-create { justify-self:start; font-weight:600; }
+.order-contact-form { display:grid; gap:12px; }
+.order-contact-form p { margin:0; }
+.order-contact-form label { display:grid; gap:6px; font-weight:600; }
+.order-contact-form input:not([type=checkbox]),.order-contact-form textarea { width:100%; min-height:44px; border:1px solid var(--border); border-radius:8px; padding:9px 11px; background:var(--card); color:var(--ink); font:inherit; }
+.order-contact-form label:has(input[type=checkbox]) { display:flex; align-items:center; gap:10px; }
+.order-contact-form input[type=checkbox] { width:20px; height:20px; flex-shrink:0; }
+.order-contact-form textarea { font-size:14px; line-height:1.5; resize:vertical; min-height:160px; }
+.order-contact-form small { color:var(--ink); opacity:.8; font-size:13px; line-height:1.45; }
+.sd-box.order-actions-dialog { display:flex; flex-direction:column; overflow:hidden; }
+.order-actions-dialog .sd-body { min-height:0; overflow:auto; }
+.order-actions-dialog .sd-title,.order-actions-dialog .sd-actions { flex-shrink:0; }
+@media(max-width:600px) { .order-actions-dialog .sd-actions { display:grid; grid-template-columns:1fr 1fr; } .order-actions-dialog .sd-actions>button:last-child { grid-column:1/-1; } }
+.order-estimate-options { display:flex; flex-wrap:wrap; gap:8px; }
+.order-estimate-options button { padding:8px 12px; min-height:44px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; }
+.order-estimate-options button[aria-pressed=true] { border-color:var(--primary); background:var(--sand); color:var(--ink); box-shadow:inset 0 0 0 1px var(--primary); font-weight:700; }
 .online-board-order-link { min-height: 44px; min-width: 44px; }
 .online-board-time { display: flex; flex-wrap: wrap; gap: 6px 12px; font: inherit; font-size: 13px; }
 .online-board-time [data-order-age] { font-weight: 650; }

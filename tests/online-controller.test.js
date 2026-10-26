@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createController } from '../src/online/controller.js';
 
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -97,6 +97,7 @@ describe('menú y pedidos', () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: rows } } });
     await s.ctl.resume();
     expect(s.orders.map(o => o.remoteId)).toEqual(['r1']);                       // el entregado no se trae
+    expect(s.notes[0].sound).toBe(false);
     expect(s.imports).toEqual([{initial:true}]);                               // no imprimir el historial al reconectar
     expect(s.notes[0].title).toBe('Nuevo pedido online #0001'); expect(s.notes[0].body).toContain('Ana');
     await s.ctl.resume();
@@ -107,6 +108,7 @@ describe('menú y pedidos', () => {
     await s.ctl.resume(); const ws = FakeWS.last; await ws.onopen();
     ws.onmessage({ data: JSON.stringify({ topic: ws.sent[0].topic, event: 'postgres_changes', payload: { data: { type: 'INSERT', record: { id: 'live-1', status: 'pendiente', created_at: new Date().toISOString(), payload: { source: 'pickup', customerName: 'Luis', total: 9000, items: [] } } } } }) });
     expect(s.orders[0]).toMatchObject({ remoteId: 'live-1', source: 'pickup', customerName: 'Luis' });
+    expect(s.notes.at(-1).sound).toBe(true);
     expect(s.imports).toEqual([{initial:false}]);                              // sí habilita la cola para pedidos nuevos
     expect(s.notes.at(-1).title).toMatch(/Nuevo pedido online/); expect(s.refreshed).toBeGreaterThan(0);
   });
@@ -116,6 +118,31 @@ describe('menú y pedidos', () => {
     expect(await s.ctl.pushStatus({ remoteId: 'r1', status: 'en_preparacion' })).toBe(true);
     const c = s.calls.find(x => x.method === 'PATCH'); expect(c.url).toContain('id=eq.r1'); expect(c.body).toEqual({ status: 'preparando' });
     expect(await s.ctl.pushStatus({ status: 'listo' })).toBe(false);
+  });
+  it('una cancelación sin conexión queda pendiente y se reintenta al reconectar sin resucitar el pedido', async () => {
+    let fail = true;
+    const row = { id: 'cancel-test', status: 'preparando', payload: { source: 'delivery', total: 9000 } };
+    const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': c => c.method === 'PATCH' ? fail ? { status: 503, body: { message: 'sin conexión' } } : { status: 204 } : { body: [row] } } });
+    await s.ctl.resume(); const o = s.orders[0]; o.status = 'cancelado';
+    expect(await s.ctl.pushStatus(o)).toBe(false); expect(o.remoteStatusPending).toBe('cancelado');
+    await s.ctl.resume(); expect(o.status).toBe('cancelado'); expect(o.remoteStatusPending).toBe('cancelado');
+    fail = false; row.status = 'cancelado'; await s.ctl.resume(); expect(o.status).toBe('cancelado'); expect(o.remoteStatus).toBe('cancelado'); expect(o.remoteStatusPending).toBeUndefined();
+    expect(s.orders).toHaveLength(1); expect(s.notes.filter(n => n.sound)).toHaveLength(0);
+  });
+  it('cancelar sin una sesión activa conserva la intención para la próxima conexión', async () => {
+    const s = setup({ conn }); const o = { remoteId: 'offline', status: 'cancelado' };
+    expect(await s.ctl.pushStatus(o)).toBe(false); expect(o.remoteStatusPending).toBe('cancelado'); expect(s.calls).toHaveLength(0);
+  });
+  it('una respuesta lenta de preparación no pisa una cancelación posterior', async () => {
+    let release; const writes = [];
+    const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': async c => {
+      if (c.method !== 'PATCH') return { body: [] };
+      writes.push(c.body.status); if (writes.length === 1) await new Promise(r => release = r); return { status: 204 };
+    } } });
+    await s.ctl.resume(); const o = { remoteId: 'sequential-test', status: 'en_preparacion' };
+    const first = s.ctl.pushStatus(o); await vi.waitFor(() => expect(writes).toEqual(['preparando']));
+    o.status = 'cancelado'; const second = s.ctl.pushStatus(o); expect(writes).toEqual(['preparando']); release();
+    await Promise.all([first, second]); expect(writes).toEqual(['preparando', 'cancelado']); expect(o.remoteStatus).toBe('cancelado'); expect(o.remoteStatusPending).toBeUndefined();
   });
   it('actualiza un reembolso de un pedido ya entregado sin duplicarlo ni importar pedidos históricos ajenos', async () => {
     const row={id:'old-paid',status:'entregado',payment_provider:'mercadopago',payment_ref:'ref1',payment_status:'refunded',payload:{customerName:'Ana',total:1000}};
