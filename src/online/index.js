@@ -33,7 +33,7 @@ export function createOnline({ w = window, project, events }) {
     images: () => w.SAHTEN_IMAGES || {},
     projectId: () => session.id, markDirty: () => project.markDirty(), menuJson: () => onlinePublish.currentMenu(),
     orders: { list: () => w.sahtenOrders(), save: () => { if (typeof w._saveOrders === 'function') w._saveOrders(); }, add: (o, { initial = false } = {}) => { w.SAHTEN.pricing?.capture(o, { basis: 'from-quote' }); w.sahtenOrders().unshift(o); if (typeof w._saveOrders === 'function') w._saveOrders(); w.SAHTEN.receipts?.enqueue(o, {origin:'online', initial}); } },
-    notify: n => { try { w.pushNotification({ type: 'delivery', source: 'delivery', title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
+    notify: n => { try { w.pushNotification({ type: 'order', source: 'menu-online', sound: n.sound === true, title: n.title, body: n.body }); } catch (e) { /* sin notificaciones */ } },
     refresh: () => { try { if (w.currentPanel === 'mostrador') w.renderMostrador(); } catch (e) { /* */ } },
     storage: config,
   };
@@ -191,6 +191,6 @@ export function createOnline({ w = window, project, events }) {
   progress.onChange(() => ui.renderProgress());
 
   // el estado de un pedido importado se avisa a la nube
-  events.afterRender('orderSetStatus', id => { const o = (w.sahtenOrders() || []).find(x => x.id === id); if (o && o.remoteId) controller.pushStatus(o); });
+  events.afterRender('orderSetStatus', id => { const o = (w.sahtenOrders() || []).find(x => x.id === id); if (o && o.remoteId) controller.pushStatus(o).then(ok => { if (!ok && w.document && w.sahtenOrders().includes(o)) w.sahtenToast('Estado guardado en este equipo. Falta sincronizarlo con la tienda; revisá la conexión.', {kind:'error'}); }); });
   return api;
 }

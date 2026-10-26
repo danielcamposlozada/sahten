@@ -448,7 +448,10 @@ function _onlineBoardCard(o, recent = false) {
     '<div class="online-board-name">' + _esc(o.customerName || 'Consumidor Final') + '</div>' +
     '<div class="online-board-card-bottom"><div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
       (!recent ? ' <span class="online-board-age" data-order-age="' + id + '">' + _esc(workflow.orderAgeLabel(o)) + '</span>' : '') + '</div><strong class="online-board-total">$' + _fmtN(o.total) + '</strong></div>' +
+    (SAHTEN.orderActions.label(o)?'<div class="online-board-estimate">'+_esc(SAHTEN.orderActions.label(o))+'</div>':'') +
+    (!recent?'<div class="online-board-contact-actions"><button type="button" class="online-board-detail" data-online-action="confirm" data-id="'+id+'">'+(online?'Confirmar por WhatsApp':'Tiempo y WhatsApp')+'</button><button type="button" class="online-board-detail online-board-cancel" data-online-action="cancel" data-id="'+id+'">Cancelar pedido</button></div>':'') +
     (route ? '<div class="online-board-route-actions" role="group" aria-label="Reparto de la orden '+_esc(num)+'"><button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button><a class="online-board-detail" href="'+_esc(route.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ruta de la orden '+_esc(num)+' en Google Maps">Abrir en Maps</a><button type="button" class="online-board-detail" data-online-action="route-share" data-id="'+id+'" aria-label="Compartir ruta de la orden '+_esc(num)+'">Compartir</button>'+(!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'')+'</div>' : '') +
+    (o.remoteStatusPending?'<div class="online-board-missing">Estado pendiente de sincronizar <button type="button" class="online-board-detail" data-online-action="sync-status" data-id="'+id+'">Reintentar</button></div>':'') +
     (warning ? '<div class="online-board-payment is-warning"><strong>' + _esc(payment) + '</strong></div>' : '') +
     '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
     '<div class="online-board-time"><time datetime="' + _esc(o.createdAt || '') + '">Creado ' + _esc(time) + '</time></div>' +
@@ -497,6 +500,9 @@ function _onlineBoardClick(event) {
   if (action === 'pickup' || action === 'delivery') { setOnlineOrderFilter(action); return; }
   const order = SAHTEN_ORDERS.find(o => String(o.id) === button.dataset.id);
   if (!order) return;
+  if (action === 'sync-status') { SAHTEN.online.controller.pushStatus(order).then(ok=>{if(!ok)sahtenToast('No se pudo sincronizar. Revisá la conexión.',{kind:'error'});_renderDeliveryTab();}); return; }
+  if (action === 'confirm') { SAHTEN.orderActions.confirm(order.id); return; }
+  if (action === 'cancel') { SAHTEN.orderActions.cancel(order.id); return; }
   if (action === 'open') { openOrderDetail(order.id); return; }
   if (action === 'print') { printComanda(order.id); return; }
   if (action === 'route-copy' || action === 'route-share') { button.disabled=true;const task=action==='route-copy'?SAHTEN.delivery.handoff.copy(order.id):SAHTEN.delivery.handoff.share(order.id);Promise.resolve(task).finally(()=>{button.disabled=false;});return; }

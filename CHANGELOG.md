@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+- **Confirmación al cliente desde Pedidos**: botón para preparar WhatsApp en retiro y delivery, tanto web como Mostrador. Vista previa, teléfono editable para esa orden y tiempo estimado con opciones rápidas. Abre el chat con el texto listo; el envío se confirma en WhatsApp y no acredita un pago.
+- **Tiempo estimado en Mostrador**: campo opcional al crear el pedido; editable después desde su tarjeta. Se conservan la estimación, su hora y los ajustes dentro del proyecto.
+- **Aviso acústico exclusivo de pedidos web nuevos**: retiro y delivery; pedidos de Mostrador, avisos del sistema y carga de pedidos existentes quedan sin sonido. Se conserva la darbuka y las palmas.
+- **Cancelar desde la tarjeta**: acceso directo con motivo opcional y devolución de stock solo si se elige. Conserva el historial y los pagos; no realiza reembolsos. Los estados sin sincronizar quedan pendientes con reintento, sin que una respuesta anterior reactive el pedido.
+- **Buscador de clientes en Mostrador**: sugerencias locales por nombre, teléfono o correo, selección con teclado y alta rápida con datos precargados. Reemplaza el desplegable y evita asignaciones accidentales al dejar una búsqueda sin seleccionar.
+- **Disponibilidad de delivery a la vista**: la tarjeta de horario/cobertura/envío se ubica debajo del selector de modalidad, antes de los datos personales en la web y antes de la dirección en Mostrador.
+
 ## 0.4.25
 
 - **Direcciones automáticas y más rápidas**: web y Mostrador vuelven a sugerir al escribir calle y altura, sin pulsar un botón. Espera de 350 ms, cancelación de consultas anteriores, resultados cercanos al local y caché temporal en memoria. Usa Georef para sugerencias argentinas y muestra «Buscar de otra forma» solo si falla la consulta o no hay resultados; elegir la sugerencia sigue siendo necesario para validar recorrido y envío.

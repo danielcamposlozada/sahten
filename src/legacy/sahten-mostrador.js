@@ -135,6 +135,10 @@ window.sahtenOrders = () => SAHTEN_ORDERS;   // acceso desde src/online (la vari
 // v3: tipo de pedido + delivery local
 let mostradorOrderType = 'retiro'; // retiro | delivery
 let mostradorCashTendered = '';
+let mostradorEstimate = '', mostradorEstimateProject = null;
+function _mostEstimateValue(){const id=SAHTEN.project.session.id;if(mostradorEstimateProject!==id){mostradorEstimate='';mostradorEstimateProject=id;}return mostradorEstimate;}
+function mostradorSetEstimate(value){mostradorEstimateProject=SAHTEN.project.session.id;mostradorEstimate=value;_renderCartTotals();}
+function _mostEstimateHtml(){return '<label for="most-estimate-minutes">Tiempo estimado (opcional)</label><div class="most-estimate-field"><input id="most-estimate-minutes" class="most-ship-input" type="number" inputmode="numeric" min="1" max="1440" step="1" placeholder="Minutos" value="'+_esc(_mostEstimateValue())+'" oninput="mostradorSetEstimate(this.value)"><span>'+ (mostradorOrderType==='delivery'?'Hasta la entrega':'Hasta estar listo para retirar')+'</span></div>';}
 let mostradorDelivery = null;     // {address, note, lat, lng, distKm, zone, out}
 let mostradorShipManual = false;
 let _mostDelMap = null, _mostAddrTimer = null, _mostAddrSugs = [], _mostAddrAbort = null, _mostAddrGeneration = 0;
@@ -315,7 +319,7 @@ function mostradorAddToCart(pid, cardEl) {
 }
 function mostradorRemoveItem(pid) { mostradorCart = mostradorCart.filter(it=>it.productId!==pid); _renderCartItems(); _renderCartTotals(); }
 function mostradorChangeQty(pid, delta) { const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
-function mostradorClearCart() { if(!mostradorCart.length) return; mostradorCashTendered='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
+function mostradorClearCart() { if(!mostradorCart.length) return; SAHTEN.customerPicker.reset();mostradorCashTendered='';mostradorEstimate='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
 function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(!c.classList.contains('expanded')); }
 function _mostCartIsOverlay() { return document.documentElement.dataset.orderLayout === 'overlay'; }
 function mostradorSetCartOpen(open, restoreFocus=true) {
@@ -386,13 +390,13 @@ function _renderCartExtras() {
   if (_mostDelMap) { try { _mostDelMap.remove(); } catch(e) {} _mostDelMap = null; }
   const discOpts = MOSTRADOR_DISCOUNTS.map(d => { const l=d.type==='pct'?d.name+' ('+d.value+'%)':d.name+' (-$'+_fmt(d.value)+')'; return '<option value="'+d.id+'" '+(d.id===mostradorActiveDiscountId?'selected':'')+'>'+_esc(l)+'</option>'; }).join('');
   const payPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
-  const custOpts = SAHTEN_CUSTOMERS.map(c => '<option value="'+c.id+'" '+(c.id===mostradorActiveCustomerId?'selected':'')+'>'+_esc(c.name)+(c.phone?' · '+c.phone:'')+'</option>').join('');
   f.innerHTML = '<div class="most-extras">' +
-    '<div class="most-extras-row"><label for="most-customer">Cliente</label><select id="most-customer" class="most-disc-select" onchange="mostradorActiveCustomerId=this.value||null"><option value="">Consumidor Final</option>'+custOpts+'</select><button class="most-add-btn" onclick="mostQuickAddClient()" title="Nuevo cliente">+</button></div>' +
+    '<div id="most-customer-picker" class="most-customer-picker"></div>' +
     '<div class="most-extras-row"><label for="most-discount">Descuento</label><select id="most-discount" class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
-    _mostDeliveryExtrasHtml() +
+    _mostDeliveryExtrasHtml() + _mostEstimateHtml() +
     SAHTEN.paymentChoices.html({methods:_mostPaymentOptions(),selected:mostradorActivePaymentId,percent:payPolicy.enabled&&payPolicy.channels.mostrador?payPolicy.percent:0,compact:true})+_mostCashHtml()+'<button class="btn" type="button" onclick="openPaymentManager()">Gestionar métodos de pago</button>' +
     '</div>';
+  SAHTEN.customerPicker.mount(f.querySelector('#most-customer-picker'),{list:()=>SAHTEN_CUSTOMERS,selected:()=>mostradorActiveCustomerId,select:id=>{mostradorActiveCustomerId=id;_renderCartTotals();},create:seed=>mostQuickAddClient(seed)});
   f.querySelectorAll('[data-payment-choice]').forEach(b=>b.addEventListener('click',()=>mostradorSetPayment(b.dataset.paymentChoice)));
   if (mostradorOrderType==='delivery' && mostradorDelivery && mostradorDelivery.lat!=null) setTimeout(_mostInitDelMap, 30);
 }
@@ -435,6 +439,7 @@ function _mostDeliveryExtrasHtml(){
   let h='<div class="most-extras-row"><label>Tipo</label><div style="flex:1;display:flex;gap:2px;padding:2px;border-radius:9px;background:var(--sand2)">'+seg+'</div></div>';
   if(mostradorOrderType!=='delivery') return h;
   const d=mostradorDelivery; const cfg=_mostTiendaCfg(); const t=_calcCartTotals();
+  if(cfg.deliveryV2?.active) h+='<div id="most-delivery-incentive"></div>';
   let info='';
   if(typeof sahtenOfflineNotice==='function') info+=sahtenOfflineNotice();
   if(d && d.zone){ info='<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:6px;flex-wrap:wrap"><span style="width:9px;height:9px;border-radius:50%;background:'+(d.zone.color||'var(--green)')+'"></span><strong>'+_esc(d.zone.name)+'</strong><span style="color:var(--muted)">· '+d.distKm.toFixed(1)+' km · '+(t.freeShip?'<span style="color:var(--green);font-weight:600">Envío gratis</span>':'$'+_fmt(d.zone.baseCost||0))+'</span></div>'; }
@@ -444,7 +449,7 @@ function _mostDeliveryExtrasHtml(){
     '<div style="position:relative"><input type="text" id="most-addr-input" aria-label="Dirección de entrega" autocomplete="off" placeholder="Dirección de entrega…" value="'+_esc(d?d.address:'')+'" oninput="_mostAddrInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_mostPickSug(0);}" onblur="setTimeout(()=>{const b=document.getElementById(\'most-addr-sugs\');if(b)b.style.display=\'none\';},200)" style="width:100%;border:1px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;background:var(--card,#fff);color:var(--ink);outline:none">' +
     '<div id="most-addr-sugs" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:40;background:var(--card,#fff);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden"></div></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+['addressFloor','addressApartment'].map((key,i)=>'<label style="min-width:0">'+(i?'Departamento':'Piso')+'<input class="custom-input" style="width:100%" aria-label="'+(i?'Departamento':'Piso')+'" maxlength="30" value="'+_esc(d?.[key]||'')+'" oninput="_mostDeliveryField(\''+key+'\',this.value)"></label>').join('')+'</div><label>Referencia de entrega<input class="custom-input" aria-label="Referencia de entrega" maxlength="200" value="'+_esc(d?.deliveryReference||'')+'" oninput="_mostDeliveryField(\'deliveryReference\',this.value)"></label><label>Notas del pedido<input class="custom-input" aria-label="Notas del pedido" maxlength="1000" value="'+_esc(d?.note||'')+'" oninput="_mostDeliveryField(\'note\',this.value)"></label>' +
-    '<button class="btn" id="most-addr-retry" type="button" hidden style="display:none" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar de otra forma</button>'+(cfg.deliveryV2?.active?'<div id="most-delivery-incentive"></div>':info) +
+    '<button class="btn" id="most-addr-retry" type="button" hidden style="display:none" onclick="_mostAddrInput(document.getElementById(\'most-addr-input\').value,true)">Buscar de otra forma</button>'+(cfg.deliveryV2?.active?'':info) +
     (d&&d.lat!=null?'<div id="most-del-map" style="height:150px;border-radius:10px;overflow:hidden;margin-top:8px;border:1px solid var(--border);position:relative;z-index:1"></div><div style="font-size:10px;color:var(--muted);margin-top:3px">'+(cfg.deliveryV2?.active?'La ubicación corresponde a la dirección elegida en Buscar dirección.':'Podés mover el pin para ajustar la ubicación.')+'</div>':'') +
     '</div>' +
     (cfg.deliveryV2?.active?'':'<div class="most-extras-row"><label for="most-ship-val">Envío</label><input type="number" class="most-ship-input" id="most-ship-val" min="0" step="1" placeholder="'+(t.shipping||t.freeShip?'Auto: $'+_fmt(t.shipping):'0')+'" value="'+(mostradorShipManual?(mostradorShipping||0):'')+'" oninput="mostradorSetShipping(this.value)"></div>');
@@ -519,7 +524,9 @@ let _deliveryChecking=false;
 async function mostradorCheckout() {
   if(_deliveryChecking)return;
   const t = _calcCartTotals(); if (t.items.length === 0) return;
+  if(!SAHTEN.customerPicker.valid())return;
   if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){alert('El efectivo indicado no alcanza el total.');return;}
+  if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
   if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
@@ -538,6 +545,7 @@ async function mostradorCheckout() {
   const order = {
     ...(del?SAHTEN.orderDetails.deliveryDetails(del,'delivery'):{}),
     ...SAHTEN.orderDetails.cashOrderFields(t.total,mostradorCashTendered,pay?.method),
+    ...(_mostEstimateValue()!==''?{fulfillmentEstimate:SAHTEN.orderActions.snapshot(_mostEstimateValue())}:{}),
     id: localOrderId,
     num: _nextOrderNum(),
     items: validatedItems || t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
@@ -569,7 +577,7 @@ async function mostradorCheckout() {
   SAHTEN_ORDERS.unshift(order); _saveOrders();
   SAHTEN.receipts.enqueue(order,{origin:'local'});
   // Reset cart
-  mostradorCashTendered=''; mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
+  mostradorCashTendered=''; mostradorEstimate=''; mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
   mostradorShipManual = false; mostradorDelivery = null; mostradorOrderType = 'retiro';
   // El pedido creado entra en la misma cola operativa que los de la web.
   _posToast('Orden #' + String(order.num).padStart(4,'0') + ' creada · $' + _fmt(order.total));
@@ -651,8 +659,11 @@ function openOrderDetail(orderId) {
     '<div class="modal-body">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">' +
     '<div><div style="font-size:12px;color:var(--muted)">'+dateStr+'</div><div style="font-size:14px;font-weight:600;margin-top:4px">'+_esc(o.customerName||'Consumidor Final')+'</div>'+(o.customerPhone?'<div style="font-size:12px;color:var(--muted);margin-top:2px">📞 '+_esc(o.customerPhone)+'</div>':'')+(o.customerEmail?'<div style="font-size:12px;color:var(--muted);margin-top:1px">✉️ '+_esc(o.customerEmail)+'</div>':'')+(o.address&&o.source==='delivery'?'<div style="font-size:12px;color:var(--muted);margin-top:1px">📍 '+SAHTEN.orderDetails.deliveryAddressLines(o).map(_esc).join('<br>')+'</div>':'')+(o.source==='delivery'?'<span style="display:inline-block;margin-top:4px;background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="display:inline-block;margin-top:4px;background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'</div>' +
-    '<select class="most-disc-select" style="width:auto" onchange="orderSetStatus(\''+o.id+'\',this.value);this.closest(\'.modal-overlay\').remove();openOrderDetail(\''+o.id+'\')">' +
+    '<select class="most-disc-select" style="width:auto" aria-label="Estado del pedido" data-order-status="'+_esc(o.id)+'">' +
     (window.SAHTEN.orderWorkflow.allowedStatuses(o).map(value => '<option value="'+value+'" '+(o.status===value?'selected':'')+'>'+_esc(window.SAHTEN.orderWorkflow.onlineStatusLabel({...o,status:value}))+'</option>').join('')) + '</select></div>' +
+    (SAHTEN.orderActions.label(o)?'<p>'+_esc(SAHTEN.orderActions.label(o))+'</p>':'') +
+    (o.cancellation?'<p>Cancelado'+(o.cancellation.reason?': '+_esc(o.cancellation.reason):'')+'</p>':'') +
+    (['pendiente','en_preparacion','listo','enviado'].includes(o.status)?'<div class="order-detail-contact-actions"><button class="btn" data-order-command="confirm" data-id="'+_esc(o.id)+'">Tiempo y WhatsApp</button><button class="btn" data-order-command="cancel" data-id="'+_esc(o.id)+'">Cancelar pedido</button></div>':'') +
     '<table class="order-detail-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit.</th><th>Total</th></tr></thead><tbody>' +
     o.items.map(it => '<tr><td>'+_esc(it.name)+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right;font-family:DM Mono,monospace">$'+_fmt(it.unitPrice)+'</td><td style="text-align:right;font-family:DM Mono,monospace;font-weight:600">$'+_fmt(it.lineTotal)+'</td></tr>').join('') +
     '</tbody></table>' +
@@ -682,6 +693,7 @@ async function orderReopen(orderId) {
   mostradorCart = o.items.map(it => ({productId:it.productId, qty:it.qty}));
   mostradorActiveDiscountId = o.discountId; mostradorActiveCustomerId = o.customerId;
   mostradorCashTendered=o.cashTendered??'';
+  mostradorSetEstimate(o.fulfillmentEstimate?.minutes??'');
   mostradorShipping = o.shipping||0; mostradorActivePaymentId = o.paymentId;
   mostradorOrderType = o.orderType || (o.source==='delivery' ? 'delivery' : 'retiro');
   mostradorDelivery = (mostradorOrderType==='delivery' && o.lat!=null) ? (()=>{ const z=_mostZoneFor(o.lat,o.lng); return {...SAHTEN.orderDetails.deliveryDetails(o),address:o.address||'',note:o.notes||'',lat:o.lat,lng:o.lng,distKm:z.distKm,zone:z.zone,out:!!z.out}; })() : (mostradorOrderType==='delivery' ? {...SAHTEN.orderDetails.deliveryDetails(o),address:o.address||'',note:o.notes||'',lat:null,lng:null,distKm:0,zone:null,out:false} : null);
@@ -694,6 +706,7 @@ async function orderReopen(orderId) {
 
 async function orderDelete(orderId) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
+  if(o.remoteStatusPending){alert('Este pedido tiene un estado pendiente de sincronizar con la tienda. Sincronizalo antes de eliminar el registro.');return;}
   if(!(await sahtenConfirm('¿Eliminar la orden #'+String(o.num).padStart(4,'0')+'? Esta acción no se puede deshacer.', { okLabel: 'Eliminar', danger: true }))) return;
   if (o.stockDeducted && (await sahtenConfirm('Esta orden descontó stock. ¿Devolver el stock?', { okLabel: 'Devolver stock', cancelLabel: 'No devolver' }))) orderRestoreStock(orderId, true);
   SAHTEN_ORDERS = SAHTEN_ORDERS.filter(x=>x.id!==orderId); _saveOrders();
@@ -917,19 +930,25 @@ function previewComandaFromSettings() {
 }
 
 // Quick inline client creation from Mostrador cart
-function mostQuickAddClient() {
+let _quickCustomerCleanup=null,_quickCustomerContext=null;
+function mostQuickAddClientClose(){document.getElementById('quick-client-overlay')?.remove();if(_quickCustomerCleanup){_quickCustomerCleanup();_quickCustomerCleanup=null;}}
+function mostQuickAddClient(seed = {}) {
   let ov = document.getElementById('quick-client-overlay');
-  if (ov) ov.remove();
+  if (ov) mostQuickAddClientClose();
+  _quickCustomerContext={project:SAHTEN.project.session.id,list:SAHTEN_CUSTOMERS};
   ov = document.createElement('div');
   ov.id = 'quick-client-overlay';
-  ov.className = 'modal-overlay open';
-  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
-  ov.innerHTML = '<div class="modal" style="max-width:420px"><div class="modal-header"><div class="modal-title">Nuevo cliente</div><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div><div class="modal-body"><div style="display:flex;flex-direction:column;gap:12px"><div class="disc-form-field"><label>Nombre</label><input type="text" class="disc-form-input" id="qc-name" placeholder="Nombre del cliente" autofocus></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="disc-form-field"><label>Teléfono</label><input type="tel" class="disc-form-input" id="qc-phone" placeholder="+54 9..."></div><div class="disc-form-field"><label>Email (opcional)</label><input type="email" class="disc-form-input" id="qc-email" placeholder="email@..."></div></div><div class="disc-form-field"><label>Dirección (opcional)</label><input type="text" class="disc-form-input" id="qc-addr" placeholder="Dirección"></div><button class="most-checkout" style="margin-top:4px" onclick="mostQuickAddClientSave()">Crear y asignar al pedido</button></div></div></div>';
+  ov.className = 'modal-overlay open';ov.tabIndex=-1;ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-labelledby','quick-customer-title');
+  ov.addEventListener('click', e => { if (e.target === ov) mostQuickAddClientClose(); });
+  ov.innerHTML = '<div class="modal" style="max-width:420px"><div class="modal-header"><div class="modal-title" id="quick-customer-title">Nuevo cliente</div><button class="modal-close" onclick="mostQuickAddClientClose()">×</button></div><div class="modal-body"><div style="display:flex;flex-direction:column;gap:12px"><div class="disc-form-field"><label for="qc-name">Nombre</label><input type="text" class="disc-form-input" id="qc-name" placeholder="Nombre del cliente" autofocus></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="disc-form-field"><label for="qc-phone">Teléfono</label><input type="tel" class="disc-form-input" id="qc-phone" placeholder="+54 9..."></div><div class="disc-form-field"><label for="qc-email">Email (opcional)</label><input type="email" class="disc-form-input" id="qc-email" placeholder="email@..."></div></div><div class="disc-form-field"><label for="qc-addr">Dirección (opcional)</label><input type="text" class="disc-form-input" id="qc-addr" placeholder="Dirección"></div><button class="most-checkout" style="margin-top:4px" onclick="mostQuickAddClientSave()">Crear y asignar al pedido</button></div></div></div>';
   document.body.appendChild(ov);
-  setTimeout(() => document.getElementById('qc-name')?.focus(), 100);
+  _quickCustomerCleanup=SAHTEN.bindModalFocus({panel:ov,close:mostQuickAddClientClose});
+  document.getElementById('qc-name').value=seed.name||'';document.getElementById('qc-phone').value=seed.phone||'';
+  setTimeout(() => document.getElementById(seed.phone?'qc-phone':'qc-name')?.focus(), 100);
 }
 
 function mostQuickAddClientSave() {
+  if(!_quickCustomerContext||_quickCustomerContext.project!==SAHTEN.project.session.id||_quickCustomerContext.list!==SAHTEN_CUSTOMERS){mostQuickAddClientClose();alert('El proyecto cambió. Volvé a crear el cliente en el proyecto correcto.');return;}
   const name = (document.getElementById('qc-name')?.value || '').trim();
   const phone = (document.getElementById('qc-phone')?.value || '').trim();
   const email = (document.getElementById('qc-email')?.value || '').trim();
@@ -938,7 +957,7 @@ function mostQuickAddClientSave() {
   SAHTEN_CUSTOMERS.push({ id, name: name || 'Sin nombre', phone, email, address: (document.getElementById('qc-addr')?.value||'').trim() });
   _saveCustomers();
   mostradorActiveCustomerId = id;
-  document.getElementById('quick-client-overlay')?.remove();
+  mostQuickAddClientClose();
   _renderCartExtras();
   _posToast('Cliente "' + (name || phone) + '" creado y asignado');
 }

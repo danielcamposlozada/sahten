@@ -19,6 +19,7 @@ export function createController(host) {
   let client = null, feed = null, mode = 'desconectado', error = null, lastSync = null;
   const listeners = new Set();
   const imageStores = new WeakMap();
+  const statusWrites = new WeakMap();
   const imagesFor = c => { if (!imageStores.has(c)) imageStores.set(c, createImageStore(c)); return imageStores.get(c); };
   const context = () => ({ client, storeId: host.conn.storeId, projectId: host.projectId() });
   const check = ctx => { if (ctx.client !== client || ctx.storeId !== host.conn.storeId || ctx.projectId !== host.projectId()) throw new SupabaseError('Cambió el proyecto o la sesión. Volvé a sincronizar.', { code: 'project_changed' }); };
@@ -33,7 +34,7 @@ export function createController(host) {
     if (existing) {
       const fields = paymentFields(row);
       // Solo adoptar estados remotos nuevos; no revertir una acción local aún en tránsito.
-      if (row.status && existing.remoteStatus !== row.status && STATUS_FROM_REMOTE[row.status]) {
+      if (!existing.remoteStatusPending && row.status && existing.remoteStatus !== row.status && STATUS_FROM_REMOTE[row.status]) {
         fields.status = STATUS_FROM_REMOTE[row.status];
         fields.remoteStatus = row.status;
         if (['retirado', 'entregado', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
@@ -46,14 +47,19 @@ export function createController(host) {
     const o = toLocalOrder(row, host.orders.list());
     if (!o) return;
     host.orders.add(o, { initial });
-    host.notify({ title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'), body: o.customerName + ' · $' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' · delivery' : ' · retiro') });
+    host.notify({ sound: !initial, title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'), body: o.customerName + ' · $' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' · delivery' : ' · retiro') });
     host.refresh();
   }
 
   async function startFeed() {
     stopFeed();
     if (!client || !host.conn.storeId) return;
-    try { (await client.orders.list(host.conn.storeId)).reverse().forEach(row => importRow(row, { initial: true })); } catch (e) { set('conectado', e.message); }
+    const ctx = context();
+    try {
+      for (const o of host.orders.list().filter(o => o.remoteId && o.remoteStatusPending)) { await api.pushStatus(o); check(ctx); }
+      const rows = await ctx.client.orders.list(ctx.storeId); check(ctx);
+      rows.reverse().forEach(row => importRow(row, { initial: true }));
+    } catch (e) { if (e.code === 'project_changed') return; set('conectado', e.message); }
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
   }
   let lastFeed = '';
@@ -159,9 +165,23 @@ export function createController(host) {
 
     /** Cuando cambia el estado de un pedido importado, se avisa a la web/otros dispositivos. */
     async pushStatus(order) {
-      if (!client || !order || !order.remoteId) return false;
+      if (!order || !order.remoteId) return false;
       const st = STATUS_TO_REMOTE[order.status]; if (!st) return false;
-      try { await client.orders.setStatus(order.remoteId, st); order.remoteStatus = st; host.orders.save?.(); return true; } catch (e) { return false; }
+      const ctx = context(); order.remoteStatusPending = st; host.orders.save?.();
+      if (!ctx.client) { host.refresh(); return false; }
+      if (!statusWrites.has(ctx.client)) statusWrites.set(ctx.client, new Map());
+      const queue = statusWrites.get(ctx.client), before = queue.get(order.remoteId) || Promise.resolve();
+      const task = before.then(async () => {
+        try {
+          check(ctx); const target = STATUS_TO_REMOTE[order.status];
+          await ctx.client.orders.setStatus(order.remoteId, target); check(ctx);
+          order.remoteStatus = target;
+          if (STATUS_TO_REMOTE[order.status] === target) delete order.remoteStatusPending;
+          host.orders.save?.(); host.refresh(); return true;
+        } catch (e) { if (ctx.client === client && ctx.projectId === host.projectId()) host.refresh(); return false; }
+      });
+      queue.set(order.remoteId, task);
+      try { return await task; } finally { if (queue.get(order.remoteId) === task) queue.delete(order.remoteId); }
     },
   };
   return api;

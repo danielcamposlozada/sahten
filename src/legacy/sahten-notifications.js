@@ -31,6 +31,7 @@ function pushNotification(opts) {
     source: opts.source || 'sistema',
     timestamp: new Date().toISOString(),
     read: false,
+    ...(opts.sound === true && opts.source === 'menu-online' ? { sound: true } : {}),
     ...(opts.scope === 'app' ? { scope: 'app' } : {}),
     ...(opts.key ? { key: opts.key } : {}),
     ...(opts.action ? { action: opts.action } : {})   // { label, call }: botón dentro de la notificación
@@ -100,7 +101,7 @@ function _showNotifToast(notif) {
   };
 
   document.body.appendChild(toast);
-  _playNotifSound();
+  if (notif.sound === true && notif.source === 'menu-online' && ['order', 'delivery'].includes(notif.type)) _playNotifSound();
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { toast.style.top = '16px'; });
   });
@@ -286,6 +287,7 @@ function _notifTimeAgo(ts) {
 
 // ─── Hook into order events ─────────────────────────
 function _notifyNewOrder(order) {
+  if (window.SAHTEN?.orderWorkflow?.isOnlineOrder(order)) return; // El controlador online ya notificó este pedido.
   const source = order.source === 'delivery' ? 'delivery' : 'mostrador';
   const type = source === 'delivery' ? 'delivery' : 'order';
   pushNotification({
