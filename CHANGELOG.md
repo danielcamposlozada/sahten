@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.26
+
 - **Confirmación al cliente desde Pedidos**: botón para preparar WhatsApp en retiro y delivery, tanto web como Mostrador. Vista previa, teléfono editable para esa orden y tiempo estimado con opciones rápidas. Abre el chat con el texto listo; el envío se confirma en WhatsApp y no acredita un pago.
 - **Tiempo estimado en Mostrador**: campo opcional al crear el pedido; editable después desde su tarjeta. Se conservan la estimación, su hora y los ajustes dentro del proyecto.
 - **Aviso acústico exclusivo de pedidos web nuevos**: retiro y delivery; pedidos de Mostrador, avisos del sistema y carga de pedidos existentes quedan sin sonido. Se conserva la darbuka y las palmas.
