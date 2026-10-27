@@ -459,3 +459,10 @@ Se conserva la marca y el contenido configurados por negocio, sin datos comercia
 
 
 Publicación coordinada de 0.4.29 en curso: el «hazlo» continúa la implementación y publicación del concepto aprobado. El paquete se generó con los 35 productos actuales de la nube, precios verificados y sitio/logos/conexión/política conservados. No requiere ni se ejecuta una migración o cambio de servicios. Revisión en Chrome local: 1366 × 768, 1024 × 600 y celulares de 390/320 px, sin desborde del documento; carrito, datos conservados, efectivo/vuelto y Mercado Pago mediante respuestas ficticias locales, sin enviar. Al editar una dirección se quitan de totales y botones de pago los cargos de envío anteriores mientras se valida la nueva. Resultado final de suite/instaladores/hosting se registra al finalizar.
+
+
+### 27/10/2026 — Carta visual 0.4.29 publicada en la web
+
+Cloudflare Production `59b798a9-0aeb-42b2-b946-6795836cbf6e`, éxito a las 05:05:33 UTC (02:05 Argentina). Diecisiete archivos coincidentes por SHA-256 con el paquete revisado; cuatro fotos públicas 200; 35 productos y precios actuales conservados. Chrome productivo confirma la búsqueda sin tildes, pedido lateral editable, descuento configurado y segundo paso con modalidades, aviso fuera de horario, campos opcionales y Mercado Pago. Se agregó un producto solo al carrito local para revisar la pantalla; luego se quitó y quedó vacío. Sin datos personales completados, pedidos enviados, pagos ni errores de consola.
+
+PR #34 integrado por merge normal `238e3e1b9f0223c6d7225cf86a8230507eb1b1d3`, CI correcto; etiqueta `v0.4.29`. Las 657 pruebas en 70 archivos, compilación, versiones y scripts clásicos pasaron. Instaladores en el proceso `40453320938`; publicación final pendiente de comprobación. No hubo cambios en Supabase ni en credenciales, estados reales, precios, zonas u horarios. Esto reemplaza el estado de «propuesta» de Carta visual: ya es la plantilla publicada; la app instalada debe recibir 0.4.29 para conservarla al volver a exportar.
