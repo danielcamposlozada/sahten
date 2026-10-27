@@ -136,8 +136,8 @@ describe('carpeta publicada', () => {
 });
 
 // ── La web publicada, en jsdom ───────────────────────────
-async function web({ menu, fetchMap = {}, fallbackOnly = false, search = '' }) {
-  const html = buildIndexHtml(menu);
+async function web({ menu, fetchMap = {}, fallbackOnly = false, search = '', storefront = false }) {
+  const html = buildIndexHtml(menu, { storefront });
   const calls = [], opened = [];
   const dom = new JSDOM(html, {
     url: 'https://mi-local.pages.dev/' + search, runScripts: 'dangerously', pretendToBeVisual: true,
@@ -163,6 +163,45 @@ async function web({ menu, fetchMap = {}, fallbackOnly = false, search = '' }) {
 describe('web publicada', () => {
   const st = demoState();
   const baseMenu = (extra = {}) => ({ ...buildMenuJson(st, { menuConfig: { whatsappNumber: '+54 9 11 5555-0123', title: 'Sahten' }, tienda: TIENDA, store: { name: 'Sahten' } }), ...extra });
+
+  it('carta visual: busca por varias palabras, descripción y acentos, combina categoría y conserva el pedido',async()=>{
+    const m=baseMenu();m.products=[{id:'p',name:'Tabulé especial',description:'Perejil y trigo',category:'Ensaladas',price:9000},{id:'q',name:'Plato',description:'Perejil fresco',category:'Entradas',price:5000}];m.config.categories=['Ensaladas','Entradas'];
+    const a=await web({menu:m});try{
+      a.click('#grid [data-inc="p"]');a.type('#catalog-search','tabule trigo');
+      expect(a.d.querySelectorAll('#grid .card')).toHaveLength(1);expect(a.d.querySelector('#grid').textContent).toContain('Tabulé especial');
+      expect(a.d.querySelector('#bar-n').textContent).toBe('1 producto');expect(a.d.querySelector('#order-summary').textContent).toContain('Tabulé especial');
+      a.type('#catalog-search','perejil');expect(a.d.querySelectorAll('#grid .card')).toHaveLength(2);
+      a.click('[data-cat="Entradas"]');expect(a.d.querySelectorAll('#grid .card')).toHaveLength(1);expect(a.d.querySelector('[data-cat="Entradas"]').getAttribute('aria-pressed')).toBe('true');
+      a.type('#catalog-search','zzzz');expect(a.d.querySelector('#grid').textContent).toContain('No encontramos');expect(a.d.querySelector('#catalog-results').textContent).toContain('0 productos');
+      a.type('#catalog-search','');a.click('[data-cat="all"]');expect(a.d.querySelectorAll('#grid .card')).toHaveLength(2);expect(a.d.querySelector('#bar-n').textContent).toBe('1 producto');
+    }finally{a.w.close();}
+  });
+  it('pedido lateral: editar cantidades conserva foco, abre entrega y no envía hasta confirmar',async()=>{
+    const a=await web({menu:baseMenu()});try{
+      expect(a.d.querySelector('#side-next').disabled).toBe(true);a.click('#grid [data-inc]');
+      let plus=a.d.querySelector('#order-summary [data-inc]');const id=plus.id;plus.focus();plus.click();
+      expect(a.d.activeElement.id).toBe(id);expect(a.d.querySelector('#order-summary output').textContent).toBe('2');
+      a.click('#side-next');expect(a.d.querySelector('#sheet').dataset.step).toBe('details');expect(a.d.querySelector('[aria-current="step"]').textContent).toContain('Entrega y pago');
+      expect(a.calls.some(c=>c.opts.method==='POST')).toBe(false);
+      expect(new Set([...a.d.querySelectorAll('[id]')].map(el=>el.id)).size).toBe(a.d.querySelectorAll('[id]').length);
+      a.click('[data-checkout-step="cart"]');a.click('.cart-items [data-remove]');expect(a.d.querySelector('#side-next').disabled).toBe(true);expect(a.d.querySelector('#sheet').textContent).toContain('Tu pedido está vacío');
+    }finally{a.w.close();}
+  });
+  it('la promoción de la carta sigue la configuración y no inventa beneficios para otros negocios',async()=>{
+    const m=baseMenu();const a=await web({menu:m});expect(a.d.querySelector('#catalog-benefit').textContent).toBe('');a.w.close();
+    m.payments.benefit={enabled:true,percent:7,channels:{online:true,mostrador:true}};const b=await web({menu:m});expect(b.d.querySelector('#catalog-benefit').textContent).toContain('7 % de descuento');expect(b.d.querySelector('#catalog-benefit').textContent).toContain('envío se calcula aparte');b.w.close();
+    m.payments.benefit.channels.online=false;const c=await web({menu:m});expect(c.d.querySelector('#catalog-benefit').textContent).toBe('');c.w.close();
+  });
+  it('los campos opcionales plegados conservan datos al cambiar pago y modalidad',async()=>{
+    const a=await web({menu:baseMenu()});try{
+      a.click('#grid [data-inc]');a.click('#side-next');
+      expect(a.d.querySelector('[data-disclosure="address"]').open).toBe(false);a.d.querySelector('[data-disclosure="address"]').open=true;
+      a.type('#f-floor','3');a.type('#f-apartment','B');a.type('#f-reference','Timbre');a.type('#f-notes','Sin ajo');
+      a.click('[data-payment-choice="transferencia"]');expect(a.d.querySelector('[data-disclosure="address"]').open).toBe(true);expect(a.d.querySelector('#f-apartment').value).toBe('B');
+      a.click('[data-type="pickup"]');a.click('[data-type="delivery"]');expect(a.d.querySelector('#f-floor').value).toBe('3');expect(a.d.querySelector('#f-reference').value).toBe('Timbre');expect(a.d.querySelector('#f-notes').value).toBe('Sin ajo');
+      expect(a.d.querySelector('.checkout-footer-products').textContent).toContain('×1');expect(a.d.querySelector('.shipping-pending').textContent).toContain('validar tu dirección');expect(a.d.querySelector('#send').disabled).toBe(true);
+    }finally{a.w.close();}
+  });
 
   it('pedido accesible: etiquetas asociadas, foco, Escape y datos conservados al reabrir', async () => {
     const a = await web({ menu: baseMenu() });
@@ -260,6 +299,15 @@ describe('web publicada', () => {
     a.type('#f-addr', 'Lejos 1'); await a.search(); await a.wait(650); a.click('[data-sug="1"]');
     expect(a.d.querySelector('#sheet').textContent).toMatch(/fuera de la zona/);
     expect(a.d.querySelector('#send').disabled).toBe(true);
+  });
+  it('editar la dirección retira el envío anterior también de los botones de pago y rotula el importe pendiente',async()=>{
+    const m=baseMenu();m.products=[{id:'p',name:'Plato de prueba',price:20000,category:'Platos'}];m.payments.benefit={enabled:true,percent:10,channels:{online:true,mostrador:true}};
+    const a=await web({menu:m,fetchMap:{nominatim:{body:[{display_name:'Siempreviva 750, Buenos Aires',lat:'-34.6040',lon:'-58.3820'}]}}});try{
+      a.click('#grid [data-inc]');a.click('#side-next');a.type('#f-addr','Siempreviva 750');await a.search();await a.wait(650);a.click('[data-sug="0"]');
+      expect(a.d.querySelector('.payment-choice-amount').textContent).toBe('$19.500');expect(a.d.querySelector('[data-shipping-total]').textContent).toContain('$1.500');
+      a.type('#f-addr','Otra calle');expect(a.d.querySelector('.payment-choice-amount').textContent).toBe('$18.000');expect(a.d.querySelector('[data-shipping-total]')).toBeNull();
+      expect(a.d.querySelector('.checkout-totals').textContent).toContain('Total de productos');expect(a.d.querySelector('.shipping-pending').textContent).toContain('validar tu dirección');expect(a.d.querySelector('#send').disabled).toBe(true);
+    }finally{a.w.close();}
   });
   it('con Supabase: guarda el pedido en la tabla orders con el store_id', async () => {
     const m = baseMenu({ supabase: { url: 'https://abc.supabase.co', anonKey: 'anon', storeId: 'store-1', slug: 'mi-local' } });

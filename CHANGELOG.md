@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+## 0.4.29
+
+- **Carta visual y búsqueda**: productos en dos columnas en celular y tres en escritorio, buscador por nombre, descripción y categoría sin exigir tildes, filtros con estado visible y fotografías con espacio reservado. El aviso del beneficio usa la configuración real del negocio.
+- **Pedido editable al costado** en escritorio: sumar, restar y quitar sin salir de la carta, subtotal y acceso a entrega/pago. En tablet/celular se conserva el acceso fijo y la revisión del pedido antes de completar datos.
+- **Checkout adaptable en dos pasos**: entrega, datos y pago agrupados; en escritorio, resumen y confirmación en una columna propia. Piso/departamento/referencia y notas plegables, importes con envío pendiente claramente identificado, vuelto y selección de pago conservados al editar. No cambia tarifas, descuentos, cobros ni validación del servidor.
+
 ## 0.4.28
 
 - **Delivery con apertura propia** en Ajustes › Negocio › Delivery. Pausar/reactivar envía solamente el estado a la tienda conectada, con cola por negocio, reintento y confirmación visible. Conserva horarios, zonas, tarifas, retiro, pedidos y pagos iniciados. La web abierta consulta cambios cada 10 segundos y al recuperar foco; el servidor rechaza nuevos envíos incluso desde páginas antiguas.
