@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.27
+
+- **Recetas, Productos y Tienda online**: nombres y funciones separados. Habilitar una receta para venta requiere confirmación y la deja pausada y fuera de la tienda; las internas no aparecen en las pantallas de venta.
+- **Pausa compartida de ventas**: por hoy, hasta una fecha/hora o sin vencimiento; gris y «No disponible» en Mostrador y web, con protección del carrito y del servidor. Conserva precios, costos, stock e historial.
+- **Interruptores de la tienda automáticos**: mostrar/ocultar envía solo el estado y recupera el último precio publicado. Cola persistente, reintento, separación por negocio y protección frente a respuestas antiguas. Los precios y el catálogo completo siguen con publicación explícita.
+- **Nube con acciones claras**: «Actualizar proyecto entre equipos», «Publicar catálogo en la tienda» y «Exportar archivos de la web», con ayuda sobre su alcance y reemplazo de datos. La publicación automática por fotos ya no se dispara al abrir el proyecto o iniciar sesión.
+
 ## 0.4.26
 
 - **Confirmación al cliente desde Pedidos**: botón para preparar WhatsApp en retiro y delivery, tanto web como Mostrador. Vista previa, teléfono editable para esa orden y tiempo estimado con opciones rápidas. Abre el chat con el texto listo; el envío se confirma en WhatsApp y no acredita un pago.

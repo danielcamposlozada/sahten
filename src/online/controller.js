@@ -74,6 +74,19 @@ export function createController(host) {
   }
   const stopFeed = () => { if (feed) { feed.close(); feed = null; } lastFeed = ''; };
 
+  async function stateRpc(name, args) {
+    if (!client || !host.conn.storeId) throw new SupabaseError('Conectá la tienda e iniciá sesión primero.', {code:'no_session'});
+    if (publishing) throw new SupabaseError('Esperando la publicación del catálogo.', {code:'menu_busy'});
+    publishing=true;const ctx=context();
+    try {const result=await ctx.client.rpc(name,{p_store_id:ctx.storeId,...args});check(ctx);return result;}
+    catch(e){const msg=String(e.message||'');
+      if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
+      else if(/product_not_published|menu_not_published/.test(msg))e.message='Este producto todavía no tiene una versión publicada. Publicá el catálogo una vez para habilitar este interruptor.';
+      else if(/category_not_published/.test(msg))e.message='La categoría está oculta en la tienda. Publicá su categoría desde «Publicar catálogo en la tienda».';
+      throw e;
+    }finally{publishing=false;}
+  }
+
   const api = {
     info: () => ({ mode, error, signedIn: !!(client && client.auth.user), email: client && client.auth.user && client.auth.user.email, configured: !!(host.conn.url && host.conn.anonKey), storeId: host.conn.storeId || '', slug: host.conn.slug || '', feed: lastFeed, lastSync }),
     onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
@@ -129,6 +142,14 @@ export function createController(host) {
       if (!client || !host.conn.storeId) throw new SupabaseError('Conectá el proyecto primero.');
       const m = host.menuJson(); let remote = null; try { remote = await client.store.menuCount(host.conn.storeId); } catch (e) { /* no se pudo leer */ }
       return { local: m.products.length, remote, name: (m.store && m.store.name) || '', slug: host.conn.slug || '' };
+    },
+
+    /** Estado aislado: sin precio, foto, texto ni proyecto en la petición. */
+    async setAvailability(id, visible) { return stateRpc('set_menu_product_visibility', { p_product_id:id, p_visible:visible }); },
+    async setSalesAvailability(id, available, resumeAt = null) { return stateRpc('set_product_sales_availability', { p_product_id:id, p_paused:!available, p_resume_at:resumeAt }); },
+    async readAvailability() {
+      if (!client || !host.conn.storeId) return { sales:[], visibility:[] };
+      const ctx=context(), result=await ctx.client.rpc('get_product_sales_availability', {p_store_id:ctx.storeId});check(ctx);return result;
     },
 
     async prepareFile(file, onProgress) {

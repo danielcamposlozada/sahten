@@ -84,7 +84,8 @@ function renderMenuOnline() {
             <button class="btn" data-mo="all-on">Mostrar todos</button>
             <button class="btn" data-mo="all-off">Ocultar todos</button>
           </div>
-          <div id="mo-list"></div>
+          <p class="mo-availability-help">Estos interruptores muestran u ocultan productos solo en la web. Para pausarlos en Mostrador y web, usá «Pausar ventas» en Productos. Los precios se publican aparte.</p>
+          <div id="mo-availability" role="status" aria-live="polite"></div><div id="mo-list"></div>
           <details class="mo-settings" id="mo-settings">
             <summary>Ajustes del menú</summary>
             <div class="mo-fields">
@@ -111,7 +112,7 @@ function renderMenuOnline() {
 
 // Estado + lista + vista previa (la barra de búsqueda y los ajustes no se redibujan: se conserva el foco)
 function _moRefresh() {
-  _moRenderStatus(); _moRenderChips(); _moRenderList(); _moRenderPreview();
+  _moAvailabilityStatus(); _moRenderStatus(); _moRenderChips(); _moRenderList(); _moRenderPreview();
 }
 
 function _moRenderStatus() {
@@ -121,7 +122,7 @@ function _moRenderStatus() {
   let s = 'ok', title, sub;
   if (problems.length) { s = 'problem'; title = 'Falta completar para publicar'; sub = 'Resolvé los avisos de abajo.'; }
   else if (!last) { s = 'dirty'; title = 'Todavía no publicaste este menú'; sub = 'Mirá la vista previa y publicalo cuando estés listo.'; }
-  else if (last.hash !== _moHash(menu)) { s = 'dirty'; title = 'Hay cambios sin publicar'; sub = 'Última publicación: ' + _moWhen(last.at) + '. Volvé a publicar para que los clientes los vean.'; }
+  else if (last.hash !== _moHash(menu)) { s = 'dirty'; title = 'Hay cambios sin publicar'; sub = 'Última carpeta generada: ' + _moWhen(last.at) + '. Publicá el catálogo para precios y datos; exportá los archivos para cambios de diseño.'; }
   else { title = 'Menú publicado y al día'; sub = 'Última publicación: ' + _moWhen(last.at) + '.'; }
   const n = menu ? menu.products.length : 0;
   sub += ` · ${n} producto${n !== 1 ? 's' : ''} en el menú` + (sinFoto ? ` · ${sinFoto} sin foto` : '');
@@ -131,7 +132,7 @@ function _moRenderStatus() {
     <div class="mo-st-actions">
       <button class="btn" data-mo="open-site">${_moSite().enabled ? 'Editar el sitio web' : 'Armar el sitio web'}</button>
       <button class="btn" data-mo="preview">Ver vista previa</button>
-      <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Publicar menú</button>
+      <button class="btn btn-accent" data-mo="publish" ${n ? '' : 'disabled'}>Exportar archivos de la web</button>
     </div>
     ${problems.length ? `<div class="mo-problems">${problems.map(t => `<div class="mo-problem">${_esc(t)}${/WhatsApp/.test(t) ? '<button class="btn" data-mo="open-settings">Cargar número</button>' : ''}</div>`).join('')}</div>` : ''}
   </div>`;
@@ -173,20 +174,20 @@ function _moRenderList() {
       : `<div class="mo-cat-head" style="cursor:default"><span class="mo-cat-name">Sin categoría</span><span class="mo-cat-count">${g.items.length} producto${g.items.length !== 1 ? 's' : ''} · asignales una categoría desde Menú</span></div>`;
     const rows = open ? items.map(p => {
       const vis = _moIsVisible(p), price = _moPrice(p), img = _moImg(p), warns = _moWarnings(p);
-      return `<div class="mo-prod ${vis ? '' : 'off'}">
-        <label class="mo-sw"><input type="checkbox" data-mo-prod="${_esc(p.id)}" ${MENU_CONFIG.hiddenProducts.includes(p.id) ? '' : 'checked'} aria-label="${_esc(p.name)} visible"><span></span></label>
+      return `<div class="mo-prod ${vis ? '' : 'off'} ${SAHTEN.salesAvailability.isPaused(p)?'sales-paused':''}">
+        <label class="mo-sw"><input type="checkbox" data-mo-prod="${_esc(p.id)}" ${MENU_CONFIG.hiddenProducts.includes(p.id) ? '' : 'checked'} title="Muestra u oculta solo en la web. No pausa Mostrador ni publica precios pendientes." aria-label="${_esc(p.name)} visible"><span></span></label>
         ${showImgs ? SAHTEN.photos.thumb(p.id, p.name) : '<span></span>'}
         <div style="min-width:0"><div class="mo-pname">${_esc(p.name)}${p.star ? ' ⭐' : ''}${hiddenCat && !MENU_CONFIG.hiddenProducts.includes(p.id) ? ' <span style="font-size:10.5px;color:var(--accent)">(categoría oculta)</span>' : ''}</div>
           ${warns.length ? `<div class="mo-warns">${warns.map(w => `<span class="mo-warn ${w.bad ? 'bad' : ''}">${_esc(w.t)}</span>`).join('')}</div>` : ''}</div>
-        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}${SAHTEN.pricing.badge(p,'mostrador')}<button class="mo-iconbtn" style="margin-left:8px" data-mo-desc="${_esc(p.id)}" aria-label="Descripción de ${_esc(p.name)}" title="Descripción corta">✎</button>
+        <div class="mo-price ${price > 0 ? '' : 'zero'}">$${_fmtN(price)}${SAHTEN.pricing.badge(p,'mostrador')}${SAHTEN.salesAvailability.isPaused(p)?'<span class="sales-state paused">No disponible · ventas pausadas</span>':''}<button class="mo-iconbtn" style="margin-left:8px" data-mo-desc="${_esc(p.id)}" aria-label="Descripción de ${_esc(p.name)}" title="Descripción corta">✎</button>
           <button class="mo-mini" data-mo-recipe="${_esc(p.id)}" aria-label="Editar la receta de ${_esc(p.name)}" title="Editar receta (nombre, categoría, ingredientes y foto)">Receta</button>
-          <button class="mo-mini" data-mo-menu="${_esc(p.id)}" aria-label="Ver ${_esc(p.name)} en Menú" title="Ver en Menú (precio, tier y etiquetas)">Precio</button></div>
+          <button class="mo-mini" data-mo-menu="${_esc(p.id)}" aria-label="Ver ${_esc(p.name)} en Productos" title="Ver en Productos (precio, tier y etiquetas)">Precio</button></div>
         ${_moUi.desc[p.id] || p.description ? `<div style="grid-column:2/-1">${_moUi.desc[p.id] ? `<input class="custom-input" style="width:100%" maxlength="220" placeholder="Descripción corta (se muestra en el menú)" data-mo-pdesc="${_esc(p.id)}" value="${_esc(p.description || '')}">` : `<div class="desc" style="font-size:12px;color:var(--muted)">${_esc(p.description)}</div>`}</div>` : ''}
       </div>`;
     }).join('') : '';
     return `<section class="mo-cat ${hiddenCat ? 'off' : ''}" data-cat-block="${_esc(g.cat)}">${head}${rows}</section>`;
   }).join('');
-  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'Todavía no hay productos. Cargalos desde Costo Receta o Menú y acá aparecen solos.<br><button class="btn btn-accent empty-action" data-panel="costreceta">Ir a Costo Receta</button>'}</div>`;
+  el.innerHTML = html || `<div class="mo-empty">${prods.length ? 'Ningún producto coincide con tu búsqueda.' : 'No hay productos de venta. Las recetas internas y los borradores no aparecen aquí. Habilitá una receta para venta y después elegí si publicarla.<br><button class="btn btn-accent empty-action" data-panel="costreceta">Ir a Recetas</button>'}</div>`;
 }
 
 function _moRenderPreview() {
@@ -212,8 +213,9 @@ function _moPersist() { _saveMenuConfig(); _moRefresh(); }
 function _moToggleProduct(id, show) {
   const h = MENU_CONFIG.hiddenProducts.filter(x => x !== id);
   MENU_CONFIG.hiddenProducts = show ? h : [...h, id]; _moPersist();
+  if (!show || !_moIsHiddenCat(_moProducts().find(p => p.id === id)?.category)) window.dispatchEvent(new CustomEvent('sahten:availability', { detail: { id, available: show } }));
 }
-function _moToggleAll(show) { MENU_CONFIG.hiddenProducts = show ? [] : _moProducts().map(p => p.id); if (show) MENU_CONFIG.hiddenCategories = []; _moPersist(); }
+function _moToggleAll(show) { MENU_CONFIG.hiddenProducts = show ? [] : _moProducts().map(p => p.id); if (show) MENU_CONFIG.hiddenCategories = []; _moPersist(); _moProducts().forEach(p => window.dispatchEvent(new CustomEvent('sahten:availability', { detail: { id: p.id, available: show } }))); }
 function _moCatToggle(cat, show) {
   const h = MENU_CONFIG.hiddenCategories.filter(x => x !== cat);
   MENU_CONFIG.hiddenCategories = show ? h : [...h, cat]; _moPersist();
@@ -593,3 +595,12 @@ Object.assign(window, {
 function _moAfterChange() { if (!document.getElementById('mo-list')) return; _moRenderList(); _moRenderStatus(); _moRenderPreview(); }
 window.addEventListener('sahten:photo', _moAfterChange);
 window._moAfterRecipe = _moAfterChange;   // al cerrar el modal de receta
+
+function _moAvailabilityStatus() {
+  const el = document.getElementById('mo-availability'); if (!el) return;
+  const a = SAHTEN.online?.availability?.info();
+  if (!SAHTEN_SUPABASE?.storeId) { el.textContent = 'Sin tienda conectada: la disponibilidad se guarda en este proyecto. Publicá la carpeta para actualizar una web sin conexión.'; return; }
+  const labels = {'sin cambios':'Visibilidad automática solo en la web',pendiente:'Disponibilidad pendiente',publicando:'Actualizando disponibilidad…',publicado:'Visibilidad actualizada en la tienda','sin conexión':'Sin conexión: se reintentará automáticamente',error:'Hay disponibilidad pendiente de publicar'};
+  el.innerHTML = `<span>${_esc(labels[a?.state] || 'Disponibilidad automática')}${a?.pending ? ' · ' + a.pending + ' pendiente(s)' : ''}${a?.error ? ' · ' + _esc(a.error) : ''}</span>${a?.pending ? '<button class="btn" type="button" onclick="SAHTEN.online.availability.flush().catch(()=>{})">Reintentar disponibilidad</button>' : ''}`;
+}
+window._moAvailabilityStatus = _moAvailabilityStatus;

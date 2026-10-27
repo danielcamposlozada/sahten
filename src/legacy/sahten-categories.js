@@ -71,7 +71,7 @@ function _updateCRBulkBar() {
     '<span class="cr-bulk-count">' + count + '</span>' +
     '<span>' + count + ' seleccionado' + (count > 1 ? 's' : '') + '</span>' +
     '<button class="cr-bulk-btn" onclick="crBulkStar()" title="Estrella">⭐</button>' +
-    '<button class="cr-bulk-btn" onclick="crBulkToggleMenu(true)" title="Mostrar en menú">📋 Menú</button>' +
+    '<button class="cr-bulk-btn" onclick="crBulkToggleMenu(true)" title="Habilitar como productos de venta, inicialmente pausados">Productos de venta</button>' +
     '<button class="cr-bulk-btn" onclick="crBulkToggleMenu(false)" title="Solo receta interna">🔒 Interna</button>' +
     '<button class="cr-bulk-btn" onclick="crBulkSetCategory()" title="Categoría">📂 Categoría</button>' +
     '<button class="cr-bulk-btn danger" onclick="crBulkDelete()" title="Eliminar">🗑</button>' +
@@ -93,9 +93,10 @@ function crBulkStar() {
   renderCostReceta();
 }
 
-function crBulkToggleMenu(showInMenu) {
+async function crBulkToggleMenu(showInMenu) {
   const prods = _getSelectedProducts();
-  prods.forEach(p => { p.recetaOnly = !showInMenu; });
+  if (!prods.length || !await sahtenConfirm(showInMenu ? 'Se habilitarán como productos de venta, inicialmente pausados y fuera de la tienda. Después elegí su disponibilidad y publicación.' : 'Volverán a recetas internas; ya no se ofrecerán para vender.', {title:showInMenu?'Habilitar productos de venta':'Volver a uso interno',okLabel:'Confirmar'})) return;
+  prods.forEach(p => SAHTEN.salesAvailability.setEligibility(p, showInMenu));
   if (typeof scheduleSave === 'function') scheduleSave();
   crClearSelection();
   renderCostReceta();

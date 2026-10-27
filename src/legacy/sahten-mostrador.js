@@ -279,16 +279,17 @@ function _renderMostradorGrid() {
     return;
   }
   grid.innerHTML = visible.map(p => {
+    const paused=SAHTEN.salesAvailability.isPaused(p);
     const price = _mostPrice(p);
     const initial = (p.name||'?').trim().charAt(0).toUpperCase();
     const catBadge = p.category ? '<span class="most-product-cat">'+_esc(p.category)+'</span>' : '';
-    return '<div class="most-product" data-id="'+p.id+'" onclick="mostradorAddToCart(\''+p.id+'\',this)">' +
+    return '<div class="most-product '+(paused?'sales-paused':'')+'" data-id="'+p.id+'" onclick="mostradorAddToCart(\''+p.id+'\',this)">' +
       '<div class="most-product-img" id="most-img-'+p.id+'"><span class="most-product-img-placeholder">'+initial+'</span>' +
       (p.star ? '<div class="most-product-star">⭐</div>' : '') +
       catBadge + '</div>' +
       '<div class="most-product-body"><div class="most-product-label"><div class="most-product-name">'+_esc(p.name)+'</div><div class="most-list-category">'+_esc(p.category||'')+'</div></div>' +
-      '<div class="most-product-price">$'+_fmt(price)+SAHTEN.pricing.badge(p,'mostrador')+'</div></div>' +
-      '<button class="most-product-add" aria-label="Agregar '+_esc(p.name)+' al pedido" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
+      (paused?'<div class="sales-state paused">'+_esc(SAHTEN.salesAvailability.label(p))+'</div>':'')+'<div class="most-product-price">$'+_fmt(price)+SAHTEN.pricing.badge(p,'mostrador')+'</div></div>' +
+      '<button '+(paused?'disabled ':'')+'class="most-product-add" aria-label="Agregar '+_esc(p.name)+' al pedido" onclick="event.stopPropagation();mostradorAddToCart(\''+p.id+'\',this.parentNode)">+</button></div>';
   }).join('');
   visible.forEach(async p => {
     const data = await getProductImageCached(p.id);
@@ -310,6 +311,7 @@ function mostradorSetCategory(cat) { mostradorCategory = cat; _renderCats(); _re
 // CART
 // ═══════════════════════════════════════════════════════════
 function mostradorAddToCart(pid, cardEl) {
+  const p=PRODUCTS.find(p=>p.id===pid);if(!p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p)){sahtenToast('Este producto no está disponible para vender.');return;}
   const ex = mostradorCart.find(it => it.productId === pid);
   if (ex) ex.qty++; else mostradorCart.push({ productId: pid, qty: 1 });
   _renderCartItems(); _renderCartTotals();
@@ -318,7 +320,7 @@ function mostradorAddToCart(pid, cardEl) {
   if (status) status.textContent = 'Producto agregado. '+_cartItemsWithPrice().reduce((s,it)=>s+it.qty,0)+' en el pedido.';
 }
 function mostradorRemoveItem(pid) { mostradorCart = mostradorCart.filter(it=>it.productId!==pid); _renderCartItems(); _renderCartTotals(); }
-function mostradorChangeQty(pid, delta) { const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
+function mostradorChangeQty(pid, delta) { const p=PRODUCTS.find(p=>p.id===pid);if(delta>0&&(!p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p)))return;const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
 function mostradorClearCart() { if(!mostradorCart.length) return; SAHTEN.customerPicker.reset();mostradorCashTendered='';mostradorEstimate='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
 function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(!c.classList.contains('expanded')); }
 function _mostCartIsOverlay() { return document.documentElement.dataset.orderLayout === 'overlay'; }
@@ -525,6 +527,7 @@ async function mostradorCheckout() {
   if(_deliveryChecking)return;
   const t = _calcCartTotals(); if (t.items.length === 0) return;
   if(!SAHTEN.customerPicker.valid())return;
+  if(mostradorCart.some(it=>{const p=PRODUCTS.find(p=>p.id===it.productId);return !p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p);})){alert('Hay productos internos o no disponibles en el pedido. Quitalos antes de confirmar.');return;}
   if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){alert('El efectivo indicado no alcanza el total.');return;}
   if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);

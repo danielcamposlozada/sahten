@@ -32,6 +32,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
+    ...(p.salesAvailability ? { salesAvailability: { paused: !!p.salesAvailability.paused, resumeAt: p.salesAvailability.resumeAt || null } } : {}),
     price: showPrices ? channelPriceWithDisc(s, p, 'mostrador') : 0,
     ...(quoteIds[p.id] ? { priceRevision: quoteIds[p.id] } : {}),
     image: showImages && images[p.id] ? 'img/' + imageFileName(p.id) : null,
@@ -55,6 +56,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       enabled: menuConfig.enabled !== false, title: menuConfig.title || 'Nuestro Menú', subtitle: menuConfig.subtitle || '',
       showPrices, showImages, deliveryNote: menuConfig.deliveryNote || '',
       categories: cats, categoryImages,
+      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
     },
     products: items,
     site,

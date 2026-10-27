@@ -9,6 +9,7 @@
 import { sahtenDialog } from '../ui/dialog.js';
 import { ROLE_LABEL } from './roles.js';
 import { encodeConnection, decodeConnection } from './supabase.js';
+import { PROJECT_ACTION, CATALOG_ACTION, PROJECT_HELP, CATALOG_HELP } from './cloud-help.js';
 import { publishMenuConfirmed } from './menuConfirm.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
@@ -58,13 +59,14 @@ export function createUserMenu({ online, project, w = window }) {
     if (st.kind !== 'in' || !open) return '';
     const { b, slug, name } = identity(); const sy = online.syncInfo(), role = online.role();
     const stateTxt = { 'al día': 'Al día', sincronizando: 'Sincronizando…', conflicto: 'Hay un conflicto', 'sin conexión': 'Sin conexión (pendiente)', error: 'Error al sincronizar', 'sin vincular': 'Todavía no está en la nube' }[sy.state] || sy.state;
-    const it = (act, label, icon) => `<button type="button" role="menuitem" class="um-item" data-um="${act}">${icon || ''}<span>${label}</span></button>`;
+    const it = (act, label, icon, help = '') => `<button title="${esc(help)}" aria-description="${esc(help)}" type="button" role="menuitem" class="um-item" data-um="${act}">${icon || ''}<span>${label}</span></button>`;
     return `<div class="um-menu" role="menu" aria-label="Cuenta y tienda">
       <div class="um-head"><span class="um-av big" style="background:${esc(b.color)};color:#fff" aria-hidden="true">${b.logo ? `<img src="${esc(b.logo)}" alt="">` : esc(initials(name))}</span>
         <div class="um-hd"><div class="um-hname">${esc(name)}</div><div class="um-hsub">${slug ? esc(slug) + ' · ' : ''}${esc(hostOf(conn().url))}</div><div class="um-hsub">${esc(st.c.email || '')}</div></div></div>
       <div class="um-meta">${role ? `<span class="um-pill">${esc(ROLE_LABEL[role] || role)}</span>` : ''}<span class="um-pill ${sy.state === 'al día' ? 'ok' : ''}">${esc(stateTxt)}</span></div>
       <div class="um-sep"></div>
-      ${it(sy.linked ? 'sync' : 'menu', sy.linked ? 'Sincronizar ahora' : 'Sincronizar menú')}
+      ${sy.linked ? it('sync',PROJECT_ACTION,'',PROJECT_HELP) : ''}
+      ${it('menu',CATALOG_ACTION,'',CATALOG_HELP)}
       ${it('remote', 'Abrir proyecto de la nube…')}
       ${it('code', 'Copiar código de conexión')}
       ${it('panel', 'Nube y usuarios')}

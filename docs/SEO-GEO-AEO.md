@@ -392,3 +392,20 @@ El dueño pidió «subelo» después de revisar el resumen y la captura del PR #
 - [Release 0.4.26](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.26) pública, publicada el 26/10/2026 a las 19:51:01 UTC. Proceso `40388314196` completo y correcto: pruebas, Windows, Mac universal y publicación. CI del merge también correcto. Se conservan las 626 pruebas aprobadas de esta implementación.
 - `releases/latest/download/latest.json` anuncia **0.4.26** con siete entradas de plataforma: Windows EXE/MSI y Mac Intel/Apple Silicon, URLs de la versión y firmas presentes. Las tres descargas únicas del actualizador devuelven 200. Incluye DMG universal y los instaladores Windows; no se afirma instalación nativa o impresión física desde este chat.
 - Este estado reemplaza «instaladores en construcción». La web continúa en el despliegue productivo `2235109a-a4a5-4675-ba60-68a561989230`, con 17 archivos y cuatro fotos verificados, 33 productos y precios coincidentes con el catálogo público actual. Evidencia, carpeta, ZIP y guía de operación en `entregables/publicacion-0.4.26/` del espacio de trabajo.
+
+
+### 26/10/2026 — Disponibilidad, recetas internas y nube: en preparación
+
+El dueño aprobó separar Recetas, Productos y Tienda online. Se prepara la pausa compartida (por hoy, hasta fecha/hora o manual), producto gris sin permitir compra en web/Mostrador y disponibilidad con peticiones solo de estado. Los interruptores de Tienda online muestran/ocultan solo en la web; las internas y borradores quedan fuera de las pantallas de venta. Los nuevos productos habilitados comienzan pausados y fuera de la tienda.
+
+Las acciones de nube se renombran a «Actualizar proyecto entre equipos» y «Publicar catálogo en la tienda», con ayuda sobre sus datos y conflictos. Generar la carpeta se llama «Exportar archivos de la web». Detalle, límites y orden de despliegue en [DISPONIBILIDAD.md](DISPONIBILIDAD.md). No modifica datos confirmados del negocio, precios, catálogo productivo, credenciales ni pedidos. La migración y las funciones se prueban localmente; no se aplicaron a producción. La versión pública sigue siendo 0.4.26.
+
+Verificación final local: **644 pruebas en 69 archivos aprobadas**, compilación, scripts clásicos, coherencia de versiones y diferencias correctos. La suite incluye PostgreSQL local con la migración, permisos por tienda/rol, preservación del precio publicado, reintentos, vencimiento sin app abierta y bloqueo de compra en servidor. Chrome real: aviso con tres duraciones y reactivación a las 00:00, producto gris y botón deshabilitado en Mostrador y tienda generada, siempre con datos ficticios. Capturas y revisión local en `entregables/revision-disponibilidad-2026-10-26/` del espacio de trabajo. No equivale a una prueba desplegada en Supabase ni a instaladores nuevos.
+
+### 26/10/2026 — Publicación 0.4.27 autorizada y servidor actualizado
+
+El dueño indicó «revisa y deploy» sobre el PR #31. Se prepara la publicación coordinada de 0.4.27 para Windows/Mac y de la carpeta web; los conceptos nuevos de rediseño de menú/checkout no forman parte de esta versión. Las 644 pruebas se repitieron correctamente con la versión alineada en 0.4.27.
+
+Aplicada la migración `20261026_menu_availability.sql` en una transacción desde el panel de Supabase en Chrome, con registro `20261026 / menu_availability`: el conector de migraciones devolvió dos errores de solicitud vencida y se comprobó que no había aplicado nada antes de usar el panel. Se verificaron tablas y funciones y permisos sin ejecución anónima. Desplegados **sahten-payments v9** y **sahten-delivery v6**, ambos activos y conservando su autenticación propia. El hash del catálogo público permaneció igual antes/después: 35 productos actuales del negocio (y los 8 del otro catálogo), sin editar precios, productos ni pedidos. No se enviaron mensajes ni se crearon pagos.
+
+La carpeta 0.4.27 se genera con los **35 productos actuales**, conserva sus precios, fotos, sitio, conexión y política de delivery. Web, merge e instaladores pendientes de verificación final; el último release público sigue siendo 0.4.26 hasta completar el proceso.

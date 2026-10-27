@@ -48,6 +48,7 @@ import { APP_VERSION } from './project/schema.js';
 import { projectUi } from './project/ui.js';
 import { onlinePublish } from './online/app.js';
 import * as siteModule from './online/site.js';
+import { installSalesAvailability } from './ui/sales-availability.js';
 import { createOnline } from './online/index.js';
 import * as orderWorkflow from './online/order-workflow.js';
 import { events } from './events.js';
@@ -102,6 +103,7 @@ window.SAHTEN.paymentChoices = { policy: paymentBenefitPolicy, quote: paymentDis
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
 window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.orderActions = installOrderActions(window);
+window.SAHTEN.salesAvailability = installSalesAvailability(window);
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;

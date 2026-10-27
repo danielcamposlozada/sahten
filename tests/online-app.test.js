@@ -42,7 +42,7 @@ describe('publicar menú desde la app', () => {
   it('Menú Online trae el botón «Publicar menú» y la vista previa', async () => {
     const a = await app(); await a.p.openDemo(); a.ev("showPanel('menuonline'); renderMenuOnline();"); await wait(30);
     const html = a.window.document.getElementById('panel-menuonline').innerHTML;
-    expect(html).toMatch(/Publicar menú/); expect(html).toMatch(/Vista previa/); expect(html).not.toMatch(/Sahten Menu v2/);
+    expect(html).toMatch(/Exportar archivos de la web/); expect(html).toMatch(/Vista previa/); expect(html).not.toMatch(/Sahten Menu v2/);
     a.window.close();
   }, 60000);
 });

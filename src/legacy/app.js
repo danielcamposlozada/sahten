@@ -175,9 +175,9 @@ function renderCostReceta() {
           <button class="btn" style="font-size:11px;padding:4px 12px" data-photo-pick="${p.id}">📷 Foto</button>
           <button class="btn" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openProductDetail(${idx})">\ud83d\udcca Ver detalle precios</button>
           <button class="btn" style="font-size:11px;padding:4px 12px;${p.recetaOnly?'border-color:var(--muted);color:var(--muted)':'border-color:var(--green);color:var(--green);background:var(--green-pale)'}" 
-            onclick="event.stopPropagation();PRODUCTS[${idx}].recetaOnly=!PRODUCTS[${idx}].recetaOnly;renderCostReceta();renderProductos()"
-            title="${p.recetaOnly?'Esta receta NO aparece en el Menú. Clic para activar.':'Este producto SÍ aparece en el Menú. Clic para ocultarlo del Menú.'}">
-            ${p.recetaOnly?'🔒 Solo receta interna':'✅ Visible en Menú'}
+            data-sale-eligibility="${SAHTEN.salesAvailability.escape(p.id)}" onclick="event.stopPropagation();SAHTEN.salesAvailability.toggleEligibility(this.dataset.saleEligibility)"
+            title="${p.recetaOnly?'Primer paso: habilitar el producto; después activá sus ventas y su publicación online.':'Vuelve a uso interno; deja de ofrecerse en Mostrador y Tienda online.'}">
+            ${p.recetaOnly?'🔒 Interna / borrador · habilitar para venta':'Producto de venta · volver a interna'}
           </button>
         </div>
         <table class="cr-ing-table">
@@ -284,7 +284,7 @@ function mkChart(id,cfg) { destroyChart(id); const el=document.getElementById(id
 // NAVIGATION
 // ═══════════════════════════════════════════════════════
 const PANELS=['dashboard','mostrador','menuonline','nube','costreceta','productos','stock','ingredientes','envases','gastos','ajustes','ventas','proyeccion','reportes','wiki'];
-const PANEL_NAMES={dashboard:'Dashboard',productos:'Menú',proyeccion:'Proyección',ventas:'Ventas + GF',stock:'Control de Stock',ingredientes:'Ingredientes',envases:'Envases y Papelería',menuonline:'Menú Online',nube:'Nube y usuarios',ajustes:'Ajustes de Ganancia',canales:'Canales de Venta',gastos:'Gastos Fijos',costreceta:'Costo de Receta',mostrador:'Mostrador',reportes:'Reportes',personalizacion:'Personalización',wiki:'Guía de uso'};
+const PANEL_NAMES={dashboard:'Dashboard',productos:'Productos',proyeccion:'Proyección',ventas:'Ventas + GF',stock:'Control de Stock',ingredientes:'Ingredientes',envases:'Envases y Papelería',menuonline:'Tienda online',nube:'Nube y usuarios',ajustes:'Ajustes de Ganancia',canales:'Canales de Venta',gastos:'Gastos Fijos',costreceta:'Recetas',mostrador:'Mostrador',reportes:'Reportes',personalizacion:'Personalización',wiki:'Guía de uso'};
 // ── APP DRAWER + BOTTOM NAV ──────────────────────────────────
 const BOTTOM_NAV_PANELS = ['dashboard','productos','ingredientes','proyeccion'];
 
@@ -790,7 +790,7 @@ function renderProductos() {
     const commPesos = Math.round(commBase * commRate);
     tr.innerHTML=`
       <td><input type="checkbox" class="prod-cb" ${selectedSet.has(i)?'checked':''} onchange="toggleProd(${i},this.checked)"></td>
-      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:8px">${SAHTEN.photos.thumb(p.id,p.name,{size:36,del:false})}<input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}${SAHTEN.pricing.badge(p)}</div></td>
+      <td style="min-width:220px;max-width:220px;width:220px"><div style="display:flex;align-items:center;gap:8px">${SAHTEN.photos.thumb(p.id,p.name,{size:36,del:false})}<input class="inline-edit" value="${p.name}" style="width:100%;min-width:0" oninput="PRODUCTS[${i}].name=this.value">${discLabel}${SAHTEN.pricing.badge(p)}</div>${SAHTEN.salesAvailability.controls(p)}</td>
       <td data-col="etiquetas"><div class="prod-tags-wrap">${tagsHtml}${addTagBtn}</div></td>
       <td data-col="categoria"><span class="cat-pill" onclick="editCategoryInline(${i},this)" style="display:inline-block;background:var(--accent);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${p.category||'Sin categoría'}</span></td>
       <td data-col="estrella" style="text-align:center"><button class="star-toggle-btn${p.star?' active':''}" onclick="PRODUCTS[${i}].star=!PRODUCTS[${i}].star;renderProductos();renderDashboard()" title="${p.star?'Quitar estrella':'Marcar como estrella'}">${p.star?'⭐':'☆'}</button></td>
@@ -955,7 +955,7 @@ function renderProdGrid(indices) {
       + '<div class="prod-card-header">'
       +   SAHTEN.photos.thumb(p.id, p.name, { size: 52, del: false })
       +   '<div style="flex:1;min-width:0">'
-      +     '<div class="prod-card-name">' + p.name + discBadge + SAHTEN.pricing.badge(p) + '</div>'
+      +     '<div class="prod-card-name">' + p.name + discBadge + SAHTEN.pricing.badge(p) + '</div>' + SAHTEN.salesAvailability.controls(p)
       +     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center">' + tagsHtml + addTagBtnGrid + '</div>'
       +   '</div>'
       +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'
@@ -1235,9 +1235,10 @@ function npGoStep2() {
     discount: 0, discountType: 'pct', receta_cost: 0,
     packaging: [], ingredients: [], combos: [],
     porciones: 1, porcionLabel: 'porciones', pesoTotal: '', pesoUnit: 'g', porcionCant: '', porcionUnit: 'g',
-    weeks: [10, 10, 15, 15], tags: [], category: '',
+    weeks: [10, 10, 15, 15], tags: [], category: '', recetaOnly:false, salesAvailability:{paused:true,resumeAt:null,updatedAt:new Date().toISOString()},
   };
   PRODUCTS.push(newProd);
+  MENU_CONFIG.hiddenProducts=[...new Set([...(MENU_CONFIG.hiddenProducts||[]),newProd.id])];_saveMenuConfig();
   projWeeks.push([10, 10, 15, 15]);
   scheduleSave();
 
@@ -1373,6 +1374,8 @@ function duplicateProduct(i) {
   const clone = JSON.parse(JSON.stringify(src)); // deep clone
   clone.id   = 'prod_' + Date.now();
   clone.name = src.name + ' (copia)';
+  clone.salesAvailability={paused:true,resumeAt:null,updatedAt:new Date().toISOString()};
+  MENU_CONFIG.hiddenProducts=[...new Set([...(MENU_CONFIG.hiddenProducts||[]),clone.id])];_saveMenuConfig();
   PRODUCTS.push(clone);
   scheduleSave();
   renderProductos();
@@ -4518,6 +4521,7 @@ function collectState() {
     porcionesOverride: p.porcionesOverride  ?? null,
     porcionLabel:     p.porcionLabel     ?? 'porción',
     recetaOnly:       p.recetaOnly       ?? false,
+    salesAvailability: p.salesAvailability ? {...p.salesAvailability} : undefined,
     category:         p.category         ?? '',
     precioMostrador:  mostradorFinalPrice(p) || 0,
     rating:           p.rating,
