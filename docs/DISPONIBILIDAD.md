@@ -1,6 +1,6 @@
 # Recetas, productos y tienda online
 
-Preparado después de 0.4.26. Todavía sin publicar ni aplicar la migración al Supabase real.
+Preparado como versión 0.4.27, después de 0.4.26. Todavía sin publicar (no hay etiqueta ni instaladores) ni aplicar la migración al Supabase real. La etiqueta `v0.4.27` dispara la publicación automática de los instaladores y del `latest.json`: se crea solo al final del orden de abajo, con autorización del dueño.
 
 ## Las tres secciones
 
@@ -39,8 +39,19 @@ Los dos botones de nube incluyen ayuda desplegable y descripción. La opción pr
 1. Revisar y aplicar `supabase/migrations/20261026_menu_availability.sql`. Crea tablas privadas, RPC de estados y protecciones; no cambia precios ni estados de productos existentes por sí sola.
 2. Desplegar **sahten-payments** y **sahten-delivery** con la validación compartida de pausa. El servidor de Mostrador consulta el estado reciente aunque la copia del proyecto esté atrasada. La migración también protege los pedidos web antiguos que entran por REST.
 3. Generar y publicar la carpeta web nueva: las versiones anteriores no saben representar la pausa en gris.
-4. Publicar la app con sus nuevos controles. Hasta actualizar el servidor, el cambio queda pendiente con una explicación; nunca se reemplaza el catálogo completo como respaldo de un interruptor.
+4. Publicar la app con sus nuevos controles. Hasta actualizar el servidor, el cambio queda pendiente con una explicación; nunca se reemplaza el catálogo completo como respaldo de un interruptor. La app se publica creando la etiqueta `v0.4.27` (el workflow Release arma los instaladores y el `latest.json` del actualizador y los publica solos): se hace después de los pasos 1 a 3 y con autorización del dueño, porque desde ese momento los equipos reciben la actualización.
 5. Comprobar en un producto de prueba acordado, con autorización previa del dueño, pausa, bloqueo de compra, reactivación, funcionamiento en otro equipo y conservación del precio publicado. No probar con productos reales sin mostrar y aprobar el cambio concreto.
+
+### Cómo deshacer la migración
+
+La migración solo agrega: un esquema privado (`sahten_catalog_private`) con dos tablas, funciones y dos disparadores. No borra ni modifica datos existentes al aplicarse, y con las tablas vacías los disparadores dejan pasar menú y pedidos sin cambios. Los dos disparadores están en rutas de producción, así que si algo falla al publicar el menú o al crear pedidos, lo primero es quitarlos:
+
+```sql
+drop trigger if exists sahten_menu_availability on public.menus;
+drop trigger if exists sahten_order_sales_availability on public.orders;
+```
+
+Con eso la tienda y los pedidos vuelven a funcionar como antes; las pausas dejan de aplicarse en la base hasta restaurarlos (los servidores de pagos y delivery siguen comprobándolas). Los productos ocultos con el interruptor reaparecen en la próxima publicación completa. Las tablas pueden quedar sin uso; no hace falta borrarlas.
 
 ## Validación de esta preparación
 

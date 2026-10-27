@@ -1,6 +1,6 @@
 # Changelog
 
-## Sin publicar
+## 0.4.27
 
 ## 0.4.27
 
