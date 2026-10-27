@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Pausas importadas, protección adicional del servidor**: el ingreso de pedidos antiguo también consulta una pausa del catálogo publicado cuando todavía no existe su registro privado. Preparado; requiere aplicar la migración adicional autorizada.
+
 ## 0.4.27
 
 - **Recetas, Productos y Tienda online**: nombres y funciones separados. Habilitar una receta para venta requiere confirmación y la deja pausada y fuera de la tienda; las internas no aparecen en las pantallas de venta.
