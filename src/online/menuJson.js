@@ -61,6 +61,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     products: items,
     site,
     delivery: {
+      enabled: tienda.deliveryEnabled !== false,
       ...(tienda.deliveryV2 ? {deliveryV2: JSON.parse(JSON.stringify(tienda.deliveryV2))} : {}),
       lat: tienda.lat ?? null, lng: tienda.lng ?? null, zones: (tienda.zones || []).map(z => ({ id: z.id, name: z.name, type: z.type || 'circle', radiusKm: z.radiusKm || 0, points: z.points || [], baseCost: z.baseCost || 0 })),
       freeShippingMin: tienda.freeShippingMin || 0, deliveryMinOrder: tienda.deliveryMinOrder || 0, costPerKm: tienda.costPerKm || 0,

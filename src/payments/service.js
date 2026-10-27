@@ -76,6 +76,7 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         checkOrigin(req, active);
         await limited('store:' + sid, 120); await limited('buyer:' + sid + ':' + await originKey(req), 20);
         const menu=await repo.menu(sid);
+        if(body.order?.source==='delivery'&&menu.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
         if(body.order?.source==='delivery'&&menu.delivery?.deliveryV2?.active){const h=deliveryHours(menu.delivery.deliveryV2.hours,now());if(!h.open)fail('El delivery está fuera de horario. Volvé durante el horario de atención.',409,h.valid?'closed':'hours_invalid');}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
         const order = quoteOrder(menu, body.order || {},{...delivery,now:now()});

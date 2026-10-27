@@ -56,7 +56,7 @@ let selectedSet = new Set();
 let ventasView = 'grilla';
 let prodSortCol = null;  // column key being sorted
 let prodSortDir = 'asc'; // 'asc' | 'desc'
-let prodView    = 'tabla'; // 'tabla' | 'grilla'
+let prodView    = 'lista'; // 'tabla' | 'grilla'
 let stockView = 'tabla';
 // ═══════════════════════════════════════════════════════════════
 // RECETAS INDEXADAS — importadas del Excel "Costos Recetas Mayo"
@@ -469,7 +469,7 @@ function showPanel(name) {
   const savedRepTab = _getSavedTab('reportes', 'sahten');
   const savedStockCat = _getSavedTab('stockCat', 'ingredientes');
   const savedStockView = _getSavedTab('stockView', 'tabla');
-  const savedProdView = _getSavedTab('prodView', 'tabla');
+  const savedProdView = _getSavedTab('productWorkspaceView', 'lista');
 
   // Restore view states
   if (name === 'stock') { stockView = savedStockView; if (typeof stockTabCat !== 'undefined') stockTabCat = savedStockCat; }
@@ -717,11 +717,12 @@ function renderProductos() {
   if(cb) cb.checked=selectedSet.size===menuProds.length&&menuProds.length>0;
 
   // Search & sort
-  const search = (document.getElementById('prod-search')?.value||'').toLowerCase();
+  const normalizeProductSearch=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const search = normalizeProductSearch(document.getElementById('prod-search')?.value);
   const sortMode = document.getElementById('prod-sort')?.value || '';
   // Filtrar productos "solo receta" — no deben aparecer en el Menú público
   let indices = PRODUCTS.map((p,i)=>i).filter(i => !PRODUCTS[i].recetaOnly);
-  if (search) indices = indices.filter(i => PRODUCTS[i].name.toLowerCase().includes(search));
+  if (search) indices = indices.filter(i => normalizeProductSearch(PRODUCTS[i].name+' '+(PRODUCTS[i].category||'')).includes(search));
   if (sortMode) {
     indices.sort((a,b) => {
       const pa=PRODUCTS[a], pb=PRODUCTS[b];
@@ -729,8 +730,8 @@ function renderProductos() {
       if (sortMode==='name-desc')  return pb.name.localeCompare(pa.name);
       if (sortMode==='cost-desc')  return costPerUnit(pb)-costPerUnit(pa);
       if (sortMode==='cost-asc')   return costPerUnit(pa)-costPerUnit(pb);
-      if (sortMode==='price-desc') return mostradorPrice(pb)-mostradorPrice(pa);
-      if (sortMode==='price-asc')  return mostradorPrice(pa)-mostradorPrice(pb);
+      if (sortMode==='price-desc') return channelPriceWithDisc(pb,SAHTEN.productViews?.channel()||'mostrador')-channelPriceWithDisc(pa,SAHTEN.productViews?.channel()||'mostrador');
+      if (sortMode==='price-asc')  return channelPriceWithDisc(pa,SAHTEN.productViews?.channel()||'mostrador')-channelPriceWithDisc(pb,SAHTEN.productViews?.channel()||'mostrador');
       if (sortMode==='tier')       return (pa.tier||'').localeCompare(pb.tier||'');
       return 0;
     });
@@ -764,6 +765,7 @@ function renderProductos() {
     }
   }
 
+  if(SAHTEN.productViews?.render(indices,prodView,selectedSet,chColor))return;
   const tbody=document.getElementById('prod-tbody');
   tbody.innerHTML='';
   indices.forEach(i=>{
@@ -880,7 +882,7 @@ function setProdSort(col) {
 
 function setProdView(view) {
   prodView = view;
-  if (typeof _saveTabState === 'function') _saveTabState('prodView', view);
+  if (typeof _saveTabState === 'function') _saveTabState('productWorkspaceView', view);
   document.getElementById('pv-tabla').className = 'ptb-view-btn' + (view === 'tabla' ? ' active' : '');
   document.getElementById('pv-grilla').className = 'ptb-view-btn' + (view === 'grilla' ? ' active' : '');
   renderProductos();
@@ -3625,7 +3627,8 @@ const AJ_GROUPS = [
     { id: 'impresion', label: 'Impresión', panel: 'ajustes' },
     { id: 'canales', label: 'Canales de venta', panel: 'canales' },
     { id: 'tiers', label: 'Niveles de ganancia', panel: 'ajustes' },
-    { id: 'tienda', label: 'Tienda online y delivery', panel: 'ajustes' } ] },
+    { id: 'delivery', label: 'Delivery', panel: 'ajustes' },
+    { id: 'tienda', label: 'Pagos de la tienda', panel: 'ajustes' } ] },
   { id: 'proyecto', label: 'Proyecto', tabs: [
     { id: 'archivo', label: 'Archivo y proyectos', panel: 'ajustes' },
     { id: 'respaldos', label: 'Respaldos e importación', panel: 'ajustes' },
@@ -3682,7 +3685,7 @@ function _ajNavTab(tabId) {
   window._ajSkipTabs = false;
   _renderAjustesTabs(tabId);
 
-  if (tabId === 'tienda' && typeof _renderTiendaOnline === 'function') _renderTiendaOnline();
+  if (['tienda','delivery'].includes(tabId) && typeof _renderTiendaOnline === 'function') _renderTiendaOnline();
   if (['archivo','respaldos','app','ayuda'].includes(tabId) && SAHTEN.projectUi) SAHTEN.projectUi.renderBackupPanel();
   if (tabId === 'tiers') renderTiers();
   if (tabId === 'canales') renderChannels();

@@ -43,6 +43,7 @@ export function zoneFor(tienda, lat, lng) {
  */
 export function shippingFor(tienda, lat, lng, subtotal, options = {}) {
   const t = tienda || {};
+  if (t.enabled === false || t.deliveryEnabled === false) return { ok:false, status:'service_paused', cost:0, free:false, belowMin:false };
   if (t.deliveryV2?.active) return deliveryQuote(t.deliveryV2, {lat,lng}, subtotal, options);
   const z = zoneFor(t, lat, lng);
   if (!z.zone) return { ok: false, out: true, zone: null, distKm: z.distKm, cost: 0, free: false, belowMin: false, minOrder: t.deliveryMinOrder || 0 };

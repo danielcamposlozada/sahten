@@ -27,23 +27,23 @@ export function installPricing(w = window) {
     return `<button type="button" class="price-fixed-badge" data-price-product="${esc(p.id)}" data-price-channel="${esc(fixed[0])}" onclick="event.stopPropagation();SAHTEN.pricing.open(this.dataset.priceProduct,this.dataset.priceChannel)" title="${esc(title)}" aria-label="${esc(title + ' de ' + p.name)}">Precio fijado</button>`;
   };
   let closeCurrent = null;
-  function open(id, initialChannel = 'mostrador') {
+  function open(id, initialChannel = 'mostrador', container = null) {
     const product = state.products.find(p => p.id === id);
     if (!product || !canCost()) return;
     closeCurrent?.();
     const projectId = state.project.id;
-    const ov = d.createElement('div'); ov.className = 'pricing-overlay';
+    const ov = d.createElement('div'); ov.className = container ? 'pricing-embedded' : 'pricing-overlay';
     const box = d.createElement('section'); box.className = 'pricing-dialog'; box.tabIndex = -1;
-    box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'pricing-title');
-    ov.append(box); d.body.append(ov);
+    box.setAttribute('role', container ? 'region' : 'dialog'); if(!container)box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-labelledby', 'pricing-title');
+    ov.append(box); (container || d.body).append(ov);
     const drafts = {}, originals = clone(product.pricingPolicies || {});
     const channels = state.channels.filter(c => c.enabled);
     if (!channels.length) channels.push({ id: 'mostrador', name: 'Mostrador' });
     let channel = channels.some(c => c.id === initialChannel) ? initialChannel : channels[0].id, reason = '';
     let release = () => {};
-    const close = () => { release(); ov.remove(); closeCurrent = null; };
+    const close = () => { release(); ov.remove(); if(closeCurrent===close)closeCurrent = null; };
     closeCurrent = close;
-    release = bindModalFocus(box, { w, close, background: [d.querySelector('.app-shell'), d.querySelector('.main'), d.querySelector('.sidebar')] });
+    if(!container)release = bindModalFocus(box, { w, close, background: [d.querySelector('.app-shell'), d.querySelector('.main'), d.querySelector('.sidebar')] });
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     const draft = () => drafts[channel] ||= clone(policyFor(product, channel));
     const proposed = () => ({ ...product, pricingPolicies: { ...product.pricingPolicies, [channel]: draft() } });

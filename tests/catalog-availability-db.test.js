@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const owner='00000000-0000-4000-8000-000000000001',cashier='00000000-0000-4000-8000-000000000002',outsider='00000000-0000-4000-8000-000000000003';let db,sid,pid;
 const migration=read('supabase/migrations/20261026_menu_availability.sql');
+const deliveryState=read('supabase/migrations/20261027010000_delivery_service_state.sql');
 const publishedGuard=read('supabase/migrations/20261027002342_published_pause_guard.sql');
 async function as(role,fn,uid=owner){await db.exec(`reset role;select set_config('request.jwt.claim.sub','${role==='authenticated'?uid:''}',false);select set_config('request.jwt.claims','${JSON.stringify({role})}',false);set role ${role}`);try{return await fn();}finally{await db.exec('reset role');}}
 const menu=()=>db.query('select json from public.menus where store_id=$1',[sid]).then(r=>r.rows[0].json);
@@ -14,7 +15,7 @@ beforeAll(async()=>{db=new PGlite();await db.exec(read('tests/fixtures/supabase-
  pid=(await as('authenticated',()=>db.query("select public.create_project('Prueba','{}','{}') as id"))).rows[0].id;
  await db.query("insert into public.project_members(project_id,user_id,role)values($1,$2,'cajero')",[pid,cashier]);
  sid=(await db.query("insert into public.stores(slug,name,owner,project_id)values('catalog-test','Prueba',$1,$2)returning id",[owner,pid])).rows[0].id;
- await db.query('insert into public.menus(store_id,json)values($1,$2)',[sid,{config:{enabled:true,categories:['Platos']},products:[{id:'p',name:'Plato',category:'Platos',price:12000},{id:'q',name:'Segundo',price:5000}],site:{title:'Conservar'},delivery:{unchanged:true},payments:{methods:{efectivo:true}}}]);await db.exec(migration);await db.exec(publishedGuard);
+ await db.query('insert into public.menus(store_id,json)values($1,$2)',[sid,{config:{enabled:true,categories:['Platos']},products:[{id:'p',name:'Plato',category:'Platos',price:12000},{id:'q',name:'Segundo',price:5000}],site:{title:'Conservar'},delivery:{unchanged:true},payments:{methods:{efectivo:true}}}]);await db.exec(migration);await db.exec(publishedGuard);await db.exec('alter table public.orders add column if not exists payment_provider text');await db.exec(deliveryState);
 },60000);afterAll(()=>db?.close());
 it('migración idempotente, tabla privada, límites entre roles y negocios',async()=>{
  await db.exec(migration);await db.exec(publishedGuard);await db.exec(publishedGuard);
@@ -52,4 +53,26 @@ it('REST respeta una pausa publicada desde una copia importada antes de conectar
  await db.query('update public.menus set json=$2 where store_id=$1',[sid,published]);await expect(insert()).rejects.toThrow(/product_paused/);
  p.salesAvailability.resumeAt=new Date(Date.now()-1000).toISOString();await db.query('update public.menus set json=$2 where store_id=$1',[sid,published]);await insert();
  await as('authenticated',()=>pause('imported-paused',false));await insert();
+});
+
+it('pausa general privada por negocio y roles, sin tocar precios, tarifas ni pedidos existentes',async()=>{
+ await db.exec(deliveryState);await db.exec(deliveryState);
+ const set=enabled=>db.query('select public.set_delivery_service_state($1,$2)',[sid,enabled]);
+ const before=await menu();
+ for(const role of ['anon','authenticated'])await expect(as(role,()=>db.query('select * from sahten_catalog_private.delivery_service_state'))).rejects.toThrow(/permission denied/);
+ await expect(as('anon',()=>set(false))).rejects.toThrow(/permission denied/);
+ await expect(as('authenticated',()=>set(false),cashier)).rejects.toThrow(/forbidden/);
+ await expect(as('authenticated',()=>set(false),outsider)).rejects.toThrow(/forbidden/);
+ await as('authenticated',()=>set(false));
+ const paused=await menu();expect(paused).toEqual({...before,delivery:{...before.delivery,enabled:false}});
+ const read=await as('authenticated',()=>db.query('select public.get_delivery_service_state($1) as r',[sid]),cashier);expect(read.rows[0].r).toEqual({enabled:false});
+ await expect(as('authenticated',()=>db.query('select public.get_delivery_service_state($1)',[sid]),outsider)).rejects.toThrow(/forbidden/);
+ await db.query('update public.menus set json=$2 where store_id=$1',[sid,{...paused,delivery:{...paused.delivery,enabled:true}}]);expect((await menu()).delivery.enabled).toBe(false);
+ const payload={source:'delivery',items:[{productId:'q',qty:1}],total:5000};
+ await expect(as('anon',()=>db.query('insert into public.orders(store_id,payload)values($1,$2)',[sid,payload]))).rejects.toThrow(/delivery_service_paused/);
+ // Falsificar el proveedor desde el browser no permite eludir el cierre.
+ await expect(as('anon',()=>db.query("insert into public.orders(store_id,payload,payment_provider)values($1,$2,'mercadopago')",[sid,payload]))).rejects.toThrow(/delivery_service_paused|permission denied/);
+ await as('anon',()=>db.query('insert into public.orders(store_id,payload)values($1,$2)',[sid,{...payload,source:'pickup'}]));
+ await as('authenticated',()=>set(true));expect((await menu()).delivery.enabled).toBe(true);
+ await as('anon',()=>db.query('insert into public.orders(store_id,payload)values($1,$2)',[sid,payload]));
 });
