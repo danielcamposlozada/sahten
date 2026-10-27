@@ -134,10 +134,10 @@ Reactivar conserva el horario habitual; no abre fuera de horario. El retiro en l
 Publicación de Sahten verificada: migración `20261027010000_delivery_service_state.sql`, `sahten-delivery` v7, `sahten-payments` v10 y plantilla actualizados; instaladores 0.4.28 publicados. Actualizá cada equipo para usar el control. La migración conserva el estado operativo del negocio. Las modificaciones de tarifas siguen requiriendo guardar y publicar el catálogo; la carpeta de Cloudflare solo se regenera para plantilla, diseño o contenido estático.
 
 
-## Carta visual y compra en dos pasos
+## Desde 0.4.29: Carta visual y compra en dos pasos
 
 La nueva plantilla incorpora un buscador visible por nombre, descripción o categoría; combina la búsqueda con las categorías y admite texto sin tildes. El menú tiene dos columnas en celular y tres en escritorio. En escritorio ancho se edita el pedido en el panel lateral; en pantallas menores se abre desde «Mi pedido» o la barra inferior. Se pueden sumar/restar unidades y quitar productos antes de pasar a entrega/pago.
 
 El segundo paso agrupa modalidad y validación del envío, datos de contacto y pago. Piso/departamento/referencia y notas se despliegan cuando se necesitan. En escritorio, el resumen y el botón de confirmación ocupan su propia columna; en celular, la acción permanece visible. Los descuentos se muestran solamente si están configurados para ese negocio y el envío pendiente se identifica sin presentar un total final de entrega.
 
-Es una actualización de plantilla: para conservarla en futuras exportaciones hace falta la próxima versión de la app y subir una vez la carpeta nueva. Los cambios posteriores de precios y disponibilidad siguen usando los controles de nube descritos arriba.
+App 0.4.29 y carpeta web publicadas y verificadas el 27/10/2026. Actualizá la app a 0.4.29 en cada equipo para que las futuras exportaciones conserven este diseño. En sahten.online la carpeta nueva ya está subida. Para otro negocio/hosting, generá y subí una vez la carpeta nueva. Los cambios posteriores de precios y disponibilidad siguen usando los controles de nube descritos arriba.
