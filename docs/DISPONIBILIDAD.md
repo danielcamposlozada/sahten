@@ -1,6 +1,6 @@
 # Recetas, productos y tienda online
 
-Preparado como versión 0.4.27, después de 0.4.26. Todavía sin publicar (no hay etiqueta ni instaladores) ni aplicar la migración al Supabase real. La etiqueta `v0.4.27` dispara la publicación automática de los instaladores y del `latest.json`: se crea solo al final del orden de abajo, con autorización del dueño.
+Versión 0.4.27 autorizada por el dueño. La migración se aplicó y verificó en Supabase; sahten-payments v9 y sahten-delivery v6 están activos. La web y los instaladores se publican en el proceso registrado en docs/SEO-GEO-AEO.md. La etiqueta v0.4.27 dispara la publicación automática de los instaladores y del latest.json después de completar los pasos del servidor y la web.
 
 ## Las tres secciones
 
@@ -55,4 +55,4 @@ Con eso la tienda y los pedidos vuelven a funcionar como antes; las pausas dejan
 
 ## Validación de esta preparación
 
-El 26/10/2026 pasaron 644 pruebas en 69 archivos, compilación, scripts clásicos, revisión de versiones y diferencias. Las pruebas de base de datos ejecutan la migración en PostgreSQL local y comprueban permisos, tienda, restauración del producto publicado y bloqueo de pedidos pausados. Chrome real comprobó el aviso de las tres duraciones y las tarjetas grises sin compra en Mostrador y web con productos ficticios. La prueba pendiente es el despliegue coordinado anterior; no hay cambios nuevos en la tienda real ni en los instaladores públicos.
+El 26/10/2026 pasaron 644 pruebas en 69 archivos, compilación, scripts clásicos, revisión de versiones y diferencias. Las pruebas de base de datos ejecutan la migración en PostgreSQL local y comprueban permisos, tienda, restauración del producto publicado y bloqueo de pedidos pausados. Chrome real comprobó el aviso de las tres duraciones y las tarjetas grises sin compra en Mostrador y web con productos ficticios. La validación productiva y el estado de la web e instaladores se registran en docs/SEO-GEO-AEO.md. No se simularon pausas sobre productos comerciales ni se crearon pedidos reales.
