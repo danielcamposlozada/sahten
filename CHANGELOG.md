@@ -4,6 +4,8 @@
 
 ## 0.4.27
 
+- **Pausas importadas, protección adicional del servidor**: el ingreso de pedidos antiguo también consulta una pausa del catálogo publicado cuando todavía no existe su registro privado. Aplicada con autorización específica; no requiere otro instalador.
+
 - **Recetas, Productos y Tienda online**: nombres y funciones separados. Habilitar una receta para venta requiere confirmación y la deja pausada y fuera de la tienda; las internas no aparecen en las pantallas de venta.
 - **Pausa compartida de ventas**: por hoy, hasta una fecha/hora o sin vencimiento; gris y «No disponible» en Mostrador y web, con protección del carrito y del servidor. Conserva precios, costos, stock e historial.
 - **Interruptores de la tienda automáticos**: mostrar/ocultar envía solo el estado y recupera el último precio publicado. Cola persistente, reintento, separación por negocio y protección frente a respuestas antiguas. Los precios y el catálogo completo siguen con publicación explícita.
