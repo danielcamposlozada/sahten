@@ -3,6 +3,7 @@
 // Hosting gratis: Cloudflare Pages, GitHub Pages o Netlify (ver docs/PUBLICAR.md).
 // ═══════════════════════════════════════════════════════════
 import webTemplate from './web/index.html?raw';
+import cartaCss from './web/carta.css?raw';
 import orderDetailsSrc from '../core/order-details.js?raw';
 import salesAvailabilitySrc from '../core/sales-availability.js?raw';
 import deliverySrc from '../core/delivery.js?raw';
@@ -30,6 +31,7 @@ const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new Reg
 
 export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
+    .replace('/*__CARTA_CSS__*/', () => cartaCss)
     .replace('/*__PAYMENT_CSS__*/', () => paymentChoiceCss+'\n'+incentiveCss)
     .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
     .replace('<body>', storefront ? '<body data-storefront>' : preview ? '<body data-preview>' : '<body>')
