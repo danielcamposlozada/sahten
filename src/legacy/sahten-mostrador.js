@@ -354,7 +354,7 @@ function _calcCartTotals() {
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
     const cfg=_mostTiendaCfg();
-    if(cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
     else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
@@ -441,6 +441,7 @@ function _mostDeliveryExtrasHtml(){
   let h='<div class="most-extras-row"><label>Tipo</label><div style="flex:1;display:flex;gap:2px;padding:2px;border-radius:9px;background:var(--sand2)">'+seg+'</div></div>';
   if(mostradorOrderType!=='delivery') return h;
   const d=mostradorDelivery; const cfg=_mostTiendaCfg(); const t=_calcCartTotals();
+  if(cfg.deliveryEnabled===false)return h+'<div class="info-banner" role="status">Delivery pausado. Podés tomar pedidos de retiro en local.</div>';
   if(cfg.deliveryV2?.active) h+='<div id="most-delivery-incentive"></div>';
   let info='';
   if(typeof sahtenOfflineNotice==='function') info+=sahtenOfflineNotice();
@@ -532,6 +533,7 @@ async function mostradorCheckout() {
   if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
+  if(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryEnabled===false){alert('El delivery está pausado. Reactivalo en Ajustes › Negocio › Delivery o elegí retiro.');return;}
   if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
     if(!_mostSelectedPayment()){alert('Elegí un medio de pago antes de confirmar el delivery.');return;}
     const fingerprint=JSON.stringify(_mostDeliveryRequest());_deliveryChecking=true;

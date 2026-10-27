@@ -250,7 +250,7 @@ describe('Fotos: una sola forma de cargarlas (SAHTEN.photos)', () => {
     a.ev('closeRecipe()');
     $$(a, `[data-mo-menu="${pid}"]`)[0].click();                                                            // 💲 abre el Menú filtrado por ese producto
     expect(a.ev('currentPanel')).toBe('productos'); expect(a.window.document.getElementById('prod-search').value).toBe(a.ev(`PRODUCTS.find(p=>p.id==='${pid}').name`));
-    expect(a.window.document.querySelector(`#prod-tbody [data-photo="${pid}"]`)).toBeTruthy();               // el Menú también tiene la miniatura
+    expect(a.window.document.querySelector(`#prod-grid-container [data-photo="${pid}"]`)).toBeTruthy();               // el Menú también tiene la miniatura
     a.window.close();
   }, 60000);
   it('la foto de una categoría se publica: menu.json la referencia, se genera su archivo y la vista previa la lleva incrustada', async () => {

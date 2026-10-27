@@ -49,6 +49,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const benefit=paymentDiscountQuote(sub/100,method,menu.payments?.benefit,salesChannel,commercialDiscount);
   let shipping = 0, zoneName = '', lat = null, lng = null, address = 'Retiro en local', shippingQuote=null;
   if (source === 'delivery') {
+    if (menu.delivery?.enabled === false) fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
     lat = Number(input.lat); lng = Number(input.lng); address = text(input.address, 300);
     if (input.lat == null || input.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || address.length < 5) fail('Seleccioná una dirección de entrega válida.');
     const modern=menu.delivery?.deliveryV2?.active;

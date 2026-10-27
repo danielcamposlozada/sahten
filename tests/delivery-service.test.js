@@ -68,3 +68,10 @@ it('POS valida todo el catálogo interno, aunque un producto no se publique en l
  const r=await a.call('validate-pos',{order:input},'cashier');expect(r.status).toBe(200);expect(r.data.order.items[0]).toMatchObject({productId:'interno',unitPrice:40000,priceRevision:'precio-servidor'});
  expect((await a.call('order',{order:input,requestId:qid})).status).toBe(409);
 });
+
+it('la pausa general bloquea consultas y órdenes nuevas antes de pedir rutas, pero permite retiro',async()=>{
+ const a=setup();a.menu.delivery.enabled=false;const before=JSON.stringify(a.p);
+ for(const action of ['quote','order','request']){const r=await a.call(action,{order:a.input,requestId:qid});expect(r.status).toBe(409);expect(r.data.error).toBe('service_paused');}
+ expect(a.resolveRoute).not.toHaveBeenCalled();expect(a.orders).toHaveLength(0);expect(JSON.stringify(a.p)).toBe(before);
+ const pickup=await a.call('order',{order:{...a.input,source:'pickup',total:36000},requestId:qid});expect(pickup.status).toBe(200);
+});

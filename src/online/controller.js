@@ -81,6 +81,7 @@ export function createController(host) {
     try {const result=await ctx.client.rpc(name,{p_store_id:ctx.storeId,...args});check(ctx);return result;}
     catch(e){const msg=String(e.message||'');
       if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
+      else if(name==='set_delivery_service_state'&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de usar la apertura automática de delivery.';
       else if(/product_not_published|menu_not_published/.test(msg))e.message='Este producto todavía no tiene una versión publicada. Publicá el catálogo una vez para habilitar este interruptor.';
       else if(/category_not_published/.test(msg))e.message='La categoría está oculta en la tienda. Publicá su categoría desde «Publicar catálogo en la tienda».';
       throw e;
@@ -147,6 +148,11 @@ export function createController(host) {
     /** Estado aislado: sin precio, foto, texto ni proyecto en la petición. */
     async setAvailability(id, visible) { return stateRpc('set_menu_product_visibility', { p_product_id:id, p_visible:visible }); },
     async setSalesAvailability(id, available, resumeAt = null) { return stateRpc('set_product_sales_availability', { p_product_id:id, p_paused:!available, p_resume_at:resumeAt }); },
+    async setDeliveryAvailability(enabled) { return stateRpc('set_delivery_service_state', { p_enabled:enabled }); },
+    async readDeliveryAvailability() {
+      if (!client || !host.conn.storeId) return null;
+      const ctx=context(), result=await ctx.client.rpc('get_delivery_service_state', {p_store_id:ctx.storeId});check(ctx);return result;
+    },
     async readAvailability() {
       if (!client || !host.conn.storeId) return { sales:[], visibility:[] };
       const ctx=context(), result=await ctx.client.rpc('get_product_sales_availability', {p_store_id:ctx.storeId});check(ctx);return result;

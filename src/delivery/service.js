@@ -19,6 +19,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
  async function limited(sid,req){if(!await repo.run('limit',{bucket:'store:'+sid,max:100})||!await repo.run('limit',{bucket:'buyer:'+sid+':'+await originKey(req),max:25}))fail('Demasiadas consultas. Esperá un minuto.',429);}
  async function context(sid,input){
   const menu=await repo.menu(sid),policy=menu?.delivery?.deliveryV2;
+  if(input.source==='delivery'&&menu?.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
   if(!policy?.active)fail('La nueva configuración de delivery todavía no está activa.',409,'delivery_not_active');
   const validation=input.source==='delivery'?validateDeliveryPolicy(policy):{errors:[]};if(validation.errors.length)fail('La configuración de zonas necesita revisión administrativa.',409,'invalid_policy');
   const destination={lat:Number(input.lat),lng:Number(input.lng)};
@@ -50,6 +51,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     if(!record)fail('La solicitud venció. Volvé a calcularla.',409);
     if(reason.length<5)fail('Explicá el motivo de la autorización.');
     const menu=await repo.menu(sid),p=menu.delivery?.deliveryV2;
+    if(menu.delivery?.enabled===false)fail('El delivery está pausado por el local.',409,'service_paused');
     if(!p?.active||p.revision!==record.revision)fail('Cambió la configuración. Volvé a calcular la entrega.',409);
     const q=deliveryQuote(p,record.route.destination,record.result.netSubtotal,{route:record.route,now:now(),hasPaymentDiscount:!!record.payload.paymentDiscount});
     if(!['available','authorization_required'].includes(q.status))fail('No se puede autorizar una zona pausada, fuera de cobertura o bajo el mínimo.',409);

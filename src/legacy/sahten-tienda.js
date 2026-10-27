@@ -21,6 +21,7 @@ function _saveTiendaConfig(cfg) {
 function _defaultTiendaConfig() {
   return {
     address: '',
+    deliveryEnabled: true,
     lat: -34.6037, lng: -58.3816,
     costPerKm: 1500,
     freeShippingMin: 45000,
@@ -53,9 +54,11 @@ function _renderTiendaOnline() {
 
   el.innerHTML = (typeof sahtenOfflineNotice==='function' ? sahtenOfflineNotice() : '') + `
     <div class="info-banner" style="margin-bottom:16px">
-      <strong>Tienda Online:</strong> Configurá tu tienda web — zonas de delivery, métodos de pago y datos bancarios.
+      <strong>Pagos de la tienda:</strong> Medios de pago, descuento y datos bancarios. Las zonas, los horarios y la pausa general están en Ajustes › Negocio › Delivery.
     </div>
 
+    <div id="delivery-settings-group">
+    <div id="delivery-service-control"></div>
     <div id="delivery-admin"></div>
     <div id="delivery-legacy" ${cfg.deliveryV2?'hidden':''}>
     <!-- UBICACIÓN + MAPA -->
@@ -129,6 +132,7 @@ function _renderTiendaOnline() {
       </div>
     </div>
 
+    </div>
     </div>
     <!-- MÉTODOS DE PAGO -->
     <div class="card" style="margin-bottom:16px">
@@ -219,6 +223,10 @@ function _renderTiendaOnline() {
     </div>
   `;
 
+  const deliverySettings = document.getElementById('delivery-settings-content');
+  const deliveryGroup = document.getElementById('delivery-settings-group');
+  if(deliverySettings && deliveryGroup) deliverySettings.replaceChildren(deliveryGroup);
+  SAHTEN.delivery.operation.render();
   SAHTEN.online.payments?.render();
   SAHTEN.delivery.admin.mount();
   // Init Leaflet map after DOM is ready

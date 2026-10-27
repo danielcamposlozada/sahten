@@ -181,7 +181,7 @@ describe('Mostrador: cobra el mismo precio que muestra el Menú', () => {
     a.ev("CHANNELS.find(c=>c.id==='mostrador').channelDisc=10;");
     const conDesc = a.ev("channelPriceWithDisc(PRODUCTS[0],'mostrador')"); expect(conDesc).toBeLessThan(base);
     a.ev("showPanel('productos'); renderProductos();");
-    expect(a.window.document.getElementById('prod-tbody').rows[0].textContent).toContain(conDesc.toLocaleString('es-AR'));   // el Menú muestra el precio con descuento
+    expect(a.window.document.querySelector('.product-list-price').textContent).toContain(conDesc.toLocaleString('es-AR'));   // el Menú muestra el precio con descuento
     expect(pos()[0].replace(/\D/g, '')).toBe(String(conDesc));                            // la grilla del Mostrador, igual
     a.ev("mostradorAddToCart('pizza_muzza'); mostradorSetOrderType('retiro'); mostradorCheckout();"); await wait(50);
     expect(a.ev('SAHTEN_ORDERS[0].items[0].unitPrice')).toBe(conDesc); expect(a.ev('SAHTEN_ORDERS[0].total')).toBe(conDesc);

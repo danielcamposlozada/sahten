@@ -10,7 +10,7 @@ el total, el envío calculado según la zona y sus datos. Ese modo básico funci
 ## 1. Generar la carpeta
 
 1. En Sahten: **Menú Online › Configuración**. Cargá tu número de **WhatsApp** (con código de país) y revisá qué productos y categorías se muestran.
-2. En **Ajustes › Negocio › Tienda online y delivery** dejá cargada la dirección del local, las **zonas de delivery**, el envío gratis desde cierto monto y los medios de pago.
+2. En **Ajustes › Negocio › Delivery** dejá cargada la dirección del local, las **zonas de delivery**, el envío gratis desde cierto monto y los medios de pago.
 3. **Menú Online › Configuración › Publicar menú**.
    - En Chrome/Edge te pide elegir una carpeta y escribe los archivos ahí.
    - En otros navegadores descarga un `.zip`: descomprimilo.
@@ -78,7 +78,7 @@ apagar**, **mover** (arrastrando ⋮⋮ o con ▲▼) y **editar**; a la derecha
 | Cinta de texto | una franja con tu lema que se desplaza |
 | Reseñas | hasta 9 |
 | Catering y eventos | texto y datos de cobertura (zona, anticipación…) |
-| Delivery y retiro | horarios; zonas, mínimo y envío gratis salen de Ajustes › Negocio › Tienda online y delivery |
+| Delivery y retiro | horarios; zonas, mínimo y envío gratis salen de Ajustes › Negocio › Delivery |
 | Preguntas frecuentes | hasta 12 |
 | Contacto y pie | dirección, WhatsApp, Instagram |
 
@@ -124,3 +124,11 @@ Se puede añadir publicación directa por negocio: un botón que sincronice el c
 ## Desde 0.4.27: productos y disponibilidad
 
 Los nuevos nombres, la diferencia entre proyecto y catálogo y el funcionamiento de las pausas están documentados en [DISPONIBILIDAD.md](DISPONIBILIDAD.md). App, web y servidor publicados y verificados el 26/10/2026. Actualizá la app a 0.4.27 en cada equipo para usar los controles. Mostrar/ocultar en Tienda online envía automáticamente solo el estado; Pausar ventas en Productos afecta web y Mostrador. Los cambios de precios y el catálogo completo se publican explícitamente; los de diseño requieren exportar/subir los archivos.
+
+## Pausar delivery sin volver a subir archivos (preparado; requiere próxima actualización)
+
+En **Ajustes → Negocio → Delivery**, «Habilitar delivery» pausa o reactiva los nuevos envíos. Se envía automáticamente **solo ese estado** a la tienda conectada, sin publicar precios o tarifas pendientes. Esperá «Estado confirmado en la web»; si falla la conexión se conserva la cola y se puede reintentar. Los clientes que ya tenían la web abierta reciben el estado en la consulta de hasta 10 segundos o al volver a la pestaña; el servidor valida al confirmar. Sin tienda conectada, el cambio es solamente local.
+
+Reactivar conserva el horario habitual; no abre fuera de horario. El retiro en local, los pedidos aceptados y los pagos de Checkout Pro ya iniciados siguen su curso. No cancela ni reembolsa órdenes.
+
+Antes de habilitar esta función en producción: aplicar `20261027010000_delivery_service_state.sql` después de las migraciones de catálogo y pagos, actualizar `sahten-delivery` y `sahten-payments`, publicar una vez la plantilla nueva y distribuir la app actualizada. La migración no pausa automáticamente el negocio. Las modificaciones de tarifas siguen requiriendo guardar y publicar el catálogo; la carpeta de Cloudflare solo se regenera para plantilla, diseño o contenido estático.

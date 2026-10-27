@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.28
+
+- **Delivery con apertura propia** en Ajustes › Negocio › Delivery. Pausar/reactivar envía solamente el estado a la tienda conectada, con cola por negocio, reintento y confirmación visible. Conserva horarios, zonas, tarifas, retiro, pedidos y pagos iniciados. La web abierta consulta cambios cada 10 segundos y al recuperar foco; el servidor rechaza nuevos envíos incluso desde páginas antiguas.
+- **Ajustes separados**: Delivery concentra apertura, ubicación, horarios, cobertura, tarifas, incentivos y rutas. Pagos de la tienda reúne medios, Mercado Pago, beneficio por pago y datos bancarios.
+- **Productos con las cuatro vistas acordadas**: Lista esencial como inicio, Lista con editor lateral, Tarjetas y Comparador de canales. Acceso directo al editor histórico de precios, estados automático/fijado, favoritos, selección en lote, fotografías, detalles plegables y colores de todos los canales. Tabla avanzada y grilla anterior conservadas; análisis de costos plegable.
+- **Publicación coordinada**: app, plantilla web y validación del servidor; conserva el estado operativo actual de delivery y los datos del negocio.
+
 ## 0.4.27
 
 - **Pausas importadas, protección adicional del servidor**: el ingreso de pedidos antiguo también consulta una pausa del catálogo publicado cuando todavía no existe su registro privado. Aplicada con autorización específica; no requiere otro instalador.

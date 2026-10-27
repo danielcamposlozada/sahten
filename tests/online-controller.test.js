@@ -196,3 +196,9 @@ it('interruptores y pausas usan RPC solo de estados; nunca suben precios ni reem
  await s.ctl.setAvailability('a',false);await s.ctl.setSalesAvailability('a',false,'2099-01-01T00:00:00Z');
  expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_product_id:'a',p_visible:false},{p_store_id:'st-1',p_product_id:'a',p_paused:true,p_resume_at:'2099-01-01T00:00:00Z'}]);expect(s.calls.some(c=>c.url.includes('/menus')&&c.body)).toBe(false);
 });
+
+it('la pausa general publica solo el booleano del negocio, sin precios ni fotos del borrador',async()=>{
+ const s=setup({conn:{url:URL_OK,anonKey:ANON,storeId:'st-1'},storage:{'online-session:p1':{access_token:'T',refresh_token:'R',expires_at:9e9,user:{id:'u1'}}},routes:{'/rest/v1/orders':{body:[]},'/rest/v1/rpc/set_delivery_service_state':{body:{enabled:false}}}});
+ await s.ctl.resume();s.host.menuJson=()=>{throw Error('No debe publicar el catálogo');};await s.ctl.setDeliveryAvailability(false);
+ expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_enabled:false}]);
+});

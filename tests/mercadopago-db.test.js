@@ -4,7 +4,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const USER='00000000-0000-4000-8000-000000000001';let db,sid,account,cid;
 async function rpc(action,args){return (await db.query('select public.sahten_mp_backend($1,$2) result',[action,args])).rows[0].result;}
-async function role(name,fn){await db.exec('set role '+name);try{return await fn();}finally{await db.exec('reset role');}}
+async function role(name,fn){await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({role:name})]);await db.exec('set role '+name);try{return await fn();}finally{await db.exec('reset role');}}
 beforeAll(async()=>{
   db=new PGlite();await db.exec(read('tests/fixtures/supabase-prelude.sql'));await db.exec('create role service_role nologin bypassrls;');await db.exec(read('supabase/schema.sql'));
   // Vault lo provee Supabase. La prueba emula su interfaz con secretos ficticios exclusivamente.
@@ -68,4 +68,18 @@ it('deshabilitar no destruye secretos que necesitan los pagos anteriores',async(
   await role('service_role',()=>rpc('disable_account',{store_id:sid}));expect(await role('service_role',()=>rpc('account',{store_id:sid}))).toBeNull();
   expect((await role('service_role',()=>rpc('webhook_accounts',{store_id:sid})))[0]).toHaveProperty('credentials');
   expect((await db.query('select json from public.menus where store_id=$1',[sid])).rows[0].json.payments.methods.mercadopago).toBe(false);
+});
+
+it('pausar delivery bloquea una reserva nueva pero acredita la reserva previa sin perder el pago',async()=>{
+ await db.exec(read('supabase/migrations/20261026_menu_availability.sql'));
+ await db.exec(read('supabase/migrations/20261027010000_delivery_service_state.sql'));
+ const live=await role('service_role',()=>rpc('save_account',{store_id:sid,account_id:'live-fake',account_label:'Prueba local',mode:'production',site_url:'https://example.test',credentials:{accessToken:'fake-only',webhookSecret:'fake-only'}}));
+ const args={store_id:sid,account_id:live.id,request_id:'00000000-0000-4000-8000-000000000011',proof_hash:'before-pause',quote_hash:'same',order:{source:'delivery',items:[{productId:'p',qty:1}],total:100}};
+ const reserved=await role('service_role',()=>rpc('reserve',args));
+ await db.query("select set_config('request.jwt.claim.sub',$1,false)",[USER]);
+ await role('authenticated',()=>db.query('select public.set_delivery_service_state($1,false)',[sid]));
+ await expect(role('service_role',()=>rpc('reserve',{...args,request_id:'00000000-0000-4000-8000-000000000012',proof_hash:'after-pause'}))).rejects.toThrow(/delivery_service_paused/);
+ const paid=await role('service_role',()=>rpc('payment',{checkout_id:reserved.id,id:'paused-delivery-paid',status:'approved',amount_cents:10000,refunded_cents:0,updated_at:'2026-10-27T01:00:00Z'}));
+ expect(paid.payment_status).toBe('paid');expect(paid.order_id).toBeTruthy();
+ expect((await db.query('select payload from public.orders where id=$1',[paid.order_id])).rows[0].payload.source).toBe('delivery');
 });
