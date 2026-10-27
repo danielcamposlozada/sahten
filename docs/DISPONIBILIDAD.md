@@ -1,6 +1,6 @@
 # Recetas, productos y tienda online
 
-Versión 0.4.27 autorizada por el dueño. La migración se aplicó y verificó en Supabase; sahten-payments v9 y sahten-delivery v6 están activos. La web y los instaladores se publican en el proceso registrado en docs/SEO-GEO-AEO.md. La etiqueta v0.4.27 dispara la publicación automática de los instaladores y del latest.json después de completar los pasos del servidor y la web.
+Versión 0.4.27 publicada y verificada el 26/10/2026. Las dos migraciones de disponibilidad se aplicaron y registraron en Supabase; sahten-payments v9 y sahten-delivery v6 están activos. Web e instaladores Windows/Mac públicos, con actualizador y firmas verificados. Actualizá cada equipo a 0.4.27 para usar los controles. Detalle del despliegue en docs/SEO-GEO-AEO.md.
 
 ## Las tres secciones
 
@@ -34,13 +34,14 @@ Las recetas y los precios se siguen guardando en el archivo y compartiendo con e
 
 Los dos botones de nube incluyen ayuda desplegable y descripción. La opción preexistente de publicación automática al cambiar fotos está nombrada explícitamente: también publica el catálogo completo, incluidos precios y textos. Iniciar sesión o abrir el proyecto ya no programa una publicación completa por sí solo.
 
-## Orden necesario antes de activar en producción
+## Orden del despliegue (completado para Sahten)
 
 1. Revisar y aplicar `supabase/migrations/20261026_menu_availability.sql`. Crea tablas privadas, RPC de estados y protecciones; no cambia precios ni estados de productos existentes por sí sola.
+   Aplicar también `20261027002342_published_pause_guard.sql` para respetar pausas del catálogo importado antes de conectar el proyecto; conserva el estado privado como prioritario. Ambas migraciones ya están registradas en el servidor de Sahten.
 2. Desplegar **sahten-payments** y **sahten-delivery** con la validación compartida de pausa. El servidor de Mostrador consulta el estado reciente aunque la copia del proyecto esté atrasada. La migración también protege los pedidos web antiguos que entran por REST.
 3. Generar y publicar la carpeta web nueva: las versiones anteriores no saben representar la pausa en gris.
 4. Publicar la app con sus nuevos controles. Hasta actualizar el servidor, el cambio queda pendiente con una explicación; nunca se reemplaza el catálogo completo como respaldo de un interruptor. La app se publica creando la etiqueta `v0.4.27` (el workflow Release arma los instaladores y el `latest.json` del actualizador y los publica solos): se hace después de los pasos 1 a 3 y con autorización del dueño, porque desde ese momento los equipos reciben la actualización.
-5. Comprobar en un producto de prueba acordado, con autorización previa del dueño, pausa, bloqueo de compra, reactivación, funcionamiento en otro equipo y conservación del precio publicado. No probar con productos reales sin mostrar y aprobar el cambio concreto.
+5. Para una comprobación operativa en el negocio, acordar un producto con el dueño y revisar pausa, bloqueo, reactivación y otro equipo. No se alteraron productos comerciales ni se crearon pedidos/pagos durante esta publicación. Los casos de estado, permisos y vencimiento se cubrieron localmente con datos ficticios; en producción se comprobaron migraciones, permisos, servicios y conservación exacta del catálogo.
 
 ### Cómo deshacer la migración
 

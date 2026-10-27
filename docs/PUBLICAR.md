@@ -121,6 +121,6 @@ La carpeta de Cloudflare conserva una copia de respaldo y páginas estáticas pa
 Se puede añadir publicación directa por negocio: un botón que sincronice el catálogo, genere todos los archivos y los entregue a un servicio autenticado que publique en Cloudflare, con progreso, resultado y posibilidad de volver al despliegue anterior. La credencial de Cloudflare debe quedar en el servidor; no en el HTML, menu.json, proyecto compartido ni aplicación de caja. Esa conexión automática todavía no está implementada. Referencia oficial: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
 
 
-## Próxima actualización: productos y disponibilidad
+## Desde 0.4.27: productos y disponibilidad
 
-Los nuevos nombres, la diferencia entre proyecto y catálogo y el funcionamiento de las pausas están documentados en [DISPONIBILIDAD.md](DISPONIBILIDAD.md). Esta mejora está preparada, todavía sin publicar; no describe controles ya disponibles en 0.4.26.
+Los nuevos nombres, la diferencia entre proyecto y catálogo y el funcionamiento de las pausas están documentados en [DISPONIBILIDAD.md](DISPONIBILIDAD.md). App, web y servidor publicados y verificados el 26/10/2026. Actualizá la app a 0.4.27 en cada equipo para usar los controles. Mostrar/ocultar en Tienda online envía automáticamente solo el estado; Pausar ventas en Productos afecta web y Mostrador. Los cambios de precios y el catálogo completo se publican explícitamente; los de diseño requieren exportar/subir los archivos.
