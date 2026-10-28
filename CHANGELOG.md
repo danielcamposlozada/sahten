@@ -2,6 +2,20 @@
 
 ## Sin publicar
 
+## 0.4.30
+
+- **Zonas de delivery en vivo**: habilitar/pausar cada zona y pedir/quitar autorización se envía automáticamente, con permisos de dueño/admin, cola persistente y estado confirmado/pendiente. No publica tarifas ni el catálogo completo. La web abierta recibe cambios y conserva el precio del carrito; una publicación vieja no revierte estas decisiones. Requiere desplegar la migración y actualizar app/plantilla una sola vez.
+- **Ayuda de publicación**: Tienda online y Pagos explican qué cambios son en vivo y cuáles requieren Publicar catálogo en la tienda. Auditoría de controles documentada en docs/CONTROLES-EN-VIVO.md.
+
+- **Catálogos más claros**: Ingredientes y Envases comparten con Mercadería las vistas de lista/tarjetas, búsqueda por nombre/proveedor, etiquetas de campos y costo de referencia destacado. Acciones agrupadas en tres puntos, con teclado, cierre por Escape y alternativa para navegadores sin popover.
+- **Stock legible**: listas y tarjetas con existencias, mínimo, estado con texto y color, valoración al costo y acciones compactas. Los movimientos de ingredientes por unidad o volumen abren la unidad base correcta; Mercadería comparte su única existencia con el producto de reventa.
+- **Tabla avanzada de Productos**: conserva columnas y colores de canales; producto/selección y acciones fijos al desplazar, encabezado fijo, espacios consistentes, región accesible por teclado y flechas para recorrer las columnas sin perder la referencia del producto.
+
+- **Mercadería**: catálogo separado para productos terminados de proveedores, con buscador, lista/tarjetas, proveedor, presentación, unidades por paquete y costo unitario calculado con el mismo motor de Ingredientes.
+- **Reventa sin receta**: crear un producto de venta desde Mercadería y ajustar unidades por venta, categoría, foto, envases opcionales y precio por canal. Comienza pausado y oculto en la tienda, con las mismas decisiones de activación del resto de productos.
+- **Costo y stock compartidos**: agregar mercadería a recetas y combos; el artículo es una sola fuente de costos y existencias para ventas individuales, packs y combos. Incluye ingresos/retiros, movimientos, plantilla de inventario y cálculo de precios, proyecciones y costos históricos de nuevas ventas. Las anteriores conservan su registro original.
+- **Trasladar desde Ingredientes**: acción con confirmación para artículos cargados en unidades, conservando ID, referencias, costo y stock. Guardado en el proyecto y respaldo/nube completa; sin exponer proveedores ni costos en la web o en vistas públicas.
+
 ## 0.4.29
 
 - **Carta visual y búsqueda**: productos en dos columnas en celular y tres en escritorio, buscador por nombre, descripción y categoría sin exigir tildes, filtros con estado visible y fotografías con espacio reservado. El aviso del beneficio usa la configuración real del negocio.

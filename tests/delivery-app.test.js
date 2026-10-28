@@ -60,3 +60,14 @@ it('tarjetas de Pedidos ofrecen mapa, copiar y compartir al aceptar un delivery,
  w.orderSetStatus('pending','en_preparacion');expect(d.querySelector('[data-online-action="route-copy"][data-id="pending"]')).not.toBeNull();
  }finally{w.close();}
 });
+
+it('controles de zona son inmediatos, no guardan tarifas pendientes y cancelar no los revierte',async()=>{
+ const {window:w}=await openApp();try{loadRawDemo(w);configure(w);leaflet(w);w.eval("_ajNavTab('delivery')");await wait();const d=w.document,initial=w._getTiendaConfig(),events=[];
+ w.addEventListener('sahten:delivery-zone-state',e=>events.push(e.detail));
+ const cost=d.querySelector('[data-df="baseCost"]');cost.value='99999';cost.dispatchEvent(new w.Event('change',{bubbles:true}));
+ const flag=d.querySelector('[data-zoneflag="requiresAuthorization"]');flag.checked=true;flag.dispatchEvent(new w.Event('change',{bubbles:true}));
+ let cfg=w._getTiendaConfig();expect(cfg.deliveryV2.zones[0].requiresAuthorization).toBe(true);expect(cfg.deliveryV2.zones[0].baseCost).toBe(initial.deliveryV2.zones[0].baseCost);expect(cfg.deliveryV2.revision).toBe(initial.deliveryV2.revision);expect(events).toEqual([{id:initial.deliveryV2.zones[0].id,flag:'requiresAuthorization',value:true}]);
+ expect(d.querySelector('[data-zone-live-status]').textContent).toContain('Solo en este proyecto');d.querySelector('[data-action="cancel"]').click();expect(d.querySelector('[data-zoneflag="requiresAuthorization"]').checked).toBe(true);expect(d.querySelector('[data-df="baseCost"]').value).not.toBe('99999');
+ d.body.dataset.role='cajero';expect(w.SAHTEN.delivery.zoneOperation.set(cfg.deliveryV2.zones[0].id,'enabled',false)).toBe(false);expect(w._getTiendaConfig().deliveryV2.zones[0].enabled).toBe(true);
+ }finally{w.close();}
+});

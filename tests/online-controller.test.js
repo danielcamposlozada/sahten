@@ -202,3 +202,9 @@ it('la pausa general publica solo el booleano del negocio, sin precios ni fotos 
  await s.ctl.resume();s.host.menuJson=()=>{throw Error('No debe publicar el catálogo');};await s.ctl.setDeliveryAvailability(false);
  expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_enabled:false}]);
 });
+
+it('zonas en vivo envían un único campo y no publican el borrador de tarifas',async()=>{
+ const s=setup({conn:{url:URL_OK,anonKey:ANON,storeId:'st-1'},storage:{'online-session:p1':{access_token:'T',refresh_token:'R',expires_at:9e9,user:{id:'u1'}}},routes:{'/rest/v1/orders':{body:[]},'/rest/v1/rpc/set_delivery_zone_state':{body:{id:'z1',flag:'requiresAuthorization',enabled:false}}}});
+ await s.ctl.resume();s.host.menuJson=()=>{throw Error('No debe publicar el catálogo');};await s.ctl.setDeliveryZoneState('z1','requiresAuthorization',false);
+ expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_zone_id:'z1',p_flag:'requiresAuthorization',p_enabled:false}]);
+});

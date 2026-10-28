@@ -1314,9 +1314,10 @@ function _injectStockTabs(){
 function _renderStockTabs(){
   const tabs=document.getElementById('stock-cat-tabs');if(!tabs)return;
   const ic=typeof INGREDIENTES!=='undefined'?INGREDIENTES.length:0;
-  const pc=typeof PRODUCTS!=='undefined'?PRODUCTS.filter(p=>!p.recetaOnly).length:0;
+  const pc=typeof PRODUCTS!=='undefined'?PRODUCTS.filter(p=>!p.recetaOnly && p.productType!=='resale').length:0;
   const ec=typeof ENVASES!=='undefined'?ENVASES.length:0;
   tabs.innerHTML='<button class="stock-tab '+(stockTabCat==='ingredientes'?'active':'')+'" onclick="setStockCat(\'ingredientes\')">🍴 Ingredientes <span class="stock-tab-count">'+ic+'</span></button><button class="stock-tab '+(stockTabCat==='productos'?'active':'')+'" onclick="setStockCat(\'productos\')">📦 Productos <span class="stock-tab-count">'+pc+'</span></button><button class="stock-tab '+(stockTabCat==='envases'?'active':'')+'" onclick="setStockCat(\'envases\')">🏷️ Envases <span class="stock-tab-count">'+ec+'</span></button>';
+  tabs.innerHTML += '<button class="stock-tab '+(stockTabCat==='mercaderia'?'active':'')+'" onclick="setStockCat(\'mercaderia\')">Mercadería <span class="stock-tab-count">'+MERCADERIA.length+'</span></button>';
 }
 function setStockCat(cat){stockTabCat=cat;if(typeof _saveTabState==='function')_saveTabState('stockCat',cat);if(typeof renderStock==='function')renderStock();}
 

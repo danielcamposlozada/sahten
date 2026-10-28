@@ -141,3 +141,8 @@ La nueva plantilla incorpora un buscador visible por nombre, descripción o cate
 El segundo paso agrupa modalidad y validación del envío, datos de contacto y pago. Piso/departamento/referencia y notas se despliegan cuando se necesitan. En escritorio, el resumen y el botón de confirmación ocupan su propia columna; en celular, la acción permanece visible. Los descuentos se muestran solamente si están configurados para ese negocio y el envío pendiente se identifica sin presentar un total final de entrega.
 
 App 0.4.29 y carpeta web publicadas y verificadas el 27/10/2026. Actualizá la app a 0.4.29 en cada equipo para que las futuras exportaciones conserven este diseño. En sahten.online la carpeta nueva ya está subida. Para otro negocio/hosting, generá y subí una vez la carpeta nueva. Los cambios posteriores de precios y disponibilidad siguen usando los controles de nube descritos arriba.
+
+
+## Preparado después de 0.4.29: controles de zonas en vivo
+
+**Aún requiere despliegue inicial de app, plantilla y migración.** Zona habilitada y Requiere autorización se aplicarán al cambiar el control, sin publicar catálogo y sin subir otra carpeta. Se verá confirmación o pendiente de conexión. Tarifas, mínimos, horarios y beneficios seguirán con guardado/publicación explícitos. Cancelar el borrador de tarifas no revierte un estado en vivo. Detalles y auditoría de interruptores: [CONTROLES-EN-VIVO.md](CONTROLES-EN-VIVO.md).

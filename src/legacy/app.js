@@ -125,7 +125,8 @@ function renderCostReceta() {
     const ingCost = p.ingredients.reduce((s,r) => s + calcIngCost(r), 0);
     const pkgCost = p.packaging.reduce((s,r) => s + calcEnvCost(r), 0);
     const cmbCost = (p.combos||[]).reduce((s,r) => s + calcComboCost(r), 0);
-    const tot     = ingCost + pkgCost + cmbCost;
+    const merchCost = merchandiseCost(p);
+    const tot = totalCost(p);
     const isExp   = crExpandedId === p.id;
     const tierObj = getTier(p.tier);
     const ingMax  = Math.max(...p.ingredients.map(r => calcIngCost(r)), 1);
@@ -138,6 +139,10 @@ function renderCostReceta() {
       return `<tr><td>${ing ? ing.name : (row.n||'\u2014')}</td><td class="r">${row.qty||''}${row.unit||''}</td><td class="r">${ing ? fmt(pxg)+'/g' : ''}</td><td class="r">${fmt(cost)}</td><td style="min-width:60px"><div class="cr-bar-track"><div class="cr-bar-fill" style="width:${Math.min(100,Math.round(cost/ingMax*100))}%;background:${tierObj.color}88"></div></div><span style="font-size:9px;color:var(--muted)">${pct}%</span></td></tr>`;
     }).join('');
 
+    const merchRows = (p.merchandise||[]).map(row => {
+      const item = MERCADERIA.find(m => m.id === row.merchId);
+      return `<tr><td colspan="3">Mercadería: ${SAHTEN.salesAvailability.escape(item?.name||'Seleccionar artículo')} ×${Number(row.qty)||0} u</td><td class="r">${fmt(calcMerchandiseCost(row))}</td><td></td></tr>`;
+    }).join('');
     const envRows = p.packaging.length ? p.packaging.map(row => {
       const env = row.envId ? ENVASES.find(x=>x.id===row.envId) : null;
       const cost = calcEnvCost(row);
@@ -163,7 +168,7 @@ function renderCostReceta() {
           <div style="font-size:10px;color:var(--muted);text-decoration:line-through">${fmt(tot)} receta completa</div>`:`<div class="cr-cost-main">${fmt(tot)}</div>`}
           <div class="cr-cost-usd">USD ${(costPerUnit(p)/usd).toFixed(2)}</div>
           <div style="display:flex;gap:4px;margin-top:2px">
-            <span style="font-size:10px;background:rgba(35,83,40,0.1);color:var(--primary);padding:1px 6px;border-radius:4px">Ing: ${fmt(ingCost)}</span>
+            <span style="font-size:10px;background:rgba(35,83,40,0.1);color:var(--primary);padding:1px 6px;border-radius:4px">Ing: ${fmt(ingCost)}</span>${merchCost>0?`<span style="font-size:10px;padding:1px 6px">Mercadería: ${fmt(merchCost)}</span>`:''}
             <span style="font-size:10px;background:rgba(242,140,0,0.1);color:var(--accent);padding:1px 6px;border-radius:4px">Env: ${fmt(pkgCost)}</span>
             ${cmbCost>0?`<span style="font-size:10px;background:rgba(22,160,133,0.1);color:#16a085;padding:1px 6px;border-radius:4px">Cmb: ${fmt(cmbCost)}</span>`:''}
           </div>
@@ -171,7 +176,7 @@ function renderCostReceta() {
       </div>
       <div class="cr-expand-body">
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-          <button class="btn btn-accent" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openRecipe(${idx})">\u270f\ufe0f Editar receta</button>
+          <button class="btn btn-accent" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openRecipe(${idx})">\u270f\ufe0f ${p.productType==='resale'?'Editar producto de reventa':'Editar receta'}</button>
           <button class="btn" style="font-size:11px;padding:4px 12px" data-photo-pick="${p.id}">📷 Foto</button>
           <button class="btn" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();openProductDetail(${idx})">\ud83d\udcca Ver detalle precios</button>
           <button class="btn" style="font-size:11px;padding:4px 12px;${p.recetaOnly?'border-color:var(--muted);color:var(--muted)':'border-color:var(--green);color:var(--green);background:var(--green-pale)'}" 
@@ -185,6 +190,7 @@ function renderCostReceta() {
           <tbody>
             ${ingRows}
             ${ingCost>0?`<tr class="subtotal"><td colspan="3">Subtotal ingredientes</td><td class="r">${fmt(ingCost)}</td><td></td></tr>`:''}
+            ${merchRows}
             ${envRows}
             ${comboRows}
             <tr class="total-row"><td colspan="3" style="color:var(--primary)">COSTO TOTAL RECETA</td><td class="r" style="color:var(--primary)">${fmt(tot)}</td><td style="font-size:10px;color:var(--muted)">USD ${(tot/usd).toFixed(2)}</td></tr>
@@ -283,8 +289,8 @@ function mkChart(id,cfg) { destroyChart(id); const el=document.getElementById(id
 // ═══════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════
-const PANELS=['dashboard','mostrador','menuonline','nube','costreceta','productos','stock','ingredientes','envases','gastos','ajustes','ventas','proyeccion','reportes','wiki'];
-const PANEL_NAMES={dashboard:'Dashboard',productos:'Productos',proyeccion:'Proyección',ventas:'Ventas + GF',stock:'Control de Stock',ingredientes:'Ingredientes',envases:'Envases y Papelería',menuonline:'Tienda online',nube:'Nube y usuarios',ajustes:'Ajustes de Ganancia',canales:'Canales de Venta',gastos:'Gastos Fijos',costreceta:'Recetas',mostrador:'Mostrador',reportes:'Reportes',personalizacion:'Personalización',wiki:'Guía de uso'};
+const PANELS=['dashboard','mostrador','menuonline','nube','costreceta','productos','stock','ingredientes','mercaderia','envases','gastos','ajustes','ventas','proyeccion','reportes','wiki'];
+const PANEL_NAMES={dashboard:'Dashboard',productos:'Productos',proyeccion:'Proyección',ventas:'Ventas + GF',stock:'Control de Stock',ingredientes:'Ingredientes',mercaderia:'Mercadería',envases:'Envases y Papelería',menuonline:'Tienda online',nube:'Nube y usuarios',ajustes:'Ajustes de Ganancia',canales:'Canales de Venta',gastos:'Gastos Fijos',costreceta:'Recetas',mostrador:'Mostrador',reportes:'Reportes',personalizacion:'Personalización',wiki:'Guía de uso'};
 // ── APP DRAWER + BOTTOM NAV ──────────────────────────────────
 const BOTTOM_NAV_PANELS = ['dashboard','productos','ingredientes','proyeccion'];
 
@@ -829,23 +835,17 @@ function renderProductos() {
       <td data-col="comision"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--primary)">${commPct}%</span>${commPesos>0?`<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)" title="Pesos que suma la comisión al precio">+${fmt(commPesos)}</span>`:'<span style="font-size:10px;color:var(--muted)">sin comisión</span>'}</div></td>
       <td data-col="subtotal" class="price-cell price-main" style="color:var(--muted);font-weight:500;white-space:nowrap">${fmt(mp)}<button class="why-btn" onclick="event.stopPropagation();window.sahtenWhy&&sahtenWhy('${p.id}')" title="Ver y ajustar precio por canal" aria-label="Ver y ajustar precio por canal">?</button></td>
       <td data-col="por_canal">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;width:220px">
+        <div class="advanced-channel-grid">
           ${CHANNELS.filter(c=>c.enabled).map(c=>{
             const cp   = channelPrice(p,c.id)||mp;
             const col  = chColor(c.id);
             const disc = effectiveChannelDisc(p, c.id);
             const cpD  = disc > 0 ? Math.round(cp*(1-disc)/50)*50 : cp;
             const net  = channelNetReceivedWithDisc(p, c.id) || Math.round(cpD*(1-(getChannel(c.id).commission||0)));
-            return `<div style="background:${col.bg};color:${col.text};border-radius:6px;padding:5px 8px;display:flex;flex-direction:column;gap:2px">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:4px">
-                <span style="font-size:10px;font-weight:700;opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px">${c.name}</span>
-                ${disc>0?`<span style="font-size:8px;background:rgba(0,0,0,0.18);border-radius:99px;padding:1px 5px;font-weight:700;white-space:nowrap;flex-shrink:0">−${(disc*100).toFixed(0)}%</span>`:''}
-              </div>
-              <div style="display:flex;align-items:baseline;gap:4px">
-                ${disc>0?`<span style="font-family:'DM Mono',monospace;font-size:9px;opacity:0.5;text-decoration:line-through">${fmt(cp)}</span>`:''}
-                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${fmt(cpD)}</span>${SAHTEN.pricing.badge(p,c.id)}
-              </div>
-              <div style="font-family:'DM Mono',monospace;font-size:9px;opacity:0.7;white-space:nowrap">↳ ${fmt(net)}</div>
+            return `<div class="advanced-channel" style="background:${col.bg};color:${col.text}">
+              <span class="advanced-channel-name">${SAHTEN.salesAvailability.escape(c.name)}</span>
+              <div class="advanced-channel-price"><strong>${fmt(cpD)}</strong>${SAHTEN.pricing.badge(p,c.id)}</div>
+              <div class="advanced-channel-extra">${disc>0?`<span><s>${fmt(cp)}</s> −${(disc*100).toFixed(0)}%</span>`:''}<span>Neto ${fmt(net)}</span></div>
             </div>`;
           }).join('')}
         </div>
@@ -1283,6 +1283,7 @@ function openModal(i) {
     }
     return { label: row.n || '?', cost: row.v || 0 };
   });
+  (p.merchandise||[]).forEach(row=>{const item=MERCADERIA.find(m=>m.id===row.merchId);_ingResolved.push({label:'Mercadería: '+SAHTEN.salesAvailability.escape(item?.name||'Sin artículo'),cost:calcMerchandiseCost(row)});});
   const tot = _ingResolved.reduce((s,x) => s + x.cost, 0) || 1;
   const ingBars = _ingResolved.map(x => {
     const pct = Math.round(x.cost / tot * 100);
@@ -1314,7 +1315,7 @@ function openModal(i) {
   document.getElementById('modal-body').innerHTML=`
     <div class="section-title">Desglose de costos</div>
     <div>
-      ${[{n:'Costo receta (ingredientes)',v:Math.round(_ingResolved.reduce((s,x)=>s+x.cost,0))},{n:'Envases y packaging',v:packCost(p)},{n:'GF por producto'+(p.gfPctOverride!=null?' ('+p.gfPctOverride.toFixed(0)+'% del base)':' (100% del base)'),v:gfa}]
+      ${[{n:'Ingredientes y mercadería',v:Math.round(_ingResolved.reduce((s,x)=>s+x.cost,0))},{n:'Envases y packaging',v:packCost(p)},{n:'GF por producto'+(p.gfPctOverride!=null?' ('+p.gfPctOverride.toFixed(0)+'% del base)':' (100% del base)'),v:gfa}]
         .map(r=>`<div class="cost-row"><span class="cost-name">${r.n}</span><span class="cost-val">${fmt(r.v)}</span></div>`).join('')}
       <div class="cost-row total"><span class="cost-name">Base para precio</span><span class="cost-val">${fmt(tc+gfa)}</span></div>
       <div class="cost-row total">
@@ -1366,7 +1367,7 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 function openRecipe(i) {
   recipeIdx=i;
   renderRecipeBody();
-  document.getElementById('recipe-title').textContent='Editar receta: '+PRODUCTS[i].name;
+  document.getElementById('recipe-title').textContent=(PRODUCTS[i].productType==='resale'?'Editar producto de reventa: ':'Editar receta: ')+PRODUCTS[i].name;
   document.getElementById('recipe-overlay').classList.add('open');
 }
 function closeRecipe() { document.getElementById('recipe-overlay').classList.remove('open'); recipeIdx=-1; if(typeof window._moAfterRecipe==='function') window._moAfterRecipe(); }
@@ -1526,12 +1527,17 @@ function renderRecipeBody() {
   if(recipeIdx<0) return;
   const p = PRODUCTS[recipeIdx];
   const i = recipeIdx;
+  if (p.productType === 'resale') {
+    document.getElementById('recipe-body').innerHTML = SAHTEN.merchandise.resaleEditor(p, i);
+    return;
+  }
 
   const combos   = p.combos || [];
   const totIng   = p.ingredients.reduce((s,r) => s + calcIngCost(r), 0);
   const totPack  = p.packaging.reduce((s,r)  => s + calcEnvCost(r), 0);
   const totCombo = combos.reduce((s,r) => s + calcComboCost(r), 0);
-  const totTotal = totIng + totPack + totCombo;
+  const totMerch = merchandiseCost(p);
+  const totTotal = totIng + totPack + totCombo + totMerch;
 
   const ingUnits = ['g','kg','ml','L','u'];
   const envUnits = ['u','g','kg'];
@@ -1717,6 +1723,8 @@ function renderRecipeBody() {
         </div>`;
       }).join('') : '<div style="padding:12px;color:var(--muted);font-size:13px">Sin ingredientes — usá + Agregar</div>'}
     </div>
+
+    ${SAHTEN.merchandise.recipeSection(p, i)}
 
     <!-- ENVASES / PACKAGING -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2429,12 +2437,16 @@ function renderStock() {
     sourceList = INGREDIENTES;
     catLabel = 'Ingredientes';
     pricePerUnit = (item) => item.precioPkg / (item.grPaquete || 1);
+  } else if (cat === 'mercaderia') {
+    sourceList = MERCADERIA;
+    catLabel = 'Mercadería';
+    pricePerUnit = item => item.precioPkg / (item.cantidad || 1);
   } else if (cat === 'envases') {
     sourceList = (typeof ENVASES !== 'undefined') ? ENVASES : [];
     catLabel = 'Envases';
     pricePerUnit = (item) => item.precioPkg / (item.cantidad || 1);
   } else if (cat === 'productos') {
-    sourceList = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly) : [];
+    sourceList = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.filter(p => !p.recetaOnly && p.productType !== 'resale') : [];
     catLabel = 'Productos';
     pricePerUnit = (item) => parseFloat(item.precio) || 0;
   }
@@ -2469,8 +2481,8 @@ function renderStock() {
 
   if (stockView === 'tabla') {
     const unitSel = (id, u) => `<select style="border:1px solid var(--border);border-radius:5px;padding:2px 4px;font-size:11px;background:white;outline:none;color:var(--muted)" onchange="STOCK['${id}'].unit=this.value;renderStock()"><option value="g" ${u==='g'?'selected':''}>g</option><option value="kg" ${u==='kg'?'selected':''}>kg</option><option value="L" ${u==='L'?'selected':''}>L</option><option value="u" ${u==='u'?'selected':''}>u</option></select>`;
-    const colPrice = cat === 'productos' ? 'Precio venta' : '$/kg';
-    cont.innerHTML = `<div class="card"><div class="table-wrap"><table class="stock-table"><thead><tr><th>${catLabel.slice(0, -1)}</th><th>Stock actual</th><th>Unidad</th><th>Mínimo</th><th>Estado</th><th>Valor stock</th><th>${colPrice}</th><th style="width:44px"></th></tr></thead><tbody>${items.map(item => {
+    const colPrice = cat === 'productos' ? 'Precio venta' : cat === 'mercaderia' ? 'Costo / unidad' : '$/kg';
+    cont.innerHTML = `<div class="card"><div class="table-wrap"><table class="stock-table"><thead><tr><th>${cat === 'mercaderia' ? 'Artículo' : catLabel.slice(0, -1)}</th><th>Stock actual</th><th>Unidad</th><th>Mínimo</th><th>Estado</th><th>Valor stock</th><th>${colPrice}</th><th style="width:44px"></th></tr></thead><tbody>${items.map(item => {
       const s = STOCK[item.id] || { actual: 0, minimo: 0, unit: defaultUnit };
       const ppu = pricePerUnit(item);
       const val = s.actual * ppu;
@@ -2479,15 +2491,15 @@ function renderStock() {
       else if (s.minimo > 0 && s.actual < s.minimo) { sb = '#fff8e1'; st = '#d68910'; sl = 'Bajo'; rc = 'low-stock'; }
       else { sb = '#d6eed7'; st = '#235328'; sl = 'OK'; }
       const pct = s.minimo > 0 ? Math.min(100, Math.round(s.actual / s.minimo * 100)) : 0;
-      const priceDisplay = cat === 'productos' ? fmt(ppu) : fmt(ppu * 1000);
-      return `<tr class="${rc}"><td><strong>${item.name}</strong></td>
+      const priceDisplay = cat === 'productos' || cat === 'mercaderia' ? fmt(ppu) : fmt(ppu * 1000);
+      return `<tr class="${rc}"><td><strong>${SAHTEN.salesAvailability.escape(item.name)}</strong></td>
         <td><div style="display:flex;gap:6px;align-items:center"><input class="stock-input" type="number" value="${s.actual}" min="0" step="1" onchange="STOCK['${item.id}'].actual=parseFloat(this.value)||0;renderStock()"></div><div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${st}"></div></div></td>
-        <td>${unitSel(item.id, s.unit || defaultUnit)}</td>
+        <td>${cat==='mercaderia'?'u':unitSel(item.id, s.unit || defaultUnit)}</td>
         <td><div style="display:flex;gap:6px;align-items:center"><input class="stock-input" type="number" value="${s.minimo}" min="0" step="1" onchange="STOCK['${item.id}'].minimo=parseFloat(this.value)||0;renderStock()"></div></td>
         <td><span class="stock-alert" style="background:${sb};color:${st}">${sl}</span></td>
         <td style="font-family:'DM Mono',monospace;font-size:12px">${fmt(val)}</td>
         <td style="font-family:'DM Mono',monospace;font-size:12px">${priceDisplay}</td>
-        <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="quickMov('${item.id}','${item.name}','ingreso')">+ In</button> <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="quickMov('${item.id}','${item.name}','egreso')">- Out</button></td></tr>`;
+        <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="quickMov('${item.id}','','ingreso')">+ In</button> <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="quickMov('${item.id}','','egreso')">- Out</button></td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   } else {
     cont.innerHTML = `<div class="stock-grid-cards">${items.map(item => {
@@ -2501,15 +2513,15 @@ function renderStock() {
       const pct = s.minimo > 0 ? Math.min(100, Math.round(s.actual / s.minimo * 100)) : 0;
       const u = s.unit || defaultUnit;
       return `<div class="stock-card" style="border-top:3px solid ${st}">
-        <div class="stock-card-header"><div class="stock-card-name">${item.name}</div><span class="stock-alert" style="background:${sb};color:${st}">${sl}</span></div>
+        <div class="stock-card-header"><div class="stock-card-name">${SAHTEN.salesAvailability.escape(item.name)}</div><span class="stock-alert" style="background:${sb};color:${st}">${sl}</span></div>
         <div class="stock-bar" style="margin-bottom:10px"><div class="stock-bar-fill" style="width:${pct}%;background:${st}"></div></div>
         <div class="stock-row"><label>Unidad de medida</label><select style="border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:12px;background:var(--card,white);color:var(--ink);outline:none" onchange="STOCK['${item.id}'].unit=this.value;renderStock()"><option value="g" ${u==='g'?'selected':''}>gramos (g)</option><option value="kg" ${u==='kg'?'selected':''}>kilos (kg)</option><option value="L" ${u==='L'?'selected':''}>litros (L)</option><option value="u" ${u==='u'?'selected':''}>unidades (u)</option></select></div>
         <div class="stock-row"><label>Stock actual (${u})</label><input class="stock-input" type="number" value="${s.actual}" min="0" step="1" onchange="STOCK['${item.id}'].actual=parseFloat(this.value)||0;renderStock()"></div>
         <div class="stock-row"><label>Mínimo (${u})</label><input class="stock-input" type="number" value="${s.minimo}" min="0" step="1" onchange="STOCK['${item.id}'].minimo=parseFloat(this.value)||0;renderStock()"></div>
         <div class="stock-row"><label>Valor</label><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent)">${fmt(val)}</span></div>
         <div style="display:flex;gap:6px;margin-top:10px">
-          <button class="btn" style="flex:1;padding:5px;font-size:11px" onclick="quickMov('${item.id}','${item.name}','ingreso')">+ Ingreso</button>
-          <button class="btn btn-danger" style="flex:1;padding:5px;font-size:11px" onclick="quickMov('${item.id}','${item.name}','egreso')">- Egreso</button>
+          <button class="btn" style="flex:1;padding:5px;font-size:11px" onclick="quickMov('${item.id}','','ingreso')">+ Ingreso</button>
+          <button class="btn btn-danger" style="flex:1;padding:5px;font-size:11px" onclick="quickMov('${item.id}','','egreso')">- Egreso</button>
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -2518,8 +2530,8 @@ function renderStock() {
   const ingFilterSel = document.getElementById('stock-mov-filter-ing');
   if(ingFilterSel) {
     const curVal = ingFilterSel.value;
-    ingFilterSel.innerHTML = '<option value="">Todos los ingredientes</option>' +
-      INGREDIENTES.map(ing=>`<option value="${ing.name}" ${curVal===ing.name?'selected':''}>${ing.name}</option>`).join('');
+    ingFilterSel.innerHTML = '<option value="">Todos los artículos</option>' +
+      [...INGREDIENTES,...MERCADERIA,...ENVASES,...PRODUCTS].map(ing=>`<option value="${ing.name}" ${curVal===ing.name?'selected':''}>${ing.name}</option>`).join('');
   }
   const ingFilterVal = ingFilterSel?.value || '';
 
@@ -2737,6 +2749,7 @@ const GF_TEMPLATES = {
     sectionLabel: 'Control de stock — ingredientes y materias primas',
     source: 'ingredientes',
   },
+  mercaderia: { title:'Inventario de Mercadería',cat:'Mercadería',sectionLabel:'Productos terminados de proveedores',source:'mercaderia' },
   envases: {
     title: 'Inventario de Envases y Papelería', cat: '📦 Envases y Papelería',
     sectionLabel: 'Control de stock — envases, embalaje e insumos',
@@ -2758,6 +2771,7 @@ function gfGetProductList(tplId) {
       detalle: `Paq. ${i.grPaquete}g — ${fmt(i.precioPkg / i.grPaquete)}/g`,
     }));
   }
+  if (tplId === 'mercaderia') return MERCADERIA.map(m=>({name:m.name,unit:'u.',precio:m.precioPkg/(m.cantidad||1),detalle:`${m.presentacion||'Paquete'} x${m.cantidad} — ${fmt(m.precioPkg/(m.cantidad||1))}/u`}));
   if (tplId === 'envases') {
     return ENVASES.map(e => ({
       name:    e.name,
@@ -3321,7 +3335,7 @@ function registrarMovimiento() {
   const delta=(tipo==='egreso'||tipo==='merma')?-Math.abs(qty):(tipo==='ajuste'?qty:Math.abs(qty));
   STOCK[ingId].actual=Math.max(0,(STOCK[ingId].actual||0)+delta);
   const now=new Date();
-  const categoria=cat==='ingrediente'?'ingrediente':cat==='envase'?'envase':'producto';
+  const categoria=cat==='mercaderia'?'mercaderia':cat==='ingrediente'?'ingrediente':cat==='envase'?'envase':'producto';
   MOVIMIENTOS.push({
     fecha:now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
     ing:ingName, tipo, qty:delta, nota, categoria, unit:unitSel
@@ -3388,28 +3402,32 @@ function selectMotivo(motivo) {
 
 function setCatModal(cat) {
   document.getElementById('sm-categoria').value = cat;
-  ['ing','env','prod'].forEach(k=>{
+  ['ing','merch','env','prod'].forEach(k=>{
     const btn=document.getElementById('cat-btn-'+k);
     if(btn) btn.classList.remove('active');
   });
-  const map={ingrediente:'ing',envase:'env',producto:'prod'};
+  const map={ingrediente:'ing',mercaderia:'merch',envase:'env',producto:'prod'};
   const btn=document.getElementById('cat-btn-'+(map[cat]||'ing'));
   if(btn) btn.classList.add('active');
 
   // Update the label
   const labelEl=document.getElementById('sm-ing-label');
-  if(labelEl) labelEl.textContent = cat==='ingrediente'?'Ingrediente':cat==='envase'?'Envase':'Producto terminado';
+  if(labelEl) labelEl.textContent = cat==='mercaderia'?'Mercadería':cat==='ingrediente'?'Ingrediente':cat==='envase'?'Envase':'Producto terminado';
 
   // Rebuild the select options
   const sel=document.getElementById('sm-ing');
   if(!sel) return;
   if(cat==='ingrediente') {
     sel.innerHTML=INGREDIENTES.map(ing=>`<option value="${ing.id}">${ing.name}</option>`).join('');
+  } else if(cat==='mercaderia') {
+    sel.innerHTML=MERCADERIA.map(m=>`<option value="${m.id}">${SAHTEN.salesAvailability.escape(m.name)}</option>`).join('');
   } else if(cat==='envase') {
     sel.innerHTML=ENVASES.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
   } else {
-    sel.innerHTML=PRODUCTS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    sel.innerHTML=PRODUCTS.filter(p=>p.productType!=='resale').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   }
+  const unitSelect=document.getElementById('sm-unit');
+  if(unitSelect){ unitSelect.disabled=cat==='mercaderia'; unitSelect.value=cat==='ingrediente'?'g':'u'; }
   updateStockIndicator();
 }
 
@@ -3479,7 +3497,8 @@ function quickMov(id, name, tipo) {
   initStock();
   // Determine category by checking which list contains this id
   let cat='ingrediente';
-  if(ENVASES.find(e=>e.id===id)) cat='envase';
+  if(MERCADERIA.find(m=>m.id===id)) cat='mercaderia';
+  else if(ENVASES.find(e=>e.id===id)) cat='envase';
   else if(PRODUCTS.find(p=>p.id===id)) cat='producto';
 
   setCatModal(cat);
@@ -3492,7 +3511,9 @@ function quickMov(id, name, tipo) {
 
   const motivo=tipo==='ingreso'?'ingreso':tipo==='merma'?'desperdicio':'uso_interno';
   selectMotivo(motivo);
-  document.getElementById('sm-qty').value='500';
+  const baseUnit = SAHTEN.core.stockItemInfo(SAHTEN.state,id).unit;
+  document.getElementById('sm-unit').value=baseUnit;
+  document.getElementById('sm-qty').value=baseUnit==='u'?'1':'500';
   document.getElementById('sm-nota').value='';
   document.getElementById('stock-modal').classList.add('open');
   updateStockIndicator();
@@ -3504,8 +3525,10 @@ function quickMov(id, name, tipo) {
 let ingView = 'grilla';
 function setIngView(v) {
   ingView = v;
-  document.getElementById('iv-grilla').className='view-btn'+(v==='grilla'?' active':'');
-  document.getElementById('iv-lista').className='view-btn'+(v==='lista'?' active':'');
+  document.getElementById('iv-grilla').setAttribute('aria-pressed',String(v==='grilla'));
+  document.getElementById('iv-lista').setAttribute('aria-pressed',String(v==='lista'));
+  document.getElementById('iv-grilla').className='ptb-view-btn'+(v==='grilla'?' active':'');
+  document.getElementById('iv-lista').className='ptb-view-btn'+(v==='lista'?' active':'');
   renderIngredientes();
 }
 function renderIngredientes() {
@@ -3542,6 +3565,7 @@ function renderIngredientes() {
           <select style="border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-size:12px;background:var(--card,white);color:var(--ink);outline:none;color:var(--ink)" onchange="INGREDIENTES[${i}].unit=this.value;ingNormalize(INGREDIENTES[${i}]);renderIngredientes()">${unitSel(i,u)}</select>
         </div></div>
         <div class="ing-row" style="margin-top:6px;font-size:11px;color:var(--accent);font-family:'DM Mono',monospace"><span>${lbl.a}</span><span>${lbl.b}</span></div>
+        ${u==='u'?`<button class="btn" onclick="SAHTEN.merchandise.moveIngredient(INGREDIENTES[${i}].id)">Mover a Mercadería</button>`:''}
         <button class="remove-row-btn" style="margin-top:6px;font-size:12px" onclick="confirmIngDel(${i})">✕ Eliminar</button>`;
       grid.appendChild(d);
     });
@@ -3564,7 +3588,7 @@ function renderIngredientes() {
           <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${lbl.a.split(': ')[1]}</td>
           <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--primary);font-weight:600">${u==='u'?'-':fmt(refPx)}</td>
           <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${u==='u'?'-':'USD '+(refUSD).toFixed(2)}</td>
-          <td><button class="remove-row-btn" onclick="confirmIngDel(${i})">✕</button></td>
+          <td>${u==='u'?`<button class="btn" onclick="SAHTEN.merchandise.moveIngredient(INGREDIENTES[${i}].id)">Mover a Mercadería</button>`:''}<button class="remove-row-btn" onclick="confirmIngDel(${i})">✕</button></td>
         </tr>`;
       }).join('')}</tbody></table>`;
   }
@@ -4543,6 +4567,8 @@ function collectState() {
       n: r.n, 
     })),
     // Packaging: envases indexados (envId + qty + unit) y fallback v
+    ...(p.productType ? {productType:p.productType} : {}),
+    merchandise: (p.merchandise||[]).map(r=>({merchId:r.merchId,qty:r.qty})),
     packaging:      (p.packaging||[]).map(r=>({
       envId: r.envId, qty: r.qty, unit: r.unit, v: r.v||0,
       n: r.n,
@@ -4601,6 +4627,7 @@ function collectState() {
     // ── Datos principales ──────────────────────────────────
     PRODUCTS:     productsDeep,
     INGREDIENTES: ingredientesDeep,
+    MERCADERIA: MERCADERIA.map(item=>({...item})),
     ENVASES:      envasesDeep,
     GASTOS_OP:    GASTOS_OP.map(g=>({id:g.id, name:g.name, amount:g.amount})),
     GASTOS_S:     GASTOS_S.map(g=>({id:g.id, name:g.name,  amount:g.amount})),
@@ -4642,6 +4669,8 @@ function collectState() {
     // ── Estado de UI ───────────────────────────────────────
     visibleCols:   [...visibleCols],
     ingView,
+    ...SAHTEN.merchandise.preferences(),
+    ...SAHTEN.inventory.preferences(),
     ingSearch: document.getElementById('ing-search')?.value||'',
     ingSortVal: document.getElementById('ing-sort')?.value||'',
     envSearch: document.getElementById('env-search')?.value||'',
@@ -4680,6 +4709,7 @@ function applyData(data) {
   }
   setArr(INGREDIENTES, data.INGREDIENTES);
   setArr(ENVASES,      data.ENVASES);
+  setArr(MERCADERIA, data.MERCADERIA || []);
   setArr(PRODUCTS,     data.PRODUCTS);
   // ── Normalizar campos nuevos en productos (compatibilidad con JSON viejo) ──
   PRODUCTS.forEach(p => {
@@ -4691,6 +4721,7 @@ function applyData(data) {
     if (p.combos          == null) p.combos          = [];
     if (p.ingredients     == null) p.ingredients     = [];
     if (p.packaging       == null) p.packaging       = [];
+    if (p.merchandise     == null) p.merchandise     = [];
     if (p.weeks           == null) p.weeks           = [0,0,0,0];
     if (p.discountType    == null) p.discountType    = 'pct';
     if (p.discount        == null) p.discount        = 0;

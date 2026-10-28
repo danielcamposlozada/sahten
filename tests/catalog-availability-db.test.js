@@ -76,3 +76,28 @@ it('pausa general privada por negocio y roles, sin tocar precios, tarifas ni ped
  await as('authenticated',()=>set(true));expect((await menu()).delivery.enabled).toBe(true);
  await as('anon',()=>db.query('insert into public.orders(store_id,payload)values($1,$2)',[sid,payload]));
 });
+
+it('zonas en vivo: permisos, aislamiento de booleanos y protección ante catálogos viejos sin cambiar revisión',async()=>{
+ const sql=read('supabase/migrations/20261028233706_delivery_zone_operations.sql');await db.exec(sql);await db.exec(sql);
+ const m=await menu();m.delivery.deliveryV2={active:true,revision:'r-zones',zones:[{id:'z1',name:'Zona de prueba',enabled:true,requiresAuthorization:true,baseCost:1500,minOrder:17000},{id:'z2',enabled:false,requiresAuthorization:false,baseCost:3000}],hours:{enabled:true}};
+ await db.query('update public.menus set json=$2 where store_id=$1',[sid,m]);
+ const set=(id,flag,value)=>db.query('select public.set_delivery_zone_state($1,$2,$3,$4)',[sid,id,flag,value]);
+ for(const role of ['anon','authenticated'])await expect(as(role,()=>db.query('select * from sahten_catalog_private.delivery_zone_states'))).rejects.toThrow(/permission denied/);
+ await expect(as('anon',()=>set('z1','enabled',false))).rejects.toThrow(/permission denied/);
+ await expect(as('authenticated',()=>set('z1','requiresAuthorization',false),cashier)).rejects.toThrow(/forbidden/);
+ await expect(as('authenticated',()=>set('z1','requiresAuthorization',false),outsider)).rejects.toThrow(/forbidden/);
+ await expect(as('authenticated',()=>set('missing','enabled',false))).rejects.toThrow(/zone_not_published/);
+ await expect(as('authenticated',()=>set('z1','baseCost',false))).rejects.toThrow(/invalid_zone_state/);
+ await expect(as('authenticated',()=>set('z1','enabled',null))).rejects.toThrow(/invalid_zone_state/);
+ await as('authenticated',()=>set('z1','requiresAuthorization',false));
+ const expected=structuredClone(m);expected.delivery.deliveryV2.zones[0].requiresAuthorization=false;expect(await menu()).toEqual(expected);
+ await as('authenticated',()=>set('z1','enabled',false));expected.delivery.deliveryV2.zones[0].enabled=false;expect(await menu()).toEqual(expected);
+ // Una publicación económica legítima conserva sus importes nuevos y los estados operativos vigentes.
+ m.delivery.deliveryV2.zones[0].baseCost=1990;await db.query('update public.menus set json=$2 where store_id=$1',[sid,m]);
+ const actual=await menu();expect(actual.delivery.deliveryV2.zones[0]).toMatchObject({enabled:false,requiresAuthorization:false,baseCost:1990});expect(actual.delivery.deliveryV2.revision).toBe('r-zones');
+ const states=await as('authenticated',()=>db.query('select public.get_delivery_zone_states($1) as r',[sid]),cashier);
+ expect(states.rows[0].r).toEqual({revision:'r-zones',zones:[{id:'z1',enabled:false,requiresAuthorization:false},{id:'z2',enabled:false,requiresAuthorization:false}]});expect(JSON.stringify(states.rows[0].r)).not.toMatch(/baseCost|prices|minOrder|hours/);
+ await expect(as('anon',()=>db.query('select public.get_delivery_zone_states($1)',[sid]))).rejects.toThrow(/permission denied/);
+ await expect(as('authenticated',()=>db.query('select public.get_delivery_zone_states($1)',[sid]),outsider)).rejects.toThrow(/forbidden/);
+ await db.query("update public.project_members set role='admin' where project_id=$1 and user_id=$2",[pid,cashier]);await as('authenticated',()=>set('z1','enabled',true),cashier);expect((await menu()).delivery.deliveryV2.zones[0].enabled).toBe(true);
+});

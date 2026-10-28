@@ -18,7 +18,7 @@ describe('navegación', () => {
   it('el menú lateral son enlaces con data-panel, y el cajón del celular tiene las mismas secciones', async () => {
     const a = await openApp(); const d = a.window.document;
     const side = [...d.querySelectorAll('.sidebar .nav-item')];
-    expect(side.length).toBe(15);
+    expect(side.length).toBe(16);
     side.forEach(el => { expect(el.tagName).toBe('A'); expect(el.getAttribute('href')).toBe('#/' + el.dataset.panel); expect(el.hasAttribute('onclick')).toBe(false); });
     const drawer = new Set([...d.querySelectorAll('.app-drawer-item')].map(e => e.dataset.panel));
     const sideSet = new Set(side.map(e => e.dataset.panel));

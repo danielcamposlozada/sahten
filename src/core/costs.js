@@ -27,6 +27,18 @@ export function ingPxBase(ing) {
   return ing.precioPkg / Math.max(1, ing.grPaquete);
 }
 
+export function merchandiseUnitCost(item) {
+  if (!item) return 0;
+  return ingPxBase({ ...item, unit: 'u', cantidad: item.cantidad || 1 });
+}
+
+export function calcMerchandiseCost(s, row) {
+  const item = (s.merchandise || []).find(x => x.id === row.merchId);
+  return item ? merchandiseUnitCost(item) * Math.max(0, Number(row.qty) || 0) : 0;
+}
+
+export const merchandiseCost = (s, p) => (p.merchandise || []).reduce((sum, row) => sum + calcMerchandiseCost(s, row), 0);
+
 // ── Costo de una fila ────────────────────────────────────
 export function calcIngCost(s, row) {
   if (row.ingId) {
@@ -100,6 +112,7 @@ export function calcAutoPorc(p) {
 
 /** Porciones efectivas. Prioridad: override manual › automático con merma › campo manual. */
 export function getPorc(p) {
+  if (p.productType === 'resale') return 1;
   const ov = parseFloat(p.porcionesOverride);
   if (ov > 0) return Math.max(0.01, Math.round(ov * 100) / 100);
   const auto = calcAutoPorc(p);
@@ -193,7 +206,7 @@ export function calcComboCost(s, row, _visited) {
 
   const ingRaw = (target.ingredients || []).reduce((sum, r) => sum + calcIngCost(s, r), 0);
   const ingCost = ingRaw > 0 ? ingRaw : (target.receta_cost || 0); // respeta el costo manual del sub-producto
-  let cost = ingCost * prop;
+  let cost = (ingCost + merchandiseCost(s, target)) * prop;
 
   if (row.addPackaging !== false) {
     const pack = (target.packaging || []).reduce((sum, r) => sum + calcPackCost(s, r), 0);
@@ -220,7 +233,7 @@ export const comboCost = (s, p) => (p.combos || []).reduce((sum, r) => sum + cal
 export function totalCost(s, p) {
   const ingCost = (p.ingredients || []).reduce((sum, r) => sum + calcIngCost(s, r), 0);
   const rc = ingCost > 0 ? ingCost : (p.receta_cost || 0);
-  return rc + packCost(s, p) + comboCost(s, p);
+  return rc + merchandiseCost(s, p) + packCost(s, p) + comboCost(s, p);
 }
 
 /** Costo por unidad vendida: costo de la receta ÷ porciones. */
@@ -233,5 +246,5 @@ export function recalcRecetaCost(s, p) {
   const totPack = (p.packaging || []).reduce((sum, r) => sum + calcEnvCost(s, r), 0);
   const totCombo = (p.combos || []).reduce((sum, r) => sum + calcComboCost(s, r), 0);
   if (totIng > 0) p.receta_cost = totIng;
-  return { totIng, totPack, totCombo };
+  return { totIng, totPack, totCombo, totMerchandise: merchandiseCost(s, p) };
 }

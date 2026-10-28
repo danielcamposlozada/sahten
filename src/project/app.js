@@ -35,7 +35,7 @@ function collect() {
 /** Deja la app en blanco (sin tocar tiers y canales por defecto, que usa el asistente de configuración). */
 function resetApp() {
   const clear = a => { if (a) a.length = 0; };
-  [w.PRODUCTS, w.INGREDIENTES, w.ENVASES, w.GASTOS_OP, w.GASTOS_S, w.GF_DISC_HISTORY, w.MOVIMIENTOS].forEach(clear);
+  [w.PRODUCTS, w.INGREDIENTES, w.MERCADERIA, w.ENVASES, w.GASTOS_OP, w.GASTOS_S, w.GF_DISC_HISTORY, w.MOVIMIENTOS].forEach(clear);
   [w.STOCK, w.GF_MONTHS, w.SAHTEN_PROJECT, w.projChannelDist, w.projChannelLocked, w.projManualUnits, w.SAHTEN_IMAGES].forEach(o => o && Object.keys(o).forEach(k => delete o[k]));
   Object.keys(w.SAHTEN_SUPABASE).forEach(k => delete w.SAHTEN_SUPABASE[k]); Object.assign(w.SAHTEN_SUPABASE, { url: '', anonKey: '', storeId: '' });
   w.projManualMode = false; w.customTC = 0; w.SAHTEN_SALE_COSTS = {}; w.SAHTEN_PRICING_QUOTES = {};

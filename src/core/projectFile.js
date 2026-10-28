@@ -15,7 +15,7 @@ export function stateFromSahten(input) {
   return createState({
     project: clone(file.project),
     tiers: clone(cat.tiers), channels: clone(file.channels),
-    ingredients: clone(cat.ingredientes), packs: clone(cat.envases), products: clone(cat.productos),
+    ingredients: clone(cat.ingredientes), merchandise: clone(cat.mercaderia || []), packs: clone(cat.envases), products: clone(cat.productos),
     gastosOp: clone(costs.gastosOp), gastosS: clone(costs.gastosS), gfMonths: clone(costs.gfMonths),
     gfDiscHistory: clone(costs.gfDiscHistory || []),
     saleCosts: clone(costs.saleCosts || {}),

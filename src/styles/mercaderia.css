@@ -1,0 +1,43 @@
+.merch-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.merch-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.merch-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.merch-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.merch-field input, .merch-field select { width: 100%; min-width: 0; min-height: 44px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--card, white); color: var(--ink); font: inherit; font-weight: 400; box-sizing: border-box; }
+.merch-field input:focus-visible, .merch-field select:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.merch-field input:invalid { border-color: var(--red); }
+.merch-cost { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px; background: var(--green-pale, #edf4ee); color: var(--ink); border-radius: 8px; }
+.merch-unit-cost, .merch-cost strong { font-size: 20px; font-family: 'DM Mono', monospace; color: var(--primary); }
+.merch-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.merch-actions .btn, .merch-component .btn, .merch-section-title .btn { min-height: 44px; white-space: normal; }
+.merch-hint { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0; }
+.merch-empty { padding: 32px 16px; text-align: center; }
+.merch-empty p { max-width: 520px; margin: 12px auto 20px; line-height: 1.5; }
+.merch-table td { vertical-align: top; min-width: 120px; }
+.merch-table .merch-field + .merch-field { margin-top: 10px; }
+.merch-table .merch-unit-cost { font-size: 17px; white-space: nowrap; }
+.merch-table small { display: block; color: var(--muted); margin-top: 4px; }
+.merch-recipe { padding: 14px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; }
+.merch-section-title { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.merch-section-title h3 { margin: 0; font-size: 15px; }
+.merch-component { display: grid; grid-template-columns: minmax(140px, 1fr) 90px auto auto; gap: 8px; align-items: end; margin-top: 12px; }
+.merch-component > strong { align-self: center; font-size: 14px; }
+.merch-resale { display: flex; flex-direction: column; gap: 16px; }
+.merch-resale .merch-recipe { margin: 0; }
+.inventory-actions { display: flex; justify-content: flex-end; margin-top: auto; }
+.inventory-more { width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 8px; }
+.inventory-action-popover { display: none; position: fixed; inset: auto; margin: 0; min-width: 210px; max-width: min(300px, calc(100vw - 16px)); padding: 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--card, white); color: var(--ink); box-shadow: 0 8px 30px rgb(0 0 0 / .15); z-index: 10000; }
+.inventory-action-popover:popover-open { display: grid; gap: 3px; }
+.inventory-action-popover.fallback-open { display: grid; gap: 3px; }
+.inventory-action-popover .btn { width: 100%; text-align: left; justify-content: flex-start; min-height: 44px; border: none; white-space: normal; }
+.inventory-action-popover .btn:hover { background: var(--sand); }
+#panel-mercaderia .ptb-view-btn { min-width: 44px; min-height: 44px; }
+@media (max-width: 600px) {
+  .merch-component { grid-template-columns: minmax(0, 1fr) 90px; }
+  .merch-table { min-width: 720px; }
+  .merch-fields { grid-template-columns: 1fr; }
+}
+
+.inventory-secondary { margin-top: 6px; font-size: 12px; color: var(--muted); max-width: 240px; }
+.inventory-secondary summary { cursor: pointer; overflow-wrap: anywhere; padding: 3px 0; }
+.inventory-secondary[open] .merch-field { margin-top: 6px; }
+:is(.inventory-catalog-table:not(.stock-table), .merch-table) .merch-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

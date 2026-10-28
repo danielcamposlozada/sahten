@@ -35,7 +35,7 @@ const publicBrand = value => Object.fromEntries(BRAND_FIELDS.filter(k => Object.
 /** CSS que oculta costos y márgenes para los roles sin acceso (la data ya viaja sin costos; esto limpia columnas y tarjetas). */
 export const NO_COSTS_CSS = `
 body.role-no-costs [data-sec="costs"], body.role-no-costs [data-col="margen"], body.role-no-costs [data-col="costo"], body.role-no-costs .kpi-costs,
-body.role-no-costs #nav-gastos, body.role-no-costs #nav-ingredientes, body.role-no-costs #nav-envases, body.role-no-costs #nav-costreceta { display: none !important; }
+body.role-no-costs #nav-gastos, body.role-no-costs #nav-ingredientes, body.role-no-costs #nav-envases, body.role-no-costs #nav-mercaderia, body.role-no-costs #nav-costreceta { display: none !important; }
 body.role-readonly .panel input, body.role-readonly .panel select, body.role-readonly .panel textarea, body.role-readonly .panel button:not(.rep-tab):not(.rep-subtab):not(.nav-keep) { pointer-events: none; opacity: .72; }
 .role-banner { position: sticky; top: 0; z-index: 30; background: var(--accent, #F28C00); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; text-align: center; }
 `;
@@ -66,7 +66,7 @@ export function applyPublicToFile(local, pub) {
   f.project = { ...f.project, ...pub.project };
   if (pub.branding) f.settings = { ...f.settings, customization: { ...f.settings?.customization, ...publicBrand(pub.branding) } };
   if (pub.cloudImagesVersion) { f.images = pub.images || {}; f.cloudImagesVersion = pub.cloudImagesVersion; }
-  f.catalog = { ...f.catalog, productos: pub.products, ingredientes: [], envases: [], tiers: f.catalog.tiers || [], categorias: [...new Set(pub.products.map(p => p.category).filter(Boolean))] };
+  f.catalog = { ...f.catalog, productos: pub.products, ingredientes: [], mercaderia: [], envases: [], tiers: f.catalog.tiers || [], categorias: [...new Set(pub.products.map(p => p.category).filter(Boolean))] };
   f.channels = pub.channels;
   f.costs = { ...f.costs, gastosOp: [], gastosS: [], gfMonths: {}, saleCosts: {}, pricingQuotes: {} };
   f.sales = { ...f.sales, discounts: pub.sales.discounts || [], payments: pub.sales.payments || [], customers: f.sales.customers.length ? f.sales.customers : (pub.sales.customers || []) };

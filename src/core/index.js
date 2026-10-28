@@ -12,3 +12,5 @@ export * from './stock.js';
 export * from './projectFile.js';
 export { t, setLocale, getLocale, registerLocale } from '../i18n/index.js';
 export * from './delivery.js';
+
+export * from './merchandise.js';

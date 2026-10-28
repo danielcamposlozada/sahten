@@ -84,7 +84,7 @@ function renderMenuOnline() {
             <button class="btn" data-mo="all-on">Mostrar todos</button>
             <button class="btn" data-mo="all-off">Ocultar todos</button>
           </div>
-          <p class="mo-availability-help">Estos interruptores muestran u ocultan productos solo en la web. Para pausarlos en Mostrador y web, usá «Pausar ventas» en Productos. Los precios se publican aparte.</p>
+          <p class="mo-availability-help">Los interruptores de producto se envían en vivo y muestran u ocultan solo en la web. Las categorías y los ajustes generales requieren «Publicar catálogo en la tienda». Para pausarlos en Mostrador y web, usá «Pausar ventas» en Productos. Los precios se publican aparte.</p>
           <div id="mo-availability" role="status" aria-live="polite"></div><div id="mo-list"></div>
           <details class="mo-settings" id="mo-settings">
             <summary>Ajustes del menú</summary>
@@ -93,12 +93,12 @@ function renderMenuOnline() {
               <label class="f">Subtítulo<input type="text" class="custom-input" data-mo-set="subtitle" value="${_esc(MENU_CONFIG.subtitle)}"></label>
               <label class="f">WhatsApp donde llegan los pedidos<input type="tel" class="custom-input" data-mo-set="whatsappNumber" placeholder="+54 9 11 1234-5678" value="${_esc(MENU_CONFIG.whatsappNumber)}"></label>
               <label class="f">Nota de delivery (aparece al pedir)<textarea class="custom-input" rows="2" style="resize:vertical" data-mo-set="deliveryNote">${_esc(MENU_CONFIG.deliveryNote)}</textarea></label>
-              <div class="mo-checks">
+              <div class="mo-checks" title="Estos ajustes se guardan en el proyecto. Para aplicarlos en la web usá Publicar catálogo en la tienda.">
                 <label><span class="mo-sw"><input type="checkbox" data-mo-check="showPrices" ${MENU_CONFIG.showPrices !== false ? 'checked' : ''}><span></span></span>Mostrar precios</label>
                 <label><span class="mo-sw"><input type="checkbox" data-mo-check="showImages" ${MENU_CONFIG.showImages !== false ? 'checked' : ''}><span></span></span>Mostrar fotos</label>
                 <label><span class="mo-sw"><input type="checkbox" data-mo-check="enabled" ${MENU_CONFIG.enabled !== false ? 'checked' : ''}><span></span></span>Menú activo</label>
               </div>
-              <div style="font-size:11.5px;color:var(--muted)">Publicar paso a paso: docs/PUBLICAR.md. El pedido sale por WhatsApp con el precio de Mostrador; no lleva costos ni márgenes.</div>
+              <div style="font-size:11.5px;color:var(--muted)">Para aplicar estos ajustes generales en la web: Nube y usuarios → Publicar catálogo en la tienda. No hace falta subir otra carpeta; el diseño y las secciones del sitio sí requieren exportar y subir los archivos.</div>
             </div>
           </details>
         </div>
@@ -169,7 +169,7 @@ function _moRenderList() {
           ${showImgs ? SAHTEN.photos.thumb(SAHTEN.photos.categoryKey(g.cat), 'la categoría ' + g.cat, { size: 32 }) : ''}<span class="mo-cat-name">${_esc(g.cat)}</span><span class="mo-cat-count">${vis} de ${g.items.length} visibles</span>
           <button class="mo-iconbtn" data-mo-catmove="-1" data-cat="${_esc(g.cat)}" aria-label="Subir ${_esc(g.cat)}" ${gi === 0 ? 'disabled' : ''}>▲</button>
           <button class="mo-iconbtn" data-mo-catmove="1" data-cat="${_esc(g.cat)}" aria-label="Bajar ${_esc(g.cat)}" ${gi >= cats.length - 1 ? 'disabled' : ''}>▼</button>
-          <label class="mo-sw" title="${hiddenCat ? 'Mostrar' : 'Ocultar'} la categoría"><input type="checkbox" data-mo-cat="${_esc(g.cat)}" ${hiddenCat ? '' : 'checked'} aria-label="Categoría ${_esc(g.cat)} visible"><span></span></label>
+          <label class="mo-sw" title="${hiddenCat ? 'Mostrar' : 'Ocultar'} la categoría. Guardado local: requiere Publicar catálogo en la tienda."><input type="checkbox" data-mo-cat="${_esc(g.cat)}" ${hiddenCat ? '' : 'checked'} aria-label="Categoría ${_esc(g.cat)} visible"><span></span></label>
         </div>`
       : `<div class="mo-cat-head" style="cursor:default"><span class="mo-cat-name">Sin categoría</span><span class="mo-cat-count">${g.items.length} producto${g.items.length !== 1 ? 's' : ''} · asignales una categoría desde Menú</span></div>`;
     const rows = open ? items.map(p => {

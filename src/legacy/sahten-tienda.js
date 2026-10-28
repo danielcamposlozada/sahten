@@ -141,7 +141,7 @@ function _renderTiendaOnline() {
         Métodos de pago
       </div></div>
       <div class="card-body">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Activá los métodos de pago disponibles en tu tienda online.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Activá los métodos disponibles y usá «Publicar catálogo en la tienda» para aplicarlos en la web. El botón de Mercado Pago «Deshabilitar nuevos cobros» actúa directamente en el servidor.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           ${Object.entries({efectivo:'💵 Efectivo',transferencia:'🏦 Transferencia',mercadopago:'📱 Mercado Pago',tarjeta:'💳 Tarjeta'}).map(([k,label])=>`
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--card)">
@@ -374,7 +374,7 @@ function _tiendaSaveBenefit(){
   const cfg=_getTiendaConfig();
   cfg.paymentBenefit={enabled:document.getElementById('tienda-benefit-enabled').checked,percent,channels:{online:document.getElementById('tienda-benefit-online').checked,mostrador:document.getElementById('tienda-benefit-pos').checked},revision:crypto.randomUUID(),effectiveFrom:new Date().toISOString()};
   _saveTiendaConfig(cfg);
-  status.textContent='Beneficio guardado. Rige para nuevas órdenes en este proyecto. Sincronizá el menú para actualizar la tienda online.';
+  status.textContent='Beneficio guardado. Rige para nuevas órdenes en este proyecto. Usá «Publicar catálogo en la tienda» para actualizar la tienda online.';
   if(typeof _renderCartExtras==='function')_renderCartExtras();
   if(typeof _renderCartTotals==='function')_renderCartTotals();
 }

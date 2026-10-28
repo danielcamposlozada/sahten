@@ -61,7 +61,7 @@ function defaults(){
 
 // ── Arranque vacío ───────────────────────────────────────
 window.sahtenFreshStart=function(){
-  PRODUCTS.length=0; INGREDIENTES.length=0; ENVASES.length=0; GASTOS_OP.length=0; GASTOS_S.length=0;
+  PRODUCTS.length=0; INGREDIENTES.length=0; MERCADERIA.length=0; ENVASES.length=0; GASTOS_OP.length=0; GASTOS_S.length=0;
   Object.keys(STOCK).forEach(k=>delete STOCK[k]); MOVIMIENTOS.length=0;
   if(typeof GF_DISC_HISTORY!=='undefined') GF_DISC_HISTORY.length=0;
   try{ renderDashboard(); }catch(e){}

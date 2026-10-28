@@ -31,7 +31,7 @@ const P=v=>(v*100).toFixed(v*100%1?1:0)+'%';
 window.sahtenWhy=function(id){
   const i=PRODUCTS.findIndex(x=>x.id===id); const p=PRODUCTS[i]; if(!p) return;
   const ingRaw=(p.ingredients||[]).reduce((s,r)=>s+calcIngCost(r),0); const manual=ingRaw<=0&&(p.receta_cost||0)>0;
-  const ing=ingRaw>0?ingRaw:(p.receta_cost||0); const pack=packCost(p); const combo=comboCost(p); const tot=totalCost(p); const porc=getPorc(p); const cpu=costPerUnit(p);
+  const ing=ingRaw>0?ingRaw:(p.receta_cost||0); const merch=merchandiseCost(p); const pack=packCost(p); const combo=comboCost(p); const tot=totalCost(p); const porc=getPorc(p); const cpu=costPerUnit(p);
   const absorbs=typeof absorbsGF==='function'?absorbsGF(p):true; const gfu=gfPerUnit(); const gfa=gfAssigned(p);
   const ub=typeof gfUnitsBase==='function'?gfUnitsBase():0; const est=+(window.SAHTEN_PROJECT||SAHTEN_PROJECT||{}).estUnitsMonth||0;
   const tier=getTier(p.tier); const adj=p.priceAdj||1; const base=cpu+gfa; const afterTier=base*tier.factor*adj;
@@ -46,8 +46,9 @@ window.sahtenWhy=function(id){
   ov.innerHTML=`<div class="why-box"><div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><h3>¿De dónde sale este precio?</h3><div class="why-sub">${esc(p.name)}</div></div><button class="why-btn" style="width:28px;height:28px;font-size:14px" onclick="this.closest('.why-ov').remove()">✕</button></div>
   <div class="why-grp">1 · Costo por unidad</div>
   ${row(manual?'Costo de receta (manual)':'Ingredientes',fmt(ing),manual?'No hay ingredientes vinculados; se usa el costo cargado a mano.':(p.ingredients||[]).filter(r=>r.ingId).length+' ingrediente(s)',go('',`openRecipe(${i})`))}
+  ${merch?row('Mercadería',fmt(merch),'Productos terminados de proveedores',go('mercaderia')):''}
   ${pack?row('Envases',fmt(pack)):''}${combo?row('Sub-recetas / combos',fmt(combo)):''}
-  ${row('Costo total de la receta',fmt(tot))}
+  ${row(p.productType==='resale'?'Costo total del producto':'Costo total de la receta',fmt(tot))}
   ${porc!==1?row('÷ Porciones que rinde','÷ '+(Math.round(porc*100)/100),p.merma?'Incluye merma de '+p.merma+'%':''):''}
   ${row('Costo por unidad',fmt(cpu),'',null,true)}
   <div class="why-grp">2 · Gasto fijo asignado</div>
