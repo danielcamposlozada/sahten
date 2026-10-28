@@ -474,3 +474,27 @@ PR #34 integrado por merge normal `238e3e1b9f0223c6d7225cf86a8230507eb1b1d3`, CI
 - La Carta visual y checkout ya están implementados en la plantilla de la app y desplegados en https://sahten.online/pedir/. Web Production `59b798a9-0aeb-42b2-b946-6795836cbf6e`: 17 archivos verificados por hash, cuatro fotos públicas 200, 35 productos y precios conservados. Chrome verificó además la web publicada en tamaño de celular, sin desborde horizontal, con el logo original y la navegación presentes.
 - 657 pruebas en 70 archivos aprobadas; compilación, scripts clásicos, versiones y diferencias correctos. PR #34 integrado por merge normal; etiqueta conservada. No se modificaron servicios ni tablas de Supabase, tarifas, descuentos, horarios, credenciales o estados reales. No se enviaron pedidos, mensajes ni pagos.
 - Este estado reemplaza las referencias anteriores a instaladores en construcción y concepto pendiente. Actualizar la app a 0.4.29 conserva el diseño al exportar nuevamente; la web ya está actualizada y puede verse recargando la pestaña. Evidencia, capturas de escritorio/celular, carpeta, ZIP y guía en `entregables/publicacion-0.4.29/` del espacio de trabajo.
+
+
+### 28/10/2026 — Mercadería e inventarios preparados, sin publicar
+
+- Se prepara un catálogo privado de Mercadería para productos terminados de proveedores: costo por presentación/unidad, proveedor, uso en recetas/combos y creación de productos de reventa sin receta. Comparte cálculo de costos, inventario y registro histórico privado de las nuevas ventas. Traslado explícito desde Ingredientes solo para artículos en unidades; sin modificar el proyecto real.
+- Por ampliación del dueño, se prepara la misma claridad de interfaz para Ingredientes, Envases y Stock, acciones de tres puntos y mejoras de navegación/columnas fijas en la tabla avanzada de Productos. Detalle en [MERCADERIA.md](MERCADERIA.md).
+- La web recibe únicamente el producto de venta y su precio final; no los proveedores ni costos de compra. No hay cambios en la plantilla de la web, catálogos productivos, precios, Supabase, cobros, horarios o delivery. La última versión publicada sigue siendo **0.4.29**; estos cambios requieren una futura publicación de la app. Validación final se registra al terminar.
+
+
+### 28/10/2026 — Autorizaciones y pausas por zona en vivo: preparación
+
+El dueño pidió desactivar Requiere autorización de Zona 1 y evitar publicar el catálogo completo para cada cambio posterior. Se preparan los controles por zona (enabled/requiresAuthorization) con RPC autenticado de dueño/admin, estado privado por negocio, cola persistente y protección frente a publicaciones antiguas. La web abierta consulta los flags cada 10 segundos y conserva precios/tarifas del carrito; los otros equipos leen los estados sin arrastrar el borrador económico. Auditoría de los demás interruptores y límites en [CONTROLES-EN-VIVO.md](CONTROLES-EN-VIVO.md).
+
+Lectura del catálogo productivo confirmó Zona 1 habilitada con autorización, zonas 2–4 habilitadas sin autorización, Zona 5 y Excepcional pausadas. **Todavía no se cambió ese dato en producción**: requiere desplegar la migración y la app, y aplicar el control desde la sesión dueña. Sin cambios de tarifas, mínimos, horarios, descuentos, credenciales, órdenes o pagos. La última versión pública sigue siendo 0.4.29; implementación y verificación local en curso.
+
+Verificación local final de esta preparación: **674 pruebas en 73 archivos aprobadas**, compilación, scripts clásicos, coherencia de versiones y revisión de diferencias correctos. PostgreSQL local confirma dueño/admin, rechazo a cajero/anónimo/otro negocio, actualización de un único flag y protección frente a publicación vieja. La prueba de checkout abierto recibe pausa/autorización conservando precio y foco, sin crear órdenes. Chrome a 1024 × 640 confirma los controles agrupados y documento sin desborde horizontal, con un proyecto ficticio sin conexión. Evidencia en `entregables/controles-en-vivo-2026-10-28/`. Servidor, app pública y web productiva todavía sin cambiar; la autorización real de Zona 1 sigue activa hasta aplicar la operación después del despliegue inicial.
+
+
+### 28/10/2026 — Publicación conjunta 0.4.30 autorizada
+
+El dueño confirmó publicar app Windows/Mac, plantilla web y migración de zonas en vivo junto con Mercadería, inventarios y tabla avanzada. Después se desactivará únicamente Requiere autorización de Zona 1 desde la sesión dueña; conservar tarifas, mínimos, horarios y todas las demás zonas. Publicación y operación aún pendientes de verificación. No se autoriza crear pedidos, pagos ni activar zonas pausadas.
+
+
+Servidor 0.4.30 preparado: migración aplicada y registrada como **20261028233706 / delivery_zone_operations** mediante el conector. Ambos RPC rechazan al anónimo, la tabla privada queda sin filas y el catálogo conserva el hash anterior `5d4e62bd158b4870ef20b7412e79002f`; todavía no se cambió Zona 1. Verificación local de versión 0.4.30: 674 pruebas / 73 archivos, build, versiones, scripts clásicos y diferencias correctos. Carpeta web generada con **33 productos actuales** de la nube y precios coincidentes; sitio, logos, conexión y política conservados. Merge, instaladores y hosting en curso.

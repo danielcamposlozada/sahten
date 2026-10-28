@@ -20,7 +20,7 @@ describe('formato .sahten', () => {
     expect(String(b.usdRate)).toBe(String(a.usdRate)); expect(String(b.globalCommission)).toBe(String(a.globalCommission));
     delete a.usdRate; delete b.usdRate; delete a.globalCommission; delete b.globalCommission;
     // el extra de v4 (imágenes, tema, personalización) aparece vacío
-    ['images', 'theme', 'customization', 'supabase'].forEach(k => { delete b[k]; });
+    ['images', 'theme', 'customization', 'supabase', 'MERCADERIA'].forEach(k => { delete b[k]; });
     // v3 viejo no tenía gfMonths/project (quedan vacíos) y guardaba un descuento de GF en 0 que ya no existe
     ['gfMonths', 'project'].forEach(k => { if (a[k] === undefined && !Object.keys(b[k]).length) delete b[k]; });
     delete a.gfDiscPct; delete a.gfDiscNotes;

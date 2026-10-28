@@ -20,6 +20,7 @@ export function createState(init = {}) {
     tiers: [],
     channels: [],
     ingredients: [],
+    merchandise: [],        // productos terminados comprados a proveedores (stock en unidades)
     packs: [],              // envases
     products: [],
     gastosOp: [],           // gastos operativos { id, name, amount }

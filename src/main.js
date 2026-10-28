@@ -6,6 +6,8 @@ import { installCustomerPicker } from './ui/customer-picker.js';
 import { installOrderActions } from './ui/order-actions.js';
 import { installNotificationSound } from './ui/notification-sound.js';
 import { receiptProfile, receiptPaperWidth, currentReceiptProfile, saveReceiptProfile } from './ui/receipt-paper.js';
+import { installInventoryCatalog } from './ui/inventory-catalog.js';
+import { installAdvancedProductTable } from './ui/product-advanced.js';
 import { installProductViews } from './ui/product-views.js';
 import { installPricing } from './ui/pricing-editor.js';
 import { installInterfaceScale } from './ui/interface-scale.js';
@@ -98,6 +100,8 @@ window.SAHTEN.receiptPaper = { profile: receiptProfile, width: receiptPaperWidth
 window.SAHTEN.projectUi = projectUi;
 window.SAHTEN.pricing = installPricing(window);
 window.SAHTEN.productViews = installProductViews(window);
+window.SAHTEN.inventory = installInventoryCatalog(window);
+installAdvancedProductTable(window);
 window.SAHTEN.customersImport = installCustomerImport(window);
 window.SAHTEN.customerPicker = installCustomerPicker(window);
 events.beforeRender('applyData', () => window.SAHTEN.customerPicker.reset());
@@ -113,7 +117,7 @@ window.SAHTEN.delivery = installDelivery(window);
 registerModules();
 
 const RENDERS = ['showPanel', 'recalcAll', 'applyData', 'renderDashboard', 'renderProductos', 'renderProyeccion',
-  'renderMostrador', 'renderRecipeBody', 'renderCostReceta', 'renderStock', 'mkChart', 'mostSetTab', 'orderSetStatus'];
+  'renderIngredientes', 'renderEnvases', 'renderMostrador', 'renderRecipeBody', 'renderCostReceta', 'renderStock', 'mkChart', 'mostSetTab', 'orderSetStatus'];
 
 function startLegacy() {
 // Cada archivo se ejecuta como script clásico; después de cada uno se envuelven (una sola vez)

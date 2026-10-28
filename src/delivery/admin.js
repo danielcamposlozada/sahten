@@ -1,6 +1,7 @@
 import { prepareDeliveryConfig, sahtenDeliveryPolicy } from './preset.js';
 import { zoneRings, toPolygon, validateDeliveryPolicy } from './geometry.js';
 import './admin.css';
+import { zoneStateFlags, zoneStateKey } from './zone-operation.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const copy=v=>JSON.parse(JSON.stringify(v));
 export function installDeliveryAdmin(w,client){
@@ -9,6 +10,21 @@ export function installDeliveryAdmin(w,client){
  const field=(key,label,value,type='number',extra='')=>`<label>${label}<input data-df="${key}" type="${type}" value="${esc(value)}" ${extra}></label>`;
  const message=(text,error=false)=>{const el=host?.querySelector('[data-message]');if(el){el.textContent=text;el.classList.toggle('delivery-admin-error',error);}};
  const zone=()=>draft.zones[index];
+ function refreshOperational(){
+  if(!host?.isConnected||!draft)return;
+  const cfg=w._getTiendaConfig(),q=w.SAHTEN.online?.zonePublisher?.info(),connected=!!w.SAHTEN.online?.conn()?.storeId;
+  for(const local of cfg.deliveryV2?.zones||[]){
+   for(const p of [draft,saved]){const z=p?.zones.find(z=>z.id===local.id);if(z)for(const flag of zoneStateFlags)z[flag]=local[flag];}
+  }
+  const z=zone();if(!z)return;
+  for(const flag of zoneStateFlags){const el=host.querySelector('[data-zoneflag="'+flag+'"]');if(el)el.checked=!!z[flag];}
+  const pending=zoneStateFlags.some(flag=>q?.changes[zoneStateKey(z.id,flag)]);
+  const status=host.querySelector('[data-zone-live-status]');
+  if(status)status.textContent=!connected?'Solo en este proyecto: conectá la tienda para enviar estos estados.':pending?q.error?'No llegó a la web: '+q.error:q.state==='publicando'?'Actualizando la web…':'Cambio pendiente de enviar a la web.':q?.state==='publicado'?'Estados confirmados en la web.':'Al cambiar estos controles se actualizan Mostrador y la web conectada, sin publicar el catálogo.';
+  const retry=host.querySelector('[data-zone-retry]');if(retry)retry.hidden=!pending;
+  host.querySelectorAll('[data-zone]').forEach(b=>{const a=draft.zones[Number(b.dataset.zone)];b.textContent=a.name+(a.enabled?'':' · pausada');});
+  draw();
+ }
  const hoursHtml=()=>{
   const h=draft.hours,names=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const row=(periods,scope)=>periods.map((p,i)=>`<div class="delivery-benefit-row"><label>Desde<input type="time" data-hours-period="${scope}:${i}:start" value="${esc(p.start)}"></label><label>Hasta<input type="time" data-hours-period="${scope}:${i}:end" value="${esc(p.end)}"></label><button class="btn" data-remove-period="${scope}:${i}">Quitar turno</button></div>`).join('');
@@ -25,14 +41,14 @@ export function installDeliveryAdmin(w,client){
   if(!host?.isConnected)return;
   const z=zone(),editable=canEdit();if(!z){host.textContent='La configuración no tiene zonas válidas. Restaurá una copia del proyecto antes de activar el delivery.';return;}
   host.innerHTML=`<section class="card delivery-admin"><div class="card-header"><h3>Delivery geográfico e incentivos</h3></div><div class="card-body">
-   <p>Configuración ${draft.active?'activa en este proyecto':'preparada, sin activar'}. Las tarifas se comprueban por calles en el servidor; publicar o sincronizar es un paso separado.</p>
+   <p>Configuración ${draft.active?'activa en este proyecto':'preparada, sin activar'}. Zona habilitada y Requiere autorización se envían automáticamente al cambiarlos. Tarifas, mínimos, horarios y beneficios requieren guardar y publicar el catálogo.</p>
    <div class="delivery-admin-fields"><label class="delivery-switch"><input type="checkbox" data-policy="active" ${draft.active?'checked':''}> Usar nuevas zonas en este proyecto</label><label class="delivery-switch"><input type="checkbox" data-policy="promotionsEnabled" ${draft.promotionsEnabled?'checked':''}> Activar beneficios de envío</label><label class="delivery-switch"><input type="checkbox" data-policy="stackWithPayment" ${draft.stackWithPayment?'checked':''}> Combinar beneficio de envío con descuento por pago</label></div>
    <details><summary>Ubicación y protección operativa</summary><div class="delivery-admin-fields">${field('center.address','Dirección del local',draft.center.address||'','text','maxlength="300"')}${field('center.lat','Latitud del local',draft.center.lat)}${field('center.lng','Longitud del local',draft.center.lng)}${field('regularMaxKm','Máximo regular (km)',draft.regularMaxKm,'number','min="0.1" max="8" step="0.1"')}${field('maxRouteKm','Máximo excepcional (km)',draft.maxRouteKm,'number','min="0.1" max="8.5" step="0.1"')}</div><label class="delivery-switch"><input data-center-verified type="checkbox" ${draft.center.verifiedAt?'checked':''}> Verifiqué el punto exacto del local</label><p>${esc(draft.center.address||w._getTiendaConfig().address)} · <a href="${esc(draft.center.source||'https://www.openstreetmap.org/')}" target="_blank" rel="noopener">Fuente del punto</a></p></details>
    ${hoursHtml()}
    <div class="delivery-zone-picker" role="group" aria-label="Seleccionar zona">${draft.zones.map((a,i)=>`<button type="button" class="btn" data-zone="${i}" aria-pressed="${i===index}" style="--zone-color:${esc(a.color)}">${esc(a.name)}${a.enabled?'':' · pausada'}</button>`).join('')}</div>
    <div class="delivery-admin-layout"><div><div id="delivery-admin-map" class="delivery-admin-map" role="region" aria-label="Mapa de cobertura"></div><p>Elegí una zona. En modo polígono, arrastrá sus vértices o editalos por coordenadas. El color no reemplaza el nombre de la zona.</p></div><div>
    <div class="delivery-admin-fields">${field('name','Nombre',z.name,'text','maxlength="80"')}${field('color','Color',z.color,'color')}${field('innerRadiusKm','Límite inferior tarifario (km)',z.innerRadiusKm,'number','min="0" step="0.1"')}${field('radiusKm','Límite superior tarifario (km)',z.radiusKm,'number','min="0.1" max="8.5" step="0.1"')}${field('baseCost','Tarifa normal ($)',z.baseCost,'number','min="0" step="10"')}${field('minOrder','Pedido mínimo ($)',z.minOrder,'number','min="0" step="100"')}</div>
-   <label class="delivery-switch"><input type="checkbox" data-zoneflag="enabled" ${z.enabled?'checked':''}> Zona habilitada</label><label class="delivery-switch"><input type="checkbox" data-zoneflag="requiresAuthorization" ${z.requiresAuthorization?'checked':''}> Requiere autorización</label>
+   <fieldset class="delivery-zone-live"><legend>Controles en vivo</legend><label class="delivery-switch"><input type="checkbox" data-zoneflag="enabled" ${z.enabled?'checked':''}> Zona habilitada</label><label class="delivery-switch"><input type="checkbox" data-zoneflag="requiresAuthorization" ${z.requiresAuthorization?'checked':''}> Requiere autorización</label><p data-zone-live-status role="status" aria-live="polite"></p><button type="button" class="btn" data-zone-retry hidden>Reintentar envío</button><small>No cambian tarifas ni mínimos. Cancelar cambios no revierte estos controles. Quitar la autorización de la zona no elimina el control por recorrido excepcional.</small></fieldset>
    <details open><summary>Beneficios por subtotal neto de productos</summary><div>${(z.benefits||[]).map((b,i)=>`<div class="delivery-benefit-row"><label>Desde ($)<input type="number" data-benefit="${i}" data-bkey="threshold" min="1" value="${b.threshold}"></label><label>Envío ($)<input type="number" data-benefit="${i}" data-bkey="cost" min="0" value="${b.cost}"></label><button class="btn" data-remove-benefit="${i}" aria-label="Quitar beneficio ${i+1}">Quitar</button></div>`).join('')}</div><button class="btn" data-action="add-benefit">Agregar beneficio</button><p>Envío 0 = gratis. Se aplica el mejor beneficio de envío. El 10 % por efectivo/transferencia sigue siendo un descuento sobre productos; los umbrales usan el subtotal después de descuentos.</p></details>
    <div class="delivery-admin-actions"><button class="btn" data-action="convert">${z.type==='polygon'?'Restablecer esta zona radial':'Convertir este anillo a polígono'}</button><button class="btn" data-action="undo-zone">Revertir esta zona</button></div>
    ${z.type==='polygon'?`<details open><summary>Editar contorno y vértices</summary><label>Contorno<select data-ring>${[z.points,...(z.holes||[])].map((r,i)=>`<option value="${i}" ${i===ringIndex?'selected':''}>${i?'Hueco interior '+i:'Contorno exterior'} (${r.length} vértices)</option>`).join('')}</select></label><label>Vértice<select data-vertex>${(ringIndex?z.holes[ringIndex-1]:z.points).map((v,i)=>`<option value="${i}" ${i===vertex?'selected':''}>${i+1}: ${v[0].toFixed(5)}, ${v[1].toFixed(5)}</option>`).join('')}</select></label><div class="delivery-admin-fields"><label>Latitud del vértice<input data-vcoord="0" type="number" step="any" value="${(ringIndex?z.holes[ringIndex-1]:z.points)[vertex]?.[0]??''}"></label><label>Longitud del vértice<input data-vcoord="1" type="number" step="any" value="${(ringIndex?z.holes[ringIndex-1]:z.points)[vertex]?.[1]??''}"></label></div><div class="delivery-admin-actions"><button class="btn" data-action="add-vertex">Agregar vértice intermedio</button><button class="btn" data-action="remove-vertex">Eliminar vértice</button><button class="btn" data-action="draw">${drawing?'Terminar dibujo':'Dibujar contorno nuevo'}</button></div><p>${drawing?'Hacé clic en el mapa para agregar puntos; terminá con al menos tres.':'Los huecos interiores evitan superponer el anillo con las zonas más cercanas.'}</p></details>`:''}
@@ -49,7 +65,7 @@ export function installDeliveryAdmin(w,client){
    if(el.dataset.hoursPeriod){const [scope,i,key]=el.dataset.hoursPeriod.split(':');periodList(scope)[Number(i)][key]=el.value;return;}
    if(el.dataset.exceptionDate!==undefined){draft.hours.exceptions[Number(el.dataset.exceptionDate)].date=el.value;return;}
    if(el.dataset.policy){draft[el.dataset.policy]=el.checked;return;}
-   if(el.dataset.zoneflag){z[el.dataset.zoneflag]=el.checked;draw();return;}
+   if(el.dataset.zoneflag){w.SAHTEN.delivery.zoneOperation.set(z.id,el.dataset.zoneflag,el.checked);return;}
    if(el.hasAttribute('data-center-verified')){draft.center.verifiedAt=el.checked?new Date().toISOString():null;return;}
    if(el.dataset.df){const k=el.dataset.df,v=['name','color','center.address'].includes(k)?el.value:Number(el.value);if(k.startsWith('center.')){draft.center[k.split('.')[1]]=v;draft.center.verifiedAt=null;host.querySelector('[data-center-verified]').checked=false;render();return;}else if(['maxRouteKm','regularMaxKm'].includes(k))draft[k]=v;else z[k]=v;draw();return;}
    if(el.dataset.benefit!==undefined){z.benefits[Number(el.dataset.benefit)][el.dataset.bkey]=Number(el.value);return;}
@@ -59,6 +75,7 @@ export function installDeliveryAdmin(w,client){
   };
   host.onclick=async e=>{
    const b=e.target.closest('button');if(!b||!canEdit())return;
+   if(b.hasAttribute('data-zone-retry')){w.SAHTEN.online.zonePublisher.flush().catch(()=>{});return;}
    if(b.dataset.addPeriod){const list=periodList(b.dataset.addPeriod);if(list.length<4)list.push({start:'',end:''});render();return;}
    if(b.dataset.removePeriod){const [scope,i]=b.dataset.removePeriod.split(':');periodList(scope).splice(Number(i),1);render();return;}
    if(b.hasAttribute('data-add-exception')){if(draft.hours.exceptions.length<366)draft.hours.exceptions.push({date:'',periods:[]});render();return;}
@@ -83,7 +100,7 @@ export function installDeliveryAdmin(w,client){
   };
   host.querySelector('[data-routing-form]').onsubmit=async e=>{e.preventDefault();if(!canEdit())return;const input=e.target.elements['routing-key'],key=input.value;input.value='';const status=host.querySelector('[data-routing-status]');try{await client.saveProvider(key);status.textContent='Clave guardada cifrada. La siguiente consulta comprobará la ruta.';}catch(err){status.textContent=err.message;}};
   const statusEl=host.querySelector('[data-routing-status]');client.provider().then(v=>{if(statusEl.isConnected)statusEl.textContent=v.configured?'Conexión guardada.':'Sin clave: no se confirmarán envíos con el motor nuevo.';}).catch(err=>{if(statusEl.isConnected)statusEl.textContent=err.message;});
-  initMap();
+  refreshOperational();initMap();
  }
  function syncVertices(){
   if(zone().type!=='polygon')return;
@@ -102,5 +119,5 @@ export function installDeliveryAdmin(w,client){
   draft.zones.map((z,i)=>({z,i})).sort((a,b)=>b.z.radiusKm-a.z.radiusKm).forEach(({z,i})=>{const rings=zoneRings(draft.center,z);if(rings[0].length<3||rings.some(r=>r.some(p=>!p.every(Number.isFinite))))return;const l=L.polygon(rings,{color:z.color,fillOpacity:z.enabled ? .1 : .025,weight:i===index?3:1.5,dashArray:z.requiresAuthorization?'6 4':null}).bindTooltip(esc(z.name));l.on('click',e=>{if(drawing)return;L.DomEvent.stopPropagation(e);index=i;ringIndex=vertex=0;render();});l.addTo(map);layers.push(l);});
   if(zone().type==='polygon'){const r=ringIndex?zone().holes[ringIndex-1]:zone().points;r.forEach((p,i)=>{const m=L.marker(p,{draggable:canEdit(),icon:L.divIcon({className:'delivery-vertex',iconSize:[12,12]})}).addTo(map);m.bindTooltip('Vértice '+(i+1));m.on('dragend',()=>{const v=m.getLatLng();r[i]=[v.lat,v.lng];vertex=i;draw();syncVertices();});layers.push(m);});}
  }
- return {mount,dispose,edit:i=>{index=i;render();}};
+ return {mount,dispose,refreshOperational,edit:i=>{index=i;render();}};
 }

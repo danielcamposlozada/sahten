@@ -1,0 +1,37 @@
+.product-advanced-tools { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 16px; background: var(--card); border-top: 1px solid var(--border); }
+.product-advanced-tools > span { font-size: 13px; color: var(--muted); }
+.product-advanced-tools > div { display: flex; align-items: center; gap: 10px; }
+.product-advanced-tools [role="status"] { font-size: 12px; min-width: 80px; text-align: center; color: var(--muted); }
+.product-advanced-tools .btn { min-height: 40px; min-width: 44px; }
+.product-advanced-scroll { overflow: auto; max-height: min(68dvh, 760px); min-height: 180px; isolation: isolate; scrollbar-gutter: stable; overscroll-behavior-x: contain; position: relative; }
+.product-advanced-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+#panel-productos .prod-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; table-layout: auto; }
+#panel-productos .prod-table :is(th, td) { padding: 12px 14px; border-right: 1px solid var(--border); vertical-align: middle; min-width: 98px; font-size: 13px; line-height: 1.45; }
+#panel-productos .prod-table thead th { position: sticky !important; top: 0 !important; z-index: 5; background: var(--primary); border-radius: 0; }
+#panel-productos .prod-table :is(th, td):first-child { position: sticky; left: 0; min-width: 40px; width: 40px; max-width: 40px; padding: 10px 8px; box-sizing: border-box; z-index: 3; }
+#panel-productos .prod-table :is(th, td):nth-child(2) { position: sticky; left: 40px; min-width: 220px !important; width: 220px !important; max-width: 220px !important; box-sizing: border-box; z-index: 3; border-right: 2px solid var(--border); }
+#panel-productos .prod-table :is(th, td):last-child { position: sticky; right: 0; min-width: 54px; width: 54px; max-width: 54px; padding: 10px 8px; z-index: 3; border-left: 2px solid var(--border); }
+#panel-productos .prod-table tbody :is(td:first-child, td:nth-child(2), td:last-child) { background: var(--card); }
+#panel-productos .prod-table thead :is(th:first-child, th:nth-child(2), th:last-child) { z-index: 7; }
+#panel-productos .prod-table tbody tr:hover td { background: var(--sand); }
+#panel-productos .prod-table .inline-edit { min-height: 36px; font-size: 14px; }
+#panel-productos .prod-table .price-cell { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#panel-productos .prod-table [data-col="costo_total"] > span { display: block; margin-top: 4px; }
+#panel-productos .advanced-channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 330px; }
+#panel-productos .advanced-channel { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 6px; padding: 6px 8px; border-radius: 6px; }
+#panel-productos .advanced-channel-name { font-size: 11px; font-weight: 600; align-self: center; overflow-wrap: anywhere; }
+#panel-productos .advanced-channel-price { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 3px; font-size: 12px; white-space: nowrap; font-family: 'DM Mono', monospace; }
+#panel-productos .advanced-channel-extra { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; font: 10px 'DM Mono', monospace; }
+#panel-productos .prod-table [data-col="estrella"] { min-width: 48px; padding: 8px; }
+#panel-productos .prod-table .sales-controls { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+#panel-productos .prod-table .sales-state { font-size: 11px; padding: 3px 5px; }
+#panel-productos .prod-table .sales-pause-button { font-size: 11px; padding: 4px 7px; }
+#panel-productos .prod-table .row-action-btn { min-width: 40px; min-height: 40px; }
+
+#panel-productos .prod-table .sales-pause-button { min-height: 36px; }
+#panel-productos .prod-table [data-col="etiquetas"] { min-width: 150px; max-width: 180px; }
+.product-advanced-scroll.is-scrolled .prod-table tbody td:nth-child(2) { box-shadow: 6px 0 8px -8px rgb(0 0 0 / .5); }
+@media (max-width: 600px) {
+  #panel-productos .prod-table :is(th, td):nth-child(2) { min-width: 180px !important; width: 180px !important; max-width: 180px !important; }
+  #panel-productos .prod-table :is(th, td) { padding: 10px 12px; }
+}

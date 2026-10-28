@@ -1150,6 +1150,7 @@ function wipeFinal() {
     // 1. Empty all data arrays in-place (PRODUCTS is const)
     if (typeof PRODUCTS !== 'undefined') PRODUCTS.length = 0;
     if (typeof ENVASES !== 'undefined') ENVASES.length = 0;
+    if (typeof MERCADERIA !== 'undefined') MERCADERIA.length = 0;
     if (typeof GASTOS_OP !== 'undefined') GASTOS_OP.length = 0;
     if (typeof GASTOS_S !== 'undefined') GASTOS_S.length = 0;
     if (typeof GF_DISC_HISTORY !== 'undefined') GF_DISC_HISTORY.length = 0;
@@ -1179,6 +1180,7 @@ function wipeFinal() {
       try {
         if (typeof renderProductos === 'function') renderProductos();
         if (typeof renderIngredientes === 'function') renderIngredientes();
+        SAHTEN.merchandise.render();
         if (typeof renderEnvases === 'function') renderEnvases();
         if (typeof renderGastos === 'function') renderGastos();
         if (typeof renderTiers === 'function') renderTiers();

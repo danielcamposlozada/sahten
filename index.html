@@ -49,6 +49,7 @@
       <a class="nav-item" href="#/stock" data-panel="stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>Stock</span></a>
       <div class="nav-section">Configurar</div>
       <a class="nav-item" href="#/ingredientes" data-panel="ingredientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2z"/><path d="M12 12v10"/><path d="M2 12h20"/></svg><span>Ingredientes</span></a>
+      <a class="nav-item" href="#/mercaderia" data-panel="mercaderia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h18v13H3zM2 3h20v5H2zM9 12h6"/></svg><span>Mercadería</span></a>
       <a class="nav-item" href="#/envases" data-panel="envases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Envases</span></a>
       <a class="nav-item" href="#/gastos" data-panel="gastos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Gastos Fijos</span></a>
       <a class="nav-item" id="nav-nube" href="#/nube" data-panel="nube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Nube y usuarios</a>
@@ -148,6 +149,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2z"/><path d="M12 12v10"/><path d="M2 12h20"/></svg>
           <span>Ingredientes</span>
         </button>
+        <button class="app-drawer-item" id="ad-mercaderia" data-panel="mercaderia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h18v13H3zM2 3h20v5H2zM9 12h6"/></svg><span>Mercadería</span></button>
         <button class="app-drawer-item" id="ad-envases" data-panel="envases">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
           <span>Envases</span>
@@ -578,13 +580,13 @@
           <div class="s2-topbar-right">
             <div class="s2-search-wrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" id="stock-search" placeholder="Buscar producto..." oninput="renderStock()" class="s2-search-input">
+              <input type="text" id="stock-search" placeholder="Buscar artículo…" aria-label="Buscar artículos en stock" oninput="renderStock()" class="s2-search-input">
             </div>
-            <select id="stock-filter" onchange="renderStock()" class="s2-filter-select">
+            <select id="stock-filter" aria-label="Filtrar stock por estado" onchange="renderStock()" class="s2-filter-select">
               <option value="all">Todos</option>
-              <option value="low">⚠ Bajo</option>
-              <option value="out">🔴 Sin stock</option>
-              <option value="ok">✅ OK</option>
+              <option value="low">Stock bajo</option>
+              <option value="out">Sin stock</option>
+              <option value="ok">Stock OK</option>
             </select>
             <button class="s2-btn-retirar" onclick="showStockModal('uso_interno')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
@@ -725,6 +727,7 @@
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="gf-tpl-btns">
                 <button class="gf-tpl-btn active" id="gf-tpl-ingredientes" onclick="gfSetTemplate('ingredientes')">🍴<br><strong>Ingredientes</strong><br><span>Desde tu stock virtual</span></button>
+                <button class="gf-tpl-btn" id="gf-tpl-mercaderia" onclick="gfSetTemplate('mercaderia')"><strong>Mercadería</strong><br><span>Productos de proveedores</span></button>
                 <button class="gf-tpl-btn" id="gf-tpl-envases" onclick="gfSetTemplate('envases')">📦<br><strong>Envases y Papelería</strong><br><span>Desde tu stock virtual</span></button>
                 <button class="gf-tpl-btn" id="gf-tpl-libre" onclick="gfSetTemplate('libre')">✏️<br><strong>Libre / Vacía</strong><br><span>Solo filas en blanco</span></button>
               </div>
@@ -772,19 +775,19 @@
         <div class="info-banner"><strong>Base de ingredientes:</strong> Editá precios. Los cambios se reflejan en los costos de receta.</div>
         <div class="panel-toolbar">
           <div class="ptb-view-group">
-            <button class="ptb-view-btn active" id="iv-grilla" title="Vista grilla" onclick="setIngView('grilla')">
+            <button class="ptb-view-btn active" id="iv-grilla" aria-label="Vista tarjetas de ingredientes" aria-pressed="true" title="Vista tarjetas" onclick="setIngView('grilla')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
-            <button class="ptb-view-btn" id="iv-lista" title="Vista lista" onclick="setIngView('lista')">
+            <button class="ptb-view-btn" id="iv-lista" aria-label="Vista lista de ingredientes" aria-pressed="false" title="Vista lista" onclick="setIngView('lista')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
             </button>
           </div>
           <div class="ptb-sep"></div>
           <div class="ptb-search-wrap">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="ing-search" placeholder="Buscar ingrediente..." class="ptb-search" oninput="renderIngredientes()">
+            <input type="text" id="ing-search" placeholder="Buscar ingrediente o proveedor…" aria-label="Buscar ingredientes" class="ptb-search" oninput="renderIngredientes()">
           </div>
-          <select id="ing-sort" class="ptb-select" onchange="renderIngredientes()">
+          <select id="ing-sort" aria-label="Ordenar ingredientes" class="ptb-select" onchange="renderIngredientes()">
             <option value="">Orden original</option>
             <option value="name-asc">A → Z</option>
             <option value="name-desc">Z → A</option>
@@ -799,6 +802,7 @@
             </button>
           </div>
         </div>
+        <p id="ing-count" class="merch-hint" role="status" aria-live="polite"></p>
         <div class="card">
           <div class="card-body" id="ing-container">
             <div class="ing-grid" id="ing-grid"></div>
@@ -807,21 +811,58 @@
         </div>
       </div>
 
-      <!-- ENVASES -->
-      <div id="panel-envases" class="panel">
-        <div class="info-banner"><strong>Envases y papelería:</strong> Editá nombre, precio de paquete y cantidad. El precio unitario se calcula automáticamente.</div>
+      <!-- MERCADERÍA -->
+      <div id="panel-mercaderia" class="panel">
+        <div class="info-banner"><strong>Mercadería:</strong> Productos de proveedores, listos para vender o agregar a una preparación. El costo por unidad sale del paquete; no necesitás crear una receta.</div>
         <div class="panel-toolbar">
           <div class="ptb-view-group">
-            <button class="ptb-view-btn active" id="ev-lista" title="Vista lista" onclick="">
+            <button class="ptb-view-btn active" data-merch-view="grilla" title="Vista tarjetas" aria-label="Vista tarjetas" aria-pressed="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="ptb-view-btn" data-merch-view="lista" title="Vista lista" aria-label="Vista lista" aria-pressed="false">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
             </button>
           </div>
           <div class="ptb-sep"></div>
           <div class="ptb-search-wrap">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="env-search" placeholder="Buscar envase..." class="ptb-search" oninput="renderEnvases()">
+            <input type="text" id="merch-search" placeholder="Buscar artículo o proveedor…" aria-label="Buscar mercadería por nombre o proveedor" class="ptb-search">
           </div>
-          <select id="env-sort" class="ptb-select" onchange="renderEnvases()">
+          <select id="merch-sort" class="ptb-select" aria-label="Ordenar mercadería">
+
+            <option value="name-asc">A → Z</option>
+            <option value="name-desc">Z → A</option>
+            <option value="price-desc">Costo unitario ↓</option>
+            <option value="price-asc">Costo unitario ↑</option>
+          </select>
+          <div class="ptb-spacer"></div>
+          <div class="ptb-actions">
+            <button class="btn btn-accent" data-merch-action="new">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo
+            </button>
+          </div>
+        </div>
+        <p class="merch-hint" id="merch-count" role="status" aria-live="polite"></p>
+        <div class="card"><div class="card-body" id="merch-content"></div></div>
+      </div>
+
+      <!-- ENVASES -->
+      <div id="panel-envases" class="panel">
+        <div class="info-banner"><strong>Envases y papelería:</strong> Editá nombre, precio de paquete y cantidad. El precio unitario se calcula automáticamente.</div>
+        <div class="panel-toolbar">
+          <div class="ptb-view-group">
+            <button class="ptb-view-btn" id="ev-grilla" data-env-view="grilla" aria-label="Vista tarjetas de envases" aria-pressed="false" title="Vista tarjetas"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+            <button class="ptb-view-btn active" id="ev-lista" title="Vista lista" aria-label="Vista lista de envases" aria-pressed="true" data-env-view="lista">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+            </button>
+          </div>
+          <div class="ptb-sep"></div>
+          <div class="ptb-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="env-search" placeholder="Buscar envase o proveedor…" aria-label="Buscar envases" class="ptb-search" oninput="renderEnvases()">
+          </div>
+          <select id="env-sort" aria-label="Ordenar envases" class="ptb-select" onchange="renderEnvases()">
             <option value="">Orden original</option>
             <option value="name-asc">A → Z</option>
             <option value="name-desc">Z → A</option>
@@ -836,12 +877,8 @@
             </button>
           </div>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <table class="env-table"><thead><tr><th>Nombre</th><th>Precio paquete ($)</th><th>Cant. unidades</th><th>Precio unitario</th><th>$/u (USD)</th><th></th></tr></thead>
-            <tbody id="env-tbody"></tbody></table>
-          </div>
-        </div>
+        <p id="env-count" class="merch-hint" role="status" aria-live="polite"></p>
+        <div class="card"><div class="card-body"><div class="ing-grid merch-grid" id="env-grid" hidden></div><div id="env-list"></div></div></div>
       </div>
 
       <!-- AJUSTES (Unified: Personalización + Canales + Tiers + Backup + Datos) -->
@@ -919,7 +956,7 @@
               <div>
                 <div class="danger-row-title">Borrar todos los datos de este proyecto</div>
                 <div class="danger-row-desc">
-                  Borra <strong>todos los productos del menú, recetas, envases, gastos fijos, descuentos, proyecciones guardadas y unidades manuales</strong>.
+                  Borra <strong>todos los productos del menú, recetas, mercadería, envases, gastos fijos, descuentos, proyecciones guardadas y unidades manuales</strong>.
                   La aplicación queda vacía y lista desde cero. Los canales, tiers y la personalización se conservan.
                   <br><strong style="color:var(--red)">Esta acción no se puede deshacer.</strong>
                 </div>
@@ -1207,7 +1244,7 @@
 
 <!-- WIKI / GUÍA DE USO -->
       <div id="panel-wiki" class="panel">
-        
+
 
         <!-- HERO -->
         <div class="wk-hero">
@@ -1535,7 +1572,7 @@
         </div>
 
         <!-- JS de la wiki (scoped) -->
-        
+
       </div>
       <!-- /WIKI -->
 
@@ -1669,8 +1706,9 @@
       <!-- CATEGORÍA SELECTOR -->
       <div class="s2-field">
         <label class="s2-field-label">Categoría</label>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="s2-cat-btn active" id="cat-btn-ing" onclick="setCatModal('ingrediente')">🥩 Ingredientes</button>
+          <button class="s2-cat-btn" id="cat-btn-merch" onclick="setCatModal('mercaderia')">Mercadería</button>
           <button class="s2-cat-btn" id="cat-btn-env" onclick="setCatModal('envase')">📦 Envases</button>
           <button class="s2-cat-btn" id="cat-btn-prod" onclick="setCatModal('producto')">🍽 Productos</button>
         </div>
@@ -1706,7 +1744,7 @@
           <select id="sm-unit" class="s2-select-input">
             <option value="g">gramos</option>
             <option value="kg">kilos</option>
-            <option value="L">litros</option>
+            <option value="L">litros</option><option value="ml">mililitros</option>
             <option value="u">unidades</option>
           </select>
         </div>

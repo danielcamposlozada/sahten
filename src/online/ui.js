@@ -21,7 +21,7 @@ export function createOnlineUi({ online, w = window }) {
     renderAvailability() {
       const slot=$('nube-availability');if(!slot)return;
       const labels={'sin cambios':'Sin estados pendientes',pendiente:'Pendiente de publicar',publicando:'Publicando estados…',publicado:'Estados publicados','sin conexión':'Sin conexión: reintento automático',error:'Revisar estados pendientes'};
-      slot.innerHTML=[['Visibilidad en la tienda',online.availability],['Pausa de ventas en ambos canales',online.salesPublisher],['Apertura de delivery',online.deliveryPublisher]].filter(([,q])=>q).map(([label,q])=>{const a=q.info();return `<p><strong>${label}</strong>: ${esc(labels[a.state]||a.state)}${a.pending?' · '+a.pending+' pendiente(s)':''}${a.error?' · '+esc(a.error):''}</p>`;}).join('');
+      slot.innerHTML=[['Visibilidad en la tienda',online.availability],['Pausa de ventas en ambos canales',online.salesPublisher],['Apertura de delivery',online.deliveryPublisher],['Zonas y autorizaciones',online.zonePublisher]].filter(([,q])=>q).map(([label,q])=>{const a=q.info();return `<p><strong>${label}</strong>: ${esc(labels[a.state]||a.state)}${a.pending?' · '+a.pending+' pendiente(s)':''}${a.error?' · '+esc(a.error):''}</p>`;}).join('');
     },
     renderProgress() {
       const host = $('nube-progress'); if (!host) return;
@@ -52,7 +52,7 @@ export function createOnlineUi({ online, w = window }) {
         r => r && r.pendingConfirmation ? 'Te mandamos un email para confirmar la cuenta. Confirmalo y volvé a conectar.' : 'Conectado. Los pedidos nuevos van a aparecer en Mostrador › Pedidos online.');
     },
     async signIn() { await run('nube-msg', () => online.signIn(val('nb-mail'), $('nb-pass').value), 'Sesión iniciada.'); },
-    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.availability?.cancel(); online.salesPublisher?.cancel(); online.deliveryPublisher?.cancel(); online.photoPublisher.cancel(); online.controller.disconnect(); ui.render(); } },
+    async disconnect() { if (await w.sahtenConfirm('¿Desconectar este proyecto de la nube? Los datos locales no se tocan.', { okLabel: 'Desconectar', danger: true })) { online.availability?.cancel(); online.salesPublisher?.cancel(); online.deliveryPublisher?.cancel(); online.zonePublisher?.cancel(); online.photoPublisher.cancel(); online.controller.disconnect(); ui.render(); } },
     async syncMenu() { await run('nube-msg', () => publishMenuConfirmed(online, w), n => (n == null ? 'No se cambió nada: el menú publicado sigue igual.' : `Menú actualizado en línea (${n} productos).`)); },
     async link() { await run('nube-msg', () => online.linkProject(), 'Proyecto subido a la nube.'); },
     async syncNow() { const r = await run('nube-msg', () => online.syncNow(), r => ({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: elegí qué versión conservar.', offline: 'Sin conexión: queda pendiente y se reintenta solo.' }[r.action] || 'Listo.')); return r; },

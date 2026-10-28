@@ -65,6 +65,7 @@ async function _renderProductImageRow() {
       </div>
       <div class="prod-img-actions"><button class="btn" data-photo-pick="${p.id}">📷 Subir o cambiar foto</button><span style="font-size:11px;color:var(--muted)">También podés arrastrar una imagen sobre la foto.</span></div>
     </div>`;
+  if (p.productType === 'resale') row.querySelector('.prod-img-meta > div:first-child')?.remove();
   body.insertBefore(row, body.firstChild);
 }
 async function _handleProductImageUpload(ev, pid) {

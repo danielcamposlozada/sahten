@@ -19,7 +19,7 @@ const fn = (name, f) => Object.defineProperty(w, name, { value: f, writable: tru
 
 // ── Estado → globales ────────────────────────────────────
 const map = {
-  TIERS: 'tiers', CHANNELS: 'channels', INGREDIENTES: 'ingredients', ENVASES: 'packs', PRODUCTS: 'products',
+  TIERS: 'tiers', CHANNELS: 'channels', INGREDIENTES: 'ingredients', ENVASES: 'packs', MERCADERIA: 'merchandise', PRODUCTS: 'products',
   GASTOS_OP: 'gastosOp', GASTOS_S: 'gastosS', GF_DISC_HISTORY: 'gfDiscHistory', GF_MONTHS: 'gfMonths',
   SAHTEN_PROJECT: 'project', STOCK: 'stock', MOVIMIENTOS: 'movements', customTC: 'customTC',
   SAHTEN_SALE_COSTS: 'saleCosts',
@@ -43,6 +43,8 @@ const bind = {
   ingNormalize: ing => C.ingNormalize(ing),
   ingPxBase: ing => C.ingPxBase(ing),
   calcIngCost: row => C.calcIngCost(S, row),
+  calcMerchandiseCost: row => C.calcMerchandiseCost(S, row),
+  merchandiseCost: p => C.merchandiseCost(S, p),
   calcEnvCost: row => C.calcEnvCost(S, row),
   calcPackCost: row => C.calcPackCost(S, row),
   calcComboCost: (row, visited) => C.calcComboCost(S, row, visited),

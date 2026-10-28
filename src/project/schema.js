@@ -20,7 +20,7 @@
 import { prepareDeliveryConfig } from '../delivery/preset.js';
 export const SAHTEN_FORMAT = 'sahten';
 export const SCHEMA_VERSION = 2;
-export const APP_VERSION = '0.4.29';
+export const APP_VERSION = '0.4.30';
 
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -29,7 +29,7 @@ const obj = v => isObj(v) ? v : {};
 const num = (v, d) => { const n = parseFloat(v); return isFinite(n) ? n : d; };
 
 const UI_KEYS = ['gfPages', 'gfCurrentTpl', 'gfActiveColumns', 'gfResponsable', 'gfFecha', 'gfTurno', 'gfSupervisor', 'gfSector', 'gfSucursal', 'gfObs',
-  'visibleCols', 'ingView', 'ingSearch', 'ingSortVal', 'envSearch', 'envSortVal', 'ventasView', 'stockView', 'movFilter', 'currentPanel', 'tabState', 'notifications'];
+  'merchandiseView', 'merchandiseSearch', 'merchandiseSort', 'visibleCols', 'ingView', 'ingSearch', 'ingSortVal', 'envView', 'envSearch', 'envSortVal', 'ventasView', 'stockView', 'movFilter', 'currentPanel', 'tabState', 'notifications'];
 
 export const emptySupabase = () => ({ url: '', anonKey: '', storeId: '' });
 
@@ -39,7 +39,7 @@ export function emptyFile(name = '') {
     format: SAHTEN_FORMAT, schemaVersion: SCHEMA_VERSION, appVersion: APP_VERSION, modifiedAt: null,
     project: name ? { name } : {},
     settings: { theme: null, customization: {} },
-    catalog: { ingredientes: [], envases: [], productos: [], categorias: [], tiers: [] },
+    catalog: { ingredientes: [], mercaderia: [], envases: [], productos: [], categorias: [], tiers: [] },
     costs: { gastosOp: [], gastosS: [], gfMonths: {}, gfDiscHistory: [], globalCommission: 0, usdRate: 1200, customTC: 0, saleCosts: {}, pricingQuotes: {} },
     channels: [],
     stock: { items: {}, movements: [] },
@@ -63,7 +63,7 @@ export function legacyToFile(L, { modifiedAt = null, prev = null } = {}) {
   f.project = clone(obj(L.project));
   f.settings = { theme: L.theme ?? null, customization: clone(obj(L.customization)) };
   f.catalog = {
-    ingredientes: clone(arr(L.INGREDIENTES)), envases: clone(arr(L.ENVASES)), productos: clone(arr(L.PRODUCTS)),
+    ingredientes: clone(arr(L.INGREDIENTES)), mercaderia: clone(arr(L.MERCADERIA)), envases: clone(arr(L.ENVASES)), productos: clone(arr(L.PRODUCTS)),
     categorias: categoriesOf(L.PRODUCTS), tiers: clone(arr(L.TIERS)),
   };
   f.costs = {
@@ -97,7 +97,7 @@ export function fileToLegacy(file) {
   const c = f.costs, cat = f.catalog, s = f.sales, p = f.projections;
   const L = {
     _version: 3,
-    PRODUCTS: clone(cat.productos), INGREDIENTES: clone(cat.ingredientes), ENVASES: clone(cat.envases),
+    PRODUCTS: clone(cat.productos), INGREDIENTES: clone(cat.ingredientes), MERCADERIA: clone(arr(cat.mercaderia)), ENVASES: clone(cat.envases),
     GASTOS_OP: clone(c.gastosOp), GASTOS_S: clone(c.gastosS), STOCK: clone(f.stock.items), MOVIMIENTOS: clone(f.stock.movements),
     TIERS: clone(cat.tiers), CHANNELS: clone(f.channels),
     projChannelDist: clone(p.channelDist), projChannelLocked: clone(p.channelLocked), projManualMode: !!p.manualMode, projManualUnits: clone(p.manualUnits),
