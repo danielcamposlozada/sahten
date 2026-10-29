@@ -521,3 +521,8 @@ Solicitud adicional: impresión directa al confirmar desde Cobrar, por equipo y 
 PR #36 agrega impresora predeterminada de Sahten por equipo y modos sin diálogo independientes para Mostrador y pedidos nuevos de la web (retiro/delivery). Reutiliza la plantilla compacta y el control de duplicados; no altera pagos, precios, datos del negocio ni el hosting. 679 pruebas / 74 archivos, build y validaciones nativas de Mac/Windows aprobadas. Selección y opciones verificadas en una app local de prueba separada con proyecto ficticio y sin conexión a Supabase, sin imprimir ni crear órdenes. Guía y límites en [IMPRESION-DIRECTA.md](IMPRESION-DIRECTA.md).
 
 Permanece **sin publicar**: Sahten pública sigue en 0.4.30 y sahten.online conserva su último despliegue. Falta una actualización de instaladores y la prueba física de la IT01 en la caja; no se afirma validación de esa impresora desde este Mac.
+
+
+### 29/10/2026 — Publicación 0.4.31 autorizada
+
+El dueño confirmó publicar la impresión directa preparada en PR #36. Se alinean las versiones a 0.4.31 y se prepara merge normal e instaladores firmados de Windows/Mac. La web y Supabase conservan su estado; no se activan modos de impresión ni se crean órdenes o trabajos de impresión reales. Publicación en curso, pendiente de verificar los instaladores y el manifiesto del actualizador. Prueba física de IT01 pendiente en caja.

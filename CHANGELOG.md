@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.31
+
 - **Impresión directa opcional** en Ajustes → Negocio → Impresión: elegir la impresora instalada en este equipo y activar «Sin diálogo del sistema» por separado para Mostrador (al confirmar desde Cobrar) y pedidos nuevos de la web (retiro/delivery). Mantiene papel, calibración, logo, QR, dirección y vuelto; la impresión manual conserva su diálogo.
 - **Cola de comandas**: conserva el control de duplicados, no imprime el historial al conectar ni repite cambios de estado. Un fallo conserva el pedido, avisa y requiere comprobar la impresora antes de reimprimir; no cambia el estado del pago ni reintenta automáticamente. Integración nativa Windows/WebView2 y Mac/AppKit; falta la prueba física del perfil IT01 en el equipo de caja antes de dar por validado el hardware.
 

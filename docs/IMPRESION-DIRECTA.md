@@ -1,6 +1,6 @@
 # Impresión directa por equipo
 
-Preparado el 29/10/2026. La versión pública 0.4.30 conserva la impresión anterior; esta función necesita la actualización de escritorio que incluya este cambio. No requiere publicar la tienda ni cambiar Supabase.
+Disponible a partir de Sahten 0.4.31. El dueño autorizó publicar los instaladores el 29/10/2026; la publicación está en curso. No requiere publicar la tienda ni cambiar Supabase.
 
 ## Configurar la caja
 
@@ -40,3 +40,8 @@ PR [#36](https://github.com/danielcamposlozada/sahten/pull/36), rama `feature/im
 En una app nativa local con identificador separado `app.sahten.printingpreview`, un proyecto ficticio y sin conexión a Supabase se verificaron la consulta de impresoras instaladas, la selección por equipo y ambos controles independientes. No se creó ninguna orden ni se envió ningún trabajo a la impresora detectada. Se desactivaron las opciones automáticas y se cerró la app de prueba al terminar. La instalación habitual permanece en 0.4.30. Captura y resultados en `entregables/impresion-directa-2026-10-29/` del espacio de trabajo.
 
 El código está preparado para revisión; no se integró ni publicó un instalador nuevo en esta entrega. La comprobación física de IT01 continúa pendiente en el equipo de caja.
+
+
+## Publicación autorizada — 29/10/2026
+
+El dueño indicó «publica» después de revisar el alcance. Se prepara 0.4.31 para Windows y Mac, con merge normal del PR #36 y actualización firmada. Los modos sin diálogo quedan apagados hasta que se elige una impresora y se activan en ese equipo; las preferencias automáticas existentes se conservan. La tienda y Supabase no requieren un despliegue para este cambio. Falta verificar el resultado de publicación y sigue pendiente la prueba física de la IT01.
