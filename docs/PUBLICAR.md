@@ -146,3 +146,9 @@ App 0.4.29 y carpeta web publicadas y verificadas el 27/10/2026. Actualizá la a
 ## Disponible desde 0.4.30: controles de zonas en vivo
 
 **App, plantilla y migración publicadas el 28/10/2026.** Zona habilitada y Requiere autorización se aplican al cambiar el control, sin publicar catálogo y sin subir otra carpeta. Se verá confirmación o pendiente de conexión. Tarifas, mínimos, horarios y beneficios seguirán con guardado/publicación explícitos. Cancelar el borrador de tarifas no revierte un estado en vivo. Detalles y auditoría de interruptores: [CONTROLES-EN-VIVO.md](CONTROLES-EN-VIVO.md).
+
+## Plantilla de historia y movimiento · 29/10/2026
+
+La plantilla del repositorio admite dos fotos en Sitio web → Nuestra historia: una horizontal y una segunda vertical, con descripción accesible y pie visible para cada una. La página informativa Nuestra historia comparte las fotos y puede llevar un texto de equipo más completo sin alargar la home. La composición usa tamaños y alturas diferentes; en celular se apila. La franja del lema es fija y los controles tienen movimiento breve con alternativa reducida.
+
+Estos campos requieren una versión de la app que incluya los cambios; los instaladores 0.4.31 no se reemplazan con esta publicación de la web. El contenido aprobado de Sahten se conserva en `docs/brand/sahten/sitio-publicado-2026-10-29.json`, y las fotos en `docs/brand/sahten/photos/`. El JSON no carga fotos: deben elegirse los dos JPEG en sus campos. Publicar desde una app/proyecto anterior sin incorporar contenido y fotos puede reemplazar esta edición. No se modifica el proyecto del dueño automáticamente.

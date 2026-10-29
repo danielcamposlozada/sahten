@@ -1,0 +1,22 @@
+/* Movimiento funcional; colores inmediatos. Duraciones en ms, 30 % menores en celular. */
+:root{--motion-press:140ms;--motion-release:200ms;--motion-card:220ms;--motion-menu:200ms;--motion-dialog:280ms;--motion-backdrop:200ms;--motion-detail:180ms;--motion-focus:150ms;--motion-out:cubic-bezier(0,0,.2,1);--motion-in:cubic-bezier(.4,0,1,1);--motion-inout:cubic-bezier(.4,0,.2,1)}
+.snav a{transition:none}
+.btn1,.btn2,.pedir-cta,.add,.qty button,.cta,.bar button,.pedido,.seg button,.payment-choice{transition:transform var(--motion-release) var(--motion-out)}
+.btn1:hover,.btn2:hover{transform:none}
+.btn1:active,.btn2:active,.pedir-cta:active,.add:not(:disabled):active,.qty button:not(:disabled):active,.cta:not(:disabled):active,.bar button:active,.pedido:active,.seg button:not(:disabled):active,.payment-choice:not(:disabled):active{transform:scale(.98);transition-duration:var(--motion-press);transition-timing-function:var(--motion-in)}
+.ctile,.card,#menuwrap .card{transition:box-shadow var(--motion-card) var(--motion-out)}
+.ctile:hover,.card:hover{transform:none}
+input,select,textarea{transition:border-color var(--motion-focus) var(--motion-inout)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary)}
+.ov.on{animation:store-backdrop var(--motion-backdrop) var(--motion-out) both}
+.ov.on .sheet{animation:store-dialog var(--motion-dialog) var(--motion-out) both}
+.bar.on,.snav-menu[open]>div{animation:store-enter var(--motion-menu) var(--motion-out) both}
+.faq details[open]>p,.optional-fields[open]>:not(summary),.checkout-review[open]>.cart-items{animation:store-fade var(--motion-detail) var(--motion-out) both}
+.delivery-progress span{transition:width var(--motion-release) var(--motion-inout)}
+@keyframes store-backdrop{from{background:rgba(15,25,17,0)}to{background:rgba(15,25,17,.55)}}
+@keyframes store-dialog{from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes store-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes store-fade{from{opacity:0}to{opacity:1}}
+@media(max-width:760px){:root{--motion-press:100ms;--motion-release:140ms;--motion-card:154ms;--motion-menu:140ms;--motion-dialog:196ms;--motion-backdrop:140ms;--motion-detail:126ms;--motion-focus:105ms}}
+/* Mantiene contenido, foco, estado y progreso: solo elimina el desplazamiento y la espera. */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.btn1:active,.btn2:active,.pedir-cta:active,.add:active,.qty button:active,.cta:active,.bar button:active,.pedido:active,.seg button:active,.payment-choice:active{transform:none!important}}

@@ -13,8 +13,8 @@ export const SITE_MODULES = [
   { id: 'favoritos', name: 'Favoritos', icon: '⭐', desc: 'Tus productos con ⭐, con foto y descripción.' },
   { id: 'menu', name: 'Menú y pedido', icon: '🍽', desc: 'Resumen con una tarjeta por categoría y el botón «Pedir online»; la carta completa y el carrito se abren en su propia vista. Siempre visible.', fixed: true },
   { id: 'como', name: 'Cómo funciona', icon: '🧭', desc: 'Los pasos para pedir.' },
-  { id: 'historia', name: 'Nuestra historia', icon: '📖', desc: 'Quiénes son, con foto y un destacado opcional.' },
-  { id: 'banda', name: 'Cinta de texto', icon: '🎞', desc: 'Una franja con tu lema que se desplaza.' },
+  { id: 'historia', name: 'Nuestra historia', icon: '📖', desc: 'Quiénes son, con dos fotos y un destacado opcional.' },
+  { id: 'banda', name: 'Cinta de texto', icon: '🎞', desc: 'Una franja fija y legible con tu lema.' },
   { id: 'resenas', name: 'Reseñas', icon: '💬', desc: 'Lo que dicen tus clientes.' },
   { id: 'catering', name: 'Catering y eventos', icon: '🎉', desc: 'Para eventos, con datos de cobertura.' },
   { id: 'delivery', name: 'Delivery y retiro', icon: '🛵', desc: 'Zonas, horarios, mínimo y envío gratis (salen de Tienda Online).' },
@@ -40,7 +40,7 @@ export function siteDefaults() {
       { title: 'Elegí', text: 'Armá tu pedido desde el menú o escribinos por WhatsApp.' },
       { title: 'Confirmamos', text: 'Te contactamos para confirmar el pedido y coordinar.' },
       { title: 'Disfrutalo', text: 'Lo preparamos al momento y te lo llevamos o lo retirás en el local.' }] },
-    historia: { on: false, eyebrow: 'Nuestra historia', title: '', text: '', badgeWord: '', badgeMeaning: '', badgeQuote: '' },
+    historia: { on: false, eyebrow: 'Nuestra historia', title: '', text: '', teamText: '', imageAlt: '', imageCaption: '', familyAlt: '', familyCaption: '', badgeWord: '', badgeMeaning: '', badgeQuote: '' },
     banda: { on: false, text: '' },
     resenas: { on: false, title: 'Lo que dicen nuestros clientes', lead: '', placeId: '', reviewUrl: '', reviewTitle: '¿Ya probaste nuestra comida?', reviewText: 'Contanos cómo estuvo tu experiencia.', items: [] },
     catering: { on: false, eyebrow: 'Catering y eventos', title: '', text: '', cta: 'Consultar por WhatsApp', info: [] },
@@ -71,7 +71,7 @@ const list = (v, max, fn) => (Array.isArray(v) ? v : []).map(fn).filter(Boolean)
 
 /**
  * Versión pública para menu.json: solo las secciones encendidas, con todo el texto recortado (lo escribe el dueño).
- * `images`: { hero, historia } → true si hay foto cargada (el archivo se publica como img/site_<clave>.jpg).
+ * `images`: { hero, historia, familia } → true si hay foto cargada (el archivo se publica como img/site_<clave>.jpg).
  */
 export function buildSite(raw, images = {}) {
   if (!raw || !raw.enabled) return null;
@@ -79,6 +79,7 @@ export function buildSite(raw, images = {}) {
   const on = id => id === 'menu' || !!s[id].on;
   const img = k => (images[k] ? 'img/site_' + k + '.jpg' : null);
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
+  if (images.familia) out.images.familia = img('familia');
   if (s.orderPage) out.orderPage = true;
   if (s.logo) { out.logo = s.logo; out.logoUseTextColor = s.logoUseTextColor; }
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
@@ -90,6 +91,8 @@ export function buildSite(raw, images = {}) {
   if (on('como')) out.como = { title: txt(s.como.title, 60) || '¿Cómo funciona?', lead: txt(s.como.lead, 160),
     steps: list(s.como.steps, SITE_LIMITS.steps, p => { const title = txt(p && p.title, 40); return title ? { title, text: txt(p.text, 160) } : null; }) };
   if (on('historia')) out.historia = { eyebrow: txt(s.historia.eyebrow, 40), title: txt(s.historia.title, 90), text: txt(s.historia.text, 1500),
+    teamText: txt(s.historia.teamText, 600),
+    imageAlt: txt(s.historia.imageAlt, 180), imageCaption: txt(s.historia.imageCaption, 160), familyAlt: txt(s.historia.familyAlt, 180), familyCaption: txt(s.historia.familyCaption, 160),
     badgeWord: txt(s.historia.badgeWord, 30), badgeMeaning: txt(s.historia.badgeMeaning, 60), badgeQuote: txt(s.historia.badgeQuote, 200) };
   if (on('banda')) out.banda = { text: txt(s.banda.text, 120) };
   if (on('resenas')) out.resenas = { title: txt(s.resenas.title, 70) || 'Lo que dicen nuestros clientes', lead: txt(s.resenas.lead, 80), reviewUrl: reviewUrl(s.resenas.reviewUrl) || '', reviewTitle: txt(s.resenas.reviewTitle, 100) || '¿Ya probaste nuestra comida?', reviewText: txt(s.resenas.reviewText, 200) || 'Contanos cómo estuvo tu experiencia.',
