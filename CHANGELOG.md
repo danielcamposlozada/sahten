@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+Plantilla web publicada en sahten.online el 29/10/2026; los campos nuevos del editor estarán disponibles en una próxima versión de la app.
+
 - **Historia con dos fotos**: foto horizontal y segunda imagen vertical opcional, descripciones accesibles y pies editables. Se incluyen en la portada y en la página de historia, sin recortar personas; las imágenes se optimizan al exportar.
 - **Movimiento de la web**: reemplaza la cinta continua por texto fijo; feedback breve de botones, carrito y desplegables, con tiempos más cortos en celular y alternativa sin movimiento.
 

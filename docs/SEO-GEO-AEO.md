@@ -552,3 +552,12 @@ Los pies de foto se muestran a 14 px con un tono secundario de mayor contraste (
 
 
 **Corrección que reemplaza el encuadre anterior (29/10):** el dueño rechazó la variante con fondo extendido y pidió utilizar la foto original aunque tenga poco aire sobre las cabezas. Esa variante no se incorporó a la web ni a Supabase y fue retirada de la carpeta de fuentes publicables. Se quita el marco crema y se usa una composición asimétrica: grupo más ancho y 40 px más abajo; retrato más estrecho y elevado; en celular, retrato con sangría suave. Las fotos originales optimizadas y sus captions se conservan. Propuesta local sin publicar.
+
+
+### 29/10/2026 — Historia, fotos originales y movimiento publicados
+
+El dueño autorizó publicar tras aprobar el relato cálido de Marcel, los captions con Marcelle Wakil y la composición asimétrica usando las fotos originales. PR #37 integrado con merge normal `621778aa68caab4a7f52ab56dbd9fd4970baf2b6`; CI `40932262930` correcto. Cloudflare Production `084bb1d6-9cf8-4c3f-9992-2620c6540056`, completado el 29/10 a las 15:41 de Argentina. Home y página Nuestra historia incluyen las dos fotos; esta última presenta los nombres completos del equipo. Logos originales y caligrafía conservados. Se mejoran contraste y movimiento de controles, sin cinta infinita.
+
+Verificación: 683 pruebas / 75 archivos, build, scripts clásicos, versiones y contraste de marca correctos. Chrome a 360/390/640 px en preferencias clara/oscura y escritorio; movimiento reducido emulado: botones a 0s y diálogo sin animación. Preferencias temporales restauradas. Los 19 archivos públicos coinciden por SHA-256; catálogo público de Supabase idéntico antes/después, 33 productos, precios, fotos de productos, pagos y delivery conservados. No se escribieron menus/projects/orders ni se enviaron pedidos o pagos.
+
+Las fotos generadas/extendidas fueron descartadas y excluidas de la publicación. Evidencia de producción y paquete en `entregables/web-foto-motion-2026-10-29/publicacion/` del espacio de trabajo. Revisión de skills y límites en [REVISION-HOME-2026-10-29.md](REVISION-HOME-2026-10-29.md) y [MOVIMIENTO-WEB.md](MOVIMIENTO-WEB.md). Esta publicación actualiza la web; los instaladores siguen en 0.4.31 y el proyecto dueño no importa automáticamente fotos/contenido. Para futuras exportaciones, incorporar los campos nuevos y el JSON/fotos preservados antes de reemplazar la carpeta. Los textos viejos de mínimos/gratuidad por zona siguen pendientes por decisión previa del dueño.

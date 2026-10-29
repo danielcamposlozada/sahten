@@ -1,4 +1,4 @@
-# Movimiento de la web · preparado, sin publicar · 29/10/2026
+# Movimiento de la web · publicado en la web · 29/10/2026
 
 Aplicación de la skill motion-design. Sin librerías nuevas, cambios en importes ni esperas en el envío de pedidos. Se conserva el foco del diálogo y su cierre inmediato (0 ms). El lema pasa de cinta continua a texto fijo legible, una sola vez, también para lectores de pantalla.
 
@@ -21,6 +21,6 @@ Ningún movimiento regular supera 280 ms. No hay movimiento infinito ni curvas l
 
 - Chrome, vista local aislada de Supabase: imágenes cargadas (1024×768 y 1065×1600), retícula 2:1 en escritorio y una columna a 360, 390 y 640 px, sin desplazamiento horizontal de la página.
 - Abrir pedido a 390 px: estilo calculado `animation-duration: 0.196s`, `animation-timing-function: cubic-bezier(0, 0, 0.2, 1)`, rol dialog y foco dentro. Agregar/quitar un producto conserva el total; carrito de prueba vaciado. No se enviaron pedidos ni mensajes.
-- Alternativa de movimiento reducido verificada en la regla CSS; no se afirma haber cambiado la preferencia del sistema del dueño.
+- Chrome DevTools emulando prefers-reduced-motion: reduce: matchMedia true, transición del botón 0s y animación del diálogo none. Preferencias clara/oscura verificadas a 360, 390 y 640 px, con las fotos cargadas y sin desbordamiento. La paleta fija de marca se conserva en ambos casos. Emulaciones y tamaño temporal restaurados al terminar.
 - 683 pruebas / 75 archivos aprobados. Compilación Vite correcta. El verificador existente de contraste de marca pasa 288 pares; no equivale a una auditoría completa de contraste de todas las secciones de la web.
-- Imágenes y copy de la vista local son una propuesta, pendiente de aprobación del dueño y de publicación. No se ha actualizado la app instalada ni el proyecto dueño.
+- Publicación autorizada y completada en sahten.online el 29/10/2026, Cloudflare Production 084bb1d6-9cf8-4c3f-9992-2620c6540056. PR #37 integrado en main; los campos del editor quedan preparados para la próxima versión de instaladores. El proyecto dueño no fue modificado automáticamente.

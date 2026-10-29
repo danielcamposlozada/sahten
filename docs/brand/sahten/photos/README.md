@@ -5,6 +5,6 @@
 
 No se retocaron personas. La propuesta actual conserva ambas imágenes completas, en una retícula de proporción 2:1; el grupo baja 40 px y el retrato queda elevado, sin marco. En celular se apilan y el retrato tiene una sangría suave. El dueño permite recorte si mejora la composición y respeta la retícula; no es una obligación de recortar.
 
-Para futuras exportaciones desde una versión con estos campos: Sitio web → Nuestra historia → Foto horizontal y Segunda foto vertical. Cargar ambos JPEG, sus descripciones y pies. La importación de contenido JSON no carga las fotos. Estos archivos no se agregan automáticamente a otros negocios ni cambian sus imágenes. Estado: propuesta local, sin publicar ni cargar en el proyecto dueño.
+Para futuras exportaciones desde una versión con estos campos: Sitio web → Nuestra historia → Foto horizontal y Segunda foto vertical. Cargar ambos JPEG, sus descripciones y pies. La importación de contenido JSON no carga las fotos. Estos archivos no se agregan automáticamente a otros negocios ni cambian sus imágenes. Estado: publicadas en sahten.online el 29/10/2026; todavía sin cargar automáticamente en el proyecto dueño.
 
 El dueño descartó expresamente la variante con fondo extendido. Usar solamente las dos fotos originales optimizadas listadas arriba. La variante descartada no está en esta carpeta ni se referencia desde el generador.
