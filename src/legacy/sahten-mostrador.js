@@ -769,7 +769,8 @@ function printComanda(orderId, options = {}) {
 
   const paper = SAHTEN.receiptPaper.current();
   const html = SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)});
-  return SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm}).then(()=>true).catch(e=>{ if(options.automatic)throw e;alert('No se pudo imprimir la comanda. '+(e.message || 'Volvé a intentarlo.')); return false; });
+  const printing = options.direct ? SAHTEN.directPrinting.print(html, {paperWidthMm:paper.paperMm}) : SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm});
+  return printing.then(()=>{if(options.direct){try{pushNotification({type:'system',title:'Comanda enviada a la impresora',body:'Orden #'+String(o.num).padStart(4,'0')+'. Revisá la impresora si no sale el ticket.'});}catch{/* El aviso no cambia el resultado del envío. */}}return true;}).catch(e=>{ if(options.automatic)throw e;alert('No se pudo imprimir la comanda. '+(e.message || 'Volvé a intentarlo.')); return false; });
 }
 
 // ═══════════════════════════════════════════════════════════

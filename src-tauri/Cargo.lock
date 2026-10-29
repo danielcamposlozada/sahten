@@ -3082,6 +3082,9 @@ checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 name = "sahten"
 version = "0.4.30"
 dependencies = [
+ "objc2-app-kit",
+ "objc2-foundation",
+ "objc2-web-kit",
  "serde",
  "serde_json",
  "tauri",
@@ -3093,6 +3096,9 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "tokio",
+ "webview2-com",
+ "windows",
 ]
 
 [[package]]

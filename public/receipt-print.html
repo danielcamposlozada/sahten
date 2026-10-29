@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-sahten-print'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'">
+<title>Comanda de Sahten</title></head><body></body><script nonce="sahten-print">
+// Isolated receipt renderer. No project, cookies, remote assets or file access.
+window.renderReceipt = async function (html) {
+  let reported = false;
+  const report = async args => { if (!reported) { reported = true; await window.__TAURI_INTERNALS__.invoke('receipt_ready', args); } };
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const allowed = new Set(['HTML','HEAD','BODY','META','TITLE','STYLE','DIV','SPAN','STRONG','IMG','P','SECTION','H2','BR','SVG','G','PATH','RECT','CIRCLE','ELLIPSE','POLYGON','POLYLINE','LINE','DEFS','CLIPPATH','MASK']);
+    for (const el of [...doc.querySelectorAll('*')]) {
+      if (!allowed.has(el.tagName.toUpperCase())) { el.remove(); continue; }
+      for (const a of [...el.attributes]) {
+        if (/^on/i.test(a.name) || /^(nonce|href|xlink:href|srcset)$/i.test(a.name) || (a.name === 'src' && !/^data:image\/(png|jpeg|webp|svg\+xml)[;,]/i.test(a.value))) el.removeAttribute(a.name);
+      }
+    }
+    for (const style of doc.head.querySelectorAll('style')) document.head.appendChild(document.importNode(style, true));
+    document.body.replaceChildren(...[...doc.body.childNodes].map(node => document.importNode(node, true)));
+    await document.fonts.ready;
+    await Promise.all([...document.images].map(img => img.complete ? Promise.resolve() : new Promise((resolve, reject) => {
+      img.onload = resolve; img.onerror = () => reject(Error('No se pudo cargar una imagen del ticket.'));
+      setTimeout(() => reject(Error('Una imagen del ticket tardó demasiado.')), 5000);
+    })));
+    if ([...document.images].some(img => !img.naturalWidth)) throw Error('No se pudo cargar una imagen del ticket.');
+    const heightPx = Math.ceil(document.body.getBoundingClientRect().height);
+    await report({ heightPx, error: null });
+  } catch (e) { await report({ heightPx: 0, error: String(e.message || e) }); }
+};
+</script></html>

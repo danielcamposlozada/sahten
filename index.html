@@ -907,7 +907,25 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                   Previsualizar comanda
                 </button>
-</section><div class="receipt-auto-settings" style="display:grid;gap:12px;margin:16px 0;max-width:560px"><h3>Impresión automática</h3><label><input type="checkbox" id="receipt-auto-local" onchange="SAHTEN.receipts.save({autoLocal:this.checked,autoOnline:document.getElementById('receipt-auto-online').checked})"> Imprimir pedidos creados en Mostrador</label><label><input type="checkbox" id="receipt-auto-online" onchange="SAHTEN.receipts.save({autoOnline:this.checked,autoLocal:document.getElementById('receipt-auto-local').checked})"> Imprimir pedidos nuevos recibidos de la web</label><p class="custom-hint">Solo en este equipo. Abre la impresión al crear o recibir un pedido nuevo; puede requerir confirmar el diálogo del sistema. No imprime el historial al conectar, ni repite una orden al sincronizar. Activá estas opciones solo en la caja que tiene la impresora.</p></div>              <!-- Logo B&W para impresión de comandas -->
+</section><section class="receipt-auto-settings" style="display:grid;gap:14px;margin:16px 0;max-width:680px" aria-labelledby="receipt-auto-heading">
+  <h3 id="receipt-auto-heading">Impresión automática en este equipo</h3>
+  <div id="receipt-direct-settings" style="display:grid;gap:8px">
+    <label class="custom-label" for="receipt-device">Impresora para el modo sin diálogo</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><select class="custom-input" id="receipt-device" style="flex:1;min-width:180px" onchange="SAHTEN.directPrinting.select(this.value)"><option value="">Elegir impresora de este equipo</option></select><button class="btn btn-outline" type="button" onclick="SAHTEN.directPrinting.refresh()">Actualizar lista</button></div>
+    <p class="custom-hint" role="status" aria-live="polite">Consultá las impresoras instaladas en este equipo.</p>
+  </div>
+  <fieldset style="border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px"><legend style="font-weight:700;padding:0 5px">Mostrador</legend>
+    <label><input type="checkbox" id="receipt-auto-local" onchange="SAHTEN.directPrinting.save()"> Imprimir al confirmar desde Cobrar</label>
+    <label style="padding-left:20px"><input type="checkbox" id="receipt-direct-local" onchange="SAHTEN.directPrinting.save()"> Sin diálogo del sistema</label>
+    <p class="custom-hint">Se imprime una vez al crear el pedido. El estado del pago se administra por separado.</p>
+  </fieldset>
+  <fieldset style="border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px"><legend style="font-weight:700;padding:0 5px">Pedidos online</legend>
+    <label><input type="checkbox" id="receipt-auto-online" onchange="SAHTEN.directPrinting.save()"> Imprimir pedidos nuevos recibidos de la web</label>
+    <label style="padding-left:20px"><input type="checkbox" id="receipt-direct-online" onchange="SAHTEN.directPrinting.save()"> Sin diálogo del sistema</label>
+    <p class="custom-hint">Incluye retiro y delivery. No imprime el historial al conectar ni vuelve a imprimir cambios de estado o sincronizaciones.</p>
+  </fieldset>
+  <p class="custom-hint">Elegí una impresora física: los destinos PDF pueden pedir guardar un archivo. Activá la impresión automática solo en la caja con impresora. Se conserva el papel y la calibración de arriba. Con «Sin diálogo» apagado se abre la ventana habitual. La app debe estar abierta para imprimir pedidos online. Si falla el envío, el pedido se conserva y aparece un aviso; no se reintenta automáticamente para evitar duplicados.</p>
+</section>              <!-- Logo B&W para impresión de comandas -->
               <div class="custom-row" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
                 <label class="custom-label">Logo para impresión (B&N)</label>
                 <div class="custom-hint" style="margin-bottom:10px">Logo en blanco y negro para comandas e impresiones térmicas. Si no subís uno, se usa el logo principal en negro automáticamente.</div>

@@ -1,4 +1,5 @@
 import { installReceipts } from './ui/receipt-settings.js';
+import { installDirectPrinting } from './desktop/receipt-printing.js';
 import * as orderDetails from './core/order-details.js';
 import { reviewFooter, reviewUrl, DEFAULT_REVIEW_TEXT } from './ui/receipt-reviews.js';
 import { printDocument } from './ui/print.js';
@@ -93,6 +94,7 @@ window.addEventListener('online', () => { try { if (window.currentPanel === 'mos
 window.addEventListener('offline', () => { try { if (window.currentPanel === 'mostrador') window.renderMostrador(); } catch (e) { /* */ } });
 window.SAHTEN.orderDetails = orderDetails;
 window.SAHTEN.receipts = installReceipts(window);
+window.SAHTEN.directPrinting = installDirectPrinting(window);
 window.SAHTEN.receiptReviews = { footer: reviewFooter, url: reviewUrl, defaultText: DEFAULT_REVIEW_TEXT };
 window.SAHTEN.printDocument = (html, options) => printDocument(html, window, options);
 window.SAHTEN.notificationSound = installNotificationSound(window);

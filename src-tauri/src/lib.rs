@@ -1,5 +1,6 @@
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
+mod printing;
 
 /// Archivos .sahten pendientes de abrir (doble clic antes de que la ventana esté lista).
 #[derive(Default)]
@@ -21,6 +22,7 @@ fn take_pending_file(state: tauri::State<PendingFiles>) -> Option<String> {
 pub fn run() {
     let builder = tauri::Builder::default()
         .manage(PendingFiles::default())
+        .manage(printing::ReceiptPrinting::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -40,7 +42,7 @@ pub fn run() {
     }));
 
     builder
-        .invoke_handler(tauri::generate_handler![take_pending_file])
+        .invoke_handler(tauri::generate_handler![take_pending_file, printing::receipt_printers, printing::receipt_print, printing::receipt_ready])
         .setup(|app| {
             #[cfg(desktop)]
             app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
