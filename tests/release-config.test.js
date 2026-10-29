@@ -40,7 +40,7 @@ describe('instaladores (Tauri)', () => {
     expect(cargo).toContain('tauri-plugin-single-instance');
   });
   it('el nombre del comando y del evento coinciden entre Rust y la interfaz', () => {
-    expect(lib).toContain('fn take_pending_file'); expect(lib).toContain('generate_handler![take_pending_file]'); expect(integ).toContain("invoke('take_pending_file')");
+    expect(lib).toContain('fn take_pending_file'); expect(lib).toMatch(/generate_handler!\[\s*take_pending_file(?:\s*,|\s*\])/); expect(integ).toContain("invoke('take_pending_file')");
     expect(lib).toContain('"open-file"'); expect(integ).toContain("listen('open-file'");
   });
   it('permisos de archivos: lo que usa el adaptador y las rutas ocultas de los respaldos', () => {
