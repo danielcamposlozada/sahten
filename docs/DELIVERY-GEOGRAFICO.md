@@ -1,6 +1,6 @@
 # Delivery geográfico, beneficios y horarios
 
-Estado vigente al 25/10/2026: código integrado, migración aplicada, proveedor ORS conectado y funciones `sahten-delivery` v3 / `sahten-payments` v8 desplegadas. El dueño aprobó **activar la configuración local actual**, distinta del preset inicial: zonas 1–4 y beneficios activos; Zona 5 y Excepcional pausadas; Zona 1 requiere autorización. Se guardó y sincronizó desde la app, sin SQL directo sobre menú/proyecto/pedidos. Ver [tabla vigente al pie](#configuración-local-activada--25102026). La auditoría general de UX continúa pausada. Las secciones de preparación siguientes documentan el proceso histórico, no sustituyen el estado vigente.
+Estado vigente al 28/10/2026: código integrado, migración aplicada, proveedor ORS conectado y funciones `sahten-delivery` v3 / `sahten-payments` v8 desplegadas. El dueño aprobó **activar la configuración local actual**, distinta del preset inicial: zonas 1–4 y beneficios activos; Zona 5 y Excepcional pausadas; Zona 1 ya no requiere autorización desde el 28/10/2026 (app 0.4.30 y control en vivo). Se guardó y sincronizó desde la app, sin SQL directo sobre menú/proyecto/pedidos. Ver [tabla vigente al pie](#configuración-local-activada--25102026). La auditoría general de UX continúa pausada. Las secciones de preparación siguientes documentan el proceso histórico, no sustituyen el estado vigente.
 
 ## 1. Módulos modificados
 
@@ -167,7 +167,7 @@ Revisión vigente: `2d0d93c3-5e24-4aeb-85f2-dc197876513f`, efectiva `2026-10-25T
 
 | Zona | Radio geográfico | Tarifa base | Mínimo neto | Beneficios | Estado |
 |---|---|---:|---:|---|---|
-| 1 | 0–2 km | $1.500 | $17.000 | Gratis desde $25.000 | Activa; autorización obligatoria |
+| 1 | 0–2 km | $1.500 | $17.000 | Gratis desde $25.000 | Activa; sin autorización desde 28/10/2026 |
 | 2 | >2–3,5 km | $3.000 | $25.000 | Gratis desde $35.000 | Activa |
 | 3 | >3,5–5 km | $4.000 | $35.000 | $2.000 desde $42.000; gratis desde $50.000 | Activa |
 | 4 | >5–6,5 km | $5.500 | $45.000 | $2.750 desde $62.000; gratis desde $80.000 | Activa |

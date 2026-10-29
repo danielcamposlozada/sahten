@@ -143,6 +143,6 @@ El segundo paso agrupa modalidad y validación del envío, datos de contacto y p
 App 0.4.29 y carpeta web publicadas y verificadas el 27/10/2026. Actualizá la app a 0.4.29 en cada equipo para que las futuras exportaciones conserven este diseño. En sahten.online la carpeta nueva ya está subida. Para otro negocio/hosting, generá y subí una vez la carpeta nueva. Los cambios posteriores de precios y disponibilidad siguen usando los controles de nube descritos arriba.
 
 
-## Preparado después de 0.4.29: controles de zonas en vivo
+## Disponible desde 0.4.30: controles de zonas en vivo
 
-**Aún requiere despliegue inicial de app, plantilla y migración.** Zona habilitada y Requiere autorización se aplicarán al cambiar el control, sin publicar catálogo y sin subir otra carpeta. Se verá confirmación o pendiente de conexión. Tarifas, mínimos, horarios y beneficios seguirán con guardado/publicación explícitos. Cancelar el borrador de tarifas no revierte un estado en vivo. Detalles y auditoría de interruptores: [CONTROLES-EN-VIVO.md](CONTROLES-EN-VIVO.md).
+**App, plantilla y migración publicadas el 28/10/2026.** Zona habilitada y Requiere autorización se aplican al cambiar el control, sin publicar catálogo y sin subir otra carpeta. Se verá confirmación o pendiente de conexión. Tarifas, mínimos, horarios y beneficios seguirán con guardado/publicación explícitos. Cancelar el borrador de tarifas no revierte un estado en vivo. Detalles y auditoría de interruptores: [CONTROLES-EN-VIVO.md](CONTROLES-EN-VIVO.md).

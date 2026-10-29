@@ -1,6 +1,6 @@
-# Mercadería — preparado el 28/10/2026
+# Mercadería — disponible desde 0.4.30
 
-La sección Mercadería separa los productos terminados comprados a terceros de los ingredientes y envases. Está preparada en el código; todavía no forma parte de un instalador nuevo. No se modificó el proyecto real ni se publicó un catálogo o una web.
+La sección Mercadería separa los productos terminados comprados a terceros de los ingredientes y envases. Se publicó el 28/10/2026 para Windows y Mac junto con las mejoras de inventarios y Productos. La publicación no creó artículos ni trasladó ingredientes del negocio automáticamente.
 
 ## Cargar un artículo
 

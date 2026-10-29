@@ -15,7 +15,7 @@ correctos y coherentes. Lo que más pesa: datos idénticos en todos lados (NAP),
 | Dirección | General Julio Argentino Roca 1489, Vicente López, Buenos Aires (en Google y la web, escrita igual) |
 | Teléfono / WhatsApp | +54 9 11 2393-7295 (el mismo en todos los perfiles) |
 | Horarios | Lun–Jue 18:00–22:00 · Vie–Sáb 18:00–23:00 · Dom cerrado. Cargar horarios especiales de feriados |
-| Zona de delivery | Cobertura y tarifa confirmadas por dirección y recorrido. Desde el 25/10/2026 están activas las zonas locales 1–4, con mínimos/beneficios por zona; Zona 5 y Excepcional pausadas. Zona 1 requiere autorización. Tabla vigente en [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md#configuración-local-activada--25102026). Los textos libres anteriores de cobertura/mínimo/gratuidad siguen pendientes por decisión del dueño |
+| Zona de delivery | Cobertura y tarifa confirmadas por dirección y recorrido. Desde el 25/10/2026 están activas las zonas locales 1–4, con mínimos/beneficios por zona; Zona 5 y Excepcional pausadas. Zona 1 ya no requiere autorización desde el 28/10/2026. Tabla vigente en [DELIVERY-GEOGRAFICO.md](DELIVERY-GEOGRAFICO.md#configuración-local-activada--25102026). Los textos libres anteriores de cobertura/mínimo/gratuidad siguen pendientes por decisión del dueño |
 | Retiro | En el local, Roca 1489 |
 | Beneficio confirmado el 24/10/2026 | 10 % con efectivo o transferencia, solo productos (envío sin descuento), en web y Mostrador. No acumulable: aplicar el mayor descuento de la orden. Activo en app y tienda; verificación final del 24/10/2026 al pie |
 | Catering | Mesas árabes para eventos, 48 horas de anticipación |
@@ -498,3 +498,19 @@ El dueño confirmó publicar app Windows/Mac, plantilla web y migración de zona
 
 
 Servidor 0.4.30 preparado: migración aplicada y registrada como **20261028233706 / delivery_zone_operations** mediante el conector. Ambos RPC rechazan al anónimo, la tabla privada queda sin filas y el catálogo conserva el hash anterior `5d4e62bd158b4870ef20b7412e79002f`; todavía no se cambió Zona 1. Verificación local de versión 0.4.30: 674 pruebas / 73 archivos, build, versiones, scripts clásicos y diferencias correctos. Carpeta web generada con **33 productos actuales** de la nube y precios coincidentes; sitio, logos, conexión y política conservados. Merge, instaladores y hosting en curso.
+
+
+### 28/10/2026 — Web 0.4.30 publicada y verificada
+
+PR #35 integrado mediante merge normal `169e3827ceef68ad63340cdc3a2a228c146c6187`, etiqueta `v0.4.30`; CI del PR correcto. Release `40789132088` construye Windows y Mac, con pruebas correctas. Cloudflare Production `b0f7a7bd-f1f2-4cf6-9543-d0d8471cde04`, éxito el 28/10 a las 23:46:47 UTC (20:46 Argentina). Los 17 archivos coinciden por SHA-256, cuatro fotos públicas devuelven 200; 33 productos actuales y precios conservados. Chrome confirma la carta, logo, navegación, fotografías y carrito vacío, sin errores de consola ni pedidos enviados.
+
+La subida del ZIP por el panel quedó detenida y se completó por la API oficial de assets de Pages con una sesión temporal de carga, sin claves permanentes nuevas ni cambios de permisos. La tabla de estados de zona permanece vacía y el catálogo de Supabase conserva su hash previo: falta aplicar la desactivación de autorización de Zona 1 desde la app nueva al terminar los instaladores. No se modificaron precios, tarifas, mínimos, horarios, descuentos, credenciales, pedidos o pagos.
+
+
+### 28/10/2026 — Publicación 0.4.30 completada y Zona 1 aplicada
+
+Release v0.4.30 pública para Windows y Mac: workflow 40789132088 completado con éxito, instaladores y manifiesto firmado verificados. App de este equipo actualizada mediante su actualizador a 0.4.30. Web productiva verificada en el despliegue b0f7a7bd-f1f2-4cf6-9543-d0d8471cde04.
+
+Desde la sesión dueña se desmarcó únicamente **Zona 1 → Requiere autorización**; la app confirmó «Estados confirmados en la web». La consulta independiente confirma false. Al restituir ese único booleano solo dentro de la expresión de lectura, el catálogo recupera exactamente el hash previo `5d4e62bd158b4870ef20b7412e79002f`: precios, tarifas, mínimos, beneficios, horarios, productos y demás zonas conservados. No se publicó el catálogo completo para esta operación ni se crearon pedidos o pagos. La protección por recorrido excepcional permanece. Evidencia y guía en `entregables/publicacion-0.4.30/` del espacio de trabajo. Este estado reemplaza los pendientes de publicación anteriores.
+
+Solicitud adicional: impresión directa al confirmar desde Cobrar, por equipo y con impresora seleccionada; todavía no está implementada ni incluida en 0.4.30.

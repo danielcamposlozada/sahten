@@ -19,8 +19,8 @@ En Ajustes → Negocio → Delivery, los controles están agrupados como **Contr
 | Productos: pausa de ventas y reactivación (hoy, fecha o manual) | Ya en vivo: web y Mostrador; servidor valida; cola persistente | Mantener |
 | Tienda online: visibilidad individual / mostrar u ocultar todos | Ya en vivo, solo inclusión de productos publicados, sin arrastrar precios | Mantener; recetas internas no son productos publicables |
 | Delivery: apertura general | Ya en vivo, sin modificar horarios ni tarifas | Mantener |
-| Delivery: zona habilitada | **Nuevo, preparado**: envío aislado, web/Mostrador y validación existente del servidor | En vivo |
-| Delivery: requiere autorización por zona | **Nuevo, preparado**: envío aislado y persistente | En vivo |
+| Delivery: zona habilitada | **Disponible en 0.4.30**: envío aislado, web/Mostrador y validación existente del servidor | En vivo |
+| Delivery: requiere autorización por zona | **Disponible en 0.4.30**: envío aislado y persistente | En vivo |
 | Tienda: Menú activo / recepción de compras | Hoy local hasta publicar catálogo | Próximo control prioritario en vivo: separar pausa de compras de visibilidad del menú; retirar/entregar son operaciones distintas |
 | Tienda: categoría visible | Hoy local hasta publicar catálogo | Próxima operación en vivo por categoría; debe preservar la visibilidad individual de cada producto al reactivar, no convertirla en Mostrar todos |
 | Pagos: disponibilidad de efectivo, transferencia, tarjeta | Hoy local hasta publicar catálogo | Próximo control en vivo, con recotización del total cuando cambia la elegibilidad del descuento y aviso al comprador; no basta ocultar un botón |
@@ -39,7 +39,7 @@ En Ajustes → Negocio → Delivery, los controles están agrupados como **Contr
 
 ## Alcance de esta entrega
 
-Se implementan únicamente los dos controles de zona y la información sobre qué necesita publicación. Las demás recomendaciones de la tabla **no están implementadas por esta entrega**. No se activan beneficios, medios de pago, zonas pausadas ni horarios nuevos. El cambio real solicitado para Sahten es únicamente **Zona 1 → Requiere autorización: desactivado**, pendiente de aplicar/verificar al registrar la publicación.
+Se implementan únicamente los dos controles de zona y la información sobre qué necesita publicación. Las demás recomendaciones de la tabla **no están implementadas por esta entrega**. No se activan beneficios, medios de pago, zonas pausadas ni horarios nuevos. El cambio real solicitado para Sahten es únicamente **Zona 1 → Requiere autorización: desactivado**, aplicado y verificado el 28/10/2026.
 
 ## Despliegue necesario una sola vez
 
@@ -55,3 +55,8 @@ Mientras no se complete este despliegue, 0.4.29 conserva el comportamiento anter
 674 pruebas / 73 archivos aprobados. Compilación, scripts clásicos, versiones y diferencias correctos. PostgreSQL local comprueba autorización por rol/tienda, protección de la tabla privada, allowlist de campos y conservación del resto del catálogo. La prueba de checkout abierto recibe pausa/autorización sin cambiar precios ni perder foco. Chrome a 1024 × 640, sin desborde de documento: se quitó autorización únicamente en el archivo ficticio, sin conectar a Supabase. Captura: `entregables/controles-en-vivo-2026-10-28/controles-zona-1024.png` del espacio de trabajo.
 
 No se aplicó todavía la migración en producción, no se publicó la app/plantilla y no se cambió Zona 1 real. La publicación conjunta también contendría los cambios previos preparados de Mercadería, inventarios y tabla avanzada; requiere revisar/confirmar ese alcance antes de distribuir instaladores.
+
+
+## Publicación completada — 28/10/2026
+
+App 0.4.30 para Windows/Mac, web y migración publicadas con éxito. Desde la app instalada y sesión dueña se quitó únicamente la autorización de Zona 1; confirmación visible y lectura independiente correctas. El hash del catálogo con ese único booleano restituido en la consulta coincide con el anterior: ningún otro dato comercial cambió. Las descripciones de preparación anteriores son históricas; ya no falta desplegar ni aprobar esta entrega. No se crearon órdenes ni pagos.
