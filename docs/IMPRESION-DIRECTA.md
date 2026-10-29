@@ -7,7 +7,7 @@ Preparado el 29/10/2026. La versión pública 0.4.30 conserva la impresión ante
 1. Instalar la impresora y su controlador en Windows o Mac. Debe aparecer entre las impresoras del sistema. Para imprimir sin diálogos se recomienda una impresora física; un destino virtual como PDF puede pedir un archivo desde su propio controlador.
 2. Abrir **Ajustes → Negocio → Impresión**.
 3. Elegir perfil, papel y calibración. Para el caso informado: **IT01 · 48 mm · 88 %**. El ajuste se aplica al ancho del contenido; el envío nativo no agrega otra reducción.
-4. En **Impresora para el modo sin diálogo**, seleccionar la impresora de esta caja. **Actualizar lista** vuelve a consultar los dispositivos instalados; nunca cambia automáticamente a otra impresora.
+4. En **Impresora predeterminada de Sahten en este equipo**, seleccionar la impresora de esta caja. **Actualizar lista** vuelve a consultar los dispositivos instalados; nunca cambia automáticamente a otra impresora.
 5. En **Mostrador**, activar **Imprimir al confirmar desde Cobrar** y, si se desea, **Sin diálogo del sistema**.
 6. En **Pedidos online**, activar **Imprimir pedidos nuevos recibidos de la web** y, si se desea, **Sin diálogo del sistema**. Incluye retiro y delivery; funciona independientemente de Mostrador.
 
@@ -27,7 +27,7 @@ La cola procesa una comanda por vez y recuerda sus intentos por proyecto/pedido,
 
 Windows usa `ICoreWebView2_16::Print` con la impresora indicada, una copia, papel personalizado, escala nativa 100 % y sin cabeceras del navegador. Requiere WebView2 actualizado. Mac usa la operación de impresión de WKWebView/AppKit con paneles desactivados y restablece copias, escala y rango, sin heredar esas preferencias de la última impresión manual. La calibración del contenido se conserva en la plantilla.
 
-El ticket se prepara en una vista oculta aislada, con recursos de imagen embebidos y sin acceso a archivos o páginas externas. Se esperan imágenes/fuentes y se mide el alto para el rollo; A4/Carta mantienen su alto normal. Cada trabajo tiene una ventana identificada, y no acepta señales de otro trabajo o de la ventana principal. La vista se destruye al terminar o vencer la espera. No se guardan archivos temporales ni datos personales del ticket en los logs.
+El ticket se prepara en una vista oculta aislada con almacenamiento efímero, con recursos de imagen embebidos y sin acceso a archivos o páginas externas. Se esperan imágenes/fuentes y se mide el alto para el rollo; A4/Carta mantienen su alto normal. Cada trabajo tiene una ventana identificada, y no acepta señales de otro trabajo o de la ventana principal. La vista se destruye al terminar o vencer la espera. No se guardan archivos temporales ni datos personales del ticket en los logs.
 
 Las pruebas de código no reemplazan una prueba física. **Pendiente en caja:** IT01 con el controlador real de Windows, papel 48 mm y calibración 88 %; comprobar una comanda de Mostrador y una de web, legibilidad, importes completos, dirección, QR escaneable, longitud y ausencia de duplicados. No afirmar validación de hardware hasta realizar esa comprobación.
 

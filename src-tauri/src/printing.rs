@@ -66,7 +66,7 @@ pub async fn receipt_print(window: WebviewWindow, app: tauri::AppHandle, html: S
     let script = format!("window.renderReceipt({});", serde_json::to_string(&html).map_err(|e| e.to_string())?);
     let load_done = done.clone();
     let built = WebviewWindowBuilder::new(&app, label, WebviewUrl::App("receipt-print.html".into()))
-        .title("Comanda de Sahten").visible(false).focused(false).skip_taskbar(true)
+        .title("Comanda de Sahten").visible(false).focused(false).skip_taskbar(true).incognito(true)
         .inner_size(f64::from(paper_width_mm) * 96.0 / 25.4, 800.0)
         .on_navigation(|url| url.path() == "/receipt-print.html" && matches!(url.host_str(), Some("localhost") | Some("tauri.localhost")))
         .on_page_load(move |view, payload| {
@@ -160,7 +160,7 @@ fn platform_printers() -> Result<Vec<String>, String> {
 }
 #[cfg(target_os="windows")]
 fn platform_print(view: tauri::webview::PlatformWebview, printer: String, width: u16, height: f64, done: Completion) {
-    use webview2_com::{callback::PrintCompletedHandler, Microsoft::Web::WebView2::Win32::*};
+    use webview2_com::{PrintCompletedHandler, Microsoft::Web::WebView2::Win32::*};
     use windows::core::{HSTRING, Interface};
     let failed = done.clone();
     let result = (|| -> windows::core::Result<()> { unsafe {
