@@ -1,6 +1,6 @@
 # Impresión directa por equipo
 
-Disponible a partir de Sahten 0.4.31. El dueño autorizó publicar los instaladores el 29/10/2026; la publicación está en curso. No requiere publicar la tienda ni cambiar Supabase.
+Disponible desde Sahten 0.4.31, publicada el 29/10/2026 para Windows y Mac. Descargas y firmas del actualizador verificadas. No requiere publicar la tienda ni cambiar Supabase.
 
 ## Configurar la caja
 
@@ -45,3 +45,10 @@ El código está preparado para revisión; no se integró ni publicó un instala
 ## Publicación autorizada — 29/10/2026
 
 El dueño indicó «publica» después de revisar el alcance. Se prepara 0.4.31 para Windows y Mac, con merge normal del PR #36 y actualización firmada. Los modos sin diálogo quedan apagados hasta que se elige una impresora y se activan en ese equipo; las preferencias automáticas existentes se conservan. La tienda y Supabase no requieren un despliegue para este cambio. Falta verificar el resultado de publicación y sigue pendiente la prueba física de la IT01.
+
+
+## Publicación completada — 29/10/2026
+
+PR #36 integrado mediante merge normal `86fea46aa8b0db1ffb3272ef3b9474d16dd82b6f`, etiqueta `v0.4.31`. CI general y nativo correctos; workflow de Release `40830764350` completado con éxito. Instaladores de Windows (EXE/MSI) y Mac universal (DMG y paquete del actualizador) publicados a las 03:55 de Argentina. Los siete destinos del manifiesto apuntan a 0.4.31; se descargaron los tres paquetes únicos del actualizador y se verificaron criptográficamente sus firmas de archivo y comentario con la clave pública configurada en la app. Descarga de DMG accesible.
+
+[Descargar Sahten 0.4.31](https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.31). Actualizar en el equipo de caja, elegir la impresora instalada y habilitar allí las opciones deseadas. La publicación no cambió preferencias de ninguna caja ni envió trabajos a la impresora de este Mac. La prueba física de IT01 continúa pendiente; este resultado completa la publicación que figuraba en preparación en las secciones anteriores. Evidencia en `entregables/publicacion-0.4.31/` del espacio de trabajo.

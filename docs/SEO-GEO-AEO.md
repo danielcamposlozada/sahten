@@ -526,3 +526,10 @@ Permanece **sin publicar**: Sahten pública sigue en 0.4.30 y sahten.online cons
 ### 29/10/2026 — Publicación 0.4.31 autorizada
 
 El dueño confirmó publicar la impresión directa preparada en PR #36. Se alinean las versiones a 0.4.31 y se prepara merge normal e instaladores firmados de Windows/Mac. La web y Supabase conservan su estado; no se activan modos de impresión ni se crean órdenes o trabajos de impresión reales. Publicación en curso, pendiente de verificar los instaladores y el manifiesto del actualizador. Prueba física de IT01 pendiente en caja.
+
+
+### 29/10/2026 — Sahten 0.4.31 publicada y verificada
+
+PR #36 integrado con merge normal `86fea46aa8b0db1ffb3272ef3b9474d16dd82b6f`; etiqueta `v0.4.31`. CI general/nativo correctos y Release `40830764350` finalizada con éxito. Windows EXE/MSI y Mac universal publicados el 29/10 a las 03:55 de Argentina. Manifiesto público del actualizador en 0.4.31 para siete destinos; sus tres paquetes únicos descargados y firmas criptográficas de archivo/comentario verificadas con la clave pública configurada. DMG accesible; 679 pruebas / 74 archivos aprobados para la versión.
+
+La publicación de impresión queda completada; actualizar la app en cada equipo y seleccionar su impresora desde Ajustes → Negocio → Impresión. No se modificó sahten.online ni Supabase, no se cambiaron preferencias de impresión de las cajas y no se crearon órdenes o trabajos reales. Falta la prueba física de la IT01 en el equipo donde está instalada. Guía y comprobación en `entregables/publicacion-0.4.31/` del espacio de trabajo. Este estado reemplaza el pendiente de publicación anterior.
