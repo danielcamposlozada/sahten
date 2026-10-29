@@ -514,3 +514,10 @@ Release v0.4.30 pública para Windows y Mac: workflow 40789132088 completado con
 Desde la sesión dueña se desmarcó únicamente **Zona 1 → Requiere autorización**; la app confirmó «Estados confirmados en la web». La consulta independiente confirma false. Al restituir ese único booleano solo dentro de la expresión de lectura, el catálogo recupera exactamente el hash previo `5d4e62bd158b4870ef20b7412e79002f`: precios, tarifas, mínimos, beneficios, horarios, productos y demás zonas conservados. No se publicó el catálogo completo para esta operación ni se crearon pedidos o pagos. La protección por recorrido excepcional permanece. Evidencia y guía en `entregables/publicacion-0.4.30/` del espacio de trabajo. Este estado reemplaza los pendientes de publicación anteriores.
 
 Solicitud adicional: impresión directa al confirmar desde Cobrar, por equipo y con impresora seleccionada; todavía no está implementada ni incluida en 0.4.30.
+
+
+### 29/10/2026 — Impresión directa preparada; tienda sin cambios
+
+PR #36 agrega impresora predeterminada de Sahten por equipo y modos sin diálogo independientes para Mostrador y pedidos nuevos de la web (retiro/delivery). Reutiliza la plantilla compacta y el control de duplicados; no altera pagos, precios, datos del negocio ni el hosting. 679 pruebas / 74 archivos, build y validaciones nativas de Mac/Windows aprobadas. Selección y opciones verificadas en una app local de prueba separada con proyecto ficticio y sin conexión a Supabase, sin imprimir ni crear órdenes. Guía y límites en [IMPRESION-DIRECTA.md](IMPRESION-DIRECTA.md).
+
+Permanece **sin publicar**: Sahten pública sigue en 0.4.30 y sahten.online conserva su último despliegue. Falta una actualización de instaladores y la prueba física de la IT01 en la caja; no se afirma validación de esa impresora desde este Mac.

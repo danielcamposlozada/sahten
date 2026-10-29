@@ -32,3 +32,11 @@ El ticket se prepara en una vista oculta aislada con almacenamiento efímero, co
 Las pruebas de código no reemplazan una prueba física. **Pendiente en caja:** IT01 con el controlador real de Windows, papel 48 mm y calibración 88 %; comprobar una comanda de Mostrador y una de web, legibilidad, importes completos, dirección, QR escaneable, longitud y ausencia de duplicados. No afirmar validación de hardware hasta realizar esa comprobación.
 
 Referencias: [impresión WebView2](https://learn.microsoft.com/en-us/microsoft-edge/webview2/how-to/print), [impresión WKWebView](https://developer.apple.com/documentation/webkit/wkwebview/printoperation(with:)), [NSPrintOperation](https://developer.apple.com/documentation/appkit/nsprintoperation).
+
+## Verificación de esta entrega — 29/10/2026
+
+PR [#36](https://github.com/danielcamposlozada/sahten/pull/36), rama `feature/impresion-directa`: 679 pruebas en 74 archivos, build web, scripts clásicos y coherencia de versiones correctos. CI general y las pruebas nativas de Mac y Windows aprobadas (dos pruebas nativas en cada sistema), sin impresoras reales en los runners.
+
+En una app nativa local con identificador separado `app.sahten.printingpreview`, un proyecto ficticio y sin conexión a Supabase se verificaron la consulta de impresoras instaladas, la selección por equipo y ambos controles independientes. No se creó ninguna orden ni se envió ningún trabajo a la impresora detectada. Se desactivaron las opciones automáticas y se cerró la app de prueba al terminar. La instalación habitual permanece en 0.4.30. Captura y resultados en `entregables/impresion-directa-2026-10-29/` del espacio de trabajo.
+
+El código está preparado para revisión; no se integró ni publicó un instalador nuevo en esta entrega. La comprobación física de IT01 continúa pendiente en el equipo de caja.
