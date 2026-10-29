@@ -2,6 +2,9 @@
 
 ## Sin publicar
 
+- **Historia con dos fotos**: foto horizontal y segunda imagen vertical opcional, descripciones accesibles y pies editables. Se incluyen en la portada y en la página de historia, sin recortar personas; las imágenes se optimizan al exportar.
+- **Movimiento de la web**: reemplaza la cinta continua por texto fijo; feedback breve de botones, carrito y desplegables, con tiempos más cortos en celular y alternativa sin movimiento.
+
 ## 0.4.31
 
 - **Impresión directa opcional** en Ajustes → Negocio → Impresión: elegir la impresora instalada en este equipo y activar «Sin diálogo del sistema» por separado para Mostrador (al confirmar desde Cobrar) y pedidos nuevos de la web (retiro/delivery). Mantiene papel, calibración, logo, QR, dirección y vuelto; la impresión manual conserva su diálogo.

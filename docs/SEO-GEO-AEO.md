@@ -21,7 +21,7 @@ correctos y coherentes. Lo que más pesa: datos idénticos en todos lados (NAP),
 | Catering | Mesas árabes para eventos, 48 horas de anticipación |
 | Instagram | sahten.ar |
 | Sitio | https://sahten.online/ — en Google usar `?utm_source=google&utm_medium=organic&utm_campaign=gbp` (y `utm_content=pedidos` / `menu` en esos botones) |
-| Cocina | Árabe, siria. Recetas familiares (la Sitto y María Teresa) |
+| Cocina | Árabe, siria. Recetas familiares (la Sitto, **Marcelle Wakil** —nombre confirmado el 29/10/2026—, y María Teresa) |
 
 Textos listos para pegar (descripción de 631 caracteres, productos, publicaciones) están en el documento de Claude de arriba. **No inventar datos**: lo que no está en la tabla va a «Pendientes de confirmar».
 
@@ -533,3 +533,22 @@ El dueño confirmó publicar la impresión directa preparada en PR #36. Se aline
 PR #36 integrado con merge normal `86fea46aa8b0db1ffb3272ef3b9474d16dd82b6f`; etiqueta `v0.4.31`. CI general/nativo correctos y Release `40830764350` finalizada con éxito. Windows EXE/MSI y Mac universal publicados el 29/10 a las 03:55 de Argentina. Manifiesto público del actualizador en 0.4.31 para siete destinos; sus tres paquetes únicos descargados y firmas criptográficas de archivo/comentario verificadas con la clave pública configurada. DMG accesible; 679 pruebas / 74 archivos aprobados para la versión.
 
 La publicación de impresión queda completada; actualizar la app en cada equipo y seleccionar su impresora desde Ajustes → Negocio → Impresión. No se modificó sahten.online ni Supabase, no se cambiaron preferencias de impresión de las cajas y no se crearon órdenes o trabajos reales. Falta la prueba física de la IT01 en el equipo donde está instalada. Guía y comprobación en `entregables/publicacion-0.4.31/` del espacio de trabajo. Este estado reemplaza el pendiente de publicación anterior.
+
+
+### 29/10/2026 — Fotos, movimiento y propuesta editorial (sin publicar)
+
+El dueño entregó `SAHTEN-FOTO-Exportadav2.af` (foto de cuatro personas en el local) e `IMG_1107-Exportada.png` (la Sitto de Marcel, contexto confirmado por el dueño). Se conserva una exportación web en `docs/brand/sahten/photos/`: 1024×768 / 132 KiB y 1065×1600 / 332 KiB, respectivamente. Del documento Affinity se extrajo su vista PNG embebida de 1024×768, sin afirmar que sea la exportación de máxima resolución. Nuevos campos genéricos preparados para una segunda foto, texto alternativo y pies de foto; pendientes de una próxima versión de la app. La carga de las fotos en el proyecto del dueño todavía no se realizó; el JSON de contenido no importa imágenes.
+
+Datos personales públicos confirmados por el dueño para la propuesta: **Marcel Kamisso**, voz en primera persona y parte del proyecto; **María T. Ortega Levi de Kamisso**, chef; **Choukri Antonio Kamisso** y **Daniel Campos Lozada**, integrantes del proyecto sin otras funciones atribuidas. La denominación «principal» es contexto interno, no texto público. Propuesta: relato breve de Marcel en la home, nombres completos de los cuatro en Nuestra historia. Pendiente aprobación del copy y la disposición definitiva.
+
+Se prepara movimiento funcional de 100–280 ms, tiempos menores en celular, sin cinta infinita y con `prefers-reduced-motion`. Vista local de propuesta separada de producción, sin conexión a pedidos/pagos. No se publicó en Cloudflare ni se escribió en Supabase. Los textos viejos de mínimos/gratuidad de delivery siguen publicados y se detectan como contradictorios con las reglas por zona; se propone reemplazarlos, sin cambiar tarifas ni beneficios.
+
+
+Revisión de la propuesta (29/10): el dueño pidió una voz más cálida y profesional, más contexto y bajar la foto del grupo. Se amplió el borrador de Marcel a dos párrafos, conservando los hechos confirmados. El grupo baja 24 px en la retícula y se coloca en un marco crema de 28 px arriba (22 px en celular), sin inventar fondo ni retocar a las personas. Sigue siendo una propuesta local; sin publicación ni escritura en Supabase.
+
+Nombre de la Sitto confirmado posteriormente por el dueño: **Marcelle Wakil**, abuela paterna de Marcel Kamisso. Incorporado al borrador en primera persona, al texto alternativo y al pie del retrato familiar. Pies propuestos: «El equipo de Sahten, en nuestro local de Vicente López.» y «Con mi Sitto, Marcelle Wakil. Sus recetas son el origen de Sahten.» Siguen sin publicar.
+
+Los pies de foto se muestran a 14 px con un tono secundario de mayor contraste (`#536256` sobre el fondo crema). El borrador cálido y los dos captions se revisaron visualmente en Chrome; la foto de grupo se baja dentro de la composición con un marco, sin modificación generativa del fondo.
+
+
+**Corrección que reemplaza el encuadre anterior (29/10):** el dueño rechazó la variante con fondo extendido y pidió utilizar la foto original aunque tenga poco aire sobre las cabezas. Esa variante no se incorporó a la web ni a Supabase y fue retirada de la carpeta de fuentes publicables. Se quita el marco crema y se usa una composición asimétrica: grupo más ancho y 40 px más abajo; retrato más estrecho y elevado; en celular, retrato con sangría suave. Las fotos originales optimizadas y sus captions se conservan. Propuesta local sin publicar.

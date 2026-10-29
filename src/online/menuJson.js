@@ -43,7 +43,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   const categoryImages = {};   // { categoría: 'img/cat_x.jpg' } — la foto de cada categoría, si la cargaron
   if (showImages) for (const c of cats) { const k = categoryPhotoKey(c); if (k && images[k]) categoryImages[c] = 'img/' + k + '.jpg'; }
   const sb = supabase && supabase.url && supabase.anonKey && supabase.storeId ? { url: supabase.url, anonKey: supabase.anonKey, storeId: supabase.storeId, slug: supabase.slug || '' } : null;
-  const site=buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia });
+  const site=buildSite(menuConfig.site, { hero: !!images.site_hero, historia: !!images.site_historia, familia: !!images.site_familia });
   if(site&&tienda.deliveryV2?.active&&tienda.deliveryV2.hours?.enabled)site.delivery={...site.delivery,hours:deliveryHoursText(tienda.deliveryV2.hours)};
   return {
     version: MENU_VERSION, generatedAt: now.toISOString(),

@@ -1,6 +1,6 @@
 // Fotos: una sola forma de cargarlas, la misma en toda la app.
 //   Cualquier elemento con  data-photo="<clave>"  se convierte en un botón de foto: clic = elegir archivo, o arrastrar y soltar una imagen encima.
-//   Claves: id del producto (foto del producto), cat_<categoría> (foto de la categoría), site_hero / site_historia (sitio web).
+//   Claves: id del producto (foto del producto), cat_<categoría> (foto de la categoría), site_hero / site_historia / site_familia (sitio web).
 //   photoThumb(clave, nombre)  →  HTML de la miniatura (con la foto si hay, o «+ Foto»); lo dibujan Menú, Menú Online, Receta y Costo Receta.
 //   Al guardar o quitar se avisa con el evento «sahten:photo» ({ key }) y todas las miniaturas de esa clave se actualizan solas.
 import { categoryPhotoKey } from '../online/menuJson.js';

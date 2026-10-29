@@ -5,6 +5,10 @@
 // ═══════════════════════════════════════════════════════════
 import { buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags } from './seo.js';
 
+import { storyPhotosHtml } from './story.js';
+import storyCss from './web/story.css?raw';
+import { contrastText } from '../ui/contrast.js';
+
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clip = (value, max) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const paragraphs = text => String(text || '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => `<p>${esc(x).replace(/\n/g, '<br>')}</p>`).join('');
@@ -32,7 +36,7 @@ ${meta('twitter:card', seo.image ? 'summary_large_image' : 'summary')}
 ${brandHeadTags(menu)}
 ${ld(breadcrumb)}${extraLd.map(ld).join('')}
 <style>
-:root{--primary:${primary};--accent:${accent};--ink:#1e2c1f;--muted:#5d6b5f;--bg:#faf8f5;--border:#e2ddd5}
+:root{--primary:${primary};--accent:${accent};--on-accent:${contrastText(accent)};--ink:#1e2c1f;--muted:#5d6b5f;--bg:#faf8f5;--border:#e2ddd5}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
 header{background:var(--primary);color:#fff;padding:14px 16px}header .in{max-width:980px;margin:auto;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
 header a{color:#fff;text-decoration:none}header .brand{font-weight:800;font-size:18px}header nav{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px}header nav a[aria-current]{text-decoration:underline}
@@ -41,9 +45,10 @@ h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:.5em 0 .6em}h2{font-si
 ul.items{list-style:none;padding:0;margin:0}ul.items li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
 ul.items .n{font-weight:700}ul.items .d{display:block;font-weight:400;color:var(--muted);font-size:14px}ul.items .p{font-weight:800;white-space:nowrap}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px}dt{font-weight:700}dd{margin:0}
-.cta{display:inline-block;margin:10px 10px 0 0;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:13px 20px;border-radius:12px}.cta.alt{background:var(--primary)}
+.cta{display:inline-block;margin:10px 10px 0 0;background:var(--accent);color:var(--on-accent);text-decoration:none;font-weight:800;padding:13px 20px;border-radius:12px}.cta.alt{background:var(--primary);color:${contrastText(primary)}}
 .quote{border-left:4px solid var(--accent);padding:4px 14px;color:var(--muted);font-style:italic}
 footer{border-top:1px solid var(--border);padding:22px 16px;color:var(--muted);font-size:14px}footer .in{max-width:980px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}footer h2{font-size:15px;margin:0 0 4px;color:var(--ink)}footer p{margin:0}
+${storyCss}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 </head>
@@ -90,7 +95,8 @@ const builders = {
   'nuestra-historia'(menu) {
     const h = menu.site.historia, name = menu.store?.name || '';
     const badge = h.badgeWord ? `<h2>${esc(h.badgeWord)}${h.badgeMeaning ? ` · ${esc(h.badgeMeaning)}` : ''}</h2>${h.badgeQuote ? `<p class="quote">${esc(h.badgeQuote)}</p>` : ''}` : '';
-    return { title: clip(`${h.eyebrow || 'Nuestra historia'} | ${name}`, 70), description: clip(h.text, 160), h1: h.title || h.eyebrow || 'Nuestra historia', body: paragraphs(h.text) + badge };
+    const team = h.teamText ? '<h2>Quiénes estamos detrás</h2>' + paragraphs(h.teamText) : '';
+    return { title: clip(`${h.eyebrow || 'Nuestra historia'} | ${name}`, 70), description: clip(h.text, 160), h1: h.title || h.eyebrow || 'Nuestra historia', body: paragraphs(h.text) + badge + storyPhotosHtml(menu.site, name, '../') + team };
   },
 };
 

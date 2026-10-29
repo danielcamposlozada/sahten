@@ -1,0 +1,7 @@
+.story-photos{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:32px}
+.story-photo{margin:0;min-width:0}.story-photo img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;background:#ede8df;border-radius:18px}
+.story-photo-familia img{aspect-ratio:1065/1600}.story-photo figcaption{margin-top:10px;font-size:14px;line-height:1.5;color:var(--catalog-muted,#536256)}
+/* Ritmo editorial: fotos originales, anchos 2:1 y alturas escalonadas. */
+.story-photos:not(.story-photos-single) .story-photo-historia{padding-top:40px}
+.story-photos-single{display:block;max-width:760px;margin-left:auto;margin-right:auto}.story-photos-single .story-photo-familia{max-width:360px;margin:auto}
+@media(max-width:640px){.story-photos{grid-template-columns:1fr;gap:32px}.story-photos:not(.story-photos-single) .story-photo-historia{padding-top:0}.story-photo-familia{width:min(88%,320px);justify-self:end}}
