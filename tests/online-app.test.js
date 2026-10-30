@@ -1,6 +1,6 @@
 // Lo online dentro de la app real (jsdom): publicar, panel, roles, pedidos en vivo, build sin online.
 import { webcrypto } from 'node:crypto';
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { buildTestBundle, openApp } from './app-harness.js';
 import { createMemoryAdapter } from '../src/project/adapters/memory.js';
 
@@ -400,3 +400,24 @@ describe('fotos en la nube desde la app real', () => {
     a.on.signOut(); w.close();
   }, 60000);
 });
+
+it('guardar horario usa solo su RPC, confirma en web y conserva el borrador de tarifas',async()=>{
+ const a=await app();try{await a.p.openDemo();const w=a.window;
+ const hours={enabled:true,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};
+ let remote={opening:{hours,revision:'r1'},delivery:{hours,revision:'d1'}};
+ const calls=backend(w,{
+  '/auth/v1/token':{body:{access_token:'T',refresh_token:'R',expires_in:3600,user:{id:'u1',email:'owner@test.invalid'}}},
+  '/rest/v1/stores?select':{body:[]},'/rest/v1/stores':{status:201,body:[{id:'st-1',slug:'mi-local'}]},'/rest/v1/orders':{body:[]},
+  '/rpc/get_product_sales_availability':{body:{sales:[],visibility:[]}},'/rpc/get_delivery_service_state':{body:{enabled:true}},'/rpc/get_delivery_zone_states':{body:{revision:'none',zones:[]}},
+  '/rpc/get_store_service_hours':()=>({body:remote}),'/rpc/set_store_service_hours':c=>{remote={...remote,[c.body.p_kind]:{hours:c.body.p_hours,revision:'r2'}};return {body:remote[c.body.p_kind]};},
+ });
+ await a.on.connect({url:URL_OK,anonKey:ANON,slug:'mi-local',email:'owner@test.invalid',password:'fixture'});
+ await vi.waitFor(()=>expect(w._getTiendaConfig().openingHours).toEqual(hours));
+ w.eval("_ajNavTab('delivery')");const d=w.document;expect(d.getElementById('service-hours-settings').textContent).toContain('Apertura y retiro en local');
+ const price=d.createElement('input');price.id='tariff-draft';price.value='7777';d.body.append(price);price.focus();
+ const changed={...hours,weekly:hours.weekly.map((v,i)=>i===1?[{start:'12:00',end:'15:30'}]:v)};
+ expect(w.SAHTEN.delivery.hours.save('opening',changed,'r1')).toBe(true);await a.on.hoursPublisher.flush();
+ expect(a.on.hoursPublisher.info().pending).toBe(0);expect(d.querySelector('[data-hours-status=opening]').textContent).toContain('confirmado');
+ const write=calls.find(c=>c.url.includes('/rpc/set_store_service_hours'));expect(write.body).toEqual({p_store_id:'st-1',p_kind:'opening',p_hours:changed,p_expected_revision:'r1'});expect(calls.some(c=>c.url.includes('/rest/v1/menus'))).toBe(false);expect(d.activeElement).toBe(price);expect(price.value).toBe('7777');
+ }finally{a.window.close();}
+},60000);

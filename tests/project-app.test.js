@@ -448,7 +448,7 @@ describe('Ajustes: tres grupos con sus pestañas', () => {
     a.ev("showPanel('ajustes')");
     const groups = () => Array.from(d.querySelectorAll('.aj-injected-tabs .aj-group')).map(b => b.textContent);
     expect(groups()).toEqual(['Negocio', 'Proyecto', 'Esta app']);
-    expect(Array.from(d.querySelectorAll('.aj-injected-tabs .aj-subtabs .rep-tab')).map(b => b.textContent)).toEqual(['Marca y apariencia', 'Impresión', 'Canales de venta', 'Niveles de ganancia', 'Delivery', 'Pagos de la tienda']);   // abre en Negocio
+    expect(Array.from(d.querySelectorAll('.aj-injected-tabs .aj-subtabs .rep-tab')).map(b => b.textContent)).toEqual(['Marca y apariencia', 'Impresión', 'Canales de venta', 'Niveles de ganancia', 'Horarios y delivery', 'Pagos de la tienda']);   // abre en Negocio
     a.ev("_ajNavTab('respaldos')"); await wait(80);
     expect(d.querySelector('.aj-group.on').textContent).toBe('Proyecto'); expect(d.getElementById('aj-tab-respaldos').style.display).toBe(''); expect(d.getElementById('aj-tab-archivo').style.display).toBe('none');
     expect(d.getElementById('aj-tab-respaldos').textContent).toMatch(/Respaldo de ayer/);

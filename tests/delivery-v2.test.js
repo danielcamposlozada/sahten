@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {sahtenDeliveryPolicy,prepareDeliveryConfig,SAHTEN_CENTER} from '../src/delivery/preset.js';
+import {sahtenDeliveryPolicy,sahtenOpeningHours,prepareDeliveryConfig,SAHTEN_CENTER} from '../src/delivery/preset.js';
 import {deliveryQuote,deliverySnapshot,haversineKm} from '../src/core/delivery.js';
 import {circlePoints,toPolygon,validateDeliveryPolicy} from '../src/delivery/geometry.js';
 import {deliveryIncentiveHtml} from '../src/delivery/incentive.js';
@@ -13,7 +13,10 @@ it('prepara las cinco zonas y la excepcional, sin activarlas ni cambiar otros ne
  const cfg={address:SAHTEN_CENTER.address,zones:[{id:'vieja',baseCost:1500}],paymentBenefit:{enabled:true}};
  const a=prepareDeliveryConfig(cfg),b=prepareDeliveryConfig(a);
  expect(a.deliveryV2.zones.map(z=>z.baseCost)).toEqual([2190,2990,3990,5490,6990,9000]);expect(a.deliveryV2.active).toBe(false);expect(a.deliveryV2.promotionsEnabled).toBe(false);expect(b).toBe(a);expect(a.zones).toEqual(cfg.zones);
- expect(prepareDeliveryConfig({address:'Otro local'})).toEqual({address:'Otro local'});
+ expect(a.openingHours).toEqual(sahtenOpeningHours());expect(a.openingHours.weekly[1][0]).toEqual({start:'12:00',end:'15:30'});
+ const custom={...a,openingHours:{...a.openingHours,enabled:false}};expect(prepareDeliveryConfig(custom)).toBe(custom);expect(prepareDeliveryConfig(custom).openingHours.enabled).toBe(false);
+ const another={address:'Otro local'};expect(prepareDeliveryConfig(another)).toBe(another);expect(another.openingHours).toBeUndefined();
+ expect(prepareDeliveryConfig({},'sahten').openingHours).toEqual(sahtenOpeningHours());
  const f=emptyFile('Sahten');f.online.tiendaConfig=cfg;f.sales.orders=[{total:100,shipping:50}];const m=migrate(serialize(f)).file;expect(m.online.tiendaConfig.deliveryV2).toBeTruthy();expect(m.sales.orders).toEqual(f.sales.orders);expect(migrate(serialize(m)).file).toEqual(m);
 });
 it.each([[1,15000,2190],[1,25000,0],[3,20000,2990],[3,35000,0],[4.5,20000,3990],[4.5,35000,1990],[4.5,50000,0],[6,55000,2750],[6,80000,0],[7.5,40000,6990],[7.5,80000,3500]])('recorrido %s km, subtotal %s, envío %s',(km,sub,cost)=>{expect(quote(km,sub)).toMatchObject({ok:true,cost});});

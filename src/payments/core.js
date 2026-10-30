@@ -2,6 +2,7 @@ import { salesPaused } from '../core/sales-availability.js';
 import { deliveryDetails, cashChangeQuote, cashOrderFields } from '../core/order-details.js';
 import { shippingFor, deliverySnapshot } from '../core/delivery.js';
 import { paymentDiscountQuote } from '../core/payment-benefit.js';
+import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 
 export class PaymentError extends Error {
   constructor(message, status = 400, code = 'invalid_request') { super(message); this.status = status; this.code = code; }
@@ -44,6 +45,10 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const sub = items.reduce((n, i) => n + cents(i.lineTotal), 0);
   const source = input.source;
   if (!['pickup', 'delivery'].includes(source)) fail('Elegí retiro o delivery.');
+  if (source === 'pickup' && validateCustomer && salesChannel !== 'mostrador') {
+    const opening = serviceHoursStatus(menu, 'pickup', now);
+    if (!opening.open) fail(serviceHoursMessage(opening), 409, opening.valid ? 'pickup_closed' : 'opening_hours_invalid');
+  }
   const name = text(input.customerName, 100), phone = text(input.customerPhone, 40);
   if (validateCustomer && requireCustomer && (name.length < 2 || phone.replace(/\D/g, '').length < 7)) fail('Completá nombre y teléfono.');
   const benefit=paymentDiscountQuote(sub/100,method,menu.payments?.benefit,salesChannel,commercialDiscount);

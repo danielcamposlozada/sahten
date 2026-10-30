@@ -1,6 +1,6 @@
 import { quoteOrder, PaymentError, fail, validUuid, cents } from '../payments/core.js';
 import { validateDeliveryPolicy } from './geometry.js';
-import { deliveryQuote } from '../core/delivery.js';
+import { deliveryQuote, deliveryPolicyWithHours } from '../core/delivery.js';
 import { deliveryDetails } from '../core/order-details.js';
 const uuid=v=>{if(!validUuid(v))fail('Identificador no válido.');return v;};
 const intent=o=>{
@@ -18,7 +18,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
  async function access(req,sid,admin=false){const user=await authenticate(req);if(!user||!await (admin?repo.canManage:repo.canOperate)(sid,user))fail('Iniciá sesión con un rol autorizado para esta acción.',403);return user;}
  async function limited(sid,req){if(!await repo.run('limit',{bucket:'store:'+sid,max:100})||!await repo.run('limit',{bucket:'buyer:'+sid+':'+await originKey(req),max:25}))fail('Demasiadas consultas. Esperá un minuto.',429);}
  async function context(sid,input){
-  const menu=await repo.menu(sid),policy=menu?.delivery?.deliveryV2;
+  const menu=await repo.menu(sid),policy=deliveryPolicyWithHours(menu?.delivery);
   if(input.source==='delivery'&&menu?.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
   if(!policy?.active)fail('La nueva configuración de delivery todavía no está activa.',409,'delivery_not_active');
   const validation=input.source==='delivery'?validateDeliveryPolicy(policy):{errors:[]};if(validation.errors.length)fail('La configuración de zonas necesita revisión administrativa.',409,'invalid_policy');
@@ -50,7 +50,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     const user=await access(req,sid,true),record=await repo.run('quote',{store_id:sid,id:uuid(b.quoteId)}),reason=String(b.reason||'').trim().slice(0,300);
     if(!record)fail('La solicitud venció. Volvé a calcularla.',409);
     if(reason.length<5)fail('Explicá el motivo de la autorización.');
-    const menu=await repo.menu(sid),p=menu.delivery?.deliveryV2;
+    const menu=await repo.menu(sid),p=deliveryPolicyWithHours(menu?.delivery);
     if(menu.delivery?.enabled===false)fail('El delivery está pausado por el local.',409,'service_paused');
     if(!p?.active||p.revision!==record.revision)fail('Cambió la configuración. Volvé a calcular la entrega.',409);
     const q=deliveryQuote(p,record.route.destination,record.result.netSubtotal,{route:record.route,now:now(),hasPaymentDiscount:!!record.payload.paymentDiscount});

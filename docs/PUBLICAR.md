@@ -152,3 +152,10 @@ App 0.4.29 y carpeta web publicadas y verificadas el 27/10/2026. Actualizá la a
 La plantilla del repositorio admite dos fotos en Sitio web → Nuestra historia: una horizontal y una segunda vertical, con descripción accesible y pie visible para cada una. La página informativa Nuestra historia comparte las fotos y puede llevar un texto de equipo más completo sin alargar la home. La composición usa tamaños y alturas diferentes; en celular se apila. La franja del lema es fija y los controles tienen movimiento breve con alternativa reducida.
 
 Estos campos requieren una versión de la app que incluya los cambios; los instaladores 0.4.31 no se reemplazan con esta publicación de la web. El contenido aprobado de Sahten se conserva en `docs/brand/sahten/sitio-publicado-2026-10-29.json`, y las fotos en `docs/brand/sahten/photos/`. El JSON no carga fotos: deben elegirse los dos JPEG en sus campos. Publicar desde una app/proyecto anterior sin incorporar contenido y fotos puede reemplazar esta edición. No se modifica el proyecto del dueño automáticamente.
+
+
+## Desde 0.4.32: horarios independientes en vivo
+
+En **Ajustes → Negocio → Horarios y delivery** hay dos calendarios: apertura/retiro y delivery. Guardar horario y aplicar en web envía únicamente ese calendario a la tienda conectada. No requiere Publicar catálogo ni exportar archivos; esperar la confirmación. La app conserva cambios pendientes si se pierde conexión y avisa si otro equipo editó el mismo horario. Actualizar app, migración, funciones y plantilla una vez para habilitar este mecanismo.
+
+La web abierta recibe los horarios en hasta 10 segundos o al volver a la pestaña. El servidor vuelve a verificarlos al crear una orden o un checkout. Mostrador permite cobrar fuera de apertura con advertencia; delivery sigue su propio calendario. Los pagos iniciados antes del cierre siguen su curso. Los textos y datos estructurados se actualizan con JavaScript en home, tienda y páginas informativas; el HTML de respaldo para buscadores que no ejecutan scripts se renueva con una exportación. [Guía de horarios](HORARIOS-Y-DELIVERY.md).

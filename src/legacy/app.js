@@ -3651,7 +3651,7 @@ const AJ_GROUPS = [
     { id: 'impresion', label: 'Impresión', panel: 'ajustes' },
     { id: 'canales', label: 'Canales de venta', panel: 'canales' },
     { id: 'tiers', label: 'Niveles de ganancia', panel: 'ajustes' },
-    { id: 'delivery', label: 'Delivery', panel: 'ajustes' },
+    { id: 'delivery', label: 'Horarios y delivery', panel: 'ajustes' },
     { id: 'tienda', label: 'Pagos de la tienda', panel: 'ajustes' } ] },
   { id: 'proyecto', label: 'Proyecto', tabs: [
     { id: 'archivo', label: 'Archivo y proyectos', panel: 'ajustes' },

@@ -1,3 +1,4 @@
+import { installServiceHours } from './hours.js';
 import { installDeliveryOperation } from './operation.js';
 import { installZoneOperation } from './zone-operation.js';
 import { installDeliveryHandoff } from './handoff.js';
@@ -11,7 +12,7 @@ import './incentive.css';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function installDelivery(w){
  const client=createDeliveryClient(w),admin=installDeliveryAdmin(w,client),d=w.document;
- const api={client,admin,operation:installDeliveryOperation(w),zoneOperation:installZoneOperation(w),handoff:installDeliveryHandoff(w),rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
+ const api={client,admin,hours:installServiceHours(w),operation:installDeliveryOperation(w),zoneOperation:installZoneOperation(w),handoff:installDeliveryHandoff(w),rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
   async refreshPos(){const dest=w.mostradorDeliveryValue?.();if(!dest||dest.lat==null)return;const context=w.SAHTEN.project.session.id,body=w._mostDeliveryRequest();dest.routeLoading=true;dest.routeError='';w._renderCartTotals();
    try{const v=await client.quote(body);if(context!==w.SAHTEN.project.session.id||w.mostradorDeliveryValue()!==dest)return;Object.assign(dest,{route:v.route,quoteId:v.quoteId,authorization:v.authorization,serverOffset:Number.isFinite(v.serverNow)?v.serverNow-Date.now():0});}
    catch(e){if(w.mostradorDeliveryValue()===dest)dest.routeError=e.message;}
@@ -27,7 +28,7 @@ export function installDelivery(w){
    host.onclick=async e=>{const b=e.target.closest('[data-approve]');if(!b)return;const i=Number(b.dataset.approve),msg=host.querySelector('[data-approval-msg="'+i+'"]');b.disabled=true;try{await client.authorize(rows[i].id,host.querySelector('[data-approval-reason="'+i+'"]').value,host.querySelector('[data-approval-tariff="'+i+'"]').checked);msg.textContent='Entrega autorizada. El cliente debe volver a consultar el envío antes de confirmar.';}catch(err){msg.textContent=err.message;}finally{b.disabled=false;}};
   },
  };
- w.setInterval(()=>{if(d.hidden)return;if(w.currentPanel==='mostrador'){if(w._mostTiendaCfg?.().deliveryV2?.active)w._renderCartTotals?.();api.requests();}},20000);
- w.SAHTEN.events.afterRender('renderMostrador',()=>{api.requests();});
+ w.setInterval(()=>{if(d.hidden)return;if(w.currentPanel==='mostrador'){if(w._mostTiendaCfg?.().deliveryV2?.active)w._renderCartTotals?.();api.hours.refreshPosNotice();api.requests();}},20000);
+ w.SAHTEN.events.afterRender('renderMostrador',()=>{api.hours.refreshPosNotice();api.requests();});
  return api;
 }

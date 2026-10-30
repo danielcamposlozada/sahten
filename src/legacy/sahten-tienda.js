@@ -54,11 +54,12 @@ function _renderTiendaOnline() {
 
   el.innerHTML = (typeof sahtenOfflineNotice==='function' ? sahtenOfflineNotice() : '') + `
     <div class="info-banner" style="margin-bottom:16px">
-      <strong>Pagos de la tienda:</strong> Medios de pago, descuento y datos bancarios. Las zonas, los horarios y la pausa general están en Ajustes › Negocio › Delivery.
+      <strong>Pagos de la tienda:</strong> Medios de pago, descuento y datos bancarios. Las zonas, los horarios y la pausa general están en Ajustes › Negocio › Horarios y delivery.
     </div>
 
     <div id="delivery-settings-group">
     <div id="delivery-service-control"></div>
+    <div id="service-hours-settings"></div>
     <div id="delivery-admin"></div>
     <div id="delivery-legacy" ${cfg.deliveryV2?'hidden':''}>
     <!-- UBICACIÓN + MAPA -->
@@ -228,6 +229,7 @@ function _renderTiendaOnline() {
   if(deliverySettings && deliveryGroup) deliverySettings.replaceChildren(deliveryGroup);
   SAHTEN.delivery.operation.render();
   SAHTEN.online.payments?.render();
+  SAHTEN.delivery.hours.mount();
   SAHTEN.delivery.admin.mount();
   // Init Leaflet map after DOM is ready
   if(!cfg.deliveryV2)setTimeout(_initLeafletMap, 100);

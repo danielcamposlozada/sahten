@@ -25,26 +25,19 @@ export function installDeliveryAdmin(w,client){
   host.querySelectorAll('[data-zone]').forEach(b=>{const a=draft.zones[Number(b.dataset.zone)];b.textContent=a.name+(a.enabled?'':' · pausada');});
   draw();
  }
- const hoursHtml=()=>{
-  const h=draft.hours,names=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const row=(periods,scope)=>periods.map((p,i)=>`<div class="delivery-benefit-row"><label>Desde<input type="time" data-hours-period="${scope}:${i}:start" value="${esc(p.start)}"></label><label>Hasta<input type="time" data-hours-period="${scope}:${i}:end" value="${esc(p.end)}"></label><button class="btn" data-remove-period="${scope}:${i}">Quitar turno</button></div>`).join('');
-  return `<details><summary>Horario de delivery</summary><p>Se usa la hora del negocio y el servidor valida cada nueva entrega. El cierre es exacto: a esa hora ya no se reciben nuevos deliveries. Los pedidos aceptados siguen su curso; retiro en local conserva su flujo.</p><label class="delivery-switch"><input type="checkbox" data-hours-enabled ${h.enabled?'checked':''}> Respetar este horario de delivery</label><label>Zona horaria<input data-hours-zone value="${esc(h.timeZone)}" placeholder="America/Argentina/Buenos_Aires"></label><div class="delivery-hours-days">${h.weekly.map((periods,day)=>`<section><strong>${names[day]}</strong>${periods.length?'':'<span> · cerrado</span>'}${row(periods,'w'+day)}<button class="btn" data-add-period="w${day}">Agregar turno</button></section>`).join('')}</div><p>Un turno que termina antes de su inicio continúa al día siguiente. Una fecha especial cerrada corta también esa continuación.</p><h4>Feriados y fechas especiales</h4>${h.exceptions.map((ex,i)=>`<section><label>Fecha<input type="date" data-exception-date="${i}" value="${esc(ex.date)}"></label>${ex.periods.length?'':'<p>Cerrado este día</p>'}${row(ex.periods,'e'+i)}<button class="btn" data-add-period="e${i}">Agregar turno especial</button><button class="btn" data-remove-exception="${i}">Quitar fecha</button></section>`).join('')}<button class="btn" data-add-exception>Agregar fecha cerrada o especial</button></details>`;
- };
- const periodList=scope=>scope[0]==='w'?draft.hours.weekly[Number(scope.slice(1))]:draft.hours.exceptions[Number(scope.slice(1))].periods;
  function dispose(){mapGeneration++;if(map){map.remove();map=null;}layers=[];}
  function mount(){
   host=d.getElementById('delivery-admin');if(!host)return;dispose();
   const cfg=w._getTiendaConfig();const c=prepareDeliveryConfig(cfg,w.SAHTEN.online.conn().slug);if(!c.deliveryV2){host.innerHTML='';return;}
-  saved=copy(c.deliveryV2);draft=copy(saved);draft.hours??={enabled:false,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};index=0;render();
+  saved=copy({...c.deliveryV2,hours:c.deliveryHours??c.deliveryV2.hours});draft=copy(saved);draft.hours??={enabled:false,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};index=0;render();
  }
  function render(){
   if(!host?.isConnected)return;
   const z=zone(),editable=canEdit();if(!z){host.textContent='La configuración no tiene zonas válidas. Restaurá una copia del proyecto antes de activar el delivery.';return;}
   host.innerHTML=`<section class="card delivery-admin"><div class="card-header"><h3>Delivery geográfico e incentivos</h3></div><div class="card-body">
-   <p>Configuración ${draft.active?'activa en este proyecto':'preparada, sin activar'}. Zona habilitada y Requiere autorización se envían automáticamente al cambiarlos. Tarifas, mínimos, horarios y beneficios requieren guardar y publicar el catálogo.</p>
+   <p>Configuración ${draft.active?'activa en este proyecto':'preparada, sin activar'}. Zona habilitada y Requiere autorización se envían automáticamente al cambiarlos. Tarifas, mínimos y beneficios requieren guardar y publicar el catálogo. Los horarios se guardan por separado en las tarjetas de arriba y se actualizan automáticamente en la web.</p>
    <div class="delivery-admin-fields"><label class="delivery-switch"><input type="checkbox" data-policy="active" ${draft.active?'checked':''}> Usar nuevas zonas en este proyecto</label><label class="delivery-switch"><input type="checkbox" data-policy="promotionsEnabled" ${draft.promotionsEnabled?'checked':''}> Activar beneficios de envío</label><label class="delivery-switch"><input type="checkbox" data-policy="stackWithPayment" ${draft.stackWithPayment?'checked':''}> Combinar beneficio de envío con descuento por pago</label></div>
    <details><summary>Ubicación y protección operativa</summary><div class="delivery-admin-fields">${field('center.address','Dirección del local',draft.center.address||'','text','maxlength="300"')}${field('center.lat','Latitud del local',draft.center.lat)}${field('center.lng','Longitud del local',draft.center.lng)}${field('regularMaxKm','Máximo regular (km)',draft.regularMaxKm,'number','min="0.1" max="8" step="0.1"')}${field('maxRouteKm','Máximo excepcional (km)',draft.maxRouteKm,'number','min="0.1" max="8.5" step="0.1"')}</div><label class="delivery-switch"><input data-center-verified type="checkbox" ${draft.center.verifiedAt?'checked':''}> Verifiqué el punto exacto del local</label><p>${esc(draft.center.address||w._getTiendaConfig().address)} · <a href="${esc(draft.center.source||'https://www.openstreetmap.org/')}" target="_blank" rel="noopener">Fuente del punto</a></p></details>
-   ${hoursHtml()}
    <div class="delivery-zone-picker" role="group" aria-label="Seleccionar zona">${draft.zones.map((a,i)=>`<button type="button" class="btn" data-zone="${i}" aria-pressed="${i===index}" style="--zone-color:${esc(a.color)}">${esc(a.name)}${a.enabled?'':' · pausada'}</button>`).join('')}</div>
    <div class="delivery-admin-layout"><div><div id="delivery-admin-map" class="delivery-admin-map" role="region" aria-label="Mapa de cobertura"></div><p>Elegí una zona. En modo polígono, arrastrá sus vértices o editalos por coordenadas. El color no reemplaza el nombre de la zona.</p></div><div>
    <div class="delivery-admin-fields">${field('name','Nombre',z.name,'text','maxlength="80"')}${field('color','Color',z.color,'color')}${field('innerRadiusKm','Límite inferior tarifario (km)',z.innerRadiusKm,'number','min="0" step="0.1"')}${field('radiusKm','Límite superior tarifario (km)',z.radiusKm,'number','min="0.1" max="8.5" step="0.1"')}${field('baseCost','Tarifa normal ($)',z.baseCost,'number','min="0" step="10"')}${field('minOrder','Pedido mínimo ($)',z.minOrder,'number','min="0" step="100"')}</div>
@@ -60,10 +53,6 @@ export function installDeliveryAdmin(w,client){
   if(!editable)host.querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
   host.onchange=e=>{
    const el=e.target;if(!canEdit())return;
-   if(el.hasAttribute('data-hours-enabled')){draft.hours.enabled=el.checked;return;}
-   if(el.hasAttribute('data-hours-zone')){draft.hours.timeZone=el.value.trim();return;}
-   if(el.dataset.hoursPeriod){const [scope,i,key]=el.dataset.hoursPeriod.split(':');periodList(scope)[Number(i)][key]=el.value;return;}
-   if(el.dataset.exceptionDate!==undefined){draft.hours.exceptions[Number(el.dataset.exceptionDate)].date=el.value;return;}
    if(el.dataset.policy){draft[el.dataset.policy]=el.checked;return;}
    if(el.dataset.zoneflag){w.SAHTEN.delivery.zoneOperation.set(z.id,el.dataset.zoneflag,el.checked);return;}
    if(el.hasAttribute('data-center-verified')){draft.center.verifiedAt=el.checked?new Date().toISOString():null;return;}
@@ -76,10 +65,6 @@ export function installDeliveryAdmin(w,client){
   host.onclick=async e=>{
    const b=e.target.closest('button');if(!b||!canEdit())return;
    if(b.hasAttribute('data-zone-retry')){w.SAHTEN.online.zonePublisher.flush().catch(()=>{});return;}
-   if(b.dataset.addPeriod){const list=periodList(b.dataset.addPeriod);if(list.length<4)list.push({start:'',end:''});render();return;}
-   if(b.dataset.removePeriod){const [scope,i]=b.dataset.removePeriod.split(':');periodList(scope).splice(Number(i),1);render();return;}
-   if(b.hasAttribute('data-add-exception')){if(draft.hours.exceptions.length<366)draft.hours.exceptions.push({date:'',periods:[]});render();return;}
-   if(b.dataset.removeException!==undefined){draft.hours.exceptions.splice(Number(b.dataset.removeException),1);render();return;}
    if(b.dataset.zone!==undefined){index=Number(b.dataset.zone);ringIndex=vertex=0;drawing=false;render();return;}
    if(b.dataset.removeBenefit!==undefined){z.benefits.splice(Number(b.dataset.removeBenefit),1);render();return;}
    const action=b.dataset.action;if(!action)return;
@@ -91,11 +76,11 @@ export function installDeliveryAdmin(w,client){
    else if(action==='draw'){if(!drawing){z.points=[];z.holes=[];ringIndex=vertex=0;}drawing=!drawing;render();}
    else if(action==='add-vertex'||action==='remove-vertex'){const r=ringIndex?z.holes[ringIndex-1]:z.points;if(action==='remove-vertex'){if(r.length<=3){message('Un contorno necesita al menos tres vértices.',true);return;}r.splice(vertex,1);vertex=Math.max(0,vertex-1);}else if(r.length<256){if(!r.length){message('Dibujá primero el contorno en el mapa.',true);return;}const a=r[vertex],next=r[(vertex+1)%r.length];r.splice(vertex+1,0,[(a[0]+next[0])/2,(a[1]+next[1])/2]);vertex++;}render();}
    else if(action==='preview'||action==='save'){
-    const check=validateDeliveryPolicy(draft);if(check.errors.length){message(check.errors.join(' '),true);return;}
+    draft.hours=copy(w._getTiendaConfig().deliveryHours??w._getTiendaConfig().deliveryV2?.hours??draft.hours);const check=validateDeliveryPolicy(draft);if(check.errors.length){message(check.errors.join(' '),true);return;}
     if(action==='preview'){draw();message(check.warnings.join(' ')||'Vista previa válida: sin superposiciones ni huecos detectados.');return;}
     if(check.warnings.length&&!host.querySelector('[data-accept-gaps]').checked){message(check.warnings.join(' ')+' Confirmá la advertencia antes de guardar.',true);return;}
     if(draft.active){try{const status=await client.provider();if(!status.configured){message('Conectá el servicio de rutas antes de activar la configuración.',true);return;}}catch(err){message(err.message,true);return;}}
-    const current=w._getTiendaConfig();current.lat=draft.center.lat;current.lng=draft.center.lng;current.address=draft.center.address;current.deliveryV2={...copy(draft),revision:w.crypto.randomUUID(),effectiveAt:new Date().toISOString()};w._saveTiendaConfig(current);saved=copy(current.deliveryV2);draft=copy(saved);message('Configuración guardada en este proyecto. Sincronizá o publicá cuando apruebes el cambio para la tienda.');
+    const current=w._getTiendaConfig();draft.hours=copy(current.deliveryHours??current.deliveryV2?.hours??draft.hours);current.lat=draft.center.lat;current.lng=draft.center.lng;current.address=draft.center.address;current.deliveryV2={...copy(draft),revision:w.crypto.randomUUID(),effectiveAt:new Date().toISOString()};w._saveTiendaConfig(current);saved=copy(current.deliveryV2);draft=copy(saved);message('Configuración guardada en este proyecto. Sincronizá o publicá cuando apruebes el cambio para la tienda.');
    }
   };
   host.querySelector('[data-routing-form]').onsubmit=async e=>{e.preventDefault();if(!canEdit())return;const input=e.target.elements['routing-key'],key=input.value;input.value='';const status=host.querySelector('[data-routing-status]');try{await client.saveProvider(key);status.textContent='Clave guardada cifrada. La siguiente consulta comprobará la ruta.';}catch(err){status.textContent=err.message;}};
