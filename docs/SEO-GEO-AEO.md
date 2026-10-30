@@ -1,5 +1,33 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Confirmación de combinaciones de logo · 30/10/2026
+
+El dueño entregó una referencia de cuatro combinaciones de fondo/letras/árabe: verde/crema/naranja, naranja/verde/crema, crema/verde/naranja y verde/naranja/crema. Tabla y fuente original en `docs/brand/sahten/README.md`. Se corrigen únicamente las propuestas locales de home y menú para usar los once trazos sólidos originales del panel, completos y sin deformación. No se modifica la web publicada, el catálogo, Supabase ni la aplicación instalada. El generador del kit antiguo necesita una actualización separada: no dar sus exportaciones por conformes solo por el nombre del archivo.
+
+## Descripciones de todos los productos · Revisión del 30/10/2026
+
+Consulta HTTPS de `https://sahten.online/menu.json`: 31 productos y 31 descripciones vacías. Se cotejaron con las recetas del archivo local del dueño, guardado el 30/10/2026 a las 15:25 UTC, y las notas factuales de su Rappi original 200856. No se leyó ni modificó la lista de clientes/pedidos para esta tarea. Se prepararon 31 textos breves y 31 textos de detalle en `../entregables/rediseno-home-2026-10-30/descripciones/`, fuera del repositorio, y se aplicaron solo a los prototipos locales A/B/C.
+
+Quedan en consulta seis productos: Supermix (fatay en la app frente a falafel en Rappi), Tabla para Celebrar (tres frente a cuatro fatay; Benjameli frente a ensalada de la casa), Pan Árabe (cantidad), los dos Mamul (cantidad por porción) y Tequeños (salsas y tipo de queso). En sándwich de falafel se describen los componentes comunes: no se agregan rábano/hierbabuena/verdeo por referencia de otro canal. Aristelos respeta el nombre confirmado y se describe con sémola, almendras y canela; no se añade sésamo por inferencia ni se afirma su ausencia. No se infieren certificaciones ni declaraciones de ausencia de alérgenos. Los rendimientos internos de receta no se anuncian como cantidad de venta.
+
+**Consultas resueltas por el dueño, 30/10/2026:** Supermix lleva falafel; Tabla para Celebrar lleva cuatro fatay y ensalada de la casa; Pan Árabe incluye cinco panes; cada porción de Mamul (nuez y dátil) incluye dos unidades; los doce Tequeños incluyen guasacaca y tahini. La variedad específica del queso no se consultó: el texto dice queso, sin prometer queso llanero. Estas confirmaciones prevalecen sobre las diferencias de las recetas guardadas; no se modifican automáticamente sus componentes ni sus costos.
+
+Estado actualizado: 31 descripciones breves y 31 de detalle completas, sin consultas de composición pendientes. Aplicadas a los prototipos A/B/C y a la revisión editorial local. No se guardaron textos en el archivo del proyecto del dueño, no se escribieron tablas en Supabase y no se publicaron cambios. La operación automática de descripciones al guardar sigue siendo un requisito pendiente, no una función implementada en 0.4.32. Confirmar composición no implica elegir o publicar la nueva propuesta de diseño.
+
+## Dirección C ajustada · Propuesta del 30/10/2026
+
+El dueño eligió C como base y pidió revisar una propuesta antes de implementar: conservar su portada y bloques expresivos, unificar la navegación entre home/carta y tomar la forma y los colores de los platos de A, con fotografías más altas. Se preparó `../entregables/rediseno-home-2026-10-30/c-ajustada/`, solo local. Home: estructura C con sección de platos clara y arcos de A. Carta: encabezado naranja C, tarjetas claras con arcos de A, según la interpretación de la segunda parte del mensaje; esta combinación se muestra para validar. El mismo encabezado verde, logo original del panel, enlaces y medidas se usa en ambas páginas; solo cambia la acción contextual Pedir online / Mi pedido. Se conserva el catálogo de 31 productos y las descripciones confirmadas, sin cambiar precios ni condiciones de venta.
+
+No se modificó el generador ni se publicaron cambios en la app/web/Supabase. La siguiente implementación depende de validar visualmente la propuesta C ajustada; no reiniciar la exploración A/B/C desde cero.
+
+### Corrección de escala y unificación de formas · C, revisión 2
+
+El dueño aclaró que las fotos más altas eran **solo para la home**. La tienda vuelve a la altura original de A (180 px escritorio / 155 px celular); se descartan para ella los 240/205 px de C ajustada. La home conserva su altura ya aceptada. Para resolver la falta de coherencia entre los semicírculos y las diagonales, se muestra una propuesta local en `../entregables/rediseno-home-2026-10-30/c-unificada/`: una esquina superior izquierda curva y un corte inferior derecho a 45° compartidos por la foto principal y las fotos de productos. Se elimina el semicírculo completo; curva/corte de 56/28 px en escritorio y 36/18 px en celular son medidas de esta propuesta, pendientes de validar. Se simplifican los adornos de la foto principal, conservando composición C, fotos originales, logos completos, navegación verde, catálogo y precios. Esta propuesta visual no está publicada ni modifica el generador de la app.
+
+### Tres sistemas tipográficos · 30/10/2026
+
+El dueño señaló que la serif aislada en la carta no era coherente con el resto y pidió tres mezclas. Se prepararon seis páginas y tres láminas locales en `../entregables/rediseno-home-2026-10-30/tipografia/`: 1) DM Sans en todos los roles; 2) DM Sans para texto/UI y Lora recta para títulos y platos en toda la web; 3) DM Sans como base, Lora Italic en acentos editoriales repetidos y Lora recta en citas. La itálica usa su fuente auténtica; WOFF2 y licencias oficiales de Google Fonts archivadas. No se modifica el logo en curvas. Se mantienen geometrías, catálogo y alturas de C unificada; las variantes solo comparan tipografía y jerarquía. Pendiente de elección, sin publicar.
+
 > **Lectura obligatoria** para cualquier agente o persona que modifique la web publicada, los datos SEO, el menú online, las imágenes de marca o los perfiles externos.
 > Origen: informe del 23/10/2026 + paquete «Sahten — Paquete GBP, GEO y AEO» (documento en Claude: <https://claude.ai/artifact/PF23DELKs86ZiBTEK9pP2b>).
 > Imágenes y marca: [brand/sahten/README.md](brand/sahten/README.md). Prompt para agentes: [PROMPT-AGENTES.md](PROMPT-AGENTES.md).
@@ -601,3 +629,12 @@ Investigadas visualmente en Chrome las tres referencias de Dribbble entregadas; 
 Auditoría completa en Word/PDF (12 páginas): seis páginas públicas, robots y sitemap, con fuentes actuales y límites de medición. Señala descripciones ausentes, tres metas recortadas y textos libres de delivery que el dueño había pospuesto. Los horarios/FAQ corregidos por 0.4.32 se registran como resueltos. Las notas editoriales no son mediciones de ranking, tráfico o Core Web Vitals. El tutorial entregado aún incrusta envío gratis $45.000 y horarios anteriores: debe actualizar su cierre antes de publicarse; los cuatro originales no se cargan todos al abrir la home.
 
 Pedido adicional confirmado: las **descripciones de productos se actualizarán automáticamente al guardar desde la app**, sin exportar archivos. Requisito incorporado al briefing del editor y a la auditoría: operación aislada por producto/negocio, revisión y cola con confirmación, sin publicar precios pendientes; una fuente común para contenido visible y HTML/SEO. Es una implementación futura, no una función terminada de 0.4.32. Los horarios operativos ya están activos en vivo; el resto del publicador de contenido todavía requiere implementación.
+
+
+### 30/10/2026 — Tipografía y guardado comercial de delivery, preparados sin desplegar
+
+Tres comparativas locales de home/carta con la dirección C unificada: (1) DM Sans en todos los roles; (2) DM Sans + Lora recta en títulos; (3) DM Sans + acentos Lora Italic en palabras clave. Mismas fotos, colores y geometría, sin cambiar el logo. Seis páginas navegables, láminas de escritorio/celular y licencias OFL locales en `entregables/rediseno-home-2026-10-30/tipografia/` junto al repo. La selección tipográfica del dueño está pendiente; no se publica ningún prototipo.
+
+Por pedido del dueño, se prepara guardado en vivo de toda la configuración comercial de delivery: mínimo por zona, tarifa, beneficios y cobertura; los horarios ya cuentan con guardado aislado en 0.4.32. Nueva operación de app dueño/admin con validación, revisión, cola y confirmación; protección contra publicaciones viejas. La web de Cloudflare consulta Supabase y recalcula un checkout abierto preservando carrito, precios y datos; no requiere subir archivos por cada cambio. El servidor de Mostrador acepta la configuración vigente aunque el proyecto completo aún tenga una revisión anterior. Los pedidos confirmados conservan su histórico. No cambia el descuento por pago ni publica precios/productos.
+
+**Estado:** 726 pruebas / 80 archivos y compilación aprobadas. Migración `20261030232047_delivery_configuration_live.sql`, app, plantilla y cambio acotado de `sahten-delivery` preparados; falta autorización/publicación conjunta. No se aplicó la migración productiva, no se cambiaron mínimos, tarifas, horarios, pagos, menú ni pedidos reales. Se preguntó al dueño qué zona/mínimo concreto necesita ajustar; ese importe todavía no está confirmado. El HTML estático/SEO sigue requiriendo exportación para renovar su copia, sin afectar la validación operativa en vivo.

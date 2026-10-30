@@ -133,6 +133,7 @@ function _renderTiendaOnline() {
       </div>
     </div>
 
+    <div class="card"><div class="card-body" id="delivery-config-legacy-control"></div></div>
     </div>
     </div>
     <!-- MÉTODOS DE PAGO -->
@@ -231,6 +232,7 @@ function _renderTiendaOnline() {
   SAHTEN.online.payments?.render();
   SAHTEN.delivery.hours.mount();
   SAHTEN.delivery.admin.mount();
+  SAHTEN.delivery.configuration.mountLegacy();
   // Init Leaflet map after DOM is ready
   if(!cfg.deliveryV2)setTimeout(_initLeafletMap, 100);
 }

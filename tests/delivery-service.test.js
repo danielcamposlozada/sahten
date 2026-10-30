@@ -15,6 +15,15 @@ function setup(km=4.5){
  const call=async(action,body={},token='')=>{const response=await handler(new Request('https://test.invalid/'+action,{method:'POST',headers:{'Content-Type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({storeId:sid,...body})}));return {status:response.status,data:await response.json()};};
  return {call,menu,route,input,repo,resolveRoute,quotes,orders,p};
 }
+it('POS usa las condiciones guardadas en vivo sin exigir republicar el proyecto, y sigue rechazando un total anterior',async()=>{
+ const a=setup(),old=structuredClone(a.p);a.p.revision='configuracion-nueva';a.repo.posRules=async()=>({payments:[{method:'qr'}],tienda:{deliveryV2:old}});
+ const input={...a.input,paymentMethod:'qr',total:41990,localOrderId:'ord_config123'};
+ expect((await a.call('validate-pos',{order:input},'cashier')).status).toBe(409);
+ a.menu.delivery.configurationRevision='configuracion-nueva';
+ const next=await a.call('validate-pos',{order:input},'cashier');expect(next.status).toBe(200);expect(next.data.order.deliverySnapshot.revision).toBe('configuracion-nueva');
+ expect((await a.call('validate-pos',{order:{...input,total:1}},'cashier')).status).toBe(409);
+});
+
 it('calcula en servidor, rechaza importes falsos y no acepta Mercado Pago sin Checkout Pro',async()=>{
  const a=setup();let r=await a.call('quote',{order:{...a.input,shipping:1,total:1}});expect(r.data.order).toMatchObject({discount:4000,shipping:1990,total:37990});
  r=await a.call('order',{order:{...a.input,total:1},requestId:qid});expect(r.status).toBe(409);expect(a.orders).toHaveLength(0);

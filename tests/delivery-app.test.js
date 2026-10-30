@@ -77,3 +77,11 @@ it('Mostrador avisa fuera de apertura y sigue permitiendo cobrar un retiro sin u
  expect(w.document.getElementById('most-opening-hours-notice').textContent).toContain('Mostrador podés continuar y cobrar');w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(1);expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();
  }finally{w.close();}
 });
+it('una cotización anterior no repone la tarifa vieja al recalcular Mostrador',async()=>{
+ const {window:w}=await openApp();try{loadRawDemo(w);configure(w);w.showPanel('mostrador');w.mostradorAddToCart(w.SAHTEN.state.products[0].id);w.eval("mostradorSetOrderType('delivery')");
+ w.eval('mostradorDelivery='+JSON.stringify({...places[2].destination,address:places[2].label}));
+ let release;w.SAHTEN.delivery.client.quote=vi.fn().mockImplementationOnce(()=>new Promise(r=>release=r)).mockResolvedValue({route:{...places[2].route,distanceMeters:4200},quoteId:'new'});
+ const old=w.SAHTEN.delivery.refreshPos();await w.SAHTEN.delivery.refreshPos();release({route:places[2].route,quoteId:'old'});await old;
+ expect(w.mostradorDeliveryValue().quoteId).toBe('new');expect(w.mostradorDeliveryValue().route.distanceMeters).toBe(4200);expect(w.mostradorDeliveryValue().routeLoading).toBe(false);
+ }finally{w.close();}
+});

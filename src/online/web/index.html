@@ -181,7 +181,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 'use strict';
 var ORDER_PAGE=document.body.hasAttribute('data-storefront'), PREVIEW=document.body.hasAttribute('data-preview');
 var deliveryServerOffset=0,addressGeneration=0,addressAbort=null,addressSuggest=createAddressSuggestions();
-var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null;
+var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null,deliveryUpdateNotice='';
 var MENU=null, cart={}, type='delivery', geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
@@ -439,12 +439,13 @@ function modernDelivery(){return !!(MENU&&MENU.delivery&&MENU.delivery.deliveryV
 function shippingForMethod(method){return MENU.delivery?.enabled===false||geo||modernDelivery()?shippingFor(MENU.delivery,geo&&geo.lat,geo&&geo.lng,subtotal()-(modernDelivery()?cartBenefit(method).amount:0),{route:deliveryRoute,authorization:deliveryAuthorization,now:Date.now()+deliveryServerOffset,hasPaymentDiscount:!!cartBenefit(method).paymentDiscount}):null;}
 function recalcDelivery(){ship=shippingForMethod(pay);}
 function deliveryApi(action,body){var s=sb();if(!s)return Promise.reject(new Error('Falta la conexión con el servidor de envíos.'));return fetch(s.url+'/functions/v1/sahten-delivery/'+action,{method:'POST',headers:sbHeaders(),body:JSON.stringify(Object.assign({storeId:s.storeId},body))}).then(function(r){return r.json().then(function(data){if(!r.ok){var error=new Error(data.message||'No se pudo validar el envío.');error.code=data.error;if(error.code==='service_paused')MENU.delivery=Object.assign({},MENU.delivery,{enabled:false});throw error;}return data;});});}
-function refreshDeliveryRoute(){
- if(!geo||!modernDelivery())return;var generation=++deliveryGeneration;deliveryLoading=true;deliveryError='';sheet();
- return deliveryApi('quote',{order:buildOrder()}).then(function(v){if(generation!==deliveryGeneration)return;if(Number.isFinite(v.serverNow))deliveryServerOffset=v.serverNow-Date.now();deliveryRoute=v.route;deliveryAuthorization=v.authorization;deliveryQuoteId=v.quoteId;recalcDelivery();}).catch(function(e){if(generation===deliveryGeneration){deliveryRoute=null;deliveryError=e.message;recalcDelivery();}}).finally(function(){if(generation===deliveryGeneration){deliveryLoading=false;sheet();}});
+function sheetKeepFocus(){var active=document.activeElement,id=active?.id,start=active?.selectionStart,end=active?.selectionEnd;sheet();var input=id&&$(id);if(input){input.focus({preventScroll:true});if(typeof start==='number'&&input.setSelectionRange)try{input.setSelectionRange(start,end);}catch{}}}
+function refreshDeliveryRoute(preserveFocus){
+ if(!geo||!modernDelivery())return;var generation=++deliveryGeneration,draw=preserveFocus?sheetKeepFocus:sheet;deliveryLoading=true;deliveryError='';draw();
+ return deliveryApi('quote',{order:buildOrder()}).then(function(v){if(generation!==deliveryGeneration)return;if(Number.isFinite(v.serverNow))deliveryServerOffset=v.serverNow-Date.now();deliveryRoute=v.route;deliveryAuthorization=v.authorization;deliveryQuoteId=v.quoteId;recalcDelivery();}).catch(function(e){if(generation===deliveryGeneration){deliveryRoute=null;deliveryError=e.message;recalcDelivery();}}).finally(function(){if(generation===deliveryGeneration){deliveryLoading=false;draw();}});
 }
 function requestDeliveryApproval(){if(!geo)return;deliveryApi('request',{order:buildOrder()}).then(function(v){deliveryQuoteId=v.quoteId;deliveryError='Solicitud enviada al local. Volvé a consultar cuando te confirmen la autorización.';sheet();}).catch(function(e){deliveryError=e.message;sheet();});}
-function deliveryCard(){if(type!=='delivery'||!modernDelivery())return '';return deliveryIncentiveHtml(deliveryLoading?{status:'loading'}:ship,{format:fmt})+(deliveryError?'<p role="status">'+esc(deliveryError)+'</p>':'')+(ship&&ship.status==='authorization_required'?'<button class="cta ghost" data-request-delivery>Solicitar autorización al local</button>':'')+(geo?'<button class="cta ghost" data-refresh-delivery>Volver a consultar envío</button>':'');}
+function deliveryCard(){if(type!=='delivery'||!modernDelivery())return '';return (deliveryUpdateNotice?'<p class="note" role="status">'+esc(deliveryUpdateNotice)+'</p>':'')+deliveryIncentiveHtml(deliveryLoading?{status:'loading'}:ship,{format:fmt})+(deliveryError?'<p role="status">'+esc(deliveryError)+'</p>':'')+(ship&&ship.status==='authorization_required'?'<button class="cta ghost" data-request-delivery>Solicitar autorización al local</button>':'')+(geo?'<button class="cta ghost" data-refresh-delivery>Volver a consultar envío</button>':'');}
 function total(){return Math.round((subtotal()-cartBenefit().amount+(type==='delivery'&&ship&&ship.ok?ship.cost:0))*100)/100;}
 function amountForMethod(k){var quote=type==='delivery'?shippingForMethod(k):null;return fmt(subtotal()-cartBenefit(k).amount+(quote&&quote.ok?quote.cost:0));}
 function shipNote(){
@@ -586,27 +587,30 @@ document.addEventListener('click',function(e){
   else if(t.hasAttribute('data-close'))closeSheet();
   else if(t.id==='send')send();
 });
-// Solo estados e inclusión: no cambia los precios del carrito mientras el cliente lo completa.
+// Estados y condiciones de entrega en vivo; conserva los precios del carrito.
 var availabilityRefreshing=false,availabilityFingerprint='';
 function refreshSalesAvailability(){
  if(!MENU||!sb()||sending||document.visibilityState==='hidden'||availabilityRefreshing)return;
  availabilityRefreshing=true;var cfg=sb();
  fetchLimited(cfg.url+'/rest/v1/menus?select=json&store_id=eq.'+encodeURIComponent(cfg.storeId),{headers:sbHeaders()}).then(function(r){if(!r.ok)throw new Error('availability');return r.json();}).then(function(rows){
   var live=rows&&rows[0]&&rows[0].json;if(!live||!Array.isArray(live.products))return;
-  var deliveryBefore=JSON.stringify([MENU.store.openingHours,MENU.delivery?.hours,MENU.delivery?.enabled,MENU.delivery?.deliveryV2?.zones.map(function(z){return [z.id,z.enabled,z.requiresAuthorization]})]);
+  var deliveryBefore=JSON.stringify([MENU.store.openingHours,MENU.delivery,MENU.store.address,MENU.store.lat,MENU.store.lng]),rulesBefore=MENU.delivery?.configurationRevision;
+  if(live.delivery?.configurationRevision){MENU.delivery=JSON.parse(JSON.stringify(live.delivery));['address','lat','lng'].forEach(function(key){if(live.store&&Object.prototype.hasOwnProperty.call(live.store,key))MENU.store[key]=live.store[key];});}
   MENU.delivery=Object.assign({},MENU.delivery,{enabled:live.delivery?.enabled!==false});
   // Calendarios en vivo: independientes de la revisión de tarifas y del precio del carrito.
   if(live.store&&Object.prototype.hasOwnProperty.call(live.store,'openingHours'))MENU.store.openingHours=live.store.openingHours;
   var liveHours=live.delivery?.hours??live.delivery?.deliveryV2?.hours;if(liveHours)MENU.delivery.hours=liveHours;
-  // Solo estados por ID y misma revisión: nunca arrastra tarifas o geometrías nuevas al carrito.
+  // Compatibilidad con servidores previos: actualizan solo los estados por ID de la misma revisión.
   var policy=MENU.delivery.deliveryV2,livePolicy=live.delivery?.deliveryV2;
   if(policy&&livePolicy&&policy.revision===livePolicy.revision){policy.zones=policy.zones.map(function(z){var remote=livePolicy.zones.find(function(r){return r.id===z.id});return remote?Object.assign({},z,{enabled:remote.enabled!==false,requiresAuthorization:remote.requiresAuthorization===true}):z;});}
-  var deliveryChanged=deliveryBefore!==JSON.stringify([MENU.store.openingHours,MENU.delivery.hours,MENU.delivery.enabled,MENU.delivery.deliveryV2?.zones.map(function(z){return [z.id,z.enabled,z.requiresAuthorization]})]);
+  var deliveryChanged=deliveryBefore!==JSON.stringify([MENU.store.openingHours,MENU.delivery,MENU.store.address,MENU.store.lat,MENU.store.lng]),rulesChanged=!!MENU.delivery.configurationRevision&&rulesBefore!==MENU.delivery.configurationRevision;
+  if(rulesChanged){deliveryGeneration++;deliveryRoute=null;deliveryAuthorization=null;deliveryQuoteId=null;deliveryLoading=false;deliveryError='';deliveryUpdateNotice='Condiciones de envío actualizadas. Revisá el importe antes de confirmar.';}
   var before=JSON.stringify(MENU.products.map(function(p){return [p.id,p.salesAvailability,p.retired]})),old=new Map(MENU.products.map(function(p){return [p.id,p]}));
   var next=live.products.map(function(p){var existing=old.get(p.id);return existing?Object.assign({},existing,{salesAvailability:p.salesAvailability||null,retired:false}):p;});
   MENU.products.forEach(function(p){if(cart[p.id]&&!next.some(function(n){return n.id===p.id}))next.push(Object.assign({},p,{retired:true,salesAvailability:{paused:true,resumeAt:null}}));});
   MENU.products=next;MENU.config.categories=live.config?.categories||MENU.config.categories;
   if(deliveryChanged||before!==JSON.stringify(next.map(function(p){return [p.id,p.salesAvailability,p.retired]}))){var focused=document.activeElement,focusId=focused?.id,start=focused?.selectionStart,end=focused?.selectionEnd;recalcDelivery();render();if($('ov').classList.contains('on'))sheet();var input=focusId&&$(focusId);if(input){input.focus({preventScroll:true});if(typeof start==='number'&&input.setSelectionRange)try{input.setSelectionRange(start,end);}catch{}}}
+  if(rulesChanged&&type==='delivery'&&geo&&modernDelivery()&&$('ov').classList.contains('on'))refreshDeliveryRoute(true);
  }).catch(function(){/* conserva el catálogo al perder conexión; el servidor valida al confirmar */}).finally(function(){availabilityRefreshing=false;});
 }
 setInterval(refreshSalesAvailability,10000);window.addEventListener('focus',refreshSalesAvailability);document.addEventListener('visibilitychange',function(){if(document.visibilityState!=='hidden')refreshSalesAvailability();});

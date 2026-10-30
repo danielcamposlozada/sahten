@@ -80,7 +80,10 @@ export function createController(host) {
     publishing=true;const ctx=context();
     try {const result=await ctx.client.rpc(name,{p_store_id:ctx.storeId,...args});check(ctx);return result;}
     catch(e){const msg=String(e.message||'');
-      if(name==='set_store_service_hours'&&(/service_hours_conflict/.test(msg)||e.code==='40001')){e.code='service_hours_conflict';e.status=409;e.message='Este horario cambió en otro equipo. Cargá el horario de la web y revisalo antes de guardar.';}
+      if(name==='set_store_delivery_configuration'&&(/delivery_configuration_conflict/.test(msg)||e.code==='40001')){e.code='delivery_configuration_conflict';e.status=409;e.message='La configuración cambió en otro equipo. Usá la configuración de la web y revisá tus cambios antes de guardar.';}
+      else if(name==='set_store_delivery_configuration'&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez para conectar la configuración. Después se aplica al guardar, sin subir archivos.';
+      else if(name==='set_store_delivery_configuration'&&/invalid_delivery_configuration/.test(msg))e.message='Revisá los mínimos, tarifas, beneficios y límites de las zonas.';
+      else if(name==='set_store_service_hours'&&(/service_hours_conflict/.test(msg)||e.code==='40001')){e.code='service_hours_conflict';e.status=409;e.message='Este horario cambió en otro equipo. Cargá el horario de la web y revisalo antes de guardar.';}
       else if(name==='set_store_service_hours'&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de guardar horarios en la web.';
       else if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
       else if(name.startsWith('set_delivery_')&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de usar los controles de delivery en vivo.';
@@ -152,6 +155,8 @@ export function createController(host) {
     async setAvailability(id, visible) { return stateRpc('set_menu_product_visibility', { p_product_id:id, p_visible:visible }); },
     async setSalesAvailability(id, available, resumeAt = null) { return stateRpc('set_product_sales_availability', { p_product_id:id, p_paused:!available, p_resume_at:resumeAt }); },
     async setDeliveryAvailability(enabled) { return stateRpc('set_delivery_service_state', { p_enabled:enabled }); },
+    async setDeliveryConfiguration(value) { return stateRpc('set_store_delivery_configuration',{p_configuration:value.configuration,p_expected_revision:value.revision??null,p_request_id:value.requestId,p_parent_revision:value.parentRevision??null}); },
+    async readDeliveryConfiguration() {if(!client||!host.conn.storeId)return null;const ctx=context(),result=await ctx.client.rpc('get_store_delivery_configuration',{p_store_id:ctx.storeId});check(ctx);return result;},
     async setServiceHours(kind, value) { return stateRpc('set_store_service_hours', { p_kind:kind, p_hours:value.hours, p_expected_revision:value.revision ?? null }); },
     async readServiceHours() {
       if (!client || !host.conn.storeId) return null;
