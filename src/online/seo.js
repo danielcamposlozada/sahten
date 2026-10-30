@@ -39,6 +39,28 @@ export function menuSections(menu) {
   for (const p of products) { const name = p.category || 'Otros'; if (!groups.has(name)) groups.set(name, []); groups.get(name).push(p); }
   return [...groups].filter(([, items]) => items.length).map(([name, items]) => ({ name, items }));
 }
+/** Horarios públicos: apertura y entrega nunca comparten el calendario por defecto. Sin imports: se incrusta como script plano. */
+export function seoServiceSchedule(menu, kind = 'opening') {
+  return kind === 'opening' ? menu.store?.openingHours : menu.delivery?.hours ?? menu.delivery?.deliveryV2?.hours;
+}
+export function seoValidServiceWeek(h) {
+  if (h?.enabled !== true || typeof h.timeZone !== 'string' || !h.timeZone) return false;
+  try { new Intl.DateTimeFormat('es-AR',{timeZone:h.timeZone}); } catch { return false; }
+  return Array.isArray(h.weekly) && h.weekly.length === 7 && h.weekly.every(day => Array.isArray(day) && day.length <= 4 && day.every(p => p && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(p.start) && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(p.end) && p.start !== p.end));
+}
+export function seoServiceHoursText(menu, kind = 'opening') {
+  const h = seoServiceSchedule(menu, kind);
+  if (!h) return menu.site?.delivery?.hours || '';
+  if (!seoValidServiceWeek(h)) return '';
+  return h.weekly.map((day, i) => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][i] + ': ' + (day.length ? day.map(p => p.start + ' a ' + p.end + (p.end < p.start ? ' (día siguiente)' : '')).join(' y ') : 'cerrado')).join('\n');
+}
+export function seoServiceSchema(menu) {
+  const opening = seoServiceSchedule(menu), result = {};
+  if (!seoValidServiceWeek(opening)) return result;
+  result.openingHours = opening.weekly.flatMap((periods, day) => periods.map(p => ['Su','Mo','Tu','We','Th','Fr','Sa'][day] + ' ' + p.start + '-' + p.end));
+  if (Array.isArray(opening.exceptions) && opening.exceptions.length) result.specialOpeningHoursSpecification = opening.exceptions.filter(ex => ex && /^\d{4}-\d{2}-\d{2}$/.test(ex.date) && Array.isArray(ex.periods)).flatMap(ex => (ex.periods.length ? ex.periods : [{start:'00:00',end:'00:00'}]).map(p => ({'@type':'OpeningHoursSpecification',validFrom:ex.date,validThrough:ex.date,opens:p.start,closes:p.end})));
+  return result;
+}
 export function buildSeo(menu) {
   const s = menu.site || {}, options = s.seo || {}, store = menu.store || {};
   const title = seoText(options.title || store.name || 'Menú online', 100);
@@ -64,7 +86,9 @@ export function buildSeo(menu) {
   if (sameAs.length) schema.sameAs = sameAs;
   const lat = menu.delivery?.lat, lng = menu.delivery?.lng;
   if (typeof lat === 'number' && typeof lng === 'number' && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) schema.geo = { '@type': 'GeoCoordinates', latitude: lat, longitude: lng };
-  if (options.openingHours) schema.openingHours = options.openingHours.split(',').map(x => x.trim()).filter(Boolean);
+  const opening = seoServiceSchedule(menu);
+  if (opening) Object.assign(schema, seoServiceSchema(menu));
+  else if (options.openingHours) schema.openingHours = options.openingHours.split(',').map(x => x.trim()).filter(Boolean);
   return { title, description, canonical, image, imageAlt: kit ? kit.ogAlt : '', schema };
 }
 /** Preguntas frecuentes como datos estructurados: son las mismas que se ven en la página. */
@@ -103,8 +127,8 @@ export function renderSeoHead(menu, { storefront = false } = {}) {
 /** Contenido útil sin JavaScript y mientras llegan los datos en vivo. */
 export function renderSearchContent(menu) {
   if (menu.config?.enabled === false) return '';
-  const s = menu.site || {}, e = seoEscape;
-  return `<section id="search-content" style="max-width:980px;margin:auto;padding:24px"><h2>${e(menu.store?.name || 'Menú')}</h2><p>${e(s.hero?.subtitle || menu.config?.subtitle || '')}</p><p>${e(menu.store?.address || '')}</p>${s.historia?.text ? `<h2>${e(s.historia.title || 'Nuestra historia')}</h2><p>${e(s.historia.text)}</p>` : ''}<h2>${e(s.menuTitle || 'Nuestro menú')}</h2><ul>${(menu.products || []).map(p => `<li>${e(p.name)}${p.description ? ' — ' + e(p.description) : ''}${menu.config?.showPrices !== false ? ' · ' + e(menu.store?.currency?.symbol || '$') + e(p.price) : ''}</li>`).join('')}</ul>${s.delivery?.hours ? `<h2>Horarios</h2><p>${e(s.delivery.hours)}</p>` : ''}${s.delivery?.extra ? `<p>${e(s.delivery.extra)}</p>` : ''}${s.catering ? `<h2>${e(s.catering.title || 'Catering')}</h2><p>${e(s.catering.text)}</p>` : ''}${s.faq?.items?.length ? '<h2>Preguntas frecuentes</h2>' + s.faq.items.map(f => `<h3>${e(f.q)}</h3><p>${e(f.a)}</p>`).join('') : ''}${menu.store?.whatsapp ? `<p><a href="https://wa.me/${e(String(menu.store.whatsapp).replace(/\D/g, ''))}">Consultas por WhatsApp</a></p>` : ''}</section>`;
+  const s = menu.site || {}, e = seoEscape, openingText = seoServiceHoursText(menu), deliveryText = seoServiceHoursText(menu, 'delivery');
+  return `<section id="search-content" style="max-width:980px;margin:auto;padding:24px"><h2>${e(menu.store?.name || 'Menú')}</h2><p>${e(s.hero?.subtitle || menu.config?.subtitle || '')}</p><p>${e(menu.store?.address || '')}</p>${s.historia?.text ? `<h2>${e(s.historia.title || 'Nuestra historia')}</h2><p>${e(s.historia.text)}</p>` : ''}<h2>${e(s.menuTitle || 'Nuestro menú')}</h2><ul>${(menu.products || []).map(p => `<li>${e(p.name)}${p.description ? ' — ' + e(p.description) : ''}${menu.config?.showPrices !== false ? ' · ' + e(menu.store?.currency?.symbol || '$') + e(p.price) : ''}</li>`).join('')}</ul>${openingText ? `<h2>Horarios de apertura y retiro</h2><p>${e(openingText)}</p>` : ''}${deliveryText ? `<h2>Horario de delivery</h2><p>${e(deliveryText)}</p>` : ''}${s.delivery?.extra ? `<p>${e(s.delivery.extra)}</p>` : ''}${s.catering ? `<h2>${e(s.catering.title || 'Catering')}</h2><p>${e(s.catering.text)}</p>` : ''}${s.faq?.items?.length ? '<h2>Preguntas frecuentes</h2>' + s.faq.items.map(f => `<h3>${e(f.q)}</h3><p>${e(f.a)}</p>`).join('') : ''}${menu.store?.whatsapp ? `<p><a href="https://wa.me/${e(String(menu.store.whatsapp).replace(/\D/g, ''))}">Consultas por WhatsApp</a></p>` : ''}</section>`;
 }
 export function discoveryFiles(menu) {
   const canonical = buildSeo(menu).canonical;

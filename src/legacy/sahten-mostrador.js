@@ -394,6 +394,7 @@ function _renderCartExtras() {
   const discOpts = MOSTRADOR_DISCOUNTS.map(d => { const l=d.type==='pct'?d.name+' ('+d.value+'%)':d.name+' (-$'+_fmt(d.value)+')'; return '<option value="'+d.id+'" '+(d.id===mostradorActiveDiscountId?'selected':'')+'>'+_esc(l)+'</option>'; }).join('');
   const payPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
   f.innerHTML = '<div class="most-extras">' +
+    '<div id="most-opening-hours-notice">'+SAHTEN.delivery.hours.posNotice()+'</div>' +
     '<div id="most-customer-picker" class="most-customer-picker"></div>' +
     '<div class="most-extras-row"><label for="most-discount">Descuento</label><select id="most-discount" class="most-disc-select" onchange="mostradorSetDiscount(this.value)"><option value="">Sin descuento</option>'+discOpts+'</select><button class="most-add-btn" onclick="openDiscountManager()" title="Gestionar descuentos">+</button></div>' +
     _mostDeliveryExtrasHtml() + _mostEstimateHtml() +
@@ -444,6 +445,7 @@ function _mostDeliveryExtrasHtml(){
   const d=mostradorDelivery; const cfg=_mostTiendaCfg(); const t=_calcCartTotals();
   if(cfg.deliveryEnabled===false)return h+'<div class="info-banner" role="status">Delivery pausado. Podés tomar pedidos de retiro en local.</div>';
   if(cfg.deliveryV2?.active) h+='<div id="most-delivery-incentive"></div>';
+  else h+='<div id="most-delivery-hours-notice">'+(!SAHTEN.delivery.hours.deliveryStatus().open?'<div class="info-banner" role="status">'+_esc(SAHTEN.delivery.hours.deliveryNotice())+'</div>':'')+'</div>';
   let info='';
   if(typeof sahtenOfflineNotice==='function') info+=sahtenOfflineNotice();
   if(d && d.zone){ info='<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:6px;flex-wrap:wrap"><span style="width:9px;height:9px;border-radius:50%;background:'+(d.zone.color||'var(--green)')+'"></span><strong>'+_esc(d.zone.name)+'</strong><span style="color:var(--muted)">· '+d.distKm.toFixed(1)+' km · '+(t.freeShip?'<span style="color:var(--green);font-weight:600">Envío gratis</span>':'$'+_fmt(d.zone.baseCost||0))+'</span></div>'; }
@@ -534,7 +536,8 @@ async function mostradorCheckout() {
   if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
-  if(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryEnabled===false){alert('El delivery está pausado. Reactivalo en Ajustes › Negocio › Delivery o elegí retiro.');return;}
+  if(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryEnabled===false){alert('El delivery está pausado. Reactivalo en Ajustes › Negocio › Horarios y delivery o elegí retiro.');return;}
+  if(mostradorOrderType==='delivery'&&!SAHTEN.delivery.hours.deliveryStatus().open){alert(SAHTEN.delivery.hours.deliveryNotice());return;}
   if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
     if(!_mostSelectedPayment()){alert('Elegí un medio de pago antes de confirmar el delivery.');return;}
     const fingerprint=JSON.stringify(_mostDeliveryRequest());_deliveryChecking=true;

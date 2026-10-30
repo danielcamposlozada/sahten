@@ -44,7 +44,9 @@ export function zoneFor(tienda, lat, lng) {
 export function shippingFor(tienda, lat, lng, subtotal, options = {}) {
   const t = tienda || {};
   if (t.enabled === false || t.deliveryEnabled === false) return { ok:false, status:'service_paused', cost:0, free:false, belowMin:false };
-  if (t.deliveryV2?.active) return deliveryQuote(t.deliveryV2, {lat,lng}, subtotal, options);
+  if (t.deliveryV2?.active) return deliveryQuote(deliveryPolicyWithHours(t), {lat,lng}, subtotal, options);
+  const hours = deliveryHours(t.hours ?? t.deliveryHours ?? t.deliveryV2?.hours, options.now ?? Date.now());
+  if (!hours.open) return { ok:false, status:hours.valid?'closed':'hours_invalid', hours, cost:0, free:false, belowMin:false };
   const z = zoneFor(t, lat, lng);
   if (!z.zone) return { ok: false, out: true, zone: null, distKm: z.distKm, cost: 0, free: false, belowMin: false, minOrder: t.deliveryMinOrder || 0 };
   const freeMin = t.freeShippingMin || 0;
@@ -52,6 +54,10 @@ export function shippingFor(tienda, lat, lng, subtotal, options = {}) {
   const minOrder = t.deliveryMinOrder || 0;
   const belowMin = minOrder > 0 && subtotal < minOrder;
   return { ok: !belowMin, out: false, zone: z.zone, distKm: z.distKm, cost: free ? 0 : (z.zone.baseCost || 0), free, belowMin, minOrder };
+}
+
+export function deliveryPolicyWithHours(delivery) {
+  return delivery?.deliveryV2 ? { ...delivery.deliveryV2, hours: delivery.hours ?? delivery.deliveryHours ?? delivery.deliveryV2.hours } : null;
 }
 
 /** Motor v2: recibe una ruta comprobada por el servidor. Nunca convierte el radio en recorrido. */
@@ -114,7 +120,7 @@ export function deliveryReport(orders) {
 /** Horarios estructurados: índice 0 domingo; cierre exclusivo. Los feriados son excepciones explícitas. */
 export function validDeliveryHours(h) {
   if (!h) return true; // Compatibilidad de negocios que todavía no definieron horarios.
-  if (typeof h.enabled !== 'boolean') return false;
+  if (typeof h.enabled !== 'boolean' || typeof h.timeZone !== 'string' || !h.timeZone.trim()) return false;
   try { new Intl.DateTimeFormat('es-AR',{timeZone:h.timeZone}).format(); } catch { return false; }
   const time=v=>typeof v==='string'&&/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v);
   const periods=a=>Array.isArray(a)&&a.length<=4&&a.every(p=>p&&time(p.start)&&time(p.end)&&p.start!==p.end);

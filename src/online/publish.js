@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 import webTemplate from './web/index.html?raw';
 import storySrc from './story.js?raw';
+import serviceHoursSrc from '../core/service-hours.js?raw';
 import storyCss from './web/story.css?raw';
 import motionCss from './web/motion.css?raw';
 import cartaCss from './web/carta.css?raw';
@@ -28,7 +29,7 @@ import { buildSitePages } from './pages.js';
 import { brandFiles, brandInline } from './brand.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
-export const sharedScript = () => [storySrc, salesAvailabilitySrc, orderDetailsSrc, deliverySrc, incentiveSrc, addressSuggestionsSrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc, paymentBenefitSrc, paymentChoiceSrc].map(s => s.replace(/^import[^\n]*\n/gm, '').replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
+export const sharedScript = () => [storySrc, salesAvailabilitySrc, orderDetailsSrc, deliverySrc, serviceHoursSrc, incentiveSrc, addressSuggestionsSrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc, paymentBenefitSrc, paymentChoiceSrc].map(s => s.replace(/^import[^\n]*\n/gm, '').replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
 
 const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028').replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
 

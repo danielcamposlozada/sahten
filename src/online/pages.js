@@ -3,8 +3,9 @@
 // HTML estático (sin JavaScript) armado con el mismo contenido que el dueño edita en Menú Online › Sitio web.
 // Se publican junto a index.html cuando hay una dirección pública (SEO › Dirección pública de la web) y el sitio está encendido.
 // ═══════════════════════════════════════════════════════════
-import { buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags } from './seo.js';
+import { buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags, seoServiceHoursText } from './seo.js';
 
+import { serviceHoursPageScript } from './serviceHoursPage.js';
 import { storyPhotosHtml } from './story.js';
 import storyCss from './web/story.css?raw';
 import { contrastText } from '../ui/contrast.js';
@@ -15,12 +16,14 @@ const paragraphs = text => String(text || '').split(/\n\s*\n/).map(x => x.trim()
 const colour = (value, fallback) => /^#[0-9a-fA-F]{3,8}$/.test(value || '') ? value : fallback;
 const ld = data => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
+const hoursBlock = (menu, kind, title) => { const text = seoServiceHoursText(menu,kind); return `<div data-service-hours-block${text ? '' : ' hidden'}><h2>${esc(title)}</h2><p data-service-hours="${kind}" style="white-space:pre-line">${esc(text)}</p></div>`; };
+
 function layout(menu, page, { title, description, h1, body, extraLd = [] }) {
   const seo = buildSeo(menu), store = menu.store || {}, name = store.name || seo.title, base = seo.canonical.endsWith('/') ? seo.canonical : seo.canonical + '/';
   const url = new URL(page.slug + '/', base).href, primary = colour(menu.theme?.primary, '#235328'), accent = colour(menu.theme?.accent, '#F28C00');
   const wa = store.whatsapp ? 'https://wa.me/' + String(store.whatsapp).replace(/\D/g, '') : '';
   const nav = sitePageList(menu).map(p => p.slug === page.slug ? `<a href="./" aria-current="page">${esc(p.label)}</a>` : `<a href="../${esc(p.slug)}/">${esc(p.label)}</a>`).join('');
-  const hours = menu.site?.delivery?.hours ? `<div><h2>Horarios</h2><p>${esc(menu.site.delivery.hours).replace(/\n/g, '<br>')}</p></div>` : '';
+  const hours = hoursBlock(menu,'opening','Apertura y retiro');
   const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Inicio', item: seo.canonical }, { '@type': 'ListItem', position: 2, name: page.label, item: url }] };
   const meta = (key, content, property) => content ? `<meta ${property ? 'property' : 'name'}="${key}" content="${esc(content)}">` : '';
   return `<!DOCTYPE html>
@@ -34,7 +37,7 @@ ${meta('description', description)}
 ${meta('og:type', 'website', true)}${meta('og:title', title, true)}${meta('og:description', description, true)}${meta('og:url', url, true)}${meta('og:image', seo.image, true)}
 ${meta('twitter:card', seo.image ? 'summary_large_image' : 'summary')}
 ${brandHeadTags(menu)}
-${ld(breadcrumb)}${extraLd.map(ld).join('')}
+${ld(breadcrumb)}${extraLd.map(ld).join('')}<script type="application/ld+json" id="restaurant-schema">${JSON.stringify(seo.schema).replace(/</g, '\\u003c')}</script>
 <style>
 :root{--primary:${primary};--accent:${accent};--on-accent:${contrastText(accent)};--ink:#1e2c1f;--muted:#5d6b5f;--bg:#faf8f5;--border:#e2ddd5}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
@@ -61,6 +64,7 @@ ${body}
 <p><a class="cta" href="${menu.site?.orderPage ? '../pedir/' : '../#pedido'}">Pedir online</a>${wa ? `<a class="cta alt" href="${esc(wa)}">Consultar por WhatsApp</a>` : ''}</p>
 </main>
 <footer><div class="in"><div><h2>${esc(name)}</h2>${store.address ? `<p>${esc(store.address)}</p>` : ''}</div>${hours}${wa ? `<div><h2>Contacto</h2><p><a href="${esc(wa)}">WhatsApp ${esc(store.whatsapp)}</a></p></div>` : ''}</div></footer>
+${serviceHoursPageScript(menu)}
 </body>
 </html>
 `;
@@ -82,8 +86,8 @@ const builders = {
       body: (menu.config?.subtitle ? `<p>${esc(menu.config.subtitle)}.</p>` : '') + body, extraLd: [menuSchema(menu)].filter(Boolean) };
   },
   'delivery-y-retiro'(menu) {
-    const d = menu.site.delivery, store = menu.store || {}, where = menu.site.seo?.locality ? ' en ' + menu.site.seo.locality : '';
-    const body = (d.hours ? `<h2>Horarios</h2><p>${esc(d.hours).replace(/\n/g, '<br>')}</p>` : '') + (d.extra ? `<h2>Zona de reparto y envío</h2>${paragraphs(d.extra)}` : '')
+    const d = {...menu.site.delivery,hours:seoServiceHoursText(menu,'delivery')}, store = menu.store || {}, where = menu.site.seo?.locality ? ' en ' + menu.site.seo.locality : '';
+    const body = hoursBlock(menu,'opening','Apertura y retiro en local') + hoursBlock(menu,'delivery','Horario de delivery') + (d.extra ? `<h2>Zona de reparto y envío</h2>${paragraphs(d.extra)}` : '')
       + (store.address ? `<h2>Dónde estamos</h2><p>${esc(store.address)}. <a href="${esc(mapsLink(store.address))}">Cómo llegar</a></p>` : '');
     return { title: clip(`${d.title || 'Delivery y retiro'}${where} | ${store.name || ''}`, 70), description: clip([d.hours ? 'Horarios: ' + d.hours.replace(/\s*\n\s*/g, ' · ') + '.' : '', d.extra || ''].filter(Boolean).join(' '), 160), h1: `${d.title || 'Delivery y retiro'}${where}`, body };
   },

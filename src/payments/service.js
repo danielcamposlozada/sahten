@@ -1,4 +1,4 @@
-import { deliveryHours } from '../core/delivery.js';
+import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 import { PaymentError, fail, validUuid, siteUrl, quoteOrder, buildPreference, checkoutUrl, sha256, verifyWebhook, verifiedPayment, cents } from './core.js';
 
 const uuid = value => { if (!validUuid(value)) fail('Identificador no válido.'); return value; };
@@ -77,7 +77,7 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         await limited('store:' + sid, 120); await limited('buyer:' + sid + ':' + await originKey(req), 20);
         const menu=await repo.menu(sid);
         if(body.order?.source==='delivery'&&menu.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
-        if(body.order?.source==='delivery'&&menu.delivery?.deliveryV2?.active){const h=deliveryHours(menu.delivery.deliveryV2.hours,now());if(!h.open)fail('El delivery está fuera de horario. Volvé durante el horario de atención.',409,h.valid?'closed':'hours_invalid');}
+        if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
         const order = quoteOrder(menu, body.order || {},{...delivery,now:now()});
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');

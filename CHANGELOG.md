@@ -2,7 +2,13 @@
 
 ## Sin publicar
 
-Plantilla web publicada en sahten.online el 29/10/2026; los campos nuevos del editor estarán disponibles en una próxima versión de la app.
+## 0.4.32
+
+- **Horarios y delivery**: apertura/retiro y entregas tienen calendarios independientes, con turnos y fechas especiales. Guardar aplica únicamente ese horario en la tienda conectada, sin publicar precios ni subir archivos; incluye confirmación, reintento y protección ante ediciones simultáneas.
+- **Retiro disponible durante la apertura** aunque el delivery esté cerrado. Mostrador avisa fuera del horario del local y permite cobrar. Web y servidor verifican cada servicio por separado; los pagos ya iniciados y las ventas anteriores conservan su curso.
+- **Horarios en vivo en toda la web**: portada, tienda y páginas informativas reciben cambios en hasta 10 segundos o al volver a la pestaña, conservando carrito, precios y datos. La copia estática para buscadores se actualiza al exportar.
+
+Los campos de historia y movimiento, publicados en la web el 29/10, también se incorporan al editor de la app:
 
 - **Historia con dos fotos**: foto horizontal y segunda imagen vertical opcional, descripciones accesibles y pies editables. Se incluyen en la portada y en la página de historia, sin recortar personas; las imágenes se optimizan al exportar.
 - **Movimiento de la web**: reemplaza la cinta continua por texto fijo; feedback breve de botones, carrito y desplegables, con tiempos más cortos en celular y alternativa sin movimiento.

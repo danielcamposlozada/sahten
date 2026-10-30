@@ -208,3 +208,15 @@ it('zonas en vivo envían un único campo y no publican el borrador de tarifas',
  await s.ctl.resume();s.host.menuJson=()=>{throw Error('No debe publicar el catálogo');};await s.ctl.setDeliveryZoneState('z1','requiresAuthorization',false);
  expect(s.calls.filter(c=>c.method==='POST').map(c=>c.body)).toEqual([{p_store_id:'st-1',p_zone_id:'z1',p_flag:'requiresAuthorization',p_enabled:false}]);
 });
+
+it('guarda un único horario con revisión y traduce un conflicto sin publicar el catálogo',async()=>{
+ const hours={enabled:true,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};
+ let conflict=false;
+ const conn={url:URL_OK,anonKey:ANON,storeId:'st-1',slug:'mi-local'},session={access_token:'T',refresh_token:'R',expires_at:9e9,user:{id:'u1'}};
+ const s=setup({conn,storage:{'online-session:p1':session},routes:{'/rest/v1/orders':{body:[]},'/rpc/get_store_service_hours':{body:{opening:{hours,revision:'rev-1'},delivery:{hours:null,revision:null}}},'/rpc/set_store_service_hours':()=>conflict?{status:409,body:{message:'service_hours_conflict',code:'40001'}}:{body:{hours,revision:'rev-2'}}}});
+ await s.ctl.resume();expect((await s.ctl.readServiceHours()).opening.revision).toBe('rev-1');
+ expect(await s.ctl.setServiceHours('opening',{hours,revision:'rev-1'})).toEqual({hours,revision:'rev-2'});
+ expect(s.calls.find(c=>c.url.includes('/rpc/set_store_service_hours')).body).toEqual({p_store_id:'st-1',p_kind:'opening',p_hours:hours,p_expected_revision:'rev-1'});
+ conflict=true;await expect(s.ctl.setServiceHours('opening',{hours,revision:'rev-1'})).rejects.toMatchObject({code:'service_hours_conflict',status:409,message:expect.stringContaining('otro equipo')});
+ expect(s.calls.some(c=>c.url.includes('/rest/v1/menus'))).toBe(false);
+});

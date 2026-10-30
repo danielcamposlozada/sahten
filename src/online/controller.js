@@ -80,7 +80,9 @@ export function createController(host) {
     publishing=true;const ctx=context();
     try {const result=await ctx.client.rpc(name,{p_store_id:ctx.storeId,...args});check(ctx);return result;}
     catch(e){const msg=String(e.message||'');
-      if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
+      if(name==='set_store_service_hours'&&(/service_hours_conflict/.test(msg)||e.code==='40001')){e.code='service_hours_conflict';e.status=409;e.message='Este horario cambió en otro equipo. Cargá el horario de la web y revisalo antes de guardar.';}
+      else if(name==='set_store_service_hours'&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de guardar horarios en la web.';
+      else if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
       else if(name.startsWith('set_delivery_')&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de usar los controles de delivery en vivo.';
       else if(/zone_not_published/.test(msg))e.message='Esta zona todavía no está publicada. Guardá y publicá su configuración una vez antes de usar sus controles en vivo.';
       else if(/product_not_published|menu_not_published/.test(msg))e.message='Este producto todavía no tiene una versión publicada. Publicá el catálogo una vez para habilitar este interruptor.';
@@ -150,6 +152,11 @@ export function createController(host) {
     async setAvailability(id, visible) { return stateRpc('set_menu_product_visibility', { p_product_id:id, p_visible:visible }); },
     async setSalesAvailability(id, available, resumeAt = null) { return stateRpc('set_product_sales_availability', { p_product_id:id, p_paused:!available, p_resume_at:resumeAt }); },
     async setDeliveryAvailability(enabled) { return stateRpc('set_delivery_service_state', { p_enabled:enabled }); },
+    async setServiceHours(kind, value) { return stateRpc('set_store_service_hours', { p_kind:kind, p_hours:value.hours, p_expected_revision:value.revision ?? null }); },
+    async readServiceHours() {
+      if (!client || !host.conn.storeId) return null;
+      const ctx=context(), result=await ctx.client.rpc('get_store_service_hours', {p_store_id:ctx.storeId});check(ctx);return result;
+    },
     async setDeliveryZoneState(id, flag, enabled) { return stateRpc('set_delivery_zone_state', { p_zone_id:id, p_flag:flag, p_enabled:enabled }); },
     async readDeliveryZoneState() {
       if (!client || !host.conn.storeId) return null;

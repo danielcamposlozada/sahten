@@ -19,7 +19,7 @@ it('administración dibuja seis anillos con huecos; convertir, cancelar, guardar
  d.querySelector('[data-zone="2"]').click();d.querySelector('[data-action="convert"]').click();d.querySelector('[data-action="save"]').click();await wait();
  expect(d.querySelector('[data-message]').textContent).toContain('guardada');const cfg=w._getTiendaConfig();expect(cfg.deliveryV2.zones[2].type).toBe('polygon');expect(cfg.deliveryV2.zones[2].baseCost).toBe(3990);expect(cfg.deliveryV2.zones[1].type).toBe('circle');
  const file=w.SAHTEN.project.collect();await w.SAHTEN.project.apply(file);expect(w._getTiendaConfig().deliveryV2.zones[2].points.length).toBe(128);w._renderTiendaOnline();await wait();
- expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('23:00');d.querySelector('[data-hours-period="w5:0:end"]').value='22:30';d.querySelector('[data-hours-period="w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-action="save"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
+ expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('23:00');d.querySelector('[data-service-period="delivery:w5:0:end"]').value='22:30';d.querySelector('[data-service-period="delivery:w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-hours-save="delivery"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
  d.body.dataset.role='cajero';w._renderTiendaOnline();expect(d.querySelector('[data-action="save"]').disabled).toBe(true);
  }finally{w.close();}
 });
@@ -69,5 +69,11 @@ it('controles de zona son inmediatos, no guardan tarifas pendientes y cancelar n
  let cfg=w._getTiendaConfig();expect(cfg.deliveryV2.zones[0].requiresAuthorization).toBe(true);expect(cfg.deliveryV2.zones[0].baseCost).toBe(initial.deliveryV2.zones[0].baseCost);expect(cfg.deliveryV2.revision).toBe(initial.deliveryV2.revision);expect(events).toEqual([{id:initial.deliveryV2.zones[0].id,flag:'requiresAuthorization',value:true}]);
  expect(d.querySelector('[data-zone-live-status]').textContent).toContain('Solo en este proyecto');d.querySelector('[data-action="cancel"]').click();expect(d.querySelector('[data-zoneflag="requiresAuthorization"]').checked).toBe(true);expect(d.querySelector('[data-df="baseCost"]').value).not.toBe('99999');
  d.body.dataset.role='cajero';expect(w.SAHTEN.delivery.zoneOperation.set(cfg.deliveryV2.zones[0].id,'enabled',false)).toBe(false);expect(w._getTiendaConfig().deliveryV2.zones[0].enabled).toBe(true);
+ }finally{w.close();}
+});
+
+it('Mostrador avisa fuera de apertura y sigue permitiendo cobrar un retiro sin usar el horario de delivery',async()=>{
+ const {window:w}=await openApp();try{loadRawDemo(w);configure(w);const cfg=w._getTiendaConfig();cfg.openingHours={enabled:true,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};w._saveTiendaConfig(cfg);w.showPanel('mostrador');w.mostradorAddToCart(w.SAHTEN.state.products[0].id);
+ expect(w.document.getElementById('most-opening-hours-notice').textContent).toContain('Mostrador podés continuar y cobrar');w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(1);expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();
  }finally{w.close();}
 });

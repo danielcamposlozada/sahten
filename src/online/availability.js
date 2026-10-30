@@ -1,5 +1,5 @@
 // Cola persistente SOLO de estados. Una entrada fallida no bloquea a los demás productos.
-export function createAvailabilityPublisher({ publish, context, enabled, store, namespace = 'listing', timer = { set: (f, ms) => setTimeout(f, ms), clear: id => clearTimeout(id) } }) {
+export function createAvailabilityPublisher({ publish, context, enabled, store, namespace = 'listing', accepts = value => typeof value === 'boolean', timer = { set: (f, ms) => setTimeout(f, ms), clear: id => clearTimeout(id) } }) {
   let generation=0,handle=null,busy=false,state='sin cambios',error=null,attempts=0,sequence=0,states={};
   const listeners=new Set(),key=()=> 'catalog-state:'+namespace+':'+context();
   const pending=()=>store.get(key(),{})||{};
@@ -9,10 +9,11 @@ export function createAvailabilityPublisher({ publish, context, enabled, store, 
     info:()=>({state,error,pending:Object.keys(pending()).length,states:{...states},changes:{...pending()}}),
     onChange(fn){listeners.add(fn);return()=>listeners.delete(fn);},
     set(id,available,resumeAt=null){
-      if(!context()||typeof id!=='string'||!id||typeof available!=='boolean')return;
+      if(!context()||typeof id!=='string'||!id||!accepts(available))return;
       store.set(key(),{...pending(),[id]:{available,resumeAt,token:String(Date.now())+':'+(++sequence)}});
       states[id]='pendiente';state='pendiente';error=null;later(500);emit();
     },
+    discard(id){const rest={...pending()};delete rest[id];store.set(key(),rest);delete states[id];state=Object.keys(rest).length?'pendiente':'sin cambios';error=null;emit();},
     resume(){timer.clear(handle);states={};error=null;state=Object.keys(pending()).length?'pendiente':'sin cambios';if(Object.keys(pending()).length)later(0);emit();},
     cancel(){generation++;timer.clear(handle);states={};state='sin cambios';error=null;emit();},
     async flush(){

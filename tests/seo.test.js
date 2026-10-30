@@ -1,4 +1,4 @@
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { buildIndexHtml, buildPublishFiles } from '../src/online/publish.js';
 
@@ -208,4 +208,29 @@ it('con kit de marca la portada muestra la caligrafía sola (vector incrustado, 
   expect(off.window.document.querySelector('svg.brand-mark')).toBeNull();
   expect(off.window.document.querySelector('#s-hero .tag').textContent).toBe('SAHTEN Gastronomía Árabe');
   off.window.close();
+});
+
+it('publica apertura y retiro separados del horario de delivery en metadatos y páginas', async()=>{
+ const {sahtenOpeningHours,sahtenDeliveryPolicy}=await import('../src/delivery/preset.js');
+ const m=structuredClone(menu);m.store.openingHours=sahtenOpeningHours();m.delivery={hours:sahtenDeliveryPolicy().hours};m.site.delivery={title:'Delivery y retiro',hours:'Texto anterior 11:00'};m.site.seo.openingHours='Mo 11:00-22:00';
+ const html=buildIndexHtml(m),doc=new JSDOM(html).window.document,schema=JSON.parse(doc.querySelector('#restaurant-schema').textContent);
+ expect(schema.openingHours).toContain('Mo 12:00-15:30');expect(schema.openingHours).not.toContain('Mo 11:00-22:00');
+ expect(doc.querySelector('#search-content').textContent).toContain('apertura y retiro');expect(doc.querySelector('#search-content').textContent).toContain('12:00');
+ const files=await buildPublishFiles(m),delivery=new JSDOM(files.find(f=>f.path==='delivery-y-retiro/index.html').data).window.document;
+ expect(delivery.querySelector('main').textContent).toContain('Apertura y retiro en local');expect(delivery.querySelector('main').textContent).toContain('Horario de delivery');expect(delivery.querySelector('main').textContent).not.toContain('11:00');expect(delivery.querySelector('footer').textContent).toContain('12:00');
+});
+
+it('páginas informativas actualizan solo horarios y schema desde la nube sin pedir productos',async()=>{
+ const {sahtenOpeningHours,sahtenDeliveryPolicy}=await import('../src/delivery/preset.js');
+ const m=structuredClone(menu);m.store.openingHours=sahtenOpeningHours();m.delivery={hours:sahtenDeliveryPolicy().hours};m.site.delivery={title:'Delivery y retiro',hours:'Texto anterior'};m.supabase={url:'https://server.test',storeId:'store-test',anonKey:'public-test-only'};
+ const files=await buildPublishFiles(m),html=files.find(f=>f.path==='delivery-y-retiro/index.html').data;
+ let current=sahtenOpeningHours(),calls=[];current.weekly[1][0]={start:'12:30',end:'15:00'};
+ const dom=new JSDOM(html,{url:'https://local.example/delivery-y-retiro/',runScripts:'dangerously',pretendToBeVisual:true,beforeParse(w){w.fetch=async url=>{calls.push(String(url));return Response.json([{opening:current,delivery:m.delivery.hours,legacy:null}]);};}});
+ try{
+  await vi.waitFor(()=>expect(dom.window.document.querySelector('[data-service-hours="opening"]').textContent).toContain('12:30'));
+  expect(new URL(calls[0]).searchParams.get('select')).toBe('opening:json->store->openingHours,delivery:json->delivery->hours,legacy:json->delivery->deliveryV2->hours');expect(calls[0]).not.toContain('products');
+  const schema=()=>JSON.parse(dom.window.document.querySelector('#restaurant-schema').textContent);expect(schema().openingHours).toContain('Mo 12:30-15:00');expect(dom.window.document.querySelector('footer').textContent).toContain('12:30');expect(dom.window.document.querySelector('[data-service-hours="delivery"]').textContent).not.toContain('12:30');
+  current={...current,enabled:false};dom.window.dispatchEvent(new dom.window.Event('focus'));
+  await vi.waitFor(()=>expect(dom.window.document.querySelector('[data-service-hours="opening"]').closest('[data-service-hours-block]').hidden).toBe(true));expect(schema().openingHours).toBeUndefined();
+ }finally{dom.window.close();}
 });
