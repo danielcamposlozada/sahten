@@ -41,7 +41,7 @@ it('prepara el diseño Terra para home y carta sin alterar el checkout integrado
   expect(storefront.body.getAttribute('data-visual-style')).toBe('terra-2026');
   expect(storefront.body.hasAttribute('data-storefront')).toBe(true);
   expect(unchanged.body.hasAttribute('data-visual-style')).toBe(false);
-  expect(homepage.querySelector('style').textContent).toContain('terra-2026');
+  expect([...homepage.querySelectorAll('style')].some(s => s.textContent.includes('terra-2026'))).toBe(true);
   const files = await buildPublishFiles(menu);
   const index = new JSDOM(files.find(f => f.path === 'index.html').data).window.document;
   const pedir = new JSDOM(files.find(f => f.path === 'pedir/index.html').data).window.document;
