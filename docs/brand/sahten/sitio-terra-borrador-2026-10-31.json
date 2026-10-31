@@ -104,7 +104,7 @@
     },
     "resenas": {
       "on": true,
-      "title": "Lo que dicen nuestros clientes",
+      "title": "Gracias por elegir Sahten",
       "lead": "★★★★★ en Google Reviews",
       "placeId": "",
       "reviewUrl": "https://search.google.com/local/writereview?placeid=ChIJ_8u4HRjLvJUR6O_iQ94qY6Y",
@@ -157,7 +157,7 @@
     },
     "faq": {
       "on": true,
-      "title": "Preguntas frecuentes",
+      "title": "Unas dudas, resueltas.",
       "items": [
         {
           "q": "¿Dónde queda Sahten y cómo retiro mi pedido?",
