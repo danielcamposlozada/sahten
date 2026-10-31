@@ -229,38 +229,46 @@ body[data-visual-style="terra-2026"] .terra-menu .pedir-cta{
   color:var(--terra-green);font-size:15px;padding:12px 20px;min-height:48px;border-radius:8px;
 }
 
-/* Beneficio comercial: el texto y el porcentaje los entrega la política vigente. */
-body[data-visual-style="terra-2026"] .terra-menu .terra-promo{margin-top:28px}
+/* Beneficio: franja editorial verde. Porcentaje grande alineado a la derecha,
+ * sin tarjeta naranja flotante. Mantener el valor real de la política comercial. */
+body[data-visual-style="terra-2026"] .terra-menu .terra-promo{margin-top:44px}
 body[data-visual-style="terra-2026"] .terra-promo{
-  display:flex;align-items:center;justify-content:space-between;gap:24px;
-  padding:clamp(22px,3vw,34px);background:#235328;color:#FFF4D6;border-radius:18px
+  display:grid;grid-template-columns:minmax(145px,23%) minmax(0,1fr) max-content;
+  align-items:center;column-gap:clamp(18px,2.8vw,42px);
+  padding:clamp(22px,3vw,36px);background:var(--terra-green);color:var(--terra-beige);
+  border-radius:4px;min-height:220px;overflow:hidden
 }
 body[data-visual-style="terra-2026"] .terra-promo-photo{
-  flex:0 0 clamp(130px,17vw,205px);align-self:stretch;min-height:160px;
-  border-radius:20px 4px 20px 4px;overflow:hidden;background:#173a20
+  display:block;align-self:stretch;min-height:175px;overflow:hidden;
+  border-radius:2px;background:#173a20
 }
 body[data-visual-style="terra-2026"] .terra-promo-photo img{
   display:block;width:100%;height:100%;object-fit:cover;object-position:center
 }
-body[data-visual-style="terra-2026"] .terra-promo-copy{min-width:0;max-width:640px;flex:1}
+body[data-visual-style="terra-2026"] .terra-promo-copy{min-width:0;max-width:460px}
 body[data-visual-style="terra-2026"] .terra-promo-copy>span{
-  display:block;font-size:11px;letter-spacing:.14em;font-weight:800;margin-bottom:9px
+  display:block;font-size:12px;letter-spacing:.15em;font-weight:800;
+  color:#F8C387;margin-bottom:14px
 }
 body[data-visual-style="terra-2026"] .terra-promo-copy strong{
-  display:block;font-size:clamp(22px,3vw,32px);line-height:1.12;font-weight:900;letter-spacing:-.03em
+  display:block;font-size:clamp(23px,2.6vw,38px);line-height:1.08;
+  font-weight:900;letter-spacing:-.04em;color:var(--terra-beige)
 }
 body[data-visual-style="terra-2026"] .terra-promo-copy p{
-  margin:12px 0 0;max-width:58ch;color:#FFF4D6;line-height:1.55;font-size:15px
+  margin:16px 0 0;color:var(--terra-beige);line-height:1.45;font-size:14px;
+  opacity:.93
 }
 body[data-visual-style="terra-2026"] .terra-promo-badge{
-  display:flex;flex:none;align-items:baseline;gap:8px;padding:15px 22px;
-  background:#E9953C;color:#213326;border-radius:12px;white-space:nowrap
+  min-width:0;display:flex;justify-self:end;align-items:baseline;gap:clamp(5px,.8vw,12px);
+  padding:0;background:transparent;color:var(--terra-beige);border:0;
+  border-radius:0;white-space:nowrap;line-height:1
 }
 body[data-visual-style="terra-2026"] .terra-promo-badge b{
-  font-size:clamp(34px,5vw,56px);font-weight:900;letter-spacing:-.06em;line-height:1
+  font-family:'DM Sans',system-ui,sans-serif;
+  font-size:clamp(48px,6.4vw,98px);font-weight:900;letter-spacing:-.075em;line-height:1
 }
 body[data-visual-style="terra-2026"] .terra-promo-badge span{
-  font-size:clamp(16px,2vw,23px);font-weight:900;letter-spacing:.04em
+  font-size:clamp(19px,2.2vw,34px);font-weight:900;letter-spacing:-.03em
 }
 /* La carta muestra la misma serie fotográfica sin desplazar carrito ni buscador. */
 body[data-visual-style="terra-2026"] #menuwrap .catalog-heading{
@@ -281,18 +289,27 @@ body[data-visual-style="terra-2026"] #terra-catalog-photo img{
 body[data-visual-style="terra-2026"] #catalog-benefit .terra-promo{margin:0 0 18px}
 @media(max-width:760px){
   body[data-visual-style="terra-2026"] .terra-promo{
-    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:20px
+    grid-template-columns:minmax(0,1fr) max-content;
+    grid-template-rows:170px auto;column-gap:16px;row-gap:18px;padding:18px;
+    min-height:0
   }
   body[data-visual-style="terra-2026"] .terra-promo-photo{
-    grid-column:1 / -1;grid-row:1;height:160px;min-height:0
+    grid-column:1 / -1;grid-row:1;min-height:0;height:170px
   }
-  body[data-visual-style="terra-2026"] .terra-promo-copy{grid-column:1;grid-row:2}
-  body[data-visual-style="terra-2026"] .terra-promo-badge{grid-column:2;grid-row:2;align-self:center}
-  body[data-visual-style="terra-2026"] .terra-promo-badge{flex-direction:column;align-items:center;gap:0;padding:12px 13px}
-  body[data-visual-style="terra-2026"] .terra-promo-badge b{font-size:34px}
-  body[data-visual-style="terra-2026"] .terra-promo-badge span{font-size:16px}
-  body[data-visual-style="terra-2026"] .terra-promo-copy strong{font-size:22px}
-  body[data-visual-style="terra-2026"] .terra-promo-copy p{font-size:13px}
+  body[data-visual-style="terra-2026"] .terra-promo-copy{
+    grid-column:1;grid-row:2;align-self:center
+  }
+  body[data-visual-style="terra-2026"] .terra-promo-copy>span{
+    font-size:10px;letter-spacing:.09em;margin-bottom:7px
+  }
+  body[data-visual-style="terra-2026"] .terra-promo-badge{
+    grid-column:2;grid-row:2;align-self:center;justify-self:end;
+    flex-direction:column;align-items:flex-end;gap:0
+  }
+  body[data-visual-style="terra-2026"] .terra-promo-badge b{font-size:clamp(39px,8.5vw,62px)}
+  body[data-visual-style="terra-2026"] .terra-promo-badge span{font-size:clamp(18px,4vw,24px)}
+  body[data-visual-style="terra-2026"] .terra-promo-copy strong{font-size:clamp(20px,4.4vw,30px)}
+  body[data-visual-style="terra-2026"] .terra-promo-copy p{font-size:12px;line-height:1.45;margin-top:9px}
   body[data-visual-style="terra-2026"] #menuwrap .catalog-heading{
     grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:12px
   }
@@ -305,10 +322,11 @@ body[data-visual-style="terra-2026"] #catalog-benefit .terra-promo{margin:0 0 18
   }
 }
 @media(max-width:390px){
-  body[data-visual-style="terra-2026"] .terra-promo{gap:10px;padding:16px}
-  body[data-visual-style="terra-2026"] .terra-promo-badge{padding:11px}
-  body[data-visual-style="terra-2026"] .terra-promo-badge b{font-size:29px}
+  body[data-visual-style="terra-2026"] .terra-promo{gap:12px;padding:14px}
+  body[data-visual-style="terra-2026"] .terra-promo-badge b{font-size:38px}
+  body[data-visual-style="terra-2026"] .terra-promo-badge span{font-size:18px}
   body[data-visual-style="terra-2026"] .terra-promo-copy strong{font-size:20px}
+  body[data-visual-style="terra-2026"] .terra-promo-copy p{font-size:11px}
 }
 body[data-visual-style="terra-2026"] .fav{
   background:#FFF4D6;border:0;max-width:none;padding:72px max(24px,calc((100vw - 1280px)/2))
