@@ -131,3 +131,8 @@ El dueño puede aportar MP4/MOV directamente en el chat, comprimidos en ZIP, o c
 
 ## 8. RESUMEN PARA NUEVA SESIÓN
 "Continuá el PR #40 de Sahten en feat/terra-home-carta-integracion. Leé AGENTS.md, este documento y docs/REDISENO-TERRA-INTEGRACION.md. Tenemos el diseño editorial Terra C/3 sobre los módulos reales, 11 FAQ y un selector opt-in, pero falta validar CI, fidelidad visual, videos y checkout end-to-end seguro. El negocio depende de pedidos, delivery en vivo y pagos: no modifiques estos servicios ni despliegues sin una aprobación explícita. Trabajá en la rama; mantené rollback y no publiques precios o configuraciones pendientes."
+
+## 9. ACTUALIZACIÓN: LOS VIDEOS YA FUERON ENTREGADOS (31/10/2026)
+**No repetir la solicitud de videos al usuario.** Entregó `Archive(1).zip` con los cuatro originales. Fueron inspeccionados y optimizados. Leer el inventario completo y los criterios de uso en [docs/VIDEOS-TERRA-SAHTEN-2026-10-31.md](docs/VIDEOS-TERRA-SAHTEN-2026-10-31.md).
+
+El paquete descargable de la conversación se llama `sahten_videos_web_optimizados.zip` (~9,7 MB): los tres reels y el tutorial, cada uno en MP4 ligero + poster WebP; incluye `manifest.json` y `README-VIDEO-CODEX.md`. Hay que adjuntar ese ZIP al entorno de Codex o colocar sus archivos en el workspace; **los archivos binarios todavía no están en GitHub ni alojados públicamente**. La referencia visual `tipografia/tipo-3-home-pulida.html` contiene las tres tarjetas de reels y el bloque de tutorial separado. **El tutorial contiene capturas de la tienda anterior y precios/descuentos de ejemplo: no publicarlo sin corregirlo.** Mantener pedidos, cálculos, delivery, Mercado Pago y sincronización intactos.
