@@ -4,14 +4,13 @@
   "site": {
     "order": [
       "hero",
-      "favoritos",
       "menu",
-      "como",
       "historia",
-      "banda",
-      "resenas",
+      "favoritos",
       "delivery",
       "catering",
+      "como",
+      "resenas",
       "faq",
       "contacto"
     ],
@@ -34,9 +33,9 @@
     "logoUseTextColor": false,
     "hero": {
       "on": true,
-      "title": "Sabores que cuentan nuestra historia",
-      "subtitle": "Recetas familiares sirias. Pedí online con retiro en Vicente López o delivery en nuestra zona de reparto.",
-      "cta": "Pedir online",
+      "title": "Una mesa. Muchas historias.",
+      "subtitle": "Recetas de familia. Ganas de compartir.",
+      "cta": "Vamos al menú",
       "highlights": [
         {
           "icon": "",
@@ -60,11 +59,11 @@
     },
     "favoritos": {
       "on": true,
-      "title": "Nuestros favoritos",
-      "text": "Cada plato tiene historia. Son las recetas que nuestra Sitto cocinaba en Siria, adaptadas con amor por nuestra familia. Ingredientes frescos, preparados al momento, con el sabor que solo lo casero puede dar."
+      "title": "Se comparte mejor en la mesa",
+      "text": "Platos de nuestra cocina preparados para compartir. Conocé las opciones y su disponibilidad en la carta."
     },
     "menu": {
-      "title": "Nuestro menú"
+      "title": "Nuestra carta"
     },
     "como": {
       "on": true,
