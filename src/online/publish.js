@@ -36,7 +36,7 @@ const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new Reg
 
 export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
-    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss+'\n'+terraCss)
+    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss+(menu.site?.visualStyle === 'terra-2026' ? '\n'+terraCss : ''))
     .replace('/*__PAYMENT_CSS__*/', () => paymentChoiceCss+'\n'+incentiveCss)
     .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
     .replace('<body>', '<body' + (storefront ? ' data-storefront' : preview ? ' data-preview' : '') + (menu.site?.visualStyle === 'terra-2026' ? ' data-visual-style="terra-2026"' : '') + '>')
