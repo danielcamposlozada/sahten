@@ -2,7 +2,7 @@
 
 ## Sin publicar
 
-- **Rediseño Terra (borrador)**: home y carta editoriales opt-in, FAQ y páginas informativas completas, y módulo de tres videos gastronómicos originales. Los cuatro MP4 y sus portadas se empaquetan al publicar el sitio Terra, sin tocar el carrito, pagos, sincronización ni reglas de delivery. El tutorial anterior queda oculto hasta actualizar su contenido. PR #40, no publicado.
+- **Rediseño Terra (borrador)**: Home y carta editoriales opt-in, FAQ, páginas informativas y tres reels de gastronomía. Video «Cómo comprar» visible con aviso de interfaz anterior hasta su reemplazo. Beneficio comercial debajo de «¿Qué te gustaría probar?» con porcentaje dinámico y «OFF»; foto del plato y de las tortas alternadas entre portada/carta y banner (nunca repetidas dentro de la misma página), y mesa completa exclusiva de la sección Catering. Tres WebP originales y cuatro MP4 con sus portadas se empaquetan al publicar el sitio Terra. Sin cambios en carrito, pagos, condiciones comerciales, sincronización ni motor de delivery. PR #40, no publicado.
 
 ## 0.4.33
 
