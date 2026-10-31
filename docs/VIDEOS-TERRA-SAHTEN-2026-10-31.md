@@ -6,7 +6,7 @@
 
 **Integración ejecutada por ChatGPT, no delegada a Codex:** `src/online/web/index.html` contiene 3 reproductores HTML5 de carga diferida; `src/online/web/terra.css` los adapta a escritorio/móvil; `src/online/site.js` y `src/legacy/sahten-siteeditor.js` aportan el módulo editable; `src/online/terra-media.js` importa los binarios como assets diferidos, y `src/online/publish.js` los agrega **automáticamente** al paquete estático cuando el tema Terra y la sección de videos están activos. No hace falta copiar archivos manualmente ni que Codex suba los videos.
 
-El tutorial `como-comprar.mp4` viaja en el paquete pero está **desactivado visualmente por defecto**: muestra capturas y precios de una versión anterior. La web pública `sahten.online` permanece sin cambios y el PR sigue en borrador; las pruebas visuales y el despliegue requieren validación y aprobación.
+**DECISIÓN DEL DUEÑO (31/10/2026):** mantener visible el tutorial original `como-comprar.mp4` aunque use la interfaz anterior; se renovará cuando esté lista la estética nueva. Se activó `site.videos.tutorialEnabled` en el borrador Terra y se conserva el aviso visible de que la tienda actual contiene los precios y condiciones vigentes. Esta autorización es para usar el tutorial existente, no para declarar aprobado el rediseño completo. La web pública `sahten.online` permanece sin cambios hasta realizar la publicación de la plantilla; el PR sigue en borrador.
 
 Fecha: 2026-10-31 · Estado: **recibidos, verificados y optimizados; NO alojados ni publicados**
 
@@ -19,9 +19,9 @@ El usuario proporcionó en esta conversación `Archive(1).zip` (~93,7 MB), con c
 | `Picada Tabla Celebrar + Audio IA.mov` | 32,11 s | Reel 01: Tabla para Celebrar | Listo para revisión |
 | `Picada Tabla Compartir + Audio IA.mov` | 32,53 s | Reel 02: Tabla Compartir | Listo para revisión |
 | `Video SupeMIX + Audio IA.mov` | 22,53 s | Reel 03: Shawarma Supermix | Listo para revisión |
-| `SAHTEN WEB - Como Comprar.mp4` | 31,17 s | Video tutorial en bloque `#ayuda` | **Bloqueado para publicación como guía vigente** |
+| `SAHTEN WEB - Como Comprar.mp4` | 31,17 s | Video tutorial en bloque de ayuda | **Aprobado para mostrar con aviso de interfaz anterior** |
 
-El video de compra muestra la interfaz anterior, además de importes y descuentos de demostración. El archivo no debe presentarse como tutorial actualizado sin revisar/editar/regrabar las pantallas y datos según el checkout definitivo.
+El video de compra muestra la interfaz anterior, además de importes y descuentos de demostración. Por decisión expresa del dueño se muestra ahora acompañado de una aclaración visible que remite a los precios y condiciones actuales de la tienda; más adelante se reemplazará por una versión acorde con la nueva estética.
 
 ## Paquete producido en la conversación
 
@@ -57,7 +57,7 @@ La maqueta `tipografia/tipo-3-home-pulida.html` del ZIP original contiene:
 6. Los textos de nombres de comida deben contrastarse con el catálogo real y disponibilidad. Si un producto está oculto/pausado, no llevar al cliente a un producto inexistente.
 7. Revisar SEO/VideoObject SOLO después de que exista URL pública real de los recursos; no emitir datos estructurados con URLs futuras inventadas.
 8. Medir rendimiento de portada (LCP y carga móvil) al integrar, comprobar video en Safari iOS y Android.
-9. El tutorial de compra debe corregirse antes de ser publicado porque expone la interfaz anterior y valores comerciales potencialmente obsoletos.
+9. El dueño autorizó mantener visible el tutorial original mientras se prepara su reemplazo estético. Mostrar siempre el aviso sobre interfaz anterior y precios/condiciones vigentes en el checkout; no presentarlo como captura actual.
 
 ## Estado de ejecución y pendientes
 
