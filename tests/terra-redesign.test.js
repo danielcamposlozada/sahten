@@ -55,7 +55,7 @@ it('prepara el diseño Terra para home y carta sin alterar el checkout integrado
   expect(index.body.getAttribute('data-visual-style')).toBe('terra-2026');
   expect(pedir.body.hasAttribute('data-storefront')).toBe(true);
   expect(pedir.querySelector('meta[name="robots"]').content).toBe('noindex,follow');
-  expect(index.querySelector('meta[name="robots"]')?.content).not.toContain('noindex');
+  expect(index.querySelector('meta[name="robots"]')?.content || '').not.toContain('noindex');
 });
 
 it('mantiene las 11 preguntas aprobadas en el HTML y en FAQPage sin tomar dos FAQ de ejemplo', () => {
