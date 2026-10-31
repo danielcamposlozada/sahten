@@ -150,3 +150,54 @@ it('mantiene el editor anterior y permite seleccionar Terra sin publicar ni alte
   expect(source).toContain('data-sb-import');
   expect(source).toContain('data-sb-enabled');
 });
+
+
+it('la sección de videos es opcional y solo se publica con Terra, sin cambiar pedidos', () => {
+  expect(normalizeSite({}).videos.on).toBe(false);
+  const site=normalizeSite({enabled:true,visualStyle:'terra-2026',videos:{on:true,title:'Momentos',lead:'Reels',tutorialEnabled:false}});
+  expect(buildSite(site).videos).toMatchObject({title:'Momentos',lead:'Reels',tutorialEnabled:false});
+  expect(buildSite({...site,visualStyle:'classic'}).videos).toBeUndefined();
+  const restored=applySiteContent({},parseSiteContent(exportSiteContent(site)));
+  expect(restored.videos.on).toBe(true);
+  expect(restored.videos.tutorialEnabled).toBe(false);
+});
+it('la home incorpora tres videos reales con poster y no los descarga automáticamente', async () => {
+  const menu=sampleMenu();
+  expect(menu.site.videos.on).toBe(true);
+  const dom=new JSDOM(buildIndexHtml(menu),{
+    url:'https://sahten.online/',
+    runScripts:'dangerously',
+    beforeParse(w){w.scrollTo=()=>{};w.fetch=async()=>({ok:false});}
+  });
+  await new Promise(r=>setTimeout(r,100));
+  const d=dom.window.document;
+  const videos=[...d.querySelectorAll('#s-videos video')];
+  expect(videos).toHaveLength(3);
+  expect(videos.map(v=>v.querySelector('source').getAttribute('src'))).toEqual([
+    'media/terra/tabla-celebrar.mp4',
+    'media/terra/tabla-compartir.mp4',
+    'media/terra/supermix.mp4'
+  ]);
+  for(const video of videos){
+    expect(video.getAttribute('preload')).toBe('none');
+    expect(video.hasAttribute('controls')).toBe(true);
+    expect(video.hasAttribute('playsinline')).toBe(true);
+    expect(video.hasAttribute('autoplay')).toBe(false);
+    expect(video.getAttribute('poster')).toMatch(/^media\/terra\/posters\/[a-z-]+\.webp$/);
+  }
+  expect(d.querySelector('#s-how video')).toBeNull();
+  expect(d.querySelector('#s-videos a[href$="pedir/"]')).not.toBeNull();
+  dom.window.close();
+});
+it('el tutorial antiguo permanece oculto hasta aprobación explícita', async () => {
+  const m=sampleMenu();m.site.videos.tutorialEnabled=true;
+  const dom=new JSDOM(buildIndexHtml(m),{
+    url:'https://sahten.online/',
+    runScripts:'dangerously',
+    beforeParse(w){w.scrollTo=()=>{};w.fetch=async()=>({ok:false});}
+  });
+  await new Promise(r=>setTimeout(r,100));
+  expect(dom.window.document.querySelector('#s-how .terra-tutorial video source')?.getAttribute('src')).toBe('media/terra/como-comprar.mp4');
+  expect(dom.window.document.querySelector('.terra-tutorial-notice').textContent).toContain('versión anterior');
+  dom.window.close();
+});
