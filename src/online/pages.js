@@ -8,6 +8,7 @@ import { buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags, seoSer
 import { serviceHoursPageScript } from './serviceHoursPage.js';
 import { storyPhotosHtml } from './story.js';
 import storyCss from './web/story.css?raw';
+import terraCss from './web/terra.css?raw';
 import { contrastText } from '../ui/contrast.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -37,6 +38,7 @@ ${meta('description', description)}
 ${meta('og:type', 'website', true)}${meta('og:title', title, true)}${meta('og:description', description, true)}${meta('og:url', url, true)}${meta('og:image', seo.image, true)}
 ${meta('twitter:card', seo.image ? 'summary_large_image' : 'summary')}
 ${brandHeadTags(menu)}
+${menu.site?.visualStyle === 'terra-2026' ? '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">' : ''}
 ${ld(breadcrumb)}${extraLd.map(ld).join('')}<script type="application/ld+json" id="restaurant-schema">${JSON.stringify(seo.schema).replace(/</g, '\\u003c')}</script>
 <style>
 :root{--primary:${primary};--accent:${accent};--on-accent:${contrastText(accent)};--ink:#1e2c1f;--muted:#5d6b5f;--bg:#faf8f5;--border:#e2ddd5}
@@ -52,10 +54,11 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px}dt{font-weigh
 .quote{border-left:4px solid var(--accent);padding:4px 14px;color:var(--muted);font-style:italic}
 footer{border-top:1px solid var(--border);padding:22px 16px;color:var(--muted);font-size:14px}footer .in{max-width:980px;margin:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}footer h2{font-size:15px;margin:0 0 4px;color:var(--ink)}footer p{margin:0}
 ${storyCss}
+${menu.site?.visualStyle === 'terra-2026' ? terraCss : ''}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 </head>
-<body>
+<body${menu.site?.visualStyle === 'terra-2026' ? ' data-visual-style="terra-2026"' : ''}>
 <header><div class="in"><a class="brand" href="../">${esc(name)}</a><nav aria-label="Secciones">${nav}</nav></div></header>
 <main>
 <p class="crumbs"><a href="../">Inicio</a> › ${esc(page.label)}</p>
