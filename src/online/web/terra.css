@@ -338,3 +338,62 @@ body[data-visual-style="terra-2026"] main h2{font:800 clamp(24px,3vw,32px)/1.2 '
 body[data-visual-style="terra-2026"] main .cta{background:#E9953C;color:#213326}
 body[data-visual-style="terra-2026"] footer{background:#235328;color:#FFF4D6}
 body[data-visual-style="terra-2026"] footer :is(h2,a){color:#FFF4D6}
+
+
+/* Food highlights are drawn only from active products in the live catalogue. */
+body[data-visual-style="terra-2026"] .terra-picks{
+  max-width:none;background:#FFF4D6;color:#235328;
+  padding:72px max(24px,calc((100vw - 1280px)/2));
+}
+body[data-visual-style="terra-2026"] .terra-picks .terra-section-top{
+  max-width:1280px;margin:0 auto 32px;align-items:end
+}
+body[data-visual-style="terra-2026"] .terra-picks h2{font-size:44px;font-weight:900}
+body[data-visual-style="terra-2026"] .terra-picks .terra-section-top>p{font-size:17px;line-height:1.65;max-width:390px;margin:0}
+body[data-visual-style="terra-2026"] .terra-pick-grid{max-width:1280px;margin:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+body[data-visual-style="terra-2026"] .terra-pick{
+  display:grid;grid-template-columns:42% 58%;min-height:230px;color:#213326;background:#E9953C;text-decoration:none;overflow:hidden
+}
+body[data-visual-style="terra-2026"] .terra-pick.dark{color:#FFF4D6;background:#235328}
+body[data-visual-style="terra-2026"] .terra-pick-photo{min-width:0;display:block;background:rgba(0,0,0,.1)}
+body[data-visual-style="terra-2026"] .terra-pick-photo img{width:100%;height:100%;display:block;object-fit:cover}
+body[data-visual-style="terra-2026"] .terra-pick-photo>span{display:grid;place-items:center;height:100%;font-weight:800;padding:10px}
+body[data-visual-style="terra-2026"] .terra-pick-copy{
+  display:flex;min-width:0;flex-direction:column;align-items:start;gap:10px;padding:22px 18px;justify-content:center
+}
+body[data-visual-style="terra-2026"] .terra-pick-copy small{font-size:24px;font-weight:900}
+body[data-visual-style="terra-2026"] .terra-pick-copy strong{font-size:22px;line-height:1.2;overflow-wrap:anywhere}
+body[data-visual-style="terra-2026"] .terra-pick-copy span{
+  display:inline-flex;align-items:center;min-height:36px;font-size:15px;border-bottom:1px solid currentColor;
+}
+body[data-visual-style="terra-2026"] .terra-faq{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:50px;
+  max-width:1280px;padding:72px 24px;align-items:start
+}
+body[data-visual-style="terra-2026"] .terra-faq h2{
+  font-size:44px;line-height:1.13;font-weight:900;margin:0;color:#235328
+}
+body[data-visual-style="terra-2026"] .terra-faq-items{min-width:0}
+body[data-visual-style="terra-2026"] .terra-faq-items details{width:100%}
+body[data-visual-style="terra-2026"] .terra-faq-items summary{font-size:18px}
+body[data-visual-style="terra-2026"] .terra-faq-items p{font-size:17px}
+@media(max-width:900px){
+ body[data-visual-style="terra-2026"] .terra-pick-grid{gap:12px}
+ body[data-visual-style="terra-2026"] .terra-pick{grid-template-columns:1fr;min-height:0}
+ body[data-visual-style="terra-2026"] .terra-pick-photo{height:160px}
+ body[data-visual-style="terra-2026"] .terra-pick-copy{padding:16px}
+ body[data-visual-style="terra-2026"] .terra-faq{gap:28px}
+}
+@media(max-width:760px){
+ body[data-visual-style="terra-2026"] .terra-picks{padding:48px 18px}
+ body[data-visual-style="terra-2026"] .terra-picks h2{font-size:34px}
+ body[data-visual-style="terra-2026"] .terra-picks .terra-section-top>p{font-size:16px;margin-top:16px}
+ body[data-visual-style="terra-2026"] .terra-pick-grid{grid-template-columns:1fr;gap:12px}
+ body[data-visual-style="terra-2026"] .terra-pick{grid-template-columns:38% minmax(0,1fr);min-height:165px}
+ body[data-visual-style="terra-2026"] .terra-pick-photo{height:auto}
+ body[data-visual-style="terra-2026"] .terra-pick-copy strong{font-size:20px}
+ body[data-visual-style="terra-2026"] .terra-faq{display:block;padding:48px 18px}
+ body[data-visual-style="terra-2026"] .terra-faq h2{font-size:34px;margin-bottom:22px}
+ body[data-visual-style="terra-2026"] .terra-faq-items summary,
+ body[data-visual-style="terra-2026"] .terra-faq-items p{font-size:16px}
+}
