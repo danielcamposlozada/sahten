@@ -130,6 +130,7 @@ export function exportSiteContent(site) {
   const s = normalizeSite(site); const out = { format: SITE_FILE_FORMAT, version: 1, site: { order: s.order } };
   out.site.seo = s.seo;
   out.site.orderPage = s.orderPage;
+  out.site.visualStyle = s.visualStyle;
   out.site.logo = s.logo;
   out.site.logoUseTextColor = s.logoUseTextColor;
   for (const m of SITE_MODULES) out.site[m.id] = s[m.id];
@@ -147,6 +148,7 @@ const SITE_FORMAT_CHECK = SITE_FILE_FORMAT;
 export function applySiteContent(current, parsed) {
   const s = normalizeSite(current);
   if (typeof parsed.site.orderPage === 'boolean') s.orderPage = parsed.site.orderPage;
+  if (typeof parsed.site.visualStyle === 'string') s.visualStyle = parsed.site.visualStyle === 'terra-2026' ? 'terra-2026' : 'classic';
   if (typeof parsed.site.logo === 'string') s.logo = normalizeStoreLogo(parsed.site.logo);
   if (typeof parsed.site.logoUseTextColor === 'boolean') s.logoUseTextColor = parsed.site.logoUseTextColor;
   if (isObj(parsed.site.seo)) s.seo = { ...s.seo, ...parsed.site.seo };
