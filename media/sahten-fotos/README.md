@@ -10,11 +10,11 @@ Decisión oficial y continuidad de Codex: [issue #41](https://github.com/danielc
 - `media/sahten-fotos/banner-plato.webp` — proviene de `IMG_0400.jpg`: fotografía del plato; reservada al mismo banner. El dueño la identifica como «plato con cerdo»; **verificar visualmente identidad/contenido antes de etiquetarla**.
 - `media/sahten-fotos/catering-mesa.webp` — proviene de `etiquetas de vinos divertidas.png`: mesa completa con comida; **fija y exclusiva** para Catering.
 
-**La tercera imagen diferente del banner («dulces») todavía no está identificada en este respaldo.** No fingir que hay tres fotos: revisar materiales originales en el workspace de Codex; si no está disponible, pedir el archivo preciso.
+**Aclaración del dueño:** «dulces» y «tortas» son **la misma imagen**, no dos. Están respaldadas **las dos fotografías necesarias para la rotación del 10 % OFF**. La tercera fotografía es la de la mesa para Catering. **No buscar ni pedir otra imagen de dulces.**
 
 ## Reglas de uso
 
-Las tres imágenes distintas —**tortas, dulces, plato con cerdo**— deben rotar **solo en el banner del 10% OFF**, no en la portada/hero. La mesa completa no rota: se usa exclusivamente en Catering. No copiar la composición visual del PR #40.
+Las **dos imágenes distintas** —**tortas/dulces (una sola foto)** y **plato con cerdo**— deben rotar **solo en el banner del 10% OFF**, no en la portada/hero. La mesa completa no rota: se usa exclusivamente en Catering. No copiar la composición visual del PR #40.
 
 El porcentaje anunciado sale de la política comercial activa y los métodos habilitados. No modificar los cálculos de descuentos, pedidos, delivery ni pagos. Usar la implementación anterior de Codex y revisar la sección del mapa que tenía en desarrollo.
 
