@@ -161,7 +161,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 <div id="s-top"></div>
 <div id="menuwrap">
 <div class="oback" id="oback"><a href="#">← Volver al inicio</a></div>
-<div class="catalog-heading"><div><h1 id="catalog-title" tabindex="-1">Nuestra carta</h1><p>Elegí tus productos y armá tu pedido.</p></div><div class="catalog-search"><label for="catalog-search">Buscar en la carta</label><div class="catalog-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="catalog-search" type="search" placeholder="Buscá un producto…" autocomplete="off" aria-controls="grid"></div></div></div>
+<div class="catalog-heading"><div><h1 id="catalog-title" tabindex="-1">Nuestra carta</h1><p>Elegí tus productos y armá tu pedido.</p></div><div id="terra-catalog-photo" class="terra-catalog-photo"></div><div class="catalog-search"><label for="catalog-search">Buscar en la carta</label><div class="catalog-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="catalog-search" type="search" placeholder="Buscá un producto…" autocomplete="off" aria-controls="grid"></div></div></div>
 <div id="catalog-benefit"></div>
 <div class="catalog-layout"><div class="catalog-main"><nav class="cats" id="cats" aria-label="Categorías de productos"></nav>
 <main id="menu"><div id="msg"></div><p class="catalog-results" id="catalog-results" role="status" aria-live="polite"></p><div class="grid" id="grid"></div></main></div><aside id="order-summary" class="order-summary" aria-label="Tu pedido editable"></aside></div>
@@ -279,6 +279,7 @@ function benefitNotice(){
   var policy=paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit),methods=payMethods().filter(function(k){return k==='efectivo'||k==='transferencia'});
   if(!policy.enabled||!policy.channels.online||!policy.percent||!methods.length)return '';
   var names=methods.map(function(k){return k==='efectivo'?'efectivo':'transferencia'}).join(' o ');
+  if(MENU.site&&MENU.site.visualStyle==='terra-2026')return '<aside class="terra-promo" aria-label="Beneficio al pagar"><div class="terra-promo-copy"><span>UN BENEFICIO PARA COMPARTIR</span><strong>Un gusto pagar menos.</strong><p>En productos pagando con '+esc(names)+'. El envío se calcula aparte. No acumulable con otros descuentos.</p></div><div class="terra-promo-badge" aria-label="'+esc(String(policy.percent))+' por ciento de descuento"><b>'+esc(String(policy.percent))+'%</b><span>OFF</span></div></aside>'; 
   return '<div class="catalog-benefit"><strong>'+policy.percent+' % de descuento en productos</strong>Con '+names+'. El envío se calcula aparte. No acumulable con otros descuentos.</div>';
 }
 function renderOrderSummary(){
@@ -296,6 +297,7 @@ function render(){
   $('h-title').textContent=c.title||MENU.store.name||'Menú';if((BRAND||(MENU.site&&MENU.site.logo))&&!$('h-mark')){var hm=document.createElement('div');hm.id='h-mark';hm.innerHTML=brandMark(MENU.store.name||'Menú');$('h-title').parentNode.insertBefore(hm,$('h-title'));}$('h-sub').textContent=c.subtitle||'';
   $('foot').textContent=[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   $('catalog-benefit').innerHTML=c.enabled===false?'':benefitNotice();
+  $('terra-catalog-photo').innerHTML=c.enabled!==false&&MENU.site?.visualStyle==='terra-2026'&&MENU.config.showImages!==false?terraCatalogPhoto():'';
   if(c.enabled===false){$('grid').innerHTML='';$('cats').innerHTML='';$('catalog-results').textContent='';$('order-summary').innerHTML='';$('msg').innerHTML='<div class="empty"><b>Menú no disponible por ahora</b><br>Volvé a intentar más tarde.</div>';return;}
   $('msg').innerHTML=MENU.delivery?.enabled===false?'<div class="note" role="status"><strong>Delivery pausado por el local</strong><br>Podés pedir para retirar en el local.</div>':'';
   var cats=catList();
@@ -312,6 +314,31 @@ function waHref(msg){var n=String((MENU.store&&MENU.store.whatsapp)||'').replace
 function paras(t){return String(t||'').split(/\n{2,}/).map(function(x){return x.trim()}).filter(Boolean).map(function(x){return '<p>'+esc(x).replace(/\n/g,'<br>')+'</p>'}).join('');}
 var NAVLBL={videos:'Videos',como:'Cómo funciona',historia:'Nosotros',resenas:'Reseñas',catering:'Catering',faq:'Preguntas',contacto:'Contacto'};
 
+/* Three original table photographs supplied by Sahten. Choose once per page load;
+ * a repeat visit/refresh picks a different photo from the previous one.
+ * This code is presentation-only: no orders, prices, checkout or cloud writes.
+ */
+var TERRA_TABLE_PHOTOS=[
+  {src:'media/terra/photos/mesa-1.webp',alt:'Mesa compartida con platos árabes, panes, tabulé y yabras'},
+  {src:'media/terra/photos/mesa-2.webp',alt:'Platos de comida árabe Sahten compartidos alrededor de una mesa'},
+  {src:'media/terra/photos/mesa-3.webp',alt:'Mesa de Sahten con platos árabes, panes y bebidas'}
+];
+var terraChosenPhoto=null;
+function terraPhoto(){
+  if(terraChosenPhoto)return terraChosenPhoto;
+  var previous=-1;
+  try{previous=Number(sessionStorage.getItem('sahten-terra-last-photo'));}catch(e){/* Privacidad / almacenamiento bloqueado */}
+  if(!Number.isInteger(previous)||previous<0||previous>=TERRA_TABLE_PHOTOS.length)previous=-1;
+  var candidates=TERRA_TABLE_PHOTOS.filter(function(_,i){return i!==previous});
+  terraChosenPhoto=candidates[Math.floor(Math.random()*candidates.length)];
+  try{sessionStorage.setItem('sahten-terra-last-photo',String(TERRA_TABLE_PHOTOS.indexOf(terraChosenPhoto)));}catch(e){/* */}
+  return terraChosenPhoto;
+}
+function terraCatalogPhoto(){
+  var photo=terraPhoto();
+  return '<img src="'+esc(photo.src)+'" alt="'+esc(photo.alt)+'" loading="eager" decoding="async">';
+}
+
 /*
  * Terra editorial modules; presentation only.
  * Orders, payments, live catalogue, availability and routes still run through
@@ -320,8 +347,7 @@ var NAVLBL={videos:'Videos',como:'Cómo funciona',historia:'Nosotros',resenas:'R
 function terraHero(S,m){
   var f=m.hero,c=MENU.config||{},name=MENU.store.name||c.title||'Sahten';
   var showImages=MENU.config?.showImages!==false;
-  var realImage=showImages&&MENU.products.find(function(p){return p.image&&!p.retired&&!salesPaused(p)});
-  var img=showImages?((S.images&&S.images.hero)||(realImage&&realImage.image)||''):'';
+  var photo=showImages?terraPhoto():null;
   var title=String(f.title||'Una mesa. Muchas historias.');
   var headline=/^una mesa[.!]?\s*muchas historias[.!]?$/i.test(title.trim())
     ? 'UNA MESA.<br>MUCHAS<br><em>historias.</em>' : esc(title);
@@ -332,7 +358,7 @@ function terraHero(S,m){
     +(f.subtitle?'<p>'+esc(f.subtitle)+'</p>':'')
     +'<div class="btns"><a class="btn1" href="'+esc(orderHref())+'">'+esc(f.cta||'Pedir online')+' ↗</a>'
     +(waHref()?'<a class="btn2" target="_blank" rel="noopener" href="'+esc(waHref())+'">'+waIcon()+'WhatsApp</a>':'')+'</div></div>'
-    +(img?'<div class="terra-hero-visual"><img src="'+esc(img)+'" alt="'+esc(realImage&&realImage.name||'Comida árabe preparada en Sahten')+'" decoding="async" fetchpriority="high"><span>Un encuentro empieza acá.</span></div>':'')
+    +(photo?'<div class="terra-hero-visual"><img src="'+esc(photo.src)+'" alt="'+esc(photo.alt)+'" decoding="async" fetchpriority="high"><span>Un encuentro empieza acá.</span></div>':'')
     +'</section>';
 }
 function terraMenu(S){
@@ -349,7 +375,8 @@ function terraMenu(S){
     +'<h2>¿Qué te gustaría <em>probar?</em></h2></div>'
     +'<a class="terra-text-link" href="'+esc(orderHref())+'">Ver la carta completa ↗</a></div>'
     +nav+(cards?'<div class="terra-food-grid">'+cards+'</div>':'<p>Conocé nuestra carta en la tienda.</p>')
-    +'<a class="pedir-cta" href="'+esc(orderHref())+'">Pedir online · ver toda la carta ↗</a></section>';
+    +'<a class="pedir-cta" href="'+esc(orderHref())+'">Pedir online · ver toda la carta ↗</a>'
+    +(MENU.config.enabled===false?'':benefitNotice())+'</section>';
 }
 
 
