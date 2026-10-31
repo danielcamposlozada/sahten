@@ -1,0 +1,329 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-31T05:03:00Z",
+  "store": {
+    "name": "SAHTEN Gastronomia Arabe",
+    "address": "General Julio Argentino Roca 1489, Vicente López, Buenos Aires, Argentina",
+    "currency": {
+      "locale": "es-AR",
+      "symbol": "$"
+    },
+    "whatsapp": "+54 9 11 2393-7295"
+  },
+  "config": {
+    "enabled": true,
+    "title": "Nuestro Menú",
+    "subtitle": "Pedí online y te lo preparamos",
+    "categories": [
+      "Ensaladas",
+      "Entradas",
+      "Picadas",
+      "Platos Principales",
+      "Postres",
+      "Promos",
+      "Sandwich"
+    ],
+    "showPrices": true,
+    "showImages": true
+  },
+  "payments": {
+    "methods": {
+      "tarjeta": false,
+      "efectivo": true,
+      "mercadopago": true,
+      "transferencia": true
+    },
+    "benefit": {
+      "enabled": true,
+      "percent": 10,
+      "channels": {
+        "online": true,
+        "mostrador": true
+      },
+      "revision": "4aa36749-e29c-4e98-bb2e-68fcd0d44abe",
+      "effectiveFrom": "2026-10-24T11:59:09.140Z"
+    }
+  },
+  "products": [
+    {
+      "id": "shawarma_pollo",
+      "name": "Shawarma de Pollo",
+      "category": "Sandwich",
+      "price": 16000,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/b3cc5badee7a74c1bcbe33bd9fbb3703804638e1075d824921f6dfec5d65db52.jpg",
+      "star": true,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "shawarma_mixto",
+      "name": "Shawarma Mixto",
+      "category": "Sandwich",
+      "price": 16100,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/8faee97b6ea4ef2430bb8fa8cb589e1e98987705bf34f9caae603e4bdc6ea862.jpg",
+      "star": true,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "sandwich_falafel",
+      "name": "Sandwich de Falafel",
+      "category": "Sandwich",
+      "price": 15800,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/eba2ef368debf1925fa260d742c41840953dcde098fde8469b134af08fddd41e.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "hummus",
+      "name": "Hummus",
+      "category": "Entradas",
+      "price": 9900,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/14e8a64468530c1b5a85c8cee2f7e1bacec2132e8fd6c849f071d3691f688ac8.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "baba_ganoush",
+      "name": "Baba Ganoush",
+      "category": "Entradas",
+      "price": 9900,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/13f1f2ed9559a0dd5f325868799dd15c378f8d8bbaf1570e5daabe1dceb5c123.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "yabra",
+      "name": "Yabra (Hojas de Uva)",
+      "category": "Platos Principales",
+      "price": 17150,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/23aa57888b7fc286a32bf2e75bb91414e55f943117105233e8ec32413e6d423f.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "tabule_grd",
+      "name": "Tabulé ",
+      "category": "Ensaladas",
+      "price": 13200,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/c2268b113aa7d38725c72feab3c0559164e2534da77dae7ed2716081c8f32a86.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "benjameli_grd",
+      "name": "Benjameli ",
+      "category": "Ensaladas",
+      "price": 12500,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/40571ee779b73d903cfa0fbe415bc965866933a70c304a833bc1c7eebb9d02a6.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "pan_arabe",
+      "name": "Pan Árabe",
+      "category": "Entradas",
+      "price": 7700,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/58ccbd00291cca74986466b5500d74be8a2fae6bbbeebc971c050134ccdd061b.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "baklava",
+      "name": "Baklava",
+      "category": "Postres",
+      "price": 7350,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/0daedd8d89d5aa1c46890cd278f1a8e511b7d60e690e2fc2922518585ff5d131.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "mamul_nuez",
+      "name": "Mamul de Nuez",
+      "category": "Postres",
+      "price": 7000,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/ac2effe0ad8852147b6adfe42b5a26b99150eb63527336f3c1204252ef6fad7b.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "mamul_datil",
+      "name": "Mamul de Dátil",
+      "category": "Postres",
+      "price": 7000,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/f019f1d05c7e5760d58a800acb5186bf4f4faf0a75f32678af4e12cd4bbac882.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "tabla_celebrar",
+      "name": "Tabla para Celebrar",
+      "category": "Picadas",
+      "price": 38550,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/d98654411bbb15d30b9fee6f7ddad94dfe3e318fdd971024eb17bfbb412e16f7.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1779299917243",
+      "name": "Shawarma SUPERMIX",
+      "category": "Sandwich",
+      "price": 17050,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/487ebe4fdd696237df11dca3def62f9798890d4cf0520b3f6c81833bf4f100d0.jpg",
+      "star": true,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "falafel",
+      "name": "Croquetas de Falafel",
+      "category": "Entradas",
+      "price": 11800,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/7d4247aed04c1116227563dca21a116fc3e92f0d0a6f6a551d07074e9f3527c7.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "torta_de_chocolate",
+      "name": "Torta de Chocolate",
+      "category": "Postres",
+      "price": 8200,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/8b613a8b10dcea4ddcd2d119a4e5eddcfffe21a49a9d737b83b7711831c2d330.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "fatay",
+      "name": "Fatay",
+      "category": "Entradas",
+      "price": 5850,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/7cf38c0f099b56f11c9abf284227a1dfaed2915c1f0a78354ec8224a8a24905e.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "arabe_clasico",
+      "name": "Arabe Clásico",
+      "category": "Platos Principales",
+      "price": 18250,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/7f3d8776aa59c9b3c41adaa905a3434455f3507b48e8141bbfd68b8adf3b21b2.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "falafel_mix",
+      "name": "Falafel Mix",
+      "category": "Platos Principales",
+      "price": 8950,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/e112d5b198eaf0fb8971e946507b91679049249e1ca5c33fad72ffdd2666e173.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1779467294622",
+      "name": "Promo Fatay (3U)",
+      "category": "Entradas",
+      "price": 16850,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/904efad0537dc8ada252a98f5f898da24012e53c3d171b1500d3069f76527328.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1779997050112",
+      "name": "Promo Compartir para Dos",
+      "category": "Promos",
+      "price": 19750,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/9360e15d950e854520d095f7aa241957ef5849711a32ca4d774f116d63484148.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1779997171373",
+      "name": "Promo Compartir Clásico",
+      "category": "Promos",
+      "price": 24850,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/c3fca4d1d70f991732ac2ac0d9740b78a1452ec46efd2c87cee22091b2a45fc5.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1780324945477",
+      "name": "Aristilos (Porcion)",
+      "category": "Postres",
+      "price": 7800,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/cb2383765cd9785375814b85d91b4c7ef06227a77545ba1a8985b48c98eccc3b.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1780338545548",
+      "name": "Crema tahini",
+      "category": "Entradas",
+      "price": 2500,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/79f7e7125dbef7c482b33bb019162f2f1748588511785786820831069071aa5c.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1780422088415",
+      "name": "12 Tequeños",
+      "category": "Entradas",
+      "price": 14650,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/8255b53f5dfd97e9869f78513795b369c798d62855204bacb7ddcfaf4acd1bd5.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1785849682052",
+      "name": "Papas Fritas",
+      "category": "Entradas",
+      "price": 4700,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/128deef41bebe5f343553adf5c7646fa9a136ce4deca7f1537f2b16e3f673b1b.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "p1786210474707",
+      "name": "Shawarma de Pollo al Plato",
+      "category": "Platos Principales",
+      "price": 17500,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/8e234194b7771e991a81758a1c17db1793f660fdb128ce2fe3b39d7dddd1d6b9.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    },
+    {
+      "id": "cocacola_600ml",
+      "name": "Coca-Cola 600ml",
+      "category": "",
+      "price": 2500,
+      "image": "https://dtnbokdrxojdcvguuidk.supabase.co/storage/v1/object/public/sahten-photos/d9b05fcc-1e22-47a1-b3ae-48eacbdff3cc/904a7fc1e2ee5272ea5b9038ae06b5214dbd294bf50a1b038f13ad7a5dd9c616.jpg",
+      "star": false,
+      "description": "",
+      "tags": []
+    }
+  ]
+}
