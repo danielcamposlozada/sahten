@@ -186,7 +186,7 @@ it('la home incorpora tres videos reales con poster y no los descarga automátic
     expect(video.getAttribute('poster')).toMatch(/^media\/terra\/posters\/[a-z-]+\.webp$/);
   }
   expect(d.querySelector('#s-how video')).toBeNull();
-  expect(d.querySelector('#s-videos a[href$="pedir/"]')).not.toBeNull();
+  expect(new URL(d.querySelector('#s-videos a.terra-text-link').href).pathname).toBe('/pedir/');
   dom.window.close();
 });
 it('el tutorial antiguo permanece oculto hasta aprobación explícita', async () => {
