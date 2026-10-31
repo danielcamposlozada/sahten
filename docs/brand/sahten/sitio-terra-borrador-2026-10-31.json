@@ -5,6 +5,7 @@
     "order": [
       "hero",
       "menu",
+      "videos",
       "historia",
       "favoritos",
       "delivery",
@@ -212,6 +213,12 @@
       "creditText": "© 2026 Sahten · Diseñado y desarrollado por Noamdan",
       "creditUrl": "https://noamdan.com/"
     },
-    "visualStyle": "terra-2026"
+    "visualStyle": "terra-2026",
+    "videos": {
+      "on": true,
+      "title": "Historias que se comparten",
+      "lead": "Conocé nuestras tablas para compartir y el Supermix en estos videos originales.",
+      "tutorialEnabled": false
+    }
   }
 }
