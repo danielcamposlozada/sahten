@@ -140,4 +140,20 @@ El paquete descargable de la conversación se llama `sahten_videos_web_optimizad
 ## 10. RECURSOS MULTIMEDIA INTEGRADOS POR CHATGPT — ESTADO ACTUAL
 **Este apartado reemplaza cualquier instrucción anterior que diga que faltan subir los videos a GitHub o que Codex debe hacerlo.** El PR #40 ahora contiene 8 binarios reales en `media/terra/` (4 MP4 + 4 WebP). Se añadió `src/online/terra-media.js` para la importación diferida y `buildPublishFiles` de `src/online/publish.js` incorpora los binarios automáticamente en la exportación del sitio Terra con videos activos. Se añadió módulo `videos` a site.js, UI de selección en `sahten-siteeditor.js`, 3 reproductores con poster/controles y carga `preload=none` en `src/online/web/index.html`, más CSS responsive. El borrador JSON tiene videos activos tras la carta. El tutorial original `Cómo comprar` está incluido y **activado en el borrador Terra por instrucción explícita del dueño**. Conservar el aviso de interfaz anterior y precios/condiciones actuales; el reemplazo estético del video será posterior. No volver a ocultarlo en una integración futura. No copiar archivos desde el chat ni encargar esta parte a Codex. El ZIP de 720p del chat se conserva como copia de mejor calidad; los videos versionados para web son versiones más livianas.
 
+## 11. FOTOS REALES, BANNER DE BENEFICIO Y CATERING (31/10/2026)
+Por solicitud expresa del dueño se incorporaron tres fotografías de `Archive(2).zip` optimizadas como WebP y versionadas bajo `media/terra/photos/`:
+- `banner-plato.webp`: proviene de `IMG_0400.jpg`. Fotografía del plato de comida salada; se usa solamente en banners fotográficos de Terra.
+- `banner-tortas.webp`: proviene de `IMG_0440.jpg`. Fotografía con tortas y postres; se usa solamente en banners fotográficos de Terra.
+- `catering-mesa.webp`: proviene de `etiquetas de vinos divertidas.png`. Mesa real completa con platos para compartir; se usa EXCLUSIVAMENTE en la sección editorial Catering, sin participar en la rotación.
+
+En `src/online/web/index.html`, `terraPhoto()` selecciona una de las dos fotografías de banners en cada entrada o recarga, evitando repetir la última en esa pestaña con `sessionStorage`. `terraOtherPhoto()` asigna siempre la fotografía opuesta al banner del beneficio (porcentaje y leyenda «OFF»). La misma elección se aplica a la cabecera de `/pedir/`; no se cambia a mitad de la compra, ni hay autoplay ni carrusel intrusivo.
+
+El bloque comercial se genera desde `paymentBenefitPolicy(MENU.payments.benefit)` y los medios habilitados; NO se fija artificialmente el 10 %, NO se modifica el descuento real ni la lógica de pago. En la Home aparece debajo del bloque «¿Qué te gustaría probar?»; en la carta conserva un aviso comercial adaptado al diseño. Si no hay beneficio válido, se oculta. En `src/online/web/terra.css` el diseño es responsive y la imagen de Catering respeta su proporción.
+
+`src/online/terra-photos.js` importa los WebP diferidamente para la publicación, y `src/online/publish.js` agrega las tres fotos al paquete estático solo cuando Terra está activo y las imágenes generales están habilitadas. Esto es independiente de habilitar los reels. El modo clásico no cambia.
+
+Se agregaron tests al PR #40 para comprobar que las dos fotos de banners son diferentes, que la mesa no se reutiliza fuera de Catering, que «OFF» acompaña el porcentaje real y que el checkout de la carta sigue disponible.
+
+**La rama sigue sin desplegar.** Validar `npm test`, `npm run build`, `SAHTEN_ONLINE=false npm run build`, exportación estática y revisión visual de escritorio/móvil antes de publicar. No ejecutar migraciones, pagos reales, cambios comerciales o despliegues sin aceptación final.
+
 Validar `npm test`, los dos `npm run build`, la publicación ZIP final con archivos `media/terra/`, la reproducción en navegadores y la integridad de todo el checkout. **No desplegar ni fusionar a main sin aprobación.**
