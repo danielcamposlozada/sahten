@@ -12,6 +12,7 @@ export const SITE_MODULES = [
   { id: 'hero', name: 'Portada', icon: '🏠', desc: 'Lo primero que ve el cliente: título, bajada y destacados.' },
   { id: 'favoritos', name: 'Favoritos', icon: '⭐', desc: 'Tus productos con ⭐, con foto y descripción.' },
   { id: 'menu', name: 'Menú y pedido', icon: '🍽', desc: 'Resumen con una tarjeta por categoría y el botón «Pedir online»; la carta completa y el carrito se abren en su propia vista. Siempre visible.', fixed: true },
+  { id: 'videos', name: 'Videos de nuestra cocina', icon: '🎬', desc: 'Tres videos gastronómicos originales, con reproducción a pedido y portadas livianas. Solo en el diseño editorial Terra.' },
   { id: 'como', name: 'Cómo funciona', icon: '🧭', desc: 'Los pasos para pedir.' },
   { id: 'historia', name: 'Nuestra historia', icon: '📖', desc: 'Quiénes son, con dos fotos y un destacado opcional.' },
   { id: 'banda', name: 'Cinta de texto', icon: '🎞', desc: 'Una franja fija y legible con tu lema.' },
@@ -37,6 +38,7 @@ export function siteDefaults() {
     hero: { on: true, title: '', subtitle: '', cta: 'Armá tu pedido', highlights: [], logo: '', logoUseTextColor: true, logoColor: '' },
     favoritos: { on: true, title: 'Nuestros favoritos', text: '' },
     menu: { title: 'Nuestro menú' },
+    videos: { on: false, title: 'Recetas para compartir', lead: 'Tres maneras de sentarse a la mesa con Sahten.', tutorialEnabled: false },
     como: { on: true, title: '¿Cómo funciona?', lead: 'En 3 pasos tenés tu pedido.', steps: [
       { title: 'Elegí', text: 'Armá tu pedido desde el menú o escribinos por WhatsApp.' },
       { title: 'Confirmamos', text: 'Te contactamos para confirmar el pedido y coordinar.' },
@@ -90,6 +92,7 @@ export function buildSite(raw, images = {}) {
   if (out.hero && /^#[0-9a-f]{6}$/i.test(s.hero.logoColor || '')) out.hero.logoColor = s.hero.logoColor;
   if (out.hero && s.hero.logo) { out.hero.logo = s.hero.logo; out.hero.logoUseTextColor = s.hero.logoUseTextColor; }
   if (on('favoritos')) out.favoritos = { title: txt(s.favoritos.title, 60) || 'Nuestros favoritos', text: txt(s.favoritos.text, 400) };
+  if (on('videos') && s.visualStyle === 'terra-2026') out.videos = { title: txt(s.videos.title, 80) || 'Recetas para compartir', lead: txt(s.videos.lead, 260), tutorialEnabled: !!s.videos.tutorialEnabled };
   if (on('como')) out.como = { title: txt(s.como.title, 60) || '¿Cómo funciona?', lead: txt(s.como.lead, 160),
     steps: list(s.como.steps, SITE_LIMITS.steps, p => { const title = txt(p && p.title, 40); return title ? { title, text: txt(p.text, 160) } : null; }) };
   if (on('historia')) out.historia = { eyebrow: txt(s.historia.eyebrow, 40), title: txt(s.historia.title, 90), text: txt(s.historia.text, 1500),
