@@ -45,9 +45,10 @@ it('prepara el diseño Terra para home y carta sin alterar el checkout integrado
   expect(unchanged.body.hasAttribute('data-visual-style')).toBe(false);
   const rawHtml = buildIndexHtml(menu);
   expect(rawHtml).toContain('id="terra-styles"');
-  expect(rawHtml).toContain('body[data-visual-style="terra-2026"]');
+  // Vitest simula las importaciones CSS ?raw como cadenas vacías. La hoja
+  // real se comprueba desde el archivo y Vite la incorpora al hacer build.
+  expect(readFileSync(new URL('../src/online/web/terra.css', import.meta.url), 'utf8')).toContain('body[data-visual-style="terra-2026"]');
   expect(homepage.getElementById('terra-styles')).not.toBeNull();
-  expect(homepage.getElementById('terra-styles').textContent).toContain('terra-2026');
   const files = await buildPublishFiles(menu);
   const index = new JSDOM(files.find(f => f.path === 'index.html').data).window.document;
   const pedir = new JSDOM(files.find(f => f.path === 'pedir/index.html').data).window.document;
