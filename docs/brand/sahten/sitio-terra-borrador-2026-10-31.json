@@ -218,7 +218,7 @@
       "on": true,
       "title": "Historias que se comparten",
       "lead": "Conocé nuestras tablas para compartir y el Supermix en estos videos originales.",
-      "tutorialEnabled": false
+      "tutorialEnabled": true
     }
   }
 }
