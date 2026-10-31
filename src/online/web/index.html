@@ -161,7 +161,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 <div id="s-top"></div>
 <div id="menuwrap">
 <div class="oback" id="oback"><a href="#">← Volver al inicio</a></div>
-<div class="catalog-heading"><div><h1 id="catalog-title" tabindex="-1">Nuestra carta</h1><p>Elegí tus productos y armá tu pedido.</p></div><div id="terra-catalog-photo" class="terra-catalog-photo"></div><div class="catalog-search"><label for="catalog-search">Buscar en la carta</label><div class="catalog-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="catalog-search" type="search" placeholder="Buscá un producto…" autocomplete="off" aria-controls="grid"></div></div></div>
+<div class="catalog-heading"><div><h1 id="catalog-title" tabindex="-1">Nuestra carta</h1><p>Elegí tus productos y armá tu pedido.</p></div><div id="terra-catalog-photo" class="terra-catalog-photo" hidden></div><div class="catalog-search"><label for="catalog-search">Buscar en la carta</label><div class="catalog-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="catalog-search" type="search" placeholder="Buscá un producto…" autocomplete="off" aria-controls="grid"></div></div></div>
 <div id="catalog-benefit"></div>
 <div class="catalog-layout"><div class="catalog-main"><nav class="cats" id="cats" aria-label="Categorías de productos"></nav>
 <main id="menu"><div id="msg"></div><p class="catalog-results" id="catalog-results" role="status" aria-live="polite"></p><div class="grid" id="grid"></div></main></div><aside id="order-summary" class="order-summary" aria-label="Tu pedido editable"></aside></div>
@@ -303,7 +303,9 @@ function render(){
   $('h-title').textContent=c.title||MENU.store.name||'Menú';if((BRAND||(MENU.site&&MENU.site.logo))&&!$('h-mark')){var hm=document.createElement('div');hm.id='h-mark';hm.innerHTML=brandMark(MENU.store.name||'Menú');$('h-title').parentNode.insertBefore(hm,$('h-title'));}$('h-sub').textContent=c.subtitle||'';
   $('foot').textContent=[MENU.store.name,MENU.store.address].filter(Boolean).join(' · ');
   $('catalog-benefit').innerHTML=c.enabled===false?'':benefitNotice();
-  $('terra-catalog-photo').innerHTML=c.enabled!==false&&MENU.site?.visualStyle==='terra-2026'&&MENU.config.showImages!==false?terraCatalogPhoto():'';
+  var catalogPhoto=$('terra-catalog-photo'),showCatalogPhoto=c.enabled!==false&&MENU.site?.visualStyle==='terra-2026'&&MENU.config.showImages!==false;
+  catalogPhoto.hidden=!showCatalogPhoto;
+  catalogPhoto.innerHTML=showCatalogPhoto?terraCatalogPhoto():'';
   if(c.enabled===false){$('grid').innerHTML='';$('cats').innerHTML='';$('catalog-results').textContent='';$('order-summary').innerHTML='';$('msg').innerHTML='<div class="empty"><b>Menú no disponible por ahora</b><br>Volvé a intentar más tarde.</div>';return;}
   $('msg').innerHTML=MENU.delivery?.enabled===false?'<div class="note" role="status"><strong>Delivery pausado por el local</strong><br>Podés pedir para retirar en el local.</div>':'';
   var cats=catList();
