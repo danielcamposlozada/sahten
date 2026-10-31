@@ -4,6 +4,8 @@
 
 - **Rediseño Terra (borrador)**: Home y carta editoriales opt-in, FAQ, páginas informativas y tres reels de gastronomía. Video «Cómo comprar» visible con aviso de interfaz anterior hasta su reemplazo. Beneficio comercial debajo de «¿Qué te gustaría probar?» con porcentaje dinámico y «OFF»; foto del plato y de las tortas alternadas entre portada/carta y banner (nunca repetidas dentro de la misma página), y mesa completa exclusiva de la sección Catering. Tres WebP originales y cuatro MP4 con sus portadas se empaquetan al publicar el sitio Terra. Sin cambios en carrito, pagos, condiciones comerciales, sincronización ni motor de delivery. PR #40, no publicado.
 
+- **Vista previa Terra aislada (sin publicación comercial)**: proyecto separado en Cloudflare Pages (`sahten-terra-revision.pages.dev`) con 28 productos públicos de referencia, sin enviar órdenes ni permitir pagos reales. Ajuste de la franja verde del beneficio, `OFF` a la derecha y corrección de rutas de fotos en `/pedir/`. Falta comparar visualmente con el HTML local `beneficio-10/home-3.html` antes de aprobar fidelidad final.
+
 ## 0.4.33
 
 - **Delivery al guardar**: mínimos de compra, tarifas, beneficios y cobertura se envían a la tienda conectada desde «Guardar y aplicar en la web», sin publicar el catálogo ni subir archivos. Los horarios mantienen sus dos calendarios independientes. Incluye confirmación, cola sin conexión, reintento y aviso ante cambios desde otro equipo.
