@@ -44,7 +44,8 @@ export function buildIndexHtml(menu, { storefront = false, preview = false } = {
     .replace('/*__MENU_JSON__*/null', '/*__MENU_JSON__*/' + safeJson(menu))
     .replace('/*__BRAND__*/null', () => '/*__BRAND__*/' + safeJson(brandInline(menu)))
     .replace('/*__SHARED__*/', () => sharedScript())
-    .replace('<title>Menú</title>', '<title>' + (storefront ? 'Pedir online | ' : '') + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>');
+    .replace('<title>Menú</title>', '<title>' + (storefront ? 'Pedir online | ' : '') + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>')
+    .replace('</head>', (menu.site?.visualStyle === 'terra-2026' ? '<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">\n' : '') + '</head>');
 }
 
 export function dataUrlToBytes(dataUrl) {
