@@ -1,0 +1,152 @@
+/*
+ * Terra / dirección C / tipografía 3 pulida, 31-10-2026.
+ * Adaptación opt-in al generador REAL de Sahten: no se utiliza HTML de muestra
+ * ni su carrito. El cuerpo recibe data-visual-style="terra-2026" únicamente
+ * cuando el contenido exportado lo solicita explícitamente.
+ *
+ * Etapa 1: sistema legible y botones aprobados. Etapa 2 (pendiente): trasladar
+ * composición editorial exacta, acentos tipográficos, fotos y videos.
+ * No habilitar en producción hasta cerrar contenido/SEO y revisión visual.
+ */
+body[data-visual-style="terra-2026"]{
+  --terra-green:#235328;
+  --terra-ink:#213326;
+  --terra-beige:#FFF4D6;
+  --terra-orange:#F28C00;
+  --terra-copy:18px;
+  --terra-copy-mobile:16px;
+  --terra-heading:44px;
+  --terra-heading-mobile:34px;
+  --terra-section-gap:72px;
+  --serif:'DM Sans',system-ui,sans-serif;
+  font-size:var(--terra-copy);
+  line-height:1.65;
+}
+body[data-visual-style="terra-2026"] .snav{
+  background:var(--terra-green);
+  color:var(--terra-beige);
+  box-shadow:0 1px 0 rgba(255,244,214,.16);
+}
+body[data-visual-style="terra-2026"] .snav a{
+  color:var(--terra-beige);
+}
+body[data-visual-style="terra-2026"] .snav .pedido{
+  background:var(--terra-beige);
+  color:var(--terra-green);
+  border:1px solid var(--terra-beige);
+  font-size:14px;
+  min-height:44px;
+  font-weight:800;
+}
+body[data-visual-style="terra-2026"] .snav .pedido:hover,
+body[data-visual-style="terra-2026"] .snav .pedido:focus-visible{
+  box-shadow:inset 0 0 0 2px var(--terra-green);
+}
+body[data-visual-style="terra-2026"] .sec{
+  padding-block:var(--terra-section-gap);
+}
+body[data-visual-style="terra-2026"] .sec>h2,
+body[data-visual-style="terra-2026"] .sec .in>h2,
+body[data-visual-style="terra-2026"] .hd h2,
+body[data-visual-style="terra-2026"] .about h2,
+body[data-visual-style="terra-2026"] .catalog-heading h1{
+  font-family:'DM Sans',system-ui,sans-serif !important;
+  font-size:var(--terra-heading) !important;
+  font-weight:900 !important;
+  line-height:1.13 !important;
+  letter-spacing:-.035em;
+}
+body[data-visual-style="terra-2026"] .hero h1{
+  font-family:'DM Sans',system-ui,sans-serif;
+  font-weight:900;
+  letter-spacing:-.035em;
+}
+body[data-visual-style="terra-2026"] .terra-accent{
+  font-family:'Lora',Georgia,serif;
+  font-style:italic;
+  font-weight:500;
+  letter-spacing:-.015em;
+}
+body[data-visual-style="terra-2026"] .sec .lead,
+body[data-visual-style="terra-2026"] .sec .in>.lead,
+body[data-visual-style="terra-2026"] .about p,
+body[data-visual-style="terra-2026"] .sec .info p,
+body[data-visual-style="terra-2026"] .sec .review-invite p{
+  font-size:var(--terra-copy);
+  line-height:1.7;
+}
+body[data-visual-style="terra-2026"] .faq summary{
+  font-size:var(--terra-copy);
+  line-height:1.5;
+  padding-block:20px;
+}
+body[data-visual-style="terra-2026"] .faq details p{
+  font-size:var(--terra-copy);
+  line-height:1.7;
+}
+body[data-visual-style="terra-2026"] .sfoot{
+  background:var(--terra-green);
+  color:var(--terra-beige);
+  padding-block:64px 32px;
+}
+body[data-visual-style="terra-2026"] .sfoot b,
+body[data-visual-style="terra-2026"] .sfoot a{
+  color:var(--terra-beige);
+}
+body[data-visual-style="terra-2026"] .sfoot .by{
+  font-size:14px;
+  opacity:.88;
+  border-top:1px solid rgba(255,244,214,.25);
+  padding-top:18px;
+}
+body[data-visual-style="terra-2026"] #menuwrap .ph{
+  height:180px;
+  aspect-ratio:auto;
+}
+body[data-visual-style="terra-2026"] #menuwrap .desc{
+  font-size:15px;
+  line-height:1.6;
+}
+body[data-visual-style="terra-2026"] #menuwrap .name{
+  font-family:'DM Sans',system-ui,sans-serif;
+  font-weight:700;
+}
+body[data-visual-style="terra-2026"] .catalog-heading p{
+  font-size:17px;
+}
+@media(max-width:760px){
+  body[data-visual-style="terra-2026"]{
+    font-size:var(--terra-copy-mobile);
+  }
+  body[data-visual-style="terra-2026"] .sec{
+    padding-block:56px;
+  }
+  body[data-visual-style="terra-2026"] .sec>h2,
+  body[data-visual-style="terra-2026"] .sec .in>h2,
+  body[data-visual-style="terra-2026"] .hd h2,
+  body[data-visual-style="terra-2026"] .about h2,
+  body[data-visual-style="terra-2026"] .catalog-heading h1{
+    font-size:var(--terra-heading-mobile) !important;
+  }
+  body[data-visual-style="terra-2026"] .sec .lead,
+  body[data-visual-style="terra-2026"] .sec .in>.lead,
+  body[data-visual-style="terra-2026"] .about p,
+  body[data-visual-style="terra-2026"] .sec .info p,
+  body[data-visual-style="terra-2026"] .sec .review-invite p,
+  body[data-visual-style="terra-2026"] .faq summary,
+  body[data-visual-style="terra-2026"] .faq details p{
+    font-size:var(--terra-copy-mobile);
+  }
+  body[data-visual-style="terra-2026"] #menuwrap .ph{
+    height:155px;
+  }
+  body[data-visual-style="terra-2026"] #menuwrap .desc{
+    font-size:14px;
+  }
+  body[data-visual-style="terra-2026"] .catalog-heading p{
+    font-size:16px;
+  }
+  body[data-visual-style="terra-2026"] .sfoot .by{
+    font-size:13px;
+  }
+}
