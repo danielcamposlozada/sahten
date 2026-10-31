@@ -8,6 +8,7 @@ import serviceHoursSrc from '../core/service-hours.js?raw';
 import storyCss from './web/story.css?raw';
 import motionCss from './web/motion.css?raw';
 import cartaCss from './web/carta.css?raw';
+import terraCss from './web/terra.css?raw';
 import orderDetailsSrc from '../core/order-details.js?raw';
 import salesAvailabilitySrc from '../core/sales-availability.js?raw';
 import deliverySrc from '../core/delivery.js?raw';
@@ -35,10 +36,10 @@ const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new Reg
 
 export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
-    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss)
+    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss+'\n'+terraCss)
     .replace('/*__PAYMENT_CSS__*/', () => paymentChoiceCss+'\n'+incentiveCss)
     .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
-    .replace('<body>', storefront ? '<body data-storefront>' : preview ? '<body data-preview>' : '<body>')
+    .replace('<body>', '<body' + (storefront ? ' data-storefront' : preview ? ' data-preview' : '') + (menu.site?.visualStyle === 'terra-2026' ? ' data-visual-style="terra-2026"' : '') + '>')
     .replace('<!--__SEARCH_CONTENT__-->', () => renderSearchContent(menu))
     .replace('/*__MENU_JSON__*/null', '/*__MENU_JSON__*/' + safeJson(menu))
     .replace('/*__BRAND__*/null', () => '/*__BRAND__*/' + safeJson(brandInline(menu)))
