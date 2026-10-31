@@ -74,6 +74,21 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
   ];
   if (menu.site?.enabled && menu.site.orderPage) files.push({ path: 'pedir/index.html', data: buildIndexHtml(menu, { storefront: true }) });
   files.push(...discoveryFiles(menu), ...buildSitePages(menu), ...brandFiles(menu));
+  // Reels originales únicamente cuando Sahten tiene activa la sección Terra.
+  // Las importaciones ?inline son diferidas: no se cargan en editor/checkout
+  // ni se publican en proyectos clásicos u otros negocios.
+  if (menu.site?.enabled && menu.site.visualStyle === 'terra-2026' && menu.site.videos && menu.site.videos.on !== false) {
+    const { TERRA_MEDIA_ASSETS } = await import('./terra-media.js');
+    for (const [path, dataUrl] of TERRA_MEDIA_ASSETS) {
+      const bytes = dataUrlToBytes(dataUrl);
+      if (!bytes) {
+        // En Vitest las importaciones binarias pueden estar simuladas.
+        if (import.meta.env?.MODE === 'test') continue;
+        throw new Error('No se pudo incorporar el video o portada de Sahten: ' + path);
+      }
+      files.push({ path, data: bytes });
+    }
+  }
   for (const p of menu.products) {
     if (!p.image || !images[p.id]) continue;
     const bytes = await optimize(images[p.id]);
