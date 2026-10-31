@@ -282,8 +282,8 @@ function benefitNotice(){
   if(MENU.site&&MENU.site.visualStyle==='terra-2026'){
     var photo=MENU.config.showImages!==false?terraOtherPhoto():null;
     return '<aside class="terra-promo" aria-label="Beneficio al pagar">'
-      +(photo?'<div class="terra-promo-photo"><img src="'+esc(photo.src)+'" alt="'+esc(photo.alt)+'" loading="lazy" decoding="async"></div>':'')
-      +'<div class="terra-promo-copy"><span>UN BENEFICIO PARA COMPARTIR</span><strong>Un gusto pagar menos.</strong><p>En productos pagando con '+esc(names)+'. El envío se calcula aparte. No acumulable con otros descuentos.</p></div>'
+      +(photo?'<div class="terra-promo-photo"><img src="'+esc(terraMediaHref(photo.src))+'" alt="'+esc(photo.alt)+'" loading="lazy" decoding="async"></div>':'')
+      +'<div class="terra-promo-copy"><span>BENEFICIO PARA TU PEDIDO</span><strong>'+esc(names==='efectivo o transferencia'?'En efectivo y transferencia':'Con '+names)+'</strong><p>'+esc(names==='efectivo o transferencia'?'Pagando en efectivo o por transferencia.':'Pagando con '+names+'.')+' Descuento en productos; el envío se calcula aparte. No acumulable con otros beneficios.</p></div>'
       +'<div class="terra-promo-badge" aria-label="'+esc(String(policy.percent))+' por ciento de descuento"><b>'+esc(String(policy.percent))+'%</b><span>OFF</span></div></aside>';
   }
   return '<div class="catalog-benefit"><strong>'+policy.percent+' % de descuento en productos</strong>Con '+names+'. El envío se calcula aparte. No acumulable con otros descuentos.</div>';
@@ -331,6 +331,9 @@ var TERRA_BANNER_PHOTOS=[
   {src:'media/terra/photos/banner-tortas.webp',alt:'Tortas y dulces árabes compartidos en una mesa de Sahten'}
 ];
 var TERRA_CATERING_PHOTO='media/terra/photos/catering-mesa.webp';
+/* Fotos compartidas: /pedir/ es una subcarpeta. Resolver la ruta relativa
+ * contra la raíz de la publicación, también en la preview aislada. */
+function terraMediaHref(asset){return (ORDER_PAGE?'../':'')+asset;}
 var terraChosenPhoto=null;
 function terraPhoto(){
   if(terraChosenPhoto)return terraChosenPhoto;
@@ -351,7 +354,7 @@ function terraOtherPhoto(){
 }
 function terraCatalogPhoto(){
   var photo=terraPhoto();
-  return '<img src="'+esc(photo.src)+'" alt="'+esc(photo.alt)+'" loading="eager" decoding="async">';
+  return '<img src="'+esc(terraMediaHref(photo.src))+'" alt="'+esc(photo.alt)+'" loading="eager" decoding="async">';
 }
 
 /*
@@ -478,7 +481,7 @@ var MOD={
   catering:function(S,m){var f=m.catering,wa=waHref('Hola, quiero consultar por catering');if(!f.text&&!f.info.length)return '';
     var terra=S.visualStyle==='terra-2026',photo=terra&&MENU.config.showImages!==false;
     return '<section class="sec dark'+(terra?' terra-catering':'')+'" id="s-catering"><div class="in'+(photo?' terra-catering-layout':'')+'"><div class="two"><div><span class="eyebrow">'+esc(f.eyebrow||'Catering y eventos')+'</span><h2 style="font-family:var(--serif);font-weight:400;font-size:clamp(28px,5vw,42px);line-height:1.1;margin:0 0 14px">'+esc(f.title)+'</h2>'+paras(f.text).replace(/<p>/g,'<p style="line-height:1.65;margin:0 0 12px;opacity:.9">')+(wa?'<a class="btn1" style="margin-top:8px" target="_blank" rel="noopener" href="'+esc(wa)+'">'+esc(f.cta)+'</a>':'')+'</div>'+(f.info.length?'<div class="cat-info">'+f.info.map(function(i){return '<div><b>'+esc(i.label)+'</b>'+esc(i.value)+'</div>'}).join('')+'</div>':'')+'</div>'
-      +(photo?'<figure class="terra-catering-photo"><img src="'+esc(TERRA_CATERING_PHOTO)+'" alt="Mesa real de Sahten preparada con platos árabes para compartir en grupo" loading="lazy" decoding="async"><figcaption>La mesa se disfruta mejor entre todos.</figcaption></figure>':'')+'</div></section>';},
+      +(photo?'<figure class="terra-catering-photo"><img src="'+esc(terraMediaHref(TERRA_CATERING_PHOTO))+'" alt="Mesa real de Sahten preparada con platos árabes para compartir en grupo" loading="lazy" decoding="async"><figcaption>La mesa se disfruta mejor entre todos.</figcaption></figure>':'')+'</div></section>';},
   delivery:function(S,m){var f=Object.assign({},m.delivery,{hours:serviceHoursConfig(MENU,'delivery')?serviceHoursText(MENU,'delivery'):m.delivery.hours}),D=MENU.delivery||{},zones=(D.zones||[]).map(function(z){return z.name}).filter(Boolean);
     if(!(f.hours||zones.length||D.freeShippingMin||D.deliveryMinOrder||MENU.store.address))return '';
     var a='<div><h3>🛵 '+esc(f.title)+'</h3>'+(f.hours?'<div>'+esc(f.hours).replace(/\n/g,'<br>')+'</div>':'')+(D.deliveryMinOrder?'<div>Pedido mínimo: <b>'+fmt(D.deliveryMinOrder)+'</b></div>':'')+(D.freeShippingMin?'<div>Envío gratis desde <b>'+fmt(D.freeShippingMin)+'</b></div>':'')+(f.extra?'<div>'+esc(f.extra)+'</div>':'')+'</div>';
