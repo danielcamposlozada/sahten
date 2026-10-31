@@ -1,5 +1,7 @@
 import { it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+import { Script } from 'node:vm';
 import publishedContent from '../docs/brand/sahten/sitio-terra-borrador-2026-10-31.json';
 import { normalizeSite, buildSite, exportSiteContent, parseSiteContent, applySiteContent } from '../src/online/site.js';
 import { buildIndexHtml, buildPublishFiles } from '../src/online/publish.js';
@@ -135,4 +137,15 @@ it('conserva las preferencias para ocultar fotos sin borrar productos o categorÃ
   expect(dom.window.document.querySelector('#s-menuhd').textContent).toContain('Producto vigente');
   expect(dom.window.document.querySelector('#s-menuhd .terra-food-image img')).toBeNull();
   dom.window.close();
+});
+
+
+it('mantiene el editor anterior y permite seleccionar Terra sin publicar ni alterar pedidos', () => {
+  const source = readFileSync(new URL('../src/legacy/sahten-siteeditor.js', import.meta.url), 'utf8');
+  expect(() => new Script(source)).not.toThrow();
+  expect(source).toContain('data-sb-visual-style');
+  expect(source).toContain("S.visualStyle = t.value === 'terra-2026'");
+  expect(source).toContain('data-sb-order-page');
+  expect(source).toContain('data-sb-import');
+  expect(source).toContain('data-sb-enabled');
 });
