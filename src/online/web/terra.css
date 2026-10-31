@@ -150,3 +150,191 @@ body[data-visual-style="terra-2026"] .catalog-heading p{
     font-size:13px;
   }
 }
+
+
+/* Terra editorial layout: real, server-backed products and real order links. */
+body[data-visual-style="terra-2026"]{background:#FAF8F5;color:#235328}
+body[data-visual-style="terra-2026"] :is(.sec,.sfoot,#s-top,#s-rest){min-width:0}
+body[data-visual-style="terra-2026"] .terra-hero{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:center;gap:clamp(24px,5vw,76px);
+  max-width:none;margin:0;padding:clamp(40px,5vw,76px) max(24px,calc((100vw - 1280px)/2));
+  text-align:left;color:var(--terra-ink);background:#E9953C;min-height:450px;
+}
+body[data-visual-style="terra-2026"] .terra-hero>*{min-width:0}
+body[data-visual-style="terra-2026"] .terra-hero-mark{max-width:260px;margin-bottom:16px}
+body[data-visual-style="terra-2026"] .terra-hero-mark .brand-mark{width:min(260px,60vw);margin:0;max-height:100px;object-fit:contain}
+body[data-visual-style="terra-2026"] .terra-hero-eyebrow{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin:4px 0 20px}
+body[data-visual-style="terra-2026"] .terra-hero h1{
+  font-family:'DM Sans',system-ui,sans-serif;font-weight:900;font-size:clamp(42px,6vw,78px);max-width:12ch;
+  line-height:1.04;letter-spacing:-.055em;color:var(--terra-ink);margin:0 0 22px;
+}
+body[data-visual-style="terra-2026"] .terra-hero h1 em,
+body[data-visual-style="terra-2026"] .terra-menu h2 em,
+body[data-visual-style="terra-2026"] .terra-how h2 em,
+body[data-visual-style="terra-2026"] .terra-faq h2 em{
+  font-family:'Lora',Georgia,serif;font-style:italic;font-weight:500;text-transform:none;letter-spacing:-.045em;color:inherit;
+}
+body[data-visual-style="terra-2026"] .terra-hero p{
+  margin:0 0 24px;max-width:36ch;font-size:18px;font-weight:500;line-height:1.6;color:var(--terra-ink);opacity:1
+}
+body[data-visual-style="terra-2026"] .terra-hero .btns{justify-content:flex-start;gap:12px}
+body[data-visual-style="terra-2026"] .terra-hero .btn1{
+  background:var(--terra-green);color:var(--terra-beige);border:2px solid var(--terra-green);
+  border-radius:8px;min-height:48px;display:inline-flex;align-items:center;padding:12px 22px;
+}
+body[data-visual-style="terra-2026"] .terra-hero .btn2{
+  color:var(--terra-ink);border:2px solid currentColor;border-radius:8px;min-height:48px;
+  display:inline-flex;align-items:center;padding:10px 18px
+}
+body[data-visual-style="terra-2026"] .terra-hero-visual{
+  position:relative;max-height:460px;height:100%;min-height:320px;overflow:hidden;border-radius:44px 8px 44px 8px;background:#e6ddcc;
+}
+body[data-visual-style="terra-2026"] .terra-hero-visual img{
+  display:block;width:100%;height:100%;min-height:320px;max-height:460px;object-fit:cover;
+}
+body[data-visual-style="terra-2026"] .terra-hero-visual span{
+  position:absolute;left:16px;bottom:16px;background:var(--terra-beige);color:var(--terra-green);
+  max-width:190px;padding:10px 14px;font-size:12px;line-height:1.3;font-weight:800;text-transform:uppercase;
+}
+body[data-visual-style="terra-2026"] .terra-menu{max-width:1280px;padding:72px 24px}
+body[data-visual-style="terra-2026"] .terra-section-top{
+  display:flex;gap:30px;align-items:end;justify-content:space-between;margin-bottom:26px;
+}
+body[data-visual-style="terra-2026"] .terra-section-top .eyebrow{margin-bottom:14px}
+body[data-visual-style="terra-2026"] .terra-section-top h2{margin:0;font-size:44px;line-height:1.13}
+body[data-visual-style="terra-2026"] .terra-text-link{
+  display:inline-flex;align-items:center;min-height:44px;color:inherit;font-size:16px;font-weight:700;
+  text-decoration:none;border-bottom:1px solid currentColor;white-space:normal
+}
+body[data-visual-style="terra-2026"] .terra-menu-cats{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px 26px;
+  padding-bottom:12px;border-bottom:1px solid #cbd2c4;margin-bottom:24px
+}
+body[data-visual-style="terra-2026"] .terra-menu-cats a{color:var(--terra-green);font-size:15px;font-weight:700;text-decoration:none;min-height:40px;display:inline-flex;align-items:center}
+body[data-visual-style="terra-2026"] .terra-menu-cats a:focus-visible,
+body[data-visual-style="terra-2026"] .terra-text-link:focus-visible{outline:3px solid #EA872D;outline-offset:4px}
+body[data-visual-style="terra-2026"] .terra-food-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+body[data-visual-style="terra-2026"] .terra-food-card{display:block;color:var(--terra-green);text-decoration:none;min-width:0}
+body[data-visual-style="terra-2026"] .terra-food-image{
+  display:block;aspect-ratio:1.45;overflow:hidden;border-radius:30px 6px 28px 6px;background:#EEE7DC
+}
+body[data-visual-style="terra-2026"] .terra-food-image img{width:100%;height:100%;object-fit:cover;display:block}
+body[data-visual-style="terra-2026"] .terra-food-details{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+body[data-visual-style="terra-2026"] .terra-food-details small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:5px}
+body[data-visual-style="terra-2026"] .terra-food-details strong{font-size:25px;line-height:1.25;display:block;overflow-wrap:anywhere}
+body[data-visual-style="terra-2026"] .terra-food-details>span:last-child{font-size:22px}
+body[data-visual-style="terra-2026"] .terra-menu .pedir-cta{
+  display:inline-flex;align-items:center;width:auto;margin-top:32px;background:transparent;border:1px solid var(--terra-green);
+  color:var(--terra-green);font-size:15px;padding:12px 20px;min-height:48px;border-radius:8px;
+}
+body[data-visual-style="terra-2026"] .fav{
+  background:#FFF4D6;border:0;max-width:none;padding:72px max(24px,calc((100vw - 1280px)/2))
+}
+body[data-visual-style="terra-2026"] .fav .grid{max-width:1280px;grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-visual-style="terra-2026"] .fav .ph{aspect-ratio:1.8}
+body[data-visual-style="terra-2026"] .fav .more{color:var(--terra-green);font-size:16px;display:inline-flex;min-height:44px;align-items:center}
+body[data-visual-style="terra-2026"] .about{background:#235328;color:var(--terra-beige);max-width:none;
+  padding:72px max(24px,calc((100vw - 1280px)/2));grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px}
+body[data-visual-style="terra-2026"] .about h2{color:var(--terra-beige)!important}
+body[data-visual-style="terra-2026"] .about .eyebrow{color:var(--terra-beige)}
+body[data-visual-style="terra-2026"] .about p{color:var(--terra-beige)!important}
+body[data-visual-style="terra-2026"] .about a{color:var(--terra-beige)}
+body[data-visual-style="terra-2026"] #s-delivery{max-width:1280px;margin:0 auto}
+body[data-visual-style="terra-2026"] #s-delivery .info{gap:36px}
+body[data-visual-style="terra-2026"] #s-delivery .info>*{background:transparent;border:0;box-shadow:none}
+body[data-visual-style="terra-2026"] #s-delivery h3{font-family:'DM Sans',sans-serif;font-weight:900;font-size:30px;line-height:1.15}
+body[data-visual-style="terra-2026"] #s-catering{background:#E9953C;color:#213326}
+body[data-visual-style="terra-2026"] #s-catering .in{max-width:1280px}
+body[data-visual-style="terra-2026"] #s-catering .lead,
+body[data-visual-style="terra-2026"] #s-catering h2,
+body[data-visual-style="terra-2026"] #s-catering .eyebrow,
+body[data-visual-style="terra-2026"] #s-catering p{color:#213326}
+body[data-visual-style="terra-2026"] #s-catering .btn1{background:#235328;color:#FFF4D6;border:1px solid #235328}
+body[data-visual-style="terra-2026"] .terra-how{
+  max-width:none;background:#E9953C;color:#213326;padding:80px max(24px,calc((100vw - 1200px)/2));
+}
+body[data-visual-style="terra-2026"] .terra-how-inner{max-width:1200px;display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);align-items:center;gap:72px;margin:auto}
+body[data-visual-style="terra-2026"] .terra-how h2{font-weight:900;color:#213326}
+body[data-visual-style="terra-2026"] .terra-how .eyebrow{color:#213326}
+body[data-visual-style="terra-2026"] .terra-how .lead{color:#213326;max-width:52ch;font-size:18px;line-height:1.7}
+body[data-visual-style="terra-2026"] .terra-how ol{list-style:none;padding:0;margin:24px 0;display:grid;gap:16px}
+body[data-visual-style="terra-2026"] .terra-how li{display:flex;gap:16px;align-items:start}
+body[data-visual-style="terra-2026"] .terra-how li>span{border:1px solid #213326;border-radius:50%;min-width:36px;height:36px;display:grid;place-items:center;font-size:14px;font-weight:800}
+body[data-visual-style="terra-2026"] .terra-how li strong{font-size:18px}
+body[data-visual-style="terra-2026"] .terra-how li p{margin:3px 0 0;font-size:16px;line-height:1.5}
+body[data-visual-style="terra-2026"] .terra-how-phone{
+  background:#F9F5ED;border:6px solid #235328;border-radius:22px;padding:28px 14px 12px;
+  min-height:365px;color:#235328;box-shadow:0 8px 28px rgba(20,40,15,.15);
+}
+body[data-visual-style="terra-2026"] .terra-how-phone-head{font-size:16px;font-weight:900;border-bottom:3px solid #235328;padding-bottom:12px}
+body[data-visual-style="terra-2026"] .terra-how-phone-title{font-size:23px;font-weight:900;margin:28px 0 18px}
+body[data-visual-style="terra-2026"] .terra-how-phone-line{background:#E5DDCE;height:42px;border-radius:6px;margin:10px 0}
+body[data-visual-style="terra-2026"] .terra-how-phone-line.short{width:75%}
+body[data-visual-style="terra-2026"] .terra-how-phone-choice{font-size:13px;font-weight:700;margin-top:22px;display:flex;gap:8px}
+body[data-visual-style="terra-2026"] .terra-how-phone-choice span{background:#E5DDCE;padding:4px;border-radius:5px}
+body[data-visual-style="terra-2026"] .terra-how-phone-foot{background:#235328;color:#FFF4D6;border-radius:6px;padding:10px 6px;font-size:13px;font-weight:800;margin-top:20px;text-align:center}
+body[data-visual-style="terra-2026"] .terra-how .terra-text-link{color:#213326}
+body[data-visual-style="terra-2026"] .faq{max-width:1280px}
+body[data-visual-style="terra-2026"] .faq details{
+  background:transparent;border:0;border-bottom:1px solid #cad3c4;border-radius:0;margin:0;padding:0
+}
+body[data-visual-style="terra-2026"] .faq summary{display:flex;align-items:center;justify-content:space-between;gap:16px}
+body[data-visual-style="terra-2026"] .faq summary:after{float:none;flex:none}
+body[data-visual-style="terra-2026"] .faq p{color:#235328}
+body[data-visual-style="terra-2026"] .sfoot a{font-size:15px;line-height:1.5}
+body[data-visual-style="terra-2026"] .sfoot .by a{font-size:14px}
+body[data-visual-style="terra-2026"] #menuwrap{background:#FAF8F5}
+body[data-visual-style="terra-2026"] #menuwrap .card{border:0;background:#fffdf8}
+body[data-visual-style="terra-2026"] #menuwrap .ph{border-radius:18px 5px 0 0;overflow:hidden}
+body[data-visual-style="terra-2026"] #menuwrap .catalog-heading h1{color:#235328}
+body[data-visual-style="terra-2026"] #menuwrap .add:not(:disabled){background:#E9953C;color:#213326;font-weight:800}
+body[data-visual-style="terra-2026"] .catalog-benefit{border-left-color:#235328}
+@media(max-width:850px){
+ body[data-visual-style="terra-2026"] .terra-hero{gap:22px;padding:42px 24px}
+ body[data-visual-style="terra-2026"] .terra-hero h1{font-size:clamp(38px,6vw,60px)}
+ body[data-visual-style="terra-2026"] .terra-how-inner{grid-template-columns:180px minmax(0,1fr);gap:38px}
+ body[data-visual-style="terra-2026"] .terra-food-grid{gap:14px}
+ body[data-visual-style="terra-2026"] .terra-food-details strong{font-size:21px}
+ body[data-visual-style="terra-2026"] .about{gap:24px}
+}
+@media(max-width:760px){
+ body[data-visual-style="terra-2026"] .terra-hero{grid-template-columns:1fr;padding:36px 18px;gap:30px}
+ body[data-visual-style="terra-2026"] .terra-hero h1{font-size:clamp(42px,10vw,62px);max-width:none}
+ body[data-visual-style="terra-2026"] .terra-hero p{font-size:16px}
+ body[data-visual-style="terra-2026"] .terra-hero-visual{max-height:350px;min-height:230px}
+ body[data-visual-style="terra-2026"] .terra-hero-visual img{min-height:230px;max-height:350px}
+ body[data-visual-style="terra-2026"] .terra-section-top{display:block}
+ body[data-visual-style="terra-2026"] .terra-menu{padding:48px 18px}
+ body[data-visual-style="terra-2026"] .terra-menu .terra-text-link{margin-top:10px}
+ body[data-visual-style="terra-2026"] .terra-menu-cats{flex-wrap:nowrap;overflow:auto;gap:20px}
+ body[data-visual-style="terra-2026"] .terra-menu-cats a{white-space:nowrap}
+ body[data-visual-style="terra-2026"] .terra-food-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ body[data-visual-style="terra-2026"] .terra-food-card:nth-child(n+3){display:none}
+ body[data-visual-style="terra-2026"] .terra-food-details strong{font-size:20px}
+ body[data-visual-style="terra-2026"] .terra-food-image{aspect-ratio:1.2}
+ body[data-visual-style="terra-2026"] .fav{padding:48px 18px}
+ body[data-visual-style="terra-2026"] .fav .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-visual-style="terra-2026"] .about{grid-template-columns:1fr;padding:48px 18px}
+ body[data-visual-style="terra-2026"] .terra-how{padding:48px 18px}
+ body[data-visual-style="terra-2026"] .terra-how-inner{display:flex;flex-direction:column-reverse;gap:30px}
+ body[data-visual-style="terra-2026"] .terra-how-graphic{width:210px;max-width:100%}
+ body[data-visual-style="terra-2026"] .terra-how-copy{width:100%}
+ body[data-visual-style="terra-2026"] .terra-how li strong{font-size:16px}
+ body[data-visual-style="terra-2026"] .sfoot{padding:48px 18px 28px}
+ body[data-visual-style="terra-2026"] #menuwrap .ph{height:155px}
+}
+@media(max-width:360px){
+ body[data-visual-style="terra-2026"] .terra-food-grid{gap:8px}
+ body[data-visual-style="terra-2026"] .terra-food-details strong{font-size:18px}
+ body[data-visual-style="terra-2026"] .terra-hero h1{font-size:42px}
+}
+/* Informative static pages generated by pages.js, kept indexable. */
+body[data-visual-style="terra-2026"] header{background:#235328;color:#FFF4D6}
+body[data-visual-style="terra-2026"] header a{color:#FFF4D6}
+body[data-visual-style="terra-2026"] main{color:#235328}
+body[data-visual-style="terra-2026"] main h1{font:900 clamp(34px,5vw,50px)/1.1 'DM Sans',system-ui,sans-serif;color:#235328}
+body[data-visual-style="terra-2026"] main h2{font:800 clamp(24px,3vw,32px)/1.2 'DM Sans',system-ui,sans-serif;color:#235328}
+body[data-visual-style="terra-2026"] main .cta{background:#E9953C;color:#213326}
+body[data-visual-style="terra-2026"] footer{background:#235328;color:#FFF4D6}
+body[data-visual-style="terra-2026"] footer :is(h2,a){color:#FFF4D6}
