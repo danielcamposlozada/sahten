@@ -29,6 +29,7 @@ export function siteDefaults() {
   return {
     enabled: false,
     orderPage: false,
+    visualStyle: 'classic',
     logo: '',
     logoUseTextColor: false,
     seo: { url: '', title: '', description: '', cuisine: '', streetAddress: '', locality: '', region: '', country: '', openingHours: '', areaServed: '', sameAs: '', brandKit: '' },
@@ -55,7 +56,7 @@ const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 /** Completa lo que falte con los valores de fábrica y deja el orden válido (todas las secciones, sin repetidas). */
 export function normalizeSite(raw) {
   const d = siteDefaults(); const r = isObj(raw) ? raw : {};
-  const out = { enabled: !!r.enabled, orderPage: !!r.orderPage, logo: normalizeStoreLogo(r.logo), logoUseTextColor: !!r.logoUseTextColor };
+  const out = { enabled: !!r.enabled, orderPage: !!r.orderPage, visualStyle: r.visualStyle === 'terra-2026' ? 'terra-2026' : 'classic', logo: normalizeStoreLogo(r.logo), logoUseTextColor: !!r.logoUseTextColor };
   out.seo = { ...d.seo, ...(isObj(r.seo) ? r.seo : {}) };
   for (const m of SITE_MODULES) out[m.id] = { ...d[m.id], ...(isObj(r[m.id]) ? r[m.id] : {}) };
   out.hero.logo = normalizeStoreLogo(out.hero.logo);
@@ -81,6 +82,7 @@ export function buildSite(raw, images = {}) {
   const out = { enabled: true, order: s.order.filter(on), images: { hero: img('hero'), historia: img('historia') }, menuTitle: txt(s.menu.title, 60) || 'Nuestro menú' };
   if (images.familia) out.images.familia = img('familia');
   if (s.orderPage) out.orderPage = true;
+  if (s.visualStyle === 'terra-2026') out.visualStyle = 'terra-2026';
   if (s.logo) { out.logo = s.logo; out.logoUseTextColor = s.logoUseTextColor; }
   out.seo = Object.fromEntries(Object.entries(s.seo).map(([k, v]) => [k, txt(v, k === 'url' ? 300 : k === 'sameAs' ? 600 : 200)]));
   if (on('hero')) out.hero = { title: txt(s.hero.title, 80), subtitle: txt(s.hero.subtitle, 220), cta: txt(s.hero.cta, 30) || 'Armá tu pedido',
