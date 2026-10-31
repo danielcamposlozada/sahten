@@ -12,6 +12,7 @@ const _SB_FIELDS = {
     ['list', 'highlights', 'Destacados (hasta 4)', { add: 'Agregar destacado', max: 4, fields: [['icon', 'Ícono 🍕', 'sm'], ['title', 'Título'], ['text', 'Detalle']] }]],
   favoritos: [['text', 'title', 'Título'], ['area', 'text', 'Texto de introducción', 2], ['note', 'Muestra los productos marcados con ⭐ en la lista de Menú (hasta 6).']],
   menu: [['text', 'title', 'Título de la sección'], ['note', 'Es tu carta con categorías y el carrito. Siempre está; solo podés moverla de lugar.']],
+  videos: [['text', 'title', 'Título de videos'], ['area', 'lead', 'Bajada', 2], ['note', 'Reels originales: Tabla Celebrar, Tabla Compartir y Supermix. Publicá sus MP4 y portadas WebP en media/terra/ junto al sitio. Solo visible con el estilo Editorial Terra.'], ['check', 'tutorialEnabled', 'Mostrar también video Cómo comprar (interfaz anterior; revisar antes de publicar)']],
   como: [['text', 'title', 'Título'], ['text', 'lead', 'Bajada'], ['list', 'steps', 'Pasos (hasta 4)', { add: 'Agregar paso', max: 4, fields: [['title', 'Título'], ['text', 'Detalle']] }]],
   historia: [['text', 'eyebrow', 'Etiqueta chica', 'Ej: Nuestra historia'], ['text', 'title', 'Título'], ['area', 'text', 'Texto (separá los párrafos con una línea en blanco)', 6], ['image', 'historia', 'Foto horizontal (opcional)'], ['text', 'imageAlt', 'Descripción de la foto (accesibilidad)'], ['text', 'imageCaption', 'Pie de la foto (opcional)'],
     ['image', 'familia', 'Segunda foto vertical (opcional)'], ['text', 'familyAlt', 'Descripción de la segunda foto (accesibilidad)'], ['text', 'familyCaption', 'Pie de la segunda foto (opcional)'], ['area', 'teamText', 'Equipo (solo en la página Nuestra historia)', 3],
@@ -54,6 +55,7 @@ function _sbRenderField(S, id, f) {
       <div><button class="btn" data-sb-google>Traer reseñas</button> <span class="sb-gmsg" id="sb-google-msg">${_esc(_sbUi.googleMsg)}</span></div>
       <small>Necesitás una clave de Google Maps Platform con «Places API (New)» activada. Google limita cuánto se puede guardar y pide indicar que vienen de Google: el sitio las muestra con la etiqueta «Google».</small></div>`;
   if (type === 'note') return `<div class="sb-note">${_esc(key)}</div>`;
+  if (type === 'check') return `<label class="f"><input type="checkbox" data-sb-check="${id}.${key}" ${m[key] ? 'checked' : ''}> ${_esc(label)}</label>`;
   if (type === 'text') return `<label class="f">${_esc(label)}<input type="text" class="custom-input" data-sb="${id}.${key}" placeholder="${_esc(extra || '')}" value="${_esc(m[key])}"></label>`;
   if (type === 'area') return `<label class="f">${_esc(label)}<textarea class="custom-input" rows="${extra || 3}" style="resize:vertical" data-sb="${id}.${key}">${_esc(m[key])}</textarea></label>`;
   if (type === 'image') {
@@ -158,6 +160,7 @@ function _sbBind(host) {
     if (t.dataset.sbOrderPage !== undefined) { S.orderPage = t.checked; _sbChanged({ top: true }); }
     else if (t.dataset.sbVisualStyle !== undefined) { S.visualStyle = t.value === 'terra-2026' ? 'terra-2026' : 'classic'; _sbChanged({ top: true }); }
     else if (t.dataset.sbLogo !== undefined && t.files && t.files[0]) { const config = MENU_CONFIG, target = t.dataset.sbLogoFor; SAHTEN_SITE.readStoreLogo(t.files[0]).then(logo => { if (MENU_CONFIG !== config) return; if (target === 'hero') _moSite().hero.logo = logo; else _moSite().logo = logo; _sbChanged({ top: true, list: true }); }).catch(err => alert(err.message)); }
+    else if (t.dataset.sbCheck !== undefined) { const [m,k]=t.dataset.sbCheck.split('.'); S[m][k]=t.checked; _sbChanged({}); }
     else if (t.dataset.sbLogoColor !== undefined) { S.logoUseTextColor = t.checked; _sbChanged({}); }
     else if (t.dataset.sbHeroLogoColor !== undefined) { S.hero.logoUseTextColor = t.checked; _sbChanged({}); }
     else if (t.dataset.sbOn) { S[t.dataset.sbOn].on = t.checked; _sbChanged({ list: true }); }
