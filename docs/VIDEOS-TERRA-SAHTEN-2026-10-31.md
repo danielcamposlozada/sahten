@@ -1,0 +1,64 @@
+# Videos reales de Sahten — Integración con Terra
+Fecha: 2026-10-31 · Estado: **recibidos, verificados y optimizados; NO alojados ni publicados**
+
+## Archivos recibidos
+
+El usuario proporcionó en esta conversación `Archive(1).zip` (~93,7 MB), con cuatro videos originales H.264/AAC, todos 1080×1920, 9:16 y con pista de audio. Los archivos fuente **no están dentro del repositorio**.
+
+| Original | Duración | Uso EXACTO en la maqueta Terra | Estado |
+| --- | ---: | --- | --- |
+| `Picada Tabla Celebrar + Audio IA.mov` | 32,11 s | Reel 01: Tabla para Celebrar | Listo para revisión |
+| `Picada Tabla Compartir + Audio IA.mov` | 32,53 s | Reel 02: Tabla Compartir | Listo para revisión |
+| `Video SupeMIX + Audio IA.mov` | 22,53 s | Reel 03: Shawarma Supermix | Listo para revisión |
+| `SAHTEN WEB - Como Comprar.mp4` | 31,17 s | Video tutorial en bloque `#ayuda` | **Bloqueado para publicación como guía vigente** |
+
+El video de compra muestra la interfaz anterior, además de importes y descuentos de demostración. El archivo no debe presentarse como tutorial actualizado sin revisar/editar/regrabar las pantallas y datos según el checkout definitivo.
+
+## Paquete producido en la conversación
+
+`sahten_videos_web_optimizados.zip` (≈9,7 MB), creado a partir de los originales, contiene:
+
+| Archivo | Tamaño aprox. |
+| --- | ---: |
+| `videos/tabla-celebrar.mp4` | 3,30 MB |
+| `videos/tabla-compartir.mp4` | 2,91 MB |
+| `videos/supermix.mp4` | 1,53 MB |
+| `videos/como-comprar.mp4` | 1,94 MB |
+| `posters/{slug}.webp` | 30–42 KB cada uno |
+| `manifest.json` | Duraciones, dimensiones, SHA-256 y estado |
+| `README-VIDEO-CODEX.md` | Instrucciones de reproducción e integración |
+
+Videos optimizados: MP4 H.264 + AAC 96 kb/s, resolución 720×1280, `+faststart`, sin modificar el original. Posters WebP 540×960. El ZIP está disponible en la conversación con el usuario y debe adjuntarse a la sesión de Codex o colocarse en su workspace para publicación autorizada. **No afirmar que el ZIP esté montado en el ambiente de Codex ni que se haya cargado a Cloudflare/Supabase/GitHub.**
+
+## Posiciones dentro del rediseño de Terra
+
+La maqueta `tipografia/tipo-3-home-pulida.html` del ZIP original contiene:
+- `.reel-grid`: tres videos gastronómicos («Tabla para Celebrar», «Tabla Compartir», «Shawarma Supermix»), inicialmente solo imágenes/posters que no reproducen el video.
+- `#ayuda`: video `Cómo comprar`, independiente de los reels, acompañado de pasos de compra completos.
+- Los CTA a la carta se deben vincular al catálogo activo: no conservar enlaces hacia maquetas HTML ni copiar sus 31 artículos de ejemplo.
+- No confundir `#ayuda` con la sección nueva del mapa que Codex estaba desarrollando en paralelo. Integrar el mapa sin sobrescribir otras ramas.
+
+## Contrato técnico de video
+
+1. No modificar las funciones actuales de carrito, pago, horarios, cobertura, navegación ni Supabase para mostrar videos.
+2. Publicar solamente en un hosting estático autorizado, con URL estable, caché y tipo de contenido correcto. Acordar almacenamiento y política de versiones; no subir los MOV originales (~94 MB) al repo.
+3. Inicialmente mostrar poster WebP; video solo al click/tap (`preload="none"`, `playsinline`, `controls`, atributos de ancho/alto). Evitar 3–4 reproducciones y descargas simultáneas.
+4. Audio disponible en los originales y optimizados, pero jamás autoplay con audio. Para autoplay decorativo en caso de aprobación: `muted` y respetar preferencias de movimiento.
+5. Mantener accesibilidad y contraste; preparar transcripción y subtítulos verdaderos cuando se disponga de su contenido. No inventar subtítulos.
+6. Los textos de nombres de comida deben contrastarse con el catálogo real y disponibilidad. Si un producto está oculto/pausado, no llevar al cliente a un producto inexistente.
+7. Revisar SEO/VideoObject SOLO después de que exista URL pública real de los recursos; no emitir datos estructurados con URLs futuras inventadas.
+8. Medir rendimiento de portada (LCP y carga móvil) al integrar, comprobar video en Safari iOS y Android.
+9. El tutorial de compra debe corregirse antes de ser publicado porque expone la interfaz anterior y valores comerciales potencialmente obsoletos.
+
+## Estado de ejecución y pendientes
+
+- [x] Inspección del ZIP: 4 videos originales con audio.
+- [x] Revisión visual por fotogramas: 3 videos gastronómicos + video de compra viejo.
+- [x] Transcodificación a MP4 H.264 + AAC para web, posters WebP.
+- [x] ZIP optimizado, manifiesto y README para Codex.
+- [ ] Copiar físicamente los archivos optimizados al workspace/hosting del proyecto.
+- [ ] Implementar las tres tarjetas reproductoras en la home real, sin tocar órdenes o pagos.
+- [ ] Aprobar y subir videos a hosting; después configurar URLs de producción/preview.
+- [ ] Rehacer/actualizar el tutorial de compra y revisarlo antes de habilitarlo públicamente.
+- [ ] Pruebas de rendimiento, responsive, accesibilidad y calidad visual.
+- [ ] Autorizar deployment separado; la web publicada no debe cambiar sin confirmación.
