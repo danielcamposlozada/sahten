@@ -1,6 +1,6 @@
 import { it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
-import publishedContent from '../docs/brand/sahten/sitio-publicado-2026-10-30.json';
+import publishedContent from '../docs/brand/sahten/sitio-terra-borrador-2026-10-31.json';
 import { normalizeSite, buildSite, exportSiteContent, parseSiteContent, applySiteContent } from '../src/online/site.js';
 import { buildIndexHtml, buildPublishFiles } from '../src/online/publish.js';
 
@@ -79,4 +79,11 @@ it('conserva las páginas informativas, el canonical y los productos vivos sin u
   expect(catalog.querySelector('main').textContent).toContain('Producto vigente');
   expect(catalog.querySelector('main').textContent).toContain('$13.000');
   expect(catalog.querySelector('main').textContent).not.toContain('Shawarma de Carne');
+});
+
+it('descarta los importes y horarios archivados que no provienen de la configuración en vivo', () => {
+  const text = JSON.stringify(publishedContent.site);
+  expect(text).not.toMatch(/\\$45\\.000|unos 6 km|18:00 a 23:00|18:00-23:00/);
+  expect(publishedContent.site.seo.openingHours).toBe('');
+  expect(publishedContent.site.faq.items).toHaveLength(11);
 });
