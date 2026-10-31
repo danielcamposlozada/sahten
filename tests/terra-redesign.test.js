@@ -185,12 +185,13 @@ it('la home incorpora tres videos reales con poster y no los descarga automátic
     expect(video.hasAttribute('autoplay')).toBe(false);
     expect(video.getAttribute('poster')).toMatch(/^media\/terra\/posters\/[a-z-]+\.webp$/);
   }
-  expect(d.querySelector('#s-how video')).toBeNull();
+  expect(d.querySelector('#s-how .terra-tutorial video source')?.getAttribute('src')).toBe('media/terra/como-comprar.mp4');
   expect(new URL(d.querySelector('#s-videos a.terra-text-link').href).pathname).toBe('/pedir/');
   dom.window.close();
 });
-it('el tutorial antiguo permanece oculto hasta aprobación explícita', async () => {
-  const m=sampleMenu();m.site.videos.tutorialEnabled=true;
+it('el tutorial original queda visible en el borrador y mantiene el aviso sobre precios vigentes', async () => {
+  const m=sampleMenu();
+  expect(m.site.videos.tutorialEnabled).toBe(true);
   const dom=new JSDOM(buildIndexHtml(m),{
     url:'https://sahten.online/',
     runScripts:'dangerously',
@@ -199,5 +200,6 @@ it('el tutorial antiguo permanece oculto hasta aprobación explícita', async ()
   await new Promise(r=>setTimeout(r,100));
   expect(dom.window.document.querySelector('#s-how .terra-tutorial video source')?.getAttribute('src')).toBe('media/terra/como-comprar.mp4');
   expect(dom.window.document.querySelector('.terra-tutorial-notice').textContent).toContain('versión anterior');
+  expect(dom.window.document.querySelector('#s-how .terra-tutorial video').hasAttribute('controls')).toBe(true);
   dom.window.close();
 });
