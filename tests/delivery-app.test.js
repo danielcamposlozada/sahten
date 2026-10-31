@@ -19,7 +19,7 @@ it('administración dibuja seis anillos con huecos; convertir, cancelar, guardar
  d.querySelector('[data-zone="2"]').click();d.querySelector('[data-action="convert"]').click();d.querySelector('[data-action="save"]').click();await wait();
  expect(d.querySelector('[data-message]').textContent).toContain('guardada');const cfg=w._getTiendaConfig();expect(cfg.deliveryV2.zones[2].type).toBe('polygon');expect(cfg.deliveryV2.zones[2].baseCost).toBe(3990);expect(cfg.deliveryV2.zones[1].type).toBe('circle');
  const file=w.SAHTEN.project.collect();await w.SAHTEN.project.apply(file);expect(w._getTiendaConfig().deliveryV2.zones[2].points.length).toBe(128);w._renderTiendaOnline();await wait();
- expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('23:00');d.querySelector('[data-service-period="delivery:w5:0:end"]').value='22:30';d.querySelector('[data-service-period="delivery:w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-hours-save="delivery"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
+ expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:00');d.querySelector('[data-service-period="delivery:w5:0:end"]').value='22:30';d.querySelector('[data-service-period="delivery:w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-hours-save="delivery"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
  d.body.dataset.role='cajero';w._renderTiendaOnline();expect(d.querySelector('[data-action="save"]').disabled).toBe(true);
  }finally{w.close();}
 });
@@ -75,5 +75,13 @@ it('controles de zona son inmediatos, no guardan tarifas pendientes y cancelar n
 it('Mostrador avisa fuera de apertura y sigue permitiendo cobrar un retiro sin usar el horario de delivery',async()=>{
  const {window:w}=await openApp();try{loadRawDemo(w);configure(w);const cfg=w._getTiendaConfig();cfg.openingHours={enabled:true,timeZone:'America/Argentina/Buenos_Aires',weekly:Array.from({length:7},()=>[]),exceptions:[]};w._saveTiendaConfig(cfg);w.showPanel('mostrador');w.mostradorAddToCart(w.SAHTEN.state.products[0].id);
  expect(w.document.getElementById('most-opening-hours-notice').textContent).toContain('Mostrador podés continuar y cobrar');w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(1);expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();
+ }finally{w.close();}
+});
+it('una cotización anterior no repone la tarifa vieja al recalcular Mostrador',async()=>{
+ const {window:w}=await openApp();try{loadRawDemo(w);configure(w);w.showPanel('mostrador');w.mostradorAddToCart(w.SAHTEN.state.products[0].id);w.eval("mostradorSetOrderType('delivery')");
+ w.eval('mostradorDelivery='+JSON.stringify({...places[2].destination,address:places[2].label}));
+ let release;w.SAHTEN.delivery.client.quote=vi.fn().mockImplementationOnce(()=>new Promise(r=>release=r)).mockResolvedValue({route:{...places[2].route,distanceMeters:4200},quoteId:'new'});
+ const old=w.SAHTEN.delivery.refreshPos();await w.SAHTEN.delivery.refreshPos();release({route:places[2].route,quoteId:'old'});await old;
+ expect(w.mostradorDeliveryValue().quoteId).toBe('new');expect(w.mostradorDeliveryValue().route.distanceMeters).toBe(4200);expect(w.mostradorDeliveryValue().routeLoading).toBe(false);
  }finally{w.close();}
 });

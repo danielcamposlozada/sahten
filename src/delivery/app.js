@@ -1,3 +1,4 @@
+import { installDeliveryConfiguration } from './configuration.js';
 import { installServiceHours } from './hours.js';
 import { installDeliveryOperation } from './operation.js';
 import { installZoneOperation } from './zone-operation.js';
@@ -11,12 +12,12 @@ import { deliverySnapshot } from '../core/delivery.js';
 import './incentive.css';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function installDelivery(w){
- const client=createDeliveryClient(w),admin=installDeliveryAdmin(w,client),d=w.document;
- const api={client,admin,hours:installServiceHours(w),operation:installDeliveryOperation(w),zoneOperation:installZoneOperation(w),handoff:installDeliveryHandoff(w),rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
-  async refreshPos(){const dest=w.mostradorDeliveryValue?.();if(!dest||dest.lat==null)return;const context=w.SAHTEN.project.session.id,body=w._mostDeliveryRequest();dest.routeLoading=true;dest.routeError='';w._renderCartTotals();
-   try{const v=await client.quote(body);if(context!==w.SAHTEN.project.session.id||w.mostradorDeliveryValue()!==dest)return;Object.assign(dest,{route:v.route,quoteId:v.quoteId,authorization:v.authorization,serverOffset:Number.isFinite(v.serverNow)?v.serverNow-Date.now():0});}
-   catch(e){if(w.mostradorDeliveryValue()===dest)dest.routeError=e.message;}
-   finally{if(w.mostradorDeliveryValue()===dest){dest.routeLoading=false;w._renderCartTotals();}}
+ const client=createDeliveryClient(w),admin=installDeliveryAdmin(w,client),d=w.document;let posGeneration=0;
+ const api={client,admin,configuration:installDeliveryConfiguration(w),hours:installServiceHours(w),operation:installDeliveryOperation(w),zoneOperation:installZoneOperation(w),handoff:installDeliveryHandoff(w),rings:zoneRings,prepare:prepareDeliveryConfig,incentive:deliveryIncentiveHtml,snapshot:deliverySnapshot,
+  async refreshPos(){const dest=w.mostradorDeliveryValue?.();if(!dest||dest.lat==null)return;const generation=++posGeneration,context=w.SAHTEN.project.session.id,body=w._mostDeliveryRequest();dest.routeLoading=true;dest.routeError='';w._renderCartTotals();
+   try{const v=await client.quote(body);if(generation!==posGeneration||context!==w.SAHTEN.project.session.id||w.mostradorDeliveryValue()!==dest)return;Object.assign(dest,{route:v.route,quoteId:v.quoteId,authorization:v.authorization,serverOffset:Number.isFinite(v.serverNow)?v.serverNow-Date.now():0});}
+   catch(e){if(generation===posGeneration&&w.mostradorDeliveryValue()===dest)dest.routeError=e.message;}
+   finally{if(generation===posGeneration&&w.mostradorDeliveryValue()===dest){dest.routeLoading=false;w._renderCartTotals();}}
   },
   async authorizePos(){const dest=w.mostradorDeliveryValue?.();if(!dest?.quoteId)return;const reason=await w.sahtenAsk('Motivo de la autorización de entrega excepcional:','');if(!reason)return;try{await client.authorize(dest.quoteId,reason);await api.refreshPos();}catch(e){w.alert(e.message);}},
   async requests(){

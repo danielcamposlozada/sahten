@@ -21,8 +21,21 @@ async function web({closed=false,geocodeDelay=0,price=20000,geocodeFallback=fals
  }});
  await wait(100);const w=dom.window,d=w.document,click=sel=>{const el=d.querySelector(sel);expect(el,sel).not.toBeNull();el.click();},type=(sel,value)=>{const el=d.querySelector(sel);el.value=value;el.dispatchEvent(new w.Event('input',{bubbles:true}));};
  const search=async()=>{await vi.waitFor(()=>expect(d.querySelector('[data-delivery-search]').hidden).toBe(false));click('[data-delivery-search]');expect(d.querySelector('[data-delivery-search]').hidden).toBe(true);};
- return {w,d,click,type,search,calls,orders,close:()=>w.close(),setTime:t=>serverNow=Date.parse(t),setZone:(id,fields)=>Object.assign(menu.delivery.deliveryV2.zones.find(z=>z.id===id),fields),setPrice:value=>menu.products[0].price=value,setOpening:value=>menu.store.openingHours=structuredClone(value),setDeliveryHours:value=>menu.delivery.hours=structuredClone(value),tickHours:()=>intervals.filter(i=>i.ms===15000).forEach(i=>i.fn())};
+ return {w,d,click,type,search,calls,orders,close:()=>w.close(),setTime:t=>serverNow=Date.parse(t),setZone:(id,fields)=>Object.assign(menu.delivery.deliveryV2.zones.find(z=>z.id===id),fields),setDeliveryRevision:value=>{menu.delivery.configurationRevision=value;menu.delivery.deliveryV2.revision=value;},refreshAvailability:()=>intervals.filter(i=>i.ms===10000).forEach(i=>i.fn()),setPrice:value=>menu.products[0].price=value,setOpening:value=>menu.store.openingHours=structuredClone(value),setDeliveryHours:value=>menu.delivery.hours=structuredClone(value),tickHours:()=>intervals.filter(i=>i.ms===15000).forEach(i=>i.fn())};
 }
+it('mínimos, tarifa y beneficios llegan a un checkout abierto sin subir archivos ni perder datos o precios de productos',async()=>{
+ const a=await web();try{
+  a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente escrito');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);
+  expect(a.d.getElementById('send').disabled).toBe(false);a.d.getElementById('f-name').focus();a.d.getElementById('f-name').setSelectionRange(3,3);
+  a.setZone('delivery-3',{minOrder:45000});a.setDeliveryRevision('config-1');a.setPrice(99999);a.refreshAvailability();
+  await vi.waitFor(()=>expect(a.d.getElementById('delivery-card').textContent).toContain('45.000'));
+  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.getElementById('f-name').value).toBe('Cliente escrito');expect(a.d.activeElement.id).toBe('f-name');expect(a.d.getElementById('f-name').selectionStart).toBe(3);
+  a.setZone('delivery-3',{minOrder:15000,baseCost:3500,benefits:[]});a.setDeliveryRevision('config-2');a.refreshAvailability();
+  await vi.waitFor(()=>expect(a.d.querySelector('[data-shipping-total]')?.textContent).toContain('3.500'));expect(a.d.getElementById('send').disabled).toBe(false);expect(a.d.querySelector('[data-order-total]').textContent).toBe('$39.500');
+  expect(a.d.activeElement.id).toBe('f-name');expect(a.d.getElementById('f-phone').value).toBe('1112345678');expect(a.d.getElementById('f-addr').value).toBeTruthy();expect(a.orders).toHaveLength(0);expect(a.d.getElementById('delivery-card').textContent).toContain('Condiciones de envío actualizadas');
+ }finally{a.close();}
+});
+
 it('web usa ruta del servidor, progreso neto y pagos; cambiar dirección quita la tarifa anterior sin perder foco',async()=>{
  const a=await web();try{a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await wait(600);
  expect(a.calls.filter(c=>c.url.includes('/geocode'))).toHaveLength(0);await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);

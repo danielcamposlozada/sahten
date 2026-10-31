@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.33
+
+- **Delivery al guardar**: mínimos de compra, tarifas, beneficios y cobertura se envían a la tienda conectada desde «Guardar y aplicar en la web», sin publicar el catálogo ni subir archivos. Los horarios mantienen sus dos calendarios independientes. Incluye confirmación, cola sin conexión, reintento y aviso ante cambios desde otro equipo.
+- **Checkout con condiciones vigentes**: una web abierta recibe los cambios de delivery y vuelve a validar el recorrido, conservando carrito, precios y datos escritos. Mostrador también consulta las condiciones actuales; los pedidos confirmados conservan su registro histórico. Una publicación desde una copia vieja no revierte las reglas guardadas en vivo. Requiere una actualización inicial de app, servidor y plantilla.
+
+- **Horario confirmado de Sahten**: delivery hasta las 22:00 de lunes a sábado; apertura/retiro mantiene su calendario independiente.
+
 ## 0.4.32
 
 - **Horarios y delivery**: apertura/retiro y entregas tienen calendarios independientes, con turnos y fechas especiales. Guardar aplica únicamente ese horario en la tienda conectada, sin publicar precios ni subir archivos; incluye confirmación, reintento y protección ante ediciones simultáneas.

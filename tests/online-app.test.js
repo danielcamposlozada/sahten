@@ -421,3 +421,25 @@ it('guardar horario usa solo su RPC, confirma en web y conserva el borrador de t
  const write=calls.find(c=>c.url.includes('/rpc/set_store_service_hours'));expect(write.body).toEqual({p_store_id:'st-1',p_kind:'opening',p_hours:changed,p_expected_revision:'r1'});expect(calls.some(c=>c.url.includes('/rest/v1/menus'))).toBe(false);expect(d.activeElement).toBe(price);expect(price.value).toBe('7777');
  }finally{a.window.close();}
 },60000);
+
+it('Guardar delivery aplica mínimos en su RPC y confirma sin publicar catálogo, pagos ni horarios',async()=>{
+ const a=await app();try{await a.p.openDemo();const w=a.window;
+ const {sahtenDeliveryPolicy}=await import('../src/delivery/preset.js');
+ const policy={...sahtenDeliveryPolicy(),active:true};w._saveTiendaConfig({...w._getTiendaConfig(),deliveryV2:policy,deliveryHours:policy.hours});
+ w.SAHTEN.delivery.client.provider=async()=>({configured:true});w.SAHTEN.libs.leaflet=async()=>{};
+ let remote=null;
+ const calls=backend(w,{
+  '/auth/v1/token':{body:{access_token:'T',refresh_token:'R',expires_in:3600,user:{id:'u1',email:'owner@test.invalid'}}},
+  '/rest/v1/stores?select':{body:[]},'/rest/v1/stores':{status:201,body:[{id:'st-1',slug:'mi-local'}]},'/rest/v1/orders':{body:[]},
+  '/rpc/get_product_sales_availability':{body:{sales:[],visibility:[]}},'/rpc/get_delivery_service_state':{body:{enabled:true}},'/rpc/get_delivery_zone_states':{body:{revision:policy.revision,zones:[]}},
+  '/rpc/get_store_service_hours':{body:{}},'/rpc/get_store_delivery_configuration':()=>({body:remote}),
+  '/rpc/set_store_delivery_configuration':c=>{remote={configuration:c.body.p_configuration,revision:c.body.p_request_id,updatedAt:'2026-10-30T23:00:00Z'};return {body:remote};},
+ });
+ await a.on.connect({url:URL_OK,anonKey:ANON,slug:'mi-local',email:'owner@test.invalid',password:'fixture'});await a.on.readStates();
+ w.eval("_ajNavTab('delivery')");const d=w.document,minimum=d.querySelector('[data-df="minOrder"]');expect(minimum).not.toBeNull();minimum.value='12000';minimum.dispatchEvent(new w.Event('change',{bubbles:true}));
+ d.querySelector('[data-action="save"]').click();await wait(50);await a.on.configurationPublisher.flush();
+ expect(w._getTiendaConfig().deliveryV2.zones[0].minOrder).toBe(12000);expect(d.querySelector('[data-delivery-config-status]').textContent).toContain('confirmada');
+ const writes=calls.filter(c=>c.url.includes('/rpc/set_store_delivery_configuration'));expect(writes).toHaveLength(1);expect(writes[0].body.p_configuration.policy.zones[0].minOrder).toBe(12000);
+ expect(JSON.stringify(writes[0].body)).not.toMatch(/products|paymentMethods|openingHours|"hours"/);expect(calls.some(c=>c.url.includes('/rest/v1/menus'))).toBe(false);expect(w._getTiendaConfig().deliveryConfigurationRevision).toBe(remote.revision);
+ }finally{a.window.close();}
+},60000);

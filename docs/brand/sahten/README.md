@@ -6,14 +6,24 @@ Imágenes de marca para la web publicada, Google Business Profile y redes. **Fue
 ## Reglas de marca (no negociables)
 
 - **Colores**: verde `#235328`, naranja `#EF8E23`, crema `#FFF4D6`. Salen del panel aprobado por el dueño (`source/panel-variantes.svg`).
-- **Solo se usan las 4 variantes con letras SÓLIDAS** del panel (las de letras con contorno no se usan):
-  verde-naranja (fondo verde, letras naranjas), crema-verde, naranja-verde, crema-naranja. Detalles (rombos y caligrafía) en el tercer color, como en el panel.
+- **Combinaciones confirmadas por el dueño el 30/10/2026** en su referencia de cuatro cuadrantes. Las letras latinas, la caligrafía árabe y sus signos llevan estos colores; no intercambiarlos ni aplicar filtros monocromáticos al logo completo:
+
+  | Fondo | Letras latinas | Árabe y signos |
+  |---|---|---|
+  | Verde `#235328` | Crema `#FFF4D6` | Naranja `#EF8E23` |
+  | Naranja `#EF8E23` | Verde `#235328` | Crema `#FFF4D6` |
+  | Crema `#FFF4D6` | Verde `#235328` | Naranja `#EF8E23` |
+  | Verde `#235328` | Naranja `#EF8E23` | Crema `#FFF4D6` |
+
+  Esta confirmación reemplaza la enumeración anterior: **crema-naranja** (letras naranjas y detalles verdes sobre crema) no figura entre las combinaciones aprobadas. Para esta referencia, la forma y disposición correctas proceden de los once trazos sólidos de `source/panel-variantes.svg`, incluidos los cinco signos separados. Conservar todos los trazos y su proporción, sin estirar letras ni usar filtros. Las propuestas del 30/10 usan esos trazos originales del panel; no el wordmark de proporciones diferentes de `source/logo-web-dueno.svg` ni el lockup antiguo.
 - **Tipografía de marca: AUDREY.** Solo existe dentro del logo y de su tagline «GASTRONOMÍA ÁRABE», que ya vienen **en curvas** (`source/logo-lockup-gastronomia-arabe.svg`). No hay archivo de fuente en el repo: no escribas texto nuevo «en AUDREY». Para textos sueltos de las imágenes se usa Inter (solo apoyo).
 - **El logo no se redibuja ni se recorta.** El ícono cuadrado usa el wordmark completo (el dueño descartó un recorte de las primeras letras). En tamaños chicos (favicon) se usa sin tagline porque no se lee.
 - **Árabe siempre con vocales (tashkeel).** Cualquier texto en árabe que se escriba en el sitio, la ficha o las imágenes lleva todas las vocales/signos: por ejemplo صَحْتَيْن, no صحتين. Confirmar la escritura con el dueño antes de publicar.
 - Nombre público en todos lados: **SAHTEN Gastronomía Árabe**.
 
 ## Qué hay en `export/`
+
+**Advertencia de inventario, 30/10/2026:** los archivos generados existentes todavía proceden del lockup anterior y de su antigua tabla de variantes. Sus nombres no bastan para confirmar que cumplen la referencia actual. No regenerar ni publicar todo el kit como efecto secundario de corregir una propuesta. Las propuestas locales de home/menú del 30/10 usan los trazos originales del panel y la tabla anterior; la migración del generador/kit publicado queda pendiente de un cambio específico con validación.
 
 | Archivo | Uso |
 |---|---|

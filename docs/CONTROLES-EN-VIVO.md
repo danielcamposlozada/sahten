@@ -60,3 +60,16 @@ No se aplicó todavía la migración en producción, no se publicó la app/plant
 ## Publicación completada — 28/10/2026
 
 App 0.4.30 para Windows/Mac, web y migración publicadas con éxito. Desde la app instalada y sesión dueña se quitó únicamente la autorización de Zona 1; confirmación visible y lectura independiente correctas. El hash del catálogo con ese único booleano restituido en la consulta coincide con el anterior: ningún otro dato comercial cambió. Las descripciones de preparación anteriores son históricas; ya no falta desplegar ni aprobar esta entrega. No se crearon órdenes ni pagos.
+
+
+## Ampliación del 30/10/2026 — preparada, sin desplegar
+
+Horarios de apertura/retiro y delivery ya se guardan en vivo desde 0.4.32. Esta entrega agrega **Guardar y aplicar en la web** para configuración comercial de delivery: mínimos, tarifas, cobertura, beneficios, activación del motor y combinación del incentivo de envío con descuento por pago. Se envía una instantánea aislada después de validar, nunca cada campo a medio editar. No publica productos, precios del catálogo, medios de pago ni credenciales.
+
+La cola está separada por proyecto/servidor/tienda; conserva cambios sin conexión y usa revisión esperada e identificador de solicitud para evitar duplicados o sobrescrituras entre equipos. Tabla actual e historial privados con RLS, sin lectura directa por clientes; RPC de escritura solo para dueño/admin, con control de pertenencia. Una copia vieja del catálogo conserva las condiciones vivas. Los protectores de horarios y estados de zona siguen independientes.
+
+La plantilla recibe la configuración completa en hasta 10 segundos o al recuperar foco. Invalida ruta/cotización/autorización previa, consulta de nuevo y preserva carrito, precios y formulario; el servidor conserva la última validación al confirmar. Mostrador acepta la revisión comercial del servidor aunque la copia general del proyecto aún no se haya publicado. Una respuesta de ruta anterior no reemplaza la más reciente. Pedidos históricos intactos.
+
+Verificación local: **726 pruebas / 80 archivos**, compilación, scripts clásicos, versiones y diferencias correctos. Incluye PostgreSQL local: permisos de dueño/admin, denegación a cajero/ajeno/anónimo, historial, reintentos, conflicto, validación de importes y protección ante publicación vieja. App real en pruebas: el botón guarda mediante su RPC y no publica catálogo. Checkout abierto: recibe mínimo/tarifa/beneficios nuevos y conserva foco, formulario y precios. No se escribieron datos productivos.
+
+Para activar: aplicar `20261030232047_delivery_configuration_live.sql`, desplegar `sahten-delivery` con el código revisado y publicar app/plantilla una sola vez, con confirmación del dueño. La migración no precarga ni cambia importes existentes. Las notas de comportamiento anteriores de este documento son históricas y se mantienen como registro.
