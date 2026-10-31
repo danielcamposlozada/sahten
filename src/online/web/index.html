@@ -319,8 +319,9 @@ var NAVLBL={como:'Cómo funciona',historia:'Nosotros',resenas:'Reseñas',caterin
  */
 function terraHero(S,m){
   var f=m.hero,c=MENU.config||{},name=MENU.store.name||c.title||'Sahten';
-  var realImage=MENU.products.find(function(p){return p.image&&!p.retired&&!salesPaused(p)});
-  var img=(S.images&&S.images.hero)||(realImage&&realImage.image)||'';
+  var showImages=MENU.config?.showImages!==false;
+  var realImage=showImages&&MENU.products.find(function(p){return p.image&&!p.retired&&!salesPaused(p)});
+  var img=showImages?((S.images&&S.images.hero)||(realImage&&realImage.image)||''):'';
   var title=String(f.title||'Una mesa. Muchas historias.');
   var headline=/^una mesa[.!]?\s*muchas historias[.!]?$/i.test(title.trim())
     ? 'UNA MESA.<br>MUCHAS<br><em>historias.</em>' : esc(title);
@@ -336,10 +337,11 @@ function terraHero(S,m){
 }
 function terraMenu(S){
   var products=MENU.products.filter(function(p){return !p.retired&&!salesPaused(p)});
-  var picks=products.filter(function(p){return p.image&&p.star}).slice(0,3);
-  if(picks.length<3)products.filter(function(p){return p.image&&!picks.some(function(x){return x.id===p.id})}).slice(0,3-picks.length).forEach(function(p){picks.push(p)});
+  var showImages=MENU.config.showImages!==false;
+  var picks=products.filter(function(p){return p.star&&(!showImages||p.image)}).slice(0,3);
+  if(picks.length<3)products.filter(function(p){return (!showImages||p.image)&&!picks.some(function(x){return x.id===p.id})}).slice(0,3-picks.length).forEach(function(p){picks.push(p)});
   var cards=picks.map(function(p){return '<a class="terra-food-card" href="'+esc(orderHref(p.category||''))+'">'
-    +'<span class="terra-food-image"><img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'"></span>'
+    +'<span class="terra-food-image">'+(showImages&&p.image?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'">':'<span>'+esc(p.category||'Sahten')+'</span>')+'</span>'
     +'<span class="terra-food-details"><span><small>'+esc(p.category||'Nuestra cocina')+'</small><strong>'+esc(p.name)+'</strong></span><span aria-hidden="true">↗</span></span></a>'}).join('');
   var categories=catList().slice(0,7);
   var nav='<div class="terra-menu-cats"><a href="'+esc(orderHref())+'">Todos</a>'+categories.map(function(k){return '<a href="'+esc(orderHref(k))+'">'+esc(k)+'</a>'}).join('')+'</div>';
