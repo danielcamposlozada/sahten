@@ -63,3 +63,5 @@ fs.writeFileSync(path.join(out, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
 const needed = ['index.html', 'pedir/index.html', 'catering/index.html', 'media/terra/photos/banner-plato.webp', 'media/terra/photos/banner-tortas.webp', 'media/terra/photos/catering-mesa.webp', 'media/terra/como-comprar.mp4'];
 for (const name of needed) if (!published.includes(name)) throw new Error('Falta un archivo de preview: ' + name);
 console.log('Vista previa Terra generada:', published.length, 'archivos', 'catálogo público:', menu.products.length, 'productos');
+// Despliegue dedicado: sahten-terra-revision.pages.dev (no reemplaza sahten.online).
+
