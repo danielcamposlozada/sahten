@@ -349,6 +349,28 @@ function terraMenu(S){
     +nav+(cards?'<div class="terra-food-grid">'+cards+'</div>':'<p>Conocé nuestra carta en la tienda.</p>')
     +'<a class="pedir-cta" href="'+esc(orderHref())+'">Pedir online · ver toda la carta ↗</a></section>';
 }
+
+function terraFavorites(S,m){
+  var favorites=MENU.products.filter(function(p){return p.star&&!p.retired&&!salesPaused(p)});
+  if(!favorites.length)return '';
+  var cards=favorites.slice(0,3).map(function(p,i){
+    return '<a class="terra-pick '+(i===1?'dark':'')+'" href="'+esc(orderHref(p.category||''))+'">'
+      +'<div class="terra-pick-photo">'+(p.image&&MENU.config.showImages!==false?'<img loading="lazy" decoding="async" src="'+esc(p.image)+'" alt="'+esc(p.name)+'">':'<span>'+esc(p.category||'Sahten')+'</span>')+'</div>'
+      +'<div class="terra-pick-copy"><small>'+String(i+1).padStart(2,'0')+'</small><strong>'+esc(p.name)+'</strong><span>Ver en el menú ↗</span></div></a>';
+  }).join('');
+  return '<section class="sec terra-picks" id="s-fav"><div class="terra-section-top"><div><span class="eyebrow">Mirá lo que preparamos</span>'
+    +'<h2>'+esc(m.favoritos.title||'Nuestra cocina')+'</h2></div>'
+    +(m.favoritos.text?'<p>'+esc(m.favoritos.text)+'</p>':'')+'</div>'
+    +'<div class="terra-pick-grid">'+cards+'</div></section>';
+}
+function terraFaq(S,m){
+  var f=m.faq;
+  if(!f.items.length)return '';
+  return '<section class="sec faq terra-faq" id="s-faq">'
+    +'<div class="terra-faq-heading"><span class="eyebrow">Antes de pedir</span><h2>'+esc(f.title||'Preguntas frecuentes')+'</h2></div>'
+    +'<div class="terra-faq-items">'+f.items.map(function(x){return '<details><summary>'+esc(x.q)+'</summary><p>'+esc(x.a)+'</p></details>'}).join('')+'</div></section>';
+}
+
 function terraHow(S,m){
   var f=m.como;
   if(!f.steps||!f.steps.length)return '';
@@ -365,7 +387,7 @@ var MOD={
     return '<section class="hero'+(img?' img':'')+'" id="s-hero"'+(img?' style="background-image:url(\''+esc(img)+'\')"':'')+'>'+'<div class="hero-brand"'+(/^#[0-9a-f]{6}$/i.test(f.logoColor||'')?' style="color:'+f.logoColor+'"':'')+'>'+(brandMark(name,'hero')||'<span class="tag">'+esc(name)+'</span>')+'</div><h1>'+esc(f.title||c.title||name)+'</h1>'+((f.subtitle||c.subtitle)?'<p>'+esc(f.subtitle||c.subtitle)+'</p>':'')+
       '<div class="btns"><a class="btn1" href="'+esc(orderHref())+'">'+esc(f.cta)+' →</a>'+(waHref()?'<a class="btn2" target="_blank" rel="noopener" href="'+esc(waHref())+'">' +waIcon()+'WhatsApp</a>':'')+'</div>'+
       (f.highlights.length?'<div class="hl">'+f.highlights.map(function(x){return '<div>'+(x.icon?'<i>'+esc(x.icon)+'</i>':'')+'<b>'+esc(x.title)+'</b>'+(x.text?'<span>'+esc(x.text)+'</span>':'')+'</div>'}).join('')+'</div>':'')+'</section>';},
-  favoritos:function(S,m){var favs=MENU.products.filter(function(p){return p.star&&!p.retired&&!salesPaused(p)}).slice(0,6);if(!favs.length)return '';
+  favoritos:function(S,m){if(S.visualStyle==='terra-2026')return terraFavorites(S,m);var favs=MENU.products.filter(function(p){return p.star&&!p.retired&&!salesPaused(p)}).slice(0,6);if(!favs.length)return '';
     return '<section class="sec fav" id="s-fav"><span class="eyebrow">Del menú</span><h2>'+esc(m.favoritos.title)+'</h2>'+(m.favoritos.text?'<p class="lead">'+esc(m.favoritos.text)+'</p>':'')+'<div class="grid">'+favs.map(card).join('')+'</div><a class="more" href="'+esc(orderHref())+'">Explorar todo el menú →</a></section>';},
   menu:function(S){if(S.visualStyle==='terra-2026')return terraMenu(S);
     var tiles=catList().map(function(k){var ps=MENU.products.filter(function(p){return p.category===k});if(!ps.length)return '';var im=ps.filter(function(p){return p.image})[0];var ci=(MENU.config.categoryImages||{})[k];var src=ci||(im&&im.image)||'';var fb=ci&&im?im.image:'';
@@ -384,7 +406,7 @@ var MOD={
     var a='<div><h3>🛵 '+esc(f.title)+'</h3>'+(f.hours?'<div>'+esc(f.hours).replace(/\n/g,'<br>')+'</div>':'')+(D.deliveryMinOrder?'<div>Pedido mínimo: <b>'+fmt(D.deliveryMinOrder)+'</b></div>':'')+(D.freeShippingMin?'<div>Envío gratis desde <b>'+fmt(D.freeShippingMin)+'</b></div>':'')+(f.extra?'<div>'+esc(f.extra)+'</div>':'')+'</div>';
     var opening=serviceHoursText(MENU,'opening'),b=MENU.store.address?'<div><h3>🏠 Retiro en el local</h3><div>'+esc(MENU.store.address)+'</div>'+(opening?'<div>'+esc(opening).replace(/\n/g,'<br>')+'</div>':'')+'</div>':'';
     return '<section class="sec" id="s-delivery"><div class="info">'+a+b+'</div></section>';},
-  faq:function(S,m){var f=m.faq;if(!f.items.length)return '';return '<section class="sec faq" id="s-faq"><span class="eyebrow">Ayuda</span><h2>'+esc(f.title)+'</h2>'+f.items.map(function(x){return '<details><summary>'+esc(x.q)+'</summary><p>'+esc(x.a)+'</p></details>'}).join('')+'</section>';},
+  faq:function(S,m){if(S.visualStyle==='terra-2026')return terraFaq(S,m);var f=m.faq;if(!f.items.length)return '';return '<section class="sec faq" id="s-faq"><span class="eyebrow">Ayuda</span><h2>'+esc(f.title)+'</h2>'+f.items.map(function(x){return '<details><summary>'+esc(x.q)+'</summary><p>'+esc(x.a)+'</p></details>'}).join('')+'</section>';},
   contacto:function(S,m){var f=m.contacto,wa=waHref(),name=MENU.store.name||'',hrs=serviceHoursConfig(MENU,'opening')?serviceHoursText(MENU,'opening'):(S.delivery&&S.delivery.hours)||'',credit=f.creditText||'Hecho con Sahten',creditLink=publicWebUrl(f.creditUrl),pg=sitePageList(MENU).map(function(p){return '<a href="'+esc(p.slug)+'/">'+esc(p.label)+'</a>'}).join('<br>');
     return '<footer class="sfoot" id="s-contact"><div class="cols"><div><b>'+esc(name)+'</b>'+(f.note?'<div>'+esc(f.note)+'</div>':'')+'</div>'+(MENU.store.address?'<div><h4>Dónde</h4>'+esc(MENU.store.address)+'</div>':'')+(hrs?'<div><h4>Horarios</h4>'+esc(hrs).replace(/\n/g,'<br>')+'</div>':'')+(pg?'<div><h4>Más información</h4>'+pg+'</div>':'')+((wa||f.instagram)?'<div><h4>Escribinos</h4>'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener">' +waIcon()+'WhatsApp</a>':'')+(f.instagram?(wa?'<br>':'')+'<a href="https://instagram.com/'+esc(f.instagram)+'" target="_blank" rel="noopener">@'+esc(f.instagram)+'</a>':'')+'</div>':'')+'</div><div class="by">'+(creditLink?'<a href="'+esc(creditLink)+'" target="_blank" rel="noopener noreferrer">'+esc(credit)+'</a>':esc(credit))+'</div></footer>';}
 };
