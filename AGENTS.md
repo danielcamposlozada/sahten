@@ -21,3 +21,6 @@ Prompt listo para pegar: [docs/PROMPT-AGENTES.md](docs/PROMPT-AGENTES.md).
 
 ## Cambios y versiones
 - Cada cambio visible para el usuario va en `CHANGELOG.md` (sección «Sin publicar» hasta que haya versión). Probar con `node scripts/check-versions.mjs` si se sube versión.
+
+## Rediseño editorial Terra — traspaso a Codex (31/10/2026)
+Si trabajás en la rama `feat/terra-home-carta-integracion` o en el PR #40, **leé primero** [docs/TRASPASO-CODEX-REDISENO-TERRA-2026-10-31.md](docs/TRASPASO-CODEX-REDISENO-TERRA-2026-10-31.md) y [docs/REDISENO-TERRA-INTEGRACION.md](docs/REDISENO-TERRA-INTEGRACION.md). La web tiene pedidos y delivery en vivo: no reemplazar código del checkout con el demo de Terra, no tocar pagos/órdenes/stock ni publicar o fusionar sin aprobación. La variante editorial es opt-in; el sitio clásico es el default. Verificar CI y responsive antes de cerrar el trabajo.
