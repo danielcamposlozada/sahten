@@ -227,6 +227,9 @@ it('muestra la mesa original solamente en Catering y alterna banners sin duplica
   expect(discount?.getAttribute('src')).toBe('media/terra/photos/banner-plato.webp');
   expect(hero.getAttribute('src')).not.toBe(discount.getAttribute('src'));
   expect(promo.querySelector('.terra-promo-badge').textContent).toContain('10%OFF');
+  expect(promo.querySelector('.terra-promo-copy strong').textContent).toContain('efectivo y transferencia');
+  const promoCss=readFileSync(new URL('../src/online/web/terra.css',import.meta.url),'utf8');
+  expect(promoCss).toContain('grid-template-columns:minmax(145px,23%) minmax(0,1fr) max-content');
   expect(catering?.getAttribute('src')).toBe('media/terra/photos/catering-mesa.webp');
   expect(catering.getAttribute('loading')).toBe('lazy');
   home.window.close();
@@ -236,8 +239,10 @@ it('muestra la mesa original solamente en Catering y alterna banners sin duplica
   const orderDoc=pedir.window.document;
   const catalogPhoto=orderDoc.querySelector('#terra-catalog-photo img');
   const catalogPromo=orderDoc.querySelector('#catalog-benefit .terra-promo-photo img');
-  expect(catalogPhoto?.getAttribute('src')).toBe('media/terra/photos/banner-plato.webp');
-  expect(catalogPromo?.getAttribute('src')).toBe('media/terra/photos/banner-tortas.webp');
+  expect(catalogPhoto?.getAttribute('src')).toBe('../media/terra/photos/banner-plato.webp');
+  expect(catalogPromo?.getAttribute('src')).toBe('../media/terra/photos/banner-tortas.webp');
+  expect(new URL(catalogPhoto.getAttribute('src'),pedir.window.location.href).pathname).toBe('/media/terra/photos/banner-plato.webp');
+  expect(new URL(catalogPromo.getAttribute('src'),pedir.window.location.href).pathname).toBe('/media/terra/photos/banner-tortas.webp');
   expect(orderDoc.querySelector('#order-summary')).not.toBeNull();
   expect(orderDoc.querySelector('#grid [data-inc]')).not.toBeNull();
   pedir.window.close();
