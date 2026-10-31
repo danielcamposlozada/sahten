@@ -203,3 +203,54 @@ it('el tutorial original queda visible en el borrador y mantiene el aviso sobre 
   expect(dom.window.document.querySelector('#s-how .terra-tutorial video').hasAttribute('controls')).toBe(true);
   dom.window.close();
 });
+
+it('muestra la mesa original solamente en Catering y alterna banners sin duplicar fotos', async () => {
+  const menu=sampleMenu();
+  menu.payments={methods:{efectivo:true,transferencia:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}};
+  const create=(previous,storefront=false)=>new JSDOM(buildIndexHtml(menu,{storefront}),{
+    url:storefront?'https://sahten.online/pedir/':'https://sahten.online/',
+    runScripts:'dangerously',
+    beforeParse(w){
+      w.scrollTo=()=>{};
+      w.fetch=async()=>({ok:false});
+      w.sessionStorage.setItem('sahten-terra-last-banner',String(previous));
+    }
+  });
+  const home=create(0);
+  await new Promise(resolve=>setTimeout(resolve,100));
+  const d=home.window.document;
+  const hero=d.querySelector('#s-hero .terra-hero-visual img');
+  const promo=d.querySelector('#s-menuhd .terra-promo');
+  const discount=promo.querySelector('.terra-promo-photo img');
+  const catering=d.querySelector('#s-catering .terra-catering-photo img');
+  expect(hero?.getAttribute('src')).toBe('media/terra/photos/banner-tortas.webp');
+  expect(discount?.getAttribute('src')).toBe('media/terra/photos/banner-plato.webp');
+  expect(hero.getAttribute('src')).not.toBe(discount.getAttribute('src'));
+  expect(promo.querySelector('.terra-promo-badge').textContent).toContain('10%OFF');
+  expect(catering?.getAttribute('src')).toBe('media/terra/photos/catering-mesa.webp');
+  expect(catering.getAttribute('loading')).toBe('lazy');
+  home.window.close();
+
+  const pedir=create(1,true);
+  await new Promise(resolve=>setTimeout(resolve,100));
+  const orderDoc=pedir.window.document;
+  const catalogPhoto=orderDoc.querySelector('#terra-catalog-photo img');
+  const catalogPromo=orderDoc.querySelector('#catalog-benefit .terra-promo-photo img');
+  expect(catalogPhoto?.getAttribute('src')).toBe('media/terra/photos/banner-plato.webp');
+  expect(catalogPromo?.getAttribute('src')).toBe('media/terra/photos/banner-tortas.webp');
+  expect(orderDoc.querySelector('#order-summary')).not.toBeNull();
+  expect(orderDoc.querySelector('#grid [data-inc]')).not.toBeNull();
+  pedir.window.close();
+});
+
+it('incluye las tres fotos en el exportador Terra sin copiar datos del checkout ni exigir videos activos', () => {
+  const src=readFileSync(new URL('../src/online/terra-photos.js',import.meta.url),'utf8');
+  for (const name of ['banner-plato.webp','banner-tortas.webp','catering-mesa.webp']) {
+    expect(src).toContain(name);
+    expect(readFileSync(new URL('../media/terra/photos/'+name,import.meta.url)).byteLength).toBeGreaterThan(1000);
+  }
+  const publisher=readFileSync(new URL('../src/online/publish.js',import.meta.url),'utf8');
+  expect(publisher).toContain("import('./terra-photos.js')");
+  expect(publisher).toContain('TERRA_PHOTO_ASSETS');
+  expect(publisher).toContain("menu.site.visualStyle === 'terra-2026'");
+});
