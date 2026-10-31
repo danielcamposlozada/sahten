@@ -74,6 +74,19 @@ export async function buildPublishFiles(menu, images = {}, optimize = dataUrlToB
   ];
   if (menu.site?.enabled && menu.site.orderPage) files.push({ path: 'pedir/index.html', data: buildIndexHtml(menu, { storefront: true }) });
   files.push(...discoveryFiles(menu), ...buildSitePages(menu), ...brandFiles(menu));
+  // Fotografías originales. Se integran siempre que Terra muestra imágenes,
+  // incluso si los reels están desactivados: el usuario ve la rotación y Catering.
+  if (menu.site?.enabled && menu.site.visualStyle === 'terra-2026' && menu.config?.showImages !== false) {
+    const { TERRA_PHOTO_ASSETS } = await import('./terra-photos.js');
+    for (const [path, dataUrl] of TERRA_PHOTO_ASSETS) {
+      const bytes = dataUrlToBytes(dataUrl);
+      if (!bytes) {
+        if (import.meta.env?.MODE === 'test') continue;
+        throw new Error('No se pudo incorporar la fotografía original de Sahten: ' + path);
+      }
+      files.push({ path, data: bytes });
+    }
+  }
   // Reels originales únicamente cuando Sahten tiene activa la sección Terra.
   // Las importaciones ?inline son diferidas: no se cargan en editor/checkout
   // ni se publican en proyectos clásicos u otros negocios.
