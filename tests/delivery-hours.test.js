@@ -14,7 +14,7 @@ const order={source:'delivery',lat:place.destination.lat,lng:place.destination.l
 const sid='00000000-0000-4000-8000-000000000001',qid='00000000-0000-4000-8000-000000000002';
 it.each([
  ['2026-10-19T20:59:59Z',false],['2026-10-19T21:00:00Z',true],['2026-10-20T00:59:59Z',true],['2026-10-20T01:00:00Z',false],
- ['2026-10-23T21:00:00Z',true],['2026-10-24T01:59:59Z',true],['2026-10-24T02:00:00Z',false],
+ ['2026-10-23T21:00:00Z',true],['2026-10-24T00:59:59Z',true],['2026-10-24T01:00:00Z',false],['2026-10-24T02:00:00Z',false],
  ['2026-10-24T21:00:00Z',true],['2026-10-25T02:00:00Z',false],['2026-10-25T21:00:00Z',false],
 ])('horario Argentina, instante %s, abierto %s',(stamp,expected)=>expect(deliveryHours(sahtenDeliveryHours(),Date.parse(stamp)).open).toBe(expected));
 it('muestra próxima apertura y no inventa pedidos programados ni atención los domingos',()=>{
@@ -36,7 +36,7 @@ it('web/POS usan la misma regla: cierra aun con ruta y autorización; retiro sig
  expect(deliveryQuote(policy,place.destination,20000,{route,now:closed,authorization})).toMatchObject({ok:false,status:'closed'});
  expect(()=>quoteOrder(menu(),order,{route,now:closed,allowOtherPayments:true})).toThrow(/fuera de horario/);
  expect(quoteOrder(menu(),{...order,source:'pickup'},{now:closed,allowOtherPayments:true}).shipping).toBe(0);
- expect(historical.hours).toMatchObject({checkedAt:new Date(open).toISOString(),closesAt:'2026-10-24T02:00:00.000Z'});
+ expect(historical.hours).toMatchObject({checkedAt:new Date(open).toISOString(),closesAt:'2026-10-24T01:00:00.000Z'});
 });
 it('el servidor rechaza nuevos pedidos fuera de horario sin consultar rutas, aunque el comprador envíe una hora falsa',async()=>{
  const run=vi.fn(async a=>a==='limit'?true:null),resolveRoute=vi.fn(async()=>place.route);

@@ -19,7 +19,7 @@ it('administración dibuja seis anillos con huecos; convertir, cancelar, guardar
  d.querySelector('[data-zone="2"]').click();d.querySelector('[data-action="convert"]').click();d.querySelector('[data-action="save"]').click();await wait();
  expect(d.querySelector('[data-message]').textContent).toContain('guardada');const cfg=w._getTiendaConfig();expect(cfg.deliveryV2.zones[2].type).toBe('polygon');expect(cfg.deliveryV2.zones[2].baseCost).toBe(3990);expect(cfg.deliveryV2.zones[1].type).toBe('circle');
  const file=w.SAHTEN.project.collect();await w.SAHTEN.project.apply(file);expect(w._getTiendaConfig().deliveryV2.zones[2].points.length).toBe(128);w._renderTiendaOnline();await wait();
- expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('23:00');d.querySelector('[data-service-period="delivery:w5:0:end"]').value='22:30';d.querySelector('[data-service-period="delivery:w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-hours-save="delivery"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
+ expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:00');d.querySelector('[data-service-period="delivery:w5:0:end"]').value='22:30';d.querySelector('[data-service-period="delivery:w5:0:end"]').dispatchEvent(new w.Event('change',{bubbles:true}));d.querySelector('[data-hours-save="delivery"]').click();await wait();expect(w._getTiendaConfig().deliveryV2.hours.weekly[5][0].end).toBe('22:30');
  d.body.dataset.role='cajero';w._renderTiendaOnline();expect(d.querySelector('[data-action="save"]').disabled).toBe(true);
  }finally{w.close();}
 });
