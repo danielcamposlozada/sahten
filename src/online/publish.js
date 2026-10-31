@@ -36,7 +36,7 @@ const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new Reg
 
 export function buildIndexHtml(menu, { storefront = false, preview = false } = {}) {
   return webTemplate
-    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss+(menu.site?.visualStyle === 'terra-2026' ? '\n'+terraCss : ''))
+    .replace('/*__CARTA_CSS__*/', () => cartaCss+'\n'+storyCss+'\n'+motionCss)
     .replace('/*__PAYMENT_CSS__*/', () => paymentChoiceCss+'\n'+incentiveCss)
     .replace('<!--__SEO_HEAD__-->', () => (storefront ? '<base href="../">\n' : '') + renderSeoHead(menu, { storefront }))
     .replace('<body>', '<body' + (storefront ? ' data-storefront' : preview ? ' data-preview' : '') + (menu.site?.visualStyle === 'terra-2026' ? ' data-visual-style="terra-2026"' : '') + '>')
@@ -45,7 +45,7 @@ export function buildIndexHtml(menu, { storefront = false, preview = false } = {
     .replace('/*__BRAND__*/null', () => '/*__BRAND__*/' + safeJson(brandInline(menu)))
     .replace('/*__SHARED__*/', () => sharedScript())
     .replace('<title>Menú</title>', '<title>' + (storefront ? 'Pedir online | ' : '') + buildSeo(menu).title.replace(/[<>&]/g, '') + '</title>')
-    .replace('</head>', (menu.site?.visualStyle === 'terra-2026' ? '<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">\n' : '') + '</head>');
+    .replace('</head>', (menu.site?.visualStyle === 'terra-2026' ? '<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">\n<style id="terra-styles">' + terraCss + '</style>\n' : '') + '</head>');
 }
 
 export function dataUrlToBytes(dataUrl) {
