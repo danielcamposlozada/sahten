@@ -235,7 +235,14 @@ body[data-visual-style="terra-2026"] .terra-promo{
   display:flex;align-items:center;justify-content:space-between;gap:24px;
   padding:clamp(22px,3vw,34px);background:#235328;color:#FFF4D6;border-radius:18px
 }
-body[data-visual-style="terra-2026"] .terra-promo-copy{min-width:0;max-width:640px}
+body[data-visual-style="terra-2026"] .terra-promo-photo{
+  flex:0 0 clamp(130px,17vw,205px);align-self:stretch;min-height:160px;
+  border-radius:20px 4px 20px 4px;overflow:hidden;background:#173a20
+}
+body[data-visual-style="terra-2026"] .terra-promo-photo img{
+  display:block;width:100%;height:100%;object-fit:cover;object-position:center
+}
+body[data-visual-style="terra-2026"] .terra-promo-copy{min-width:0;max-width:640px;flex:1}
 body[data-visual-style="terra-2026"] .terra-promo-copy>span{
   display:block;font-size:11px;letter-spacing:.14em;font-weight:800;margin-bottom:9px
 }
@@ -273,7 +280,14 @@ body[data-visual-style="terra-2026"] #terra-catalog-photo img{
 }
 body[data-visual-style="terra-2026"] #catalog-benefit .terra-promo{margin:0 0 18px}
 @media(max-width:760px){
-  body[data-visual-style="terra-2026"] .terra-promo{gap:14px;padding:20px}
+  body[data-visual-style="terra-2026"] .terra-promo{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:20px
+  }
+  body[data-visual-style="terra-2026"] .terra-promo-photo{
+    grid-column:1 / -1;grid-row:1;height:160px;min-height:0
+  }
+  body[data-visual-style="terra-2026"] .terra-promo-copy{grid-column:1;grid-row:2}
+  body[data-visual-style="terra-2026"] .terra-promo-badge{grid-column:2;grid-row:2;align-self:center}
   body[data-visual-style="terra-2026"] .terra-promo-badge{flex-direction:column;align-items:center;gap:0;padding:12px 13px}
   body[data-visual-style="terra-2026"] .terra-promo-badge b{font-size:34px}
   body[data-visual-style="terra-2026"] .terra-promo-badge span{font-size:16px}
@@ -314,6 +328,39 @@ body[data-visual-style="terra-2026"] #s-delivery .info>*{background:transparent;
 body[data-visual-style="terra-2026"] #s-delivery h3{font-family:'DM Sans',sans-serif;font-weight:900;font-size:30px;line-height:1.15}
 body[data-visual-style="terra-2026"] #s-catering{background:#E9953C;color:#213326}
 body[data-visual-style="terra-2026"] #s-catering .in{max-width:1280px}
+body[data-visual-style="terra-2026"] #s-catering .terra-catering-layout{
+  max-width:1280px;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.92fr);
+  gap:clamp(24px,5vw,76px);align-items:center
+}
+body[data-visual-style="terra-2026"] .terra-catering-layout>.two{display:block;min-width:0}
+body[data-visual-style="terra-2026"] .terra-catering-layout .cat-info{
+  margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px
+}
+body[data-visual-style="terra-2026"] .terra-catering-layout .cat-info>div{min-width:0}
+body[data-visual-style="terra-2026"] .terra-catering-photo{
+  position:relative;margin:0;min-width:0;min-height:460px;height:100%;
+  border-radius:48px 8px 44px 8px;overflow:hidden;background:#e5a34b
+}
+body[data-visual-style="terra-2026"] .terra-catering-photo img{
+  display:block;width:100%;height:100%;min-height:460px;max-height:720px;object-fit:cover
+}
+body[data-visual-style="terra-2026"] .terra-catering-photo figcaption{
+  position:absolute;bottom:18px;left:18px;right:18px;max-width:250px;
+  padding:12px 16px;background:#FFF4D6;color:#235328;
+  font-size:13px;font-weight:800;line-height:1.4
+}
+@media(max-width:900px){
+  body[data-visual-style="terra-2026"] #s-catering .terra-catering-layout{
+    grid-template-columns:minmax(0,1fr) minmax(220px,.75fr);gap:25px
+  }
+  body[data-visual-style="terra-2026"] .terra-catering-layout .cat-info{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  body[data-visual-style="terra-2026"] #s-catering .terra-catering-layout{grid-template-columns:1fr}
+  body[data-visual-style="terra-2026"] .terra-catering-photo{min-height:340px;max-height:420px}
+  body[data-visual-style="terra-2026"] .terra-catering-photo img{min-height:340px;max-height:420px}
+}
+
 body[data-visual-style="terra-2026"] #s-catering .lead,
 body[data-visual-style="terra-2026"] #s-catering h2,
 body[data-visual-style="terra-2026"] #s-catering .eyebrow,
