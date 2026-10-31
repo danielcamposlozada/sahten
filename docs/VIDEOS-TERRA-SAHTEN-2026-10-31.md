@@ -1,4 +1,13 @@
 # Videos reales de Sahten — Integración con Terra
+
+## ACTUALIZACIÓN FINAL: RECURSOS YA INCORPORADOS EN GITHUB (31/10/2026)
+
+**Se reemplaza el estado pendiente de subir archivos que aparece más abajo.** Los 4 MP4 optimizados para la aplicación y sus 4 posters WebP ya están versionados bajo `media/terra/` en el PR #40. Sus blobs SHA se verificaron contra los archivos locales. Las versiones de 540×960 para los videos de mayor peso (H.264/AAC, hasta ~1,9 MB por clip) se adaptaron al tamaño de las tarjetas; la versión 720×1280 sigue disponible en el ZIP original de la conversación.
+
+**Integración ejecutada por ChatGPT, no delegada a Codex:** `src/online/web/index.html` contiene 3 reproductores HTML5 de carga diferida; `src/online/web/terra.css` los adapta a escritorio/móvil; `src/online/site.js` y `src/legacy/sahten-siteeditor.js` aportan el módulo editable; `src/online/terra-media.js` importa los binarios como assets diferidos, y `src/online/publish.js` los agrega **automáticamente** al paquete estático cuando el tema Terra y la sección de videos están activos. No hace falta copiar archivos manualmente ni que Codex suba los videos.
+
+El tutorial `como-comprar.mp4` viaja en el paquete pero está **desactivado visualmente por defecto**: muestra capturas y precios de una versión anterior. La web pública `sahten.online` permanece sin cambios y el PR sigue en borrador; las pruebas visuales y el despliegue requieren validación y aprobación.
+
 Fecha: 2026-10-31 · Estado: **recibidos, verificados y optimizados; NO alojados ni publicados**
 
 ## Archivos recibidos
@@ -56,8 +65,8 @@ La maqueta `tipografia/tipo-3-home-pulida.html` del ZIP original contiene:
 - [x] Revisión visual por fotogramas: 3 videos gastronómicos + video de compra viejo.
 - [x] Transcodificación a MP4 H.264 + AAC para web, posters WebP.
 - [x] ZIP optimizado, manifiesto y README para Codex.
-- [ ] Copiar físicamente los archivos optimizados al workspace/hosting del proyecto.
-- [ ] Implementar las tres tarjetas reproductoras en la home real, sin tocar órdenes o pagos.
+- [x] Subir 4 MP4 y 4 WebP al repositorio en `media/terra/` y conectar su exportación automática. **Aún no se desplegaron en el hosting público.**
+- [x] Implementar las tres tarjetas reproductoras en el generador real (solo en rama Terra), sin tocar órdenes ni pagos.
 - [ ] Aprobar y subir videos a hosting; después configurar URLs de producción/preview.
 - [ ] Rehacer/actualizar el tutorial de compra y revisarlo antes de habilitarlo públicamente.
 - [ ] Pruebas de rendimiento, responsive, accesibilidad y calidad visual.

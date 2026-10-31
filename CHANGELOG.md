@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Rediseño Terra (borrador)**: home y carta editoriales opt-in, FAQ y páginas informativas completas, y módulo de tres videos gastronómicos originales. Los cuatro MP4 y sus portadas se empaquetan al publicar el sitio Terra, sin tocar el carrito, pagos, sincronización ni reglas de delivery. El tutorial anterior queda oculto hasta actualizar su contenido. PR #40, no publicado.
+
 ## 0.4.33
 
 - **Delivery al guardar**: mínimos de compra, tarifas, beneficios y cobertura se envían a la tienda conectada desde «Guardar y aplicar en la web», sin publicar el catálogo ni subir archivos. Los horarios mantienen sus dos calendarios independientes. Incluye confirmación, cola sin conexión, reintento y aviso ante cambios desde otro equipo.
