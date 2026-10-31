@@ -87,3 +87,48 @@ it('descarta los importes y horarios archivados que no provienen de la configura
   expect(publishedContent.site.seo.openingHours).toBe('');
   expect(publishedContent.site.faq.items).toHaveLength(11);
 });
+
+
+it('usa el carrito y el flujo de compra reales bajo la presentación Terra, sin enviar pedidos ni cobros', async () => {
+  const menu = sampleMenu();
+  menu.payments = { methods: { efectivo: true } };
+  const dom = new JSDOM(buildIndexHtml(menu, { storefront: true }), {
+    url: 'https://sahten.online/pedir/',
+    runScripts: 'dangerously',
+    beforeParse(w) {
+      w.scrollTo = () => {};
+      w.fetch = async () => ({ ok: false });
+    },
+  });
+  await new Promise(resolve => setTimeout(resolve, 65));
+  const d = dom.window.document;
+  expect(d.querySelector('#grid')).not.toBeNull();
+  expect(d.querySelector('#grid').textContent).toContain('Producto vigente');
+  expect(d.querySelector('#grid [data-inc]')).not.toBeNull();
+  d.querySelector('#grid [data-inc]').click();
+  expect(d.querySelector('#bar-n').textContent).toContain('1 producto');
+  d.querySelector('#bar button').click();
+  expect(d.querySelector('#ov').classList.contains('on')).toBe(true);
+  d.querySelector('#cart-next').click();
+  expect(d.querySelector('#sheet').textContent).toContain('Retiro');
+  expect(d.querySelector('#sheet').textContent).toContain('Delivery');
+  expect(d.querySelector('#sheet').textContent).toContain('Entrega y pago');
+  dom.window.close();
+});
+
+it('conserva las preferencias para ocultar fotos sin borrar productos o categorías', async () => {
+  const menu = sampleMenu();
+  menu.config.showImages = false;
+  const doc = new JSDOM(buildIndexHtml(menu)).window.document;
+  expect(doc.body.dataset.visualStyle).toBe('terra-2026');
+  const dom = new JSDOM(buildIndexHtml(menu), {
+    url: 'https://sahten.online/',
+    runScripts: 'dangerously',
+    beforeParse(w) { w.scrollTo = () => {}; w.fetch = async () => ({ ok: false }); },
+  });
+  await new Promise(resolve => setTimeout(resolve, 65));
+  expect(dom.window.document.querySelector('#s-menuhd').textContent).toContain('Entradas');
+  expect(dom.window.document.querySelector('#s-menuhd').textContent).toContain('Producto vigente');
+  expect(dom.window.document.querySelector('#s-menuhd .terra-food-image img')).toBeNull();
+  dom.window.close();
+});
