@@ -21,3 +21,8 @@ Prompt listo para pegar: [docs/PROMPT-AGENTES.md](docs/PROMPT-AGENTES.md).
 
 ## Cambios y versiones
 - Cada cambio visible para el usuario va en `CHANGELOG.md` (sección «Sin publicar» hasta que haya versión). Probar con `node scripts/check-versions.mjs` si se sube versión.
+
+## Decisión del dueño: rediseño Terra rechazado, continuar Codex (31/10/2026)
+**Antes de cualquier trabajo de Home, banners, Catering o mapa, leer [issue #41](https://github.com/danielcamposlozada/sahten/issues/41).** El diseño propuesto por ChatGPT en el PR #40 fue **rechazado** y el PR cerrado sin merge: no recuperarlo ni tomar su vista previa como referencia visual. **Retomar la versión que Codex estaba implementando antes**, incluida la sección de mapa, sin tocar trabajos locales o no subidos de Codex.
+
+**Fotos que el dueño sí conserva:** hay respaldo aislado en la rama `assets/fotos-sahten-2026-10-31`, carpeta `media/sahten-fotos/` y README. Tres fotos distintas —tortas, dulces y plato con cerdo— rotan **exclusivamente en el banner del beneficio del 10 % OFF** (solo si ese descuento está comercialmente activo); **mesa completa fija y exclusiva para Catering**. Solo hay 2 fotos de banner y la de Catering identificadas en ese respaldo; falta verificar/recuperar la tercera imagen de dulces. No duplicar fotos, no usarlas en el hero, ni fusionar la propuesta descartada. Mantener intactos pedidos, pagos, checkout, delivery, mapa y sincronización. No desplegar sin autorización.
