@@ -15,7 +15,7 @@ const query=()=>db.query('select public.sahten_upsell_verified_costs($1,$2) as p
 beforeAll(async()=>{
  db=new PGlite();
  await db.exec(read('tests/fixtures/supabase-prelude.sql'));
- await db.exec('create role service_role nologin;grant usage on schema public to service_role;');
+ await db.exec('create role service_role nologin bypassrls;grant usage on schema public to service_role;');
  await db.exec(read('supabase/schema.sql'));
  await db.exec('create schema if not exists sahten_catalog_private;');
  await db.query("insert into auth.users(id,email) values($1,'owner@test.invalid')",[owner]);
