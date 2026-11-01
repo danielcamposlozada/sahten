@@ -15,7 +15,7 @@ export function preparePricingQuotes(s, now = new Date()) {
   s.pricingQuotes ||= {};
   const index = quoteIndex(s.pricingQuotes);
   let changed = false;
-  for (const p of s.products.filter(p => !p.recetaOnly && !p.fixedPrices)) for (const c of s.channels.filter(c => c.enabled)) {
+  for (const p of s.products.filter(p => !p.recetaOnly && (!p.fixedPrices || p.pricingMode?.mostrador === 'calculated' || p.priceTargets?.mostrador != null))) for (const c of s.channels.filter(c => c.enabled)) {
     const value = quotation(s, p, c.id), fingerprint = JSON.stringify(value);
     if (index.has(fingerprint)) continue;
     const id = globalThis.crypto?.randomUUID?.() || `${now.getTime()}-${Math.random().toString(36).slice(2)}`;
@@ -47,7 +47,7 @@ export function captureSaleCosts(s, order, { now = new Date(), basis = 'at-sale'
     const p = s.products.find(p => p.id === it.productId);
     const quote = it.priceRevision ? s.pricingQuotes?.[it.priceRevision] : null;
     const known = quote && quote.productId === it.productId && quote.channel === channel && cents(quote.price) === cents(it.unitPrice) && Date.parse(quote.createdAt) <= Date.parse(order.createdAt);
-    if ((!p || p.fixedPrices || basis !== 'at-sale') && !known) return { productId: it.productId, name: it.name, missing: true };
+    if ((!p || (p.fixedPrices && p.pricingMode?.[channel] !== 'calculated' && p.priceTargets?.[channel] == null) || basis !== 'at-sale') && !known) return { productId: it.productId, name: it.name, missing: true };
     const revenue = (amounts[i] - allocations[i]) / 100, qty = Number(it.qty);
     const unitVariable = known ? quote.unitVariable : costPerUnit(s, p, channel), unitFixed = known ? quote.unitFixed : gfAssigned(s, p, channel);
     const rate = known ? quote.commissionRate : channelCommission(s, p, channel), commission = cents(revenue * rate);

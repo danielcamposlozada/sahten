@@ -778,8 +778,8 @@ function renderProductos() {
     const p=PRODUCTS[i];
     const tc=costPerUnit(p), gfa=gfAssigned(p), mp=channelPriceWithDisc(p,'mostrador')||mostradorFinalPrice(p);
     const marg=marginPct(mp,tc+gfa); const mc=marginColor(marg);
-    const tier=getTier(p.tier);
-    const tierOpts=TIERS.map(t=>`<option value="${t.id}" ${t.id===p.tier?'selected':''}>${t.id} – ${Math.round((t.factor-1)*100)}%</option>`).join('');
+    const tier=getTier(p.formulaTierByChannel?.mostrador || p.tier);
+    const tierOpts=TIERS.map(t=>`<option value="${t.id}" ${t.id===(p.formulaTierByChannel?.mostrador || p.tier)?'selected':''}>${t.id} – ${Math.round((t.factor-1)*100)}%</option>`).join('');
     const disc=p.discount||0;
     const discLabel=disc>0?`<span class="disc-badge">${disc>=1?'-$'+Math.round(disc):'-'+(disc*100).toFixed(0)+'%'}</span>`:'';
     const tr=document.createElement('tr');
@@ -804,7 +804,7 @@ function renderProductos() {
       <td data-col="estrella" style="text-align:center"><button class="star-toggle-btn${p.star?' active':''}" onclick="PRODUCTS[${i}].star=!PRODUCTS[${i}].star;renderProductos();renderDashboard()" title="${p.star?'Quitar estrella':'Marcar como estrella'}">${p.star?'⭐':'☆'}</button></td>
       <td data-col="costo_receta" class="price-cell">${p.porciones>1 ? `<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:var(--muted);text-decoration:line-through">${fmt(totalCost(p))} receta</span><span style="color:var(--green);font-weight:700">${fmt(costPerUnit(p))}/${p.porcionLabel||'porción'}</span><span style="font-size:9px;background:rgba(242,140,0,0.15);color:var(--accent);border-radius:99px;padding:1px 5px;font-weight:600">÷${getPorc(p).toFixed(getPorc(p)%1===0?0:2)} ${p.porcionLabel||'porc.'}</span></div>` : fmt(totalCost(p))}</td>
       <td data-col="costo_total" class="price-cell">${fmt(tc+gfa)} <span style="font-size:10px;color:var(--muted)">GF:${fmt(gfa)}</span></td>
-      <td data-col="tier"><select class="tier-select" onchange="PRODUCTS[${i}].tier=this.value;renderProductos();renderDashboard()">${tierOpts}</select></td>
+      <td data-col="tier"><select class="tier-select" onchange="if(PRODUCTS[${i}].pricingMode?.mostrador==='calculated'){PRODUCTS[${i}].formulaTierByChannel.mostrador=this.value}else{PRODUCTS[${i}].tier=this.value}renderProductos();renderDashboard()">${tierOpts}</select></td>
       <td data-col="gf_prod">
         <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
           <!-- % input -->
