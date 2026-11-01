@@ -33,6 +33,8 @@ export function toLocalOrder(row, existing = []) {
     address: String(p.address || ''), lat: p.lat ?? null, lng: p.lng ?? null, paymentMethod: p.paymentMethod || '', paymentId: null, paymentName: ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago',tarjeta:'Tarjeta'})[p.paymentMethod] || p.paymentMethod || '',
     items, subtotal: +p.subtotal || items.reduce((s, i) => s + i.lineTotal, 0), discount, discountAmount: discount, discountId: paymentDiscount ? 'cash-transfer' : null, discountName: paymentDiscount?.label || (discount ? String(p.discountName || 'Descuento').slice(0,150) : null), paymentDiscount,
     ...(p.deliverySnapshot?.version===2?{deliverySnapshot:JSON.parse(JSON.stringify(p.deliverySnapshot))}:{}),
+    ...(p.promotionSnapshot?.version===1?{promotionSnapshot:JSON.parse(JSON.stringify(p.promotionSnapshot))}:{}),
+    ...(p.promotionTicketSnapshot&&['campaign','coupon'].includes(p.promotionTicketSnapshot.kind)?{promotionTicketSnapshot:JSON.parse(JSON.stringify(p.promotionTicketSnapshot))}:{}),
     shipping: +p.shipping || 0, _zoneName: p.zoneName || '', total: +p.total || 0, notes: String(p.notes || ''),
   };
 }
