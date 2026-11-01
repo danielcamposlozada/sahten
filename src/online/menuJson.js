@@ -66,10 +66,15 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     cartRecommendations: promotions?.cartRecommendationPolicy?.enabled === true
       ? {
         enabled:true,
+        // SOLO recomendaciones a precio normal respaldadas por un registro
+        // de costo de compra verificado. No convertir estas sugerencias en
+        // cupones ni publicar los costos privados del negocio.
         beverageContexts:(promotions.beverageUpsellPolicy?.enabled===true?promotions.beverageUpsellPolicy.contexts||[]:[]).map(g=>({
           id:txt(g.id,80),name:txt(g.name,90),priority:Number(g.priority)||0,
           triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
-          options:(g.options||[]).filter(id=>items.some(p=>p.id===id&&p.category==='Bebidas')),
+          options:(g.options||[]).filter(id=>
+            promotions.beverageUpsellPolicy.options?.some(o=>o.id===id&&o.verified===true) &&
+            items.some(p=>p.id===id&&p.category==='Bebidas')),
           ...(g.minEligibleSubtotal!=null?{minEligibleSubtotal:Number(g.minEligibleSubtotal)}:{}),
           ...(g.maxEligibleSubtotal!=null?{maxEligibleSubtotal:Number(g.maxEligibleSubtotal)}:{})
         })).filter(g=>g.triggerProductIds.length>0&&g.options.length>0),
