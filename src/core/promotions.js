@@ -110,8 +110,10 @@ export function quotePromotions({
       const fee=amount(base-discount,commissionPercent);
       const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
       if(config.requireVerifiedCosts&&!known)return null;
-      if(known&&Number.isFinite(minMargin)&&minMargin>0&&base-discount-fee>0&&
-        (base-discount-fee-toCents(cost)*l.qty)/(base-discount-fee)*100<minMargin)return null;
+      // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
+      const realized=base-discount-fee;
+      if(known&&Number.isFinite(minMargin)&&minMargin>0&&
+        (realized<=0||(realized-toCents(cost)*l.qty)/realized*100<minMargin))return null;
       return {candidate,extra,discount};
     }).filter(Boolean).sort((a,b)=>b.discount-a.discount||b.candidate.priority-a.candidate.priority);
     const chosen=candidates[0]||null, winner=chosen?.candidate||null;
