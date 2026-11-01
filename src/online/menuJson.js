@@ -62,6 +62,20 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
     },
     products: items,
+    // Recomendaciones NO descontadas, independientes del motor de promociones.
+    // Se filtran por catálogo publicado y nunca se exponen costos/proveedores.
+    beverageRecommendations: promotions?.beverageUpsellPolicy?.enabled === true
+      ? {enabled:true,
+        options:(promotions.beverageUpsellPolicy.options||[])
+          .filter(x=>items.some(p=>p.id===x.id&&p.category==='Bebidas')).map(x=>({id:x.id})),
+        contexts:(promotions.beverageUpsellPolicy.contexts||[])
+          .map(g=>({id:g.id,name:g.name,priority:g.priority,
+            triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
+            options:(g.options||[]).filter(id=>items.some(p=>p.id===id&&p.category==='Bebidas')),
+            ...(g.minEligibleSubtotal!=null?{minEligibleSubtotal:g.minEligibleSubtotal}:{}),
+            ...(g.maxEligibleSubtotal!=null?{maxEligibleSubtotal:g.maxEligibleSubtotal}:{})}))
+          .filter(g=>g.triggerProductIds.length&&g.options.length)}
+      : {enabled:false},
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
       checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):10,
