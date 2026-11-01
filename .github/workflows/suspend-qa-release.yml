@@ -1,0 +1,22 @@
+# Control excepcional para evitar publicar una versión con una métrica detectada como incorrecta.
+name: Suspender release 0.4.34 anterior a QA
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/suspend-qa-release.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  suspend:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Cancelar empaquetado anterior
+        run: |
+          gh api -X POST "/repos/$GITHUB_REPOSITORY/actions/runs/41276955362/cancel" || true
+      - name: Evitar publicar instaladores desactualizados
+        run: |
+          sleep 5
+          gh release delete "v0.4.34" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
