@@ -40,6 +40,11 @@ it('sin aprobación financiera el motor ON nunca devuelve costos utilizables par
  await db.query('update public.menus set json=$2 where store_id=$1',
  [storeId,{...menu,promotions:{enabled:true,upsells:[]}}]);
  await db.query(`update public.projects set data=data || '{"promotions":{"enabled":true}}'::jsonb where id=$1`,[projectId]);
+ const flags=(await db.query(`select p.data #>> '{promotions,enabled}' as project_on,
+    m.json #>> '{promotions,enabled}' as menu_on
+    from public.stores st join public.projects p on p.id=st.project_id
+    join public.menus m on m.store_id=st.id where st.id=$1`,[storeId])).rows;
+ expect(flags).toEqual([{project_on:'true',menu_on:'true'}]);
  const result=await runAs('service_role',query);
  expect(result).toMatchObject({verified:true,trustedOrderCosts:{verified:false}});
  expect(result.trustedPaymentFeePercent).toBeNull();
