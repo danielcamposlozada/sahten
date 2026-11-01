@@ -74,7 +74,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     lat = Number(input.lat); lng = Number(input.lng); address = text(input.address, 300);
     if (input.lat == null || input.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || address.length < 5) fail('Seleccioná una dirección de entrega válida.');
     const modern=menu.delivery?.deliveryV2?.active;
-    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:hasPaymentBenefit});
+    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:promotion?hasPaymentBenefit:!!benefit.paymentDiscount});
     if (!ship.ok && validateCustomer) fail(ship.belowMin ? 'No se alcanza el pedido mínimo de delivery.' : ship.status==='closed'?'El delivery está fuera de horario. Volvé durante el horario de atención.':ship.status==='hours_invalid'?'El horario de delivery necesita revisión del local.':ship.status==='authorization_required'?'La entrega requiere autorización del local.':ship.status==='route_unverified'?'No se pudo validar la ruta por calles.':'La dirección está fuera de cobertura o no está habilitada para entrega.',409,ship.status||'invalid_delivery');
     shippingQuote=ship;
     shipping = cents(ship.cost); zoneName = text(ship.zone?.name, 100);
