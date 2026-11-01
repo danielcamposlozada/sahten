@@ -1,0 +1,123 @@
+{
+  "enabled": false,
+  "version": 1,
+  "mode": "full_price_only",
+  "maxCards": 2,
+  "notes": "Se activa únicamente cuando el checkout compatible está desplegado; no cambia descuentos, costos ni tickets.",
+  "complements": [
+    {
+      "id": "baklava-context",
+      "name": "¿Algo dulce para terminar?",
+      "priority": 70,
+      "productId": "baklava",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "p1779299917243",
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "yabra",
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "mamul-nuez-context",
+      "name": "¿Un mamul de postre?",
+      "priority": 60,
+      "productId": "mamul_nuez",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "mamul-datil-context",
+      "name": "¿Un mamul de dátil?",
+      "priority": 55,
+      "productId": "mamul_datil",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "chocolate-cake-context",
+      "name": "¿Una porción de torta?",
+      "priority": 50,
+      "productId": "torta_de_chocolate",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "hummus-context",
+      "name": "Para acompañar tu plato",
+      "priority": 30,
+      "productId": "hummus",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "p1779299917243"
+      ],
+      "enabled": true,
+      "suppressIfPresent": [
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ]
+    },
+    {
+      "id": "fatay-context",
+      "name": "¿Sumás una Fatay?",
+      "priority": 20,
+      "productId": "fatay",
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "yabra"
+      ],
+      "suppressIfPresent": [
+        "p1779467294622",
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "enabled": true
+    }
+  ]
+}

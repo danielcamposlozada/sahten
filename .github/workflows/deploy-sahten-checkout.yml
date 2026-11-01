@@ -77,7 +77,7 @@ jobs:
             -H "Authorization: Bearer $CF_TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
           current=$(echo "$data" | jq -er '.result.latest_deployment.id')
-          if [[ "$current" != "f68ab9a6-c165-422f-8cab-4ddc3b7a9cfc" ]]; then
+          if [[ "$current" != "84a00719-0196-48ab-b31f-b321b979398e" ]]; then
             echo "::error::La versión de producción cambió: no reemplazar un deploy más nuevo sin revisar el paquete."
             exit 1
           fi
