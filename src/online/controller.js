@@ -163,6 +163,14 @@ export function createController(host) {
       const ctx=context(), result=await ctx.client.rpc('get_store_service_hours', {p_store_id:ctx.storeId});check(ctx);return result;
     },
     async setDeliveryZoneState(id, flag, enabled) { return stateRpc('set_delivery_zone_state', { p_zone_id:id, p_flag:flag, p_enabled:enabled }); },
+    // Acciones autenticadas; el RPC verifica rol propietario/administrador y versión.
+    async setPromotionCampaignState(id, enabled, expectedRevision = null) {
+      return stateRpc('set_promotion_campaign_state',{p_campaign_id:id,p_enabled:enabled,p_expected_revision:expectedRevision});
+    },
+    async readPromotionCampaignStates() {
+      if (!client || !host.conn.storeId) return null;
+      const ctx=context(),result=await ctx.client.rpc('get_promotion_campaign_states',{p_store_id:ctx.storeId});check(ctx);return result;
+    },
     async readDeliveryZoneState() {
       if (!client || !host.conn.storeId) return null;
       const ctx=context(),result=await ctx.client.rpc('get_delivery_zone_states',{p_store_id:ctx.storeId});check(ctx);return result;
