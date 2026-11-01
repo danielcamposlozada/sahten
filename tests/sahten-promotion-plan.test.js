@@ -49,7 +49,7 @@ describe('Plan del negocio SAHTEN en documento, nunca embebido en el instalador 
       'baklava','fatay','mamul_datil','mamul_nuez','torta_de_chocolate'
     ]);
     expect(plan.upsells.every(c=>c.enabled===false&&c.maxUnits===1)).toBe(true);
-    expect(plan.upsells.map(c=>c.extraPercent).sort()).toEqual([5,5,5,10,10]);
+    expect(plan.upsells.map(c=>c.extraPercent).sort((a,b)=>a-b)).toEqual([5,5,5,10,10]);
     expect(plan.upsells.every(c=>c.activationBlockers?.includes('server_basket_level_profit_guard_pending'))).toBe(true);
     expect(plan.activationPolicy.maxDiscountedUpsellLinesPerOrder).toBe(1);
     expect(plan.activationPolicy.maxUpsellCardsPerCart).toBe(2);
