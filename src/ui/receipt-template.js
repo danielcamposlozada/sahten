@@ -89,7 +89,7 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 .receipt-promo-cta,.receipt-promo-when{font-size:${compact?11:13}px;font-weight:900;letter-spacing:.35px;margin-top:6px}
 .receipt-promo-label{font-weight:600;margin-top:6px}
 .receipt-promo-terms{font-size:${compact?9:10}px;margin-top:7px;padding-top:5px;border-top:1px solid #000}
-.receipt-saving-row{font-weight:800;border-left:3px solid #000;padding-left:3px;margin-top:2px}px;font-weight:800;letter-spacing:.5px}
+.receipt-saving-row{font-weight:800;border-left:3px solid #000;padding-left:3px;margin-top:2px}
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
