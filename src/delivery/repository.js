@@ -1,7 +1,7 @@
 import { createDeliveryService, authorizationFrom } from './service.js';
 import { roadRoute, geocodeAddress } from './routing.js';
 import { validDeliveryPoint, haversineKm } from '../core/delivery.js';
-export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch}){
+export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch,upsellSecret=null}){
  async function request(path,{method='GET',body,token=serviceKey}={}){
   const r=await fetchImpl(url+path,{method,headers:{apikey:token===serviceKey?serviceKey:anonKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
   if(!r.ok)throw new Error('delivery_database_unavailable');return r.status===204?null:r.json();
@@ -13,7 +13,9 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   return !!s.project_id&&await request('/rest/v1/rpc/has_project_role',{method:'POST',token:user.token,body:{pid:s.project_id,roles}})===true;
  }
  const repo={run,menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,
-  promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
+  promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),
+  upsellEconomics:(sid,channel='online')=>request('/rest/v1/rpc/sahten_upsell_verified_costs',{method:'POST',body:{sid,channel}}),
+  consumeUpsellNonce:({storeId,nonce,sessionId,requestId,expiresAt})=>request('/rest/v1/rpc/sahten_consume_upsell_nonce',{method:'POST',body:{p_store_id:storeId,p_nonce:nonce,p_session_id:sessionId,p_request_id:requestId,p_expires_at:new Date(expiresAt).toISOString()}}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
  repo.posRules=async sid=>{const store=(await request('/rest/v1/stores?select=project_id&id=eq.'+sid))?.[0];if(!store?.project_id)return {};const project=(await request('/rest/v1/projects?select=public&id=eq.'+store.project_id))?.[0];const pub=project?.public;const availability=await request('/rest/v1/rpc/get_product_sales_availability',{method:'POST',body:{p_store_id:sid}});const pauses=new Map((availability.sales||[]).map(p=>[p.id,p.salesAvailability]));return {...(pub?.sales||{}),catalog:pub?.products?.map(p=>({...p,salesAvailability:pauses.get(p.id)||p.salesAvailability})),project:pub?.project,tienda:pub?.online?.tiendaConfig};};
  repo.savePos=(sid,lid,p)=>request('/rest/v1/rpc/validate_delivery_pos_record',{method:'POST',body:{sid,lid,p}});
  async function authenticate(req){const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');if(!token||token===anonKey||token===serviceKey)return null;try{const u=await request('/auth/v1/user',{token});return u?.id?{id:u.id,token}:null;}catch{return null;}}
@@ -43,6 +45,6 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   return {route,authorization:authorizationFrom(record,p,destination)};
  }
  async function originKey(req){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(serviceKey),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(req.headers.get('x-forwarded-for')?.split(',')[0]||'unknown')))).map(b=>b.toString(16).padStart(2,'0')).join('');}
- return {repo,authenticate,resolveRoute,resolveDelivery,originKey,geocode};
+ return {repo,authenticate,resolveRoute,resolveDelivery,originKey,geocode,upsellSecret};
 }
 export function deliveryHandler(options){return createDeliveryService(createDeliveryRepository(options));}

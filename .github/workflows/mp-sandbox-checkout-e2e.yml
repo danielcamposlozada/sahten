@@ -1,0 +1,46 @@
+name: Mercado Pago sandbox — Checkout Pro E2E (solo pruebas)
+on:
+  push:
+    branches:
+      - feat/upsell-hmac-quote-preflight-20261101
+    paths:
+      - scripts/tests/mp-sandbox-checkout-e2e.mjs
+      - .github/workflows/mp-sandbox-checkout-e2e.yml
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Crear links de pago o verificar referencia existente
+        required: true
+        type: choice
+        options:
+          - create
+          - verify
+        default: create
+      reference:
+        description: UUID de preferencia anterior, solo para modo verify
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  sandbox-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MP_SANDBOX_ACCESS_TOKEN: ${{ secrets.MP_SANDBOX_ACCESS_TOKEN }}
+      MODE: ${{ github.event.inputs.mode || 'create' }}
+      REFERENCE: ${{ github.event.inputs.reference || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Rechazar token faltante sin tocar el proveedor
+        shell: bash
+        run: |
+          if [[ -z "$MP_SANDBOX_ACCESS_TOKEN" ]]; then
+            echo "::error::Falta MP_SANDBOX_ACCESS_TOKEN. No utilizar token de producción."
+            exit 1
+          fi
+      - name: Crear o consultar compras exclusivamente del vendedor ficticio
+        run: node scripts/tests/mp-sandbox-checkout-e2e.mjs

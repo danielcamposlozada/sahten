@@ -1,0 +1,31 @@
+name: Mercado Pago — sandbox real (sin cobros)
+on:
+  push:
+    branches:
+      - feat/upsell-hmac-quote-preflight-20261101
+    paths:
+      - scripts/tests/mp-real-sandbox-smoke.mjs
+      - .github/workflows/mp-sandbox-smoke.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  sandbox-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MP_SANDBOX_ACCESS_TOKEN: ${{ secrets.MP_SANDBOX_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rechazar ejecuciones sin credencial exclusiva de prueba
+        shell: bash
+        run: |
+          if [[ -z "$MP_SANDBOX_ACCESS_TOKEN" ]]; then
+            echo "::error::NO EJECUTADO: configurar el secreto MP_SANDBOX_ACCESS_TOKEN (test seller) en GitHub Actions. No usar el token de producción ni el de Supabase."
+            exit 1
+          fi
+      - name: "API real: validar vendedor ficticio, crear y releer preferencia sin procesar pagos"
+        run: node scripts/tests/mp-real-sandbox-smoke.mjs

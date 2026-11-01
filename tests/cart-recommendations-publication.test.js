@@ -36,3 +36,49 @@ it('sin activación explícita no aparece ningún producto sugerido',()=>{
   expect(buildMenuJson(st).cartRecommendations).toEqual({enabled:false});
   expect(buildMenuJson(st,{promotions:{enabled:true,cartRecommendationPolicy:{enabled:false}}}).cartRecommendations).toEqual({enabled:false});
 });
+it('bebidas para Shawarma SUPERMIX: incluir precio completo aunque compra no esté auditada, sin revelar costos',()=>{
+  const state=demoState(),main=state.products[0],approved=state.products[1],blocked=state.products[2];
+  main.id='p1779299917243';main.name='Shawarma SUPERMIX';
+  approved.category='Bebidas';approved.name='Agua con gas 600 ml';
+  blocked.category='Bebidas';blocked.name='Sprite Zero 220 ml';
+  const result=buildMenuJson(state,{promotions:{
+    enabled:false,
+    cartRecommendationPolicy:{enabled:true,complements:[]},
+    beverageUpsellPolicy:{enabled:true,
+      options:[{id:approved.id,verified:true,secretCost:912.34},
+        {id:blocked.id,verified:false,secretCost:888.88}],
+      contexts:[{id:'sandwich-small',name:'Bebida para tu SUPERMIX',
+        triggerProductIds:[main.id],options:[blocked.id,approved.id],priority:80}]}
+  }});
+  expect(result.cartRecommendations.beverageContexts).toHaveLength(1);
+  expect(result.cartRecommendations.beverageContexts[0].options).toEqual([blocked.id,approved.id]);
+  expect(result.promotions).toEqual({enabled:false});
+  expect(JSON.stringify(result)).not.toContain('secretCost');
+  expect(JSON.stringify(result)).not.toContain('912.34');
+  expect(JSON.stringify(result)).not.toContain('888.88');
+});
+
+it('cuando se publica una oferta Fatay exige HMAC, conserva sus tramos y no inventa comisión MP',()=>{
+ const state=demoState();
+ const first=buildMenuJson(state).products[0].id;
+ const m=buildMenuJson(state,{promotions:{enabled:true,
+  checkoutProFeePercent:null,paymentPercent:10,
+  upsells:[{id:'fatay-individual-up',enabled:true,kind:'upsell',name:'Sumá una Fatay',
+   extraPercent:10,priority:55,productIds:[first],maxUnits:1,
+   triggerProductIds:['main_product'],suppressIfPresent:[],
+   discountTiers:[{minEligibleNetSubtotal:20000,totalDiscountPercent:20},
+    {minEligibleNetSubtotal:35000,totalDiscountPercent:25},
+    {minEligibleNetSubtotal:50000,totalDiscountPercent:30}],
+   trustedCosts:{[first]:999},supplierSecret:'NEVER_PUBLISH'}],
+  campaigns:[]
+ }});
+ expect(m.promotions.enabled).toBe(true);
+ expect(m.promotions.upsellGuardRequired).toBe(true);
+ expect(m.promotions.checkoutProFeePercent).toBeNull();
+ expect(m.promotions.upsells[0].discountTiers).toEqual([
+  {minEligibleNetSubtotal:20000,totalDiscountPercent:20},
+  {minEligibleNetSubtotal:35000,totalDiscountPercent:25},
+  {minEligibleNetSubtotal:50000,totalDiscountPercent:30}]);
+ expect(JSON.stringify(m)).not.toContain('NEVER_PUBLISH');
+ expect(JSON.stringify(m)).not.toContain('trustedCosts');
+});

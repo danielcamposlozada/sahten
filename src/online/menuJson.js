@@ -66,10 +66,16 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     cartRecommendations: promotions?.cartRecommendationPolicy?.enabled === true
       ? {
         enabled:true,
+        // Recomendaciones contextuales a precio normal: tener un importe de
+        // compra cargado NO equivale a marcar la factura como auditada.
+        // No condicionar sugerencias de precio completo a costVerified.
+        // Ningún descuento se habilita aquí: sigue requiriendo auditoría Edge.
         beverageContexts:(promotions.beverageUpsellPolicy?.enabled===true?promotions.beverageUpsellPolicy.contexts||[]:[]).map(g=>({
           id:txt(g.id,80),name:txt(g.name,90),priority:Number(g.priority)||0,
           triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
-          options:(g.options||[]).filter(id=>items.some(p=>p.id===id&&p.category==='Bebidas')),
+          options:(g.options||[]).filter(id=>items.some(p=>
+            p.id===id&&p.category==='Bebidas'&&p.price>0&&
+            p.salesAvailability?.paused!==true&&p.salesAvailability?.retired!==true)),
           ...(g.minEligibleSubtotal!=null?{minEligibleSubtotal:Number(g.minEligibleSubtotal)}:{}),
           ...(g.maxEligibleSubtotal!=null?{maxEligibleSubtotal:Number(g.maxEligibleSubtotal)}:{})
         })).filter(g=>g.triggerProductIds.length>0&&g.options.length>0),
@@ -84,12 +90,23 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       } : {enabled:false},
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
-      checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):10,
+      // El backend nunca debe aplicar upsells solo por ver el ítem en el carrito.
+      // Requiere token HMAC, canje de nonce y revisión de costos privados.
+      upsellGuardRequired:true,
+      checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):null,
       paymentPercent: Math.min(100,Math.max(0,Number(promotions.paymentPercent)||10)),
       campaigns:(promotions.campaigns||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,channels:c.channels,productIds:c.productIds,schedule:c.schedule,
         advertising:c.advertising?.enabled?{enabled:true,placement:c.advertising.placement,message:String(c.advertising.message||'').slice(0,180),advanceDays:c.advertising.advanceDays||4}:undefined})),
       ticket:{enabled:promotions.ticket?.enabled===true,advertise:promotions.ticket?.advertise===true},
-      upsells:(promotions.upsells||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,productIds:c.productIds,maxUnits:c.maxUnits,triggerProductIds:c.triggerProductIds,suppressIfPresent:c.suppressIfPresent})),
+      upsells:(promotions.upsells||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,productIds:c.productIds,maxUnits:c.maxUnits,triggerProductIds:c.triggerProductIds,suppressIfPresent:c.suppressIfPresent,
+        ...(Array.isArray(c.discountTiers)?{discountTiers:c.discountTiers.filter(t=>
+          Number.isFinite(Number(t.minEligibleNetSubtotal))&&Number(t.minEligibleNetSubtotal)>=0&&
+          Number.isFinite(Number(t.totalDiscountPercent))&&Number(t.totalDiscountPercent)>0&&
+          Number(t.totalDiscountPercent)<=100).map(t=>({
+            minEligibleNetSubtotal:Number(t.minEligibleNetSubtotal),
+            totalDiscountPercent:Number(t.totalDiscountPercent)
+          }))}:{}),
+      })),
       // No se expone el umbral de rentabilidad: la validación de costos ocurre en la administración.
     } : {enabled:false},
     site,

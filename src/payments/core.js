@@ -24,7 +24,7 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},trustedEconomics={},trustedUpsellSelection=null,trustedOrderCosts=null,now=Date.now()}={}) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},trustedEconomics={},trustedUpsellSelection=null,trustedOrderCosts=null,trustedPaymentFeePercent=null,now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
   const method=allowOtherPayments?input.paymentMethod:'mercadopago';
   if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
@@ -55,6 +55,14 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   if (validateCustomer && requireCustomer && (name.length < 2 || phone.replace(/\D/g, '').length < 7)) fail('Completá nombre y teléfono.');
   const paymentPolicy=menu.payments?.benefit||{};
   const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
+  // Con campañas bajo guarda HMAC, una comisión MP desconocida impide
+  // validar el margen. No inferir 10% ni convertir NaN en comisión 0%.
+  if(menu.promotions?.enabled===true&&menu.promotions?.upsellGuardRequired===true&&method==='mercadopago'){
+    const fee=trustedUpsellSelection?.verified===true
+      ? trustedPaymentFeePercent : menu.promotions.checkoutProFeePercent;
+    if(typeof fee!=='number'||!Number.isFinite(fee)||fee<0||fee>100)
+      fail('Mercado Pago requiere una comisión aprobada para activar ofertas.',409,'upsell_payment_fee_not_verified');
+  }
   const promotion=menu.promotions?.enabled===true ? quotePromotions({
     lines:items,method,channel:salesChannel,now:new Date(now),
     config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,upsellGuardRequired:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
@@ -62,7 +70,13 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
     // Jamás leer estas pruebas de body.order: solo el backend puede inyectarlas.
     trustedEconomics,trustedUpsellSelection,trustedOrderCosts,
-    commissionPercent:method==='mercadopago'?Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10):0,
+    commissionPercent:method==='mercadopago' ? (
+      trustedUpsellSelection?.verified===true
+        ? (typeof trustedPaymentFeePercent==='number'&&Number.isFinite(trustedPaymentFeePercent)&&trustedPaymentFeePercent>=0&&trustedPaymentFeePercent<=100
+          ? trustedPaymentFeePercent : NaN)
+        : (menu.promotions.upsellGuardRequired === true
+          ? Number(menu.promotions.checkoutProFeePercent)
+          : Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10))) : 0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
