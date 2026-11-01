@@ -63,6 +63,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     products: items,
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
+      checkoutProFeePercent: Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):10,
       paymentPercent: Math.min(100,Math.max(0,Number(promotions.paymentPercent)||10)),
       campaigns:(promotions.campaigns||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,channels:c.channels,productIds:c.productIds,schedule:c.schedule,
         advertising:c.advertising?.enabled?{enabled:true,placement:c.advertising.placement,message:String(c.advertising.message||'').slice(0,180),advanceDays:c.advertising.advanceDays||4}:undefined})),
