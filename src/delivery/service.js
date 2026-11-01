@@ -20,7 +20,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
  async function access(req,sid,admin=false){const user=await authenticate(req);if(!user||!await (admin?repo.canManage:repo.canOperate)(sid,user))fail('Iniciá sesión con un rol autorizado para esta acción.',403);return user;}
  async function limited(sid,req){if(!await repo.run('limit',{bucket:'store:'+sid,max:100})||!await repo.run('limit',{bucket:'buyer:'+sid+':'+await originKey(req),max:25}))fail('Demasiadas consultas. Esperá un minuto.',429);}
  async function upsellCosts(sid){
-  let costs;try{costs=await repo.upsellEconomics(sid,'online');}catch{
+  let costs;try{costs=await repo.upsellEconomics(sid,'mostrador');}catch{
    fail('Faltan costos de oferta revisados.',409,'upsell_costs_not_verified');
   }
   if(costs?.verified!==true||costs.trustedOrderCosts?.verified!==true)
