@@ -2,7 +2,7 @@ import { createPaymentService } from './service.js';
 import { createDeliveryRepository } from '../delivery/repository.js';
 
 /** Las claves de servicio solo existen en el proceso de Edge Functions. */
-export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) {
+export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch, upsellSecret = null }) {
   async function request(path, { method = 'GET', body, token = serviceKey } = {}) {
     const r = await fetchImpl(url + path, { method, headers: { apikey: token === serviceKey ? serviceKey : anonKey, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(8000) });
     let data; try { data = await r.json(); } catch { data = null; }
@@ -13,6 +13,8 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
     run: (action, args) => request('/rest/v1/rpc/sahten_mp_backend', { method: 'POST', body: { action, args } }),
     async menu(storeId) { const rows = await request('/rest/v1/menus?select=json&store_id=eq.' + storeId); return rows?.[0]?.json; },
     async promotionCosts(storeId,channel='mostrador') { return await request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid:storeId,channel}}); },
+    upsellEconomics:(storeId,channel='online')=>request('/rest/v1/rpc/sahten_upsell_verified_costs',{method:'POST',body:{sid:storeId,channel}}),
+    consumeUpsellNonce:({storeId,nonce,sessionId,requestId,expiresAt})=>request('/rest/v1/rpc/sahten_consume_upsell_nonce',{method:'POST',body:{p_store_id:storeId,p_nonce:nonce,p_session_id:sessionId,p_request_id:requestId,p_expires_at:new Date(expiresAt).toISOString()}}),
     async canManage(storeId, user) {
       const rows = await request('/rest/v1/stores?select=id,owner,project_id&id=eq.' + storeId, { token: user.token });
       const store = rows?.[0]; if (!store) return false;
@@ -32,5 +34,5 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
     return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip)))].map(b => b.toString(16).padStart(2, '0')).join('');
   }
   const delivery = createDeliveryRepository({url,serviceKey,anonKey,fetchImpl});
-  return createPaymentService({ repo, authenticate, originKey, fetchImpl, endpoint: url + '/functions/v1/sahten-payments', resolveDelivery:delivery.resolveDelivery });
+  return createPaymentService({ repo, authenticate, originKey, fetchImpl, endpoint: url + '/functions/v1/sahten-payments', resolveDelivery:delivery.resolveDelivery,upsellSecret });
 }
