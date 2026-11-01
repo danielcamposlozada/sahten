@@ -43,6 +43,40 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
   const get=()=>load();
+  let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='';
+  const liveApi=()=>w.SAHTEN?.online?.controller;
+  const canOperate=()=>!w.SAHTEN?.project?.session?.readOnly
+    && ['owner','admin'].includes(w.SAHTEN?.online?.role?.())
+    && w.SAHTEN?.online?.controller?.info?.()?.signedIn===true;
+  async function refreshLive(){
+    if(liveBusy)return;
+    liveBusy=true;liveError='';
+    try{
+      const result=await liveApi()?.readPromotionCampaignStates?.();
+      live=result&&Array.isArray(result.campaigns)?result:{published:false,campaigns:[]};
+      liveLoaded=true;
+    }catch(err){liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);}
+    finally{liveBusy=false;render();}
+  }
+  function liveEditor(){
+    const banner=!liveLoaded?'Estado de promociones aún no consultado.'
+      :!live.published?'El motor promocional no está publicado. No puede activarse desde este panel.'
+      :'Solo afecta a nuevos pedidos. No modifica pedidos ya confirmados.';
+    const rows=(live.campaigns||[]).map(row=>{
+      const disabled=!canOperate()||!live.published||liveBusy;
+      return '<div class="promo-row" data-live-campaign="'+esc(row.id)+'"><div><strong>'
+        +esc(row.id)+'</strong><p role="status">'+(row.enabled?'Activa en web':'Pausada en web')
+        +'</p></div><button type="button" data-live-toggle="'+esc(row.id)+'"'
+        +(disabled?' disabled':'')+'>'+(row.enabled?'Pausar':'Reactivar')+'</button></div>';
+    }).join('');
+    return '<section class="promo-card"><h3>Campañas publicadas · control en vivo</h3>'
+      +'<p>'+esc(banner)+'</p>'
+      +'<p>El estado online es distinto de la planificación local. El servidor valida permisos y revisiones.</p>'
+      +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
+      +'<button type="button" data-live-refresh'+(liveBusy?' disabled':'')+'>'
+      +(liveBusy?'Consultando…':'Actualizar estado desde la web')+'</button>'
+      +(rows||'<p>No hay campañas publicadas para controlar.</p>')+'</section>';
+  }
   function render() {
     const root=w.document.getElementById('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
@@ -52,10 +86,29 @@ export function installPromotionsEditor(w=window) {
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor():tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor():tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
-    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
+    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();}));
+    root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>refreshLive());
+    root.querySelectorAll('[data-live-toggle]').forEach(button=>button.addEventListener('click',async()=>{
+      if(!canOperate()||liveBusy||!live.published)return;
+      const row=live.campaigns.find(x=>x.id===button.dataset.liveToggle);if(!row)return;
+      const enable=!row.enabled;
+      const confirm=await w.sahtenConfirm?.(
+        enable?'¿Reactivar esta campaña? Se aplicará a nuevos pedidos según su calendario.':'¿Pausar esta campaña en los nuevos pedidos?',
+        {title:enable?'Reactivar campaña':'Pausar campaña',okLabel:enable?'Reactivar':'Pausar'});
+      if(confirm!==true||!canOperate()||liveBusy)return;
+      liveBusy=true;liveError='';render();
+      try{
+        await liveApi().setPromotionCampaignState(row.id,enable,row.revision??null);
+        const updated=await liveApi().readPromotionCampaignStates();
+        if(!updated||!Array.isArray(updated.campaigns))throw new Error('No se confirmó el estado remoto.');
+        live=updated;liveLoaded=true;
+      }catch(e){liveError=String(e?.message||'El cambio no se pudo confirmar.').slice(0,250);
+        try{const refreshed=await liveApi().readPromotionCampaignStates();if(refreshed)live=refreshed;}catch{}}
+      finally{liveBusy=false;render();}
+    }));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
       if(!canEdit)return;
