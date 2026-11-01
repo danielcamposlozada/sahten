@@ -70,6 +70,12 @@ describe('historial de metas locales por mes',()=>{
    expect(s.project.localProfitGoals['2026-11']).toBe(35000);
    expect(monthlyGoal(s,'2026-12',now)).toBe(null);
  });
+ it('conserva meta antigua de noviembre aunque primero se edite octubre',()=>{
+   const s={project:{localProfitGoal:35000},orders:[]},now=new Date('2026-11-11T13:00:00-03:00');
+   expect(setMonthlyGoal(s,{month:'2026-10',amount:20000,now})).toBe(true);
+   expect(monthlyGoal(s,'2026-10',now)).toBe(20000);
+   expect(monthlyGoal(s,'2026-11',now)).toBe(35000);
+ });
  it('meta del mes anterior se conserva cuando comienza el siguiente',()=>{
    const s={project:{},orders:[]};
    const nov=new Date('2026-11-11T13:00:00-03:00');
