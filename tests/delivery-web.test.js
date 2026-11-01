@@ -60,11 +60,11 @@ it('no usa respaldo para eludir una cuota del proveedor ni lo presenta como falt
  const a=await web({geocodeQuota:true});try{a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-addr','Calle ficticia 123');await a.search();await wait(120);expect(a.calls.filter(c=>c.url.includes('nominatim.openstreetmap.org/search'))).toHaveLength(0);expect(a.d.querySelector('#err').textContent).toContain('Esperá un momento');expect(a.d.querySelector('#err').textContent).not.toContain('sin conexión');expect(a.orders).toHaveLength(0);}finally{a.close();}
 });
 it('cierre visible desde el carrito; no confirma delivery fuera de hora y permite retiro',async()=>{
- const a=await web({closed:true});try{a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');expect(a.d.getElementById('delivery-card').textContent).toContain('Delivery fuera de horario');expect(a.d.querySelector('.seg').nextElementSibling.id).toBe('delivery-card');expect(a.d.getElementById('delivery-card').compareDocumentPosition(a.d.getElementById('f-name')) & a.w.Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();expect(a.d.getElementById('send').disabled).toBe(true);a.click('[data-type="pickup"]');expect(a.d.getElementById('send').disabled).toBe(false);a.click('#send');await wait(100);expect(a.orders).toHaveLength(1);expect(a.orders[0].shipping).toBe(0);
+ const a=await web({closed:true});try{a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');expect(a.d.querySelector('[data-type=delivery]').disabled).toBe(true);expect(a.d.querySelector('[data-type=delivery]').classList.contains('is-unavailable')).toBe(true);expect(a.d.querySelector('[data-type=pickup]').getAttribute('aria-pressed')).toBe('true');expect(a.d.getElementById('pickup-hours').textContent).toContain('Retiro:');expect(a.d.getElementById('delivery-card')).toBeNull();expect(a.d.getElementById('send').disabled).toBe(false);a.click('#send');await wait(100);expect(a.orders).toHaveLength(1);expect(a.orders[0].shipping).toBe(0);
  }finally{a.close();}
 });
 it('un carrito abierto antes del cierre es rechazado al confirmar después; la hora enviada no es autoridad',async()=>{
- const a=await web();try{a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);expect(a.d.getElementById('send').disabled).toBe(false);a.setTime('2026-10-24T02:00:00Z');a.click('#send');await wait(80);expect(a.orders).toHaveLength(0);expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.getElementById('delivery-card').textContent).toContain('Delivery fuera de horario');
+ const a=await web();try{a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);expect(a.d.getElementById('send').disabled).toBe(false);a.setTime('2026-10-24T02:00:00Z');a.setOpening(sahtenOpeningHours());a.click('#send');await wait(80);expect(a.orders).toHaveLength(0);expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.querySelector('[data-type=delivery]').disabled).toBe(true);expect(a.d.querySelector('[data-type=pickup]').disabled).toBe(true);expect(a.d.getElementById('delivery-card').textContent).toContain('Delivery fuera de horario');
  }finally{a.close();}
 });
 
@@ -82,7 +82,7 @@ it('piso/depto/referencia y efectivo llegan al servidor; el vuelto usa descuento
  }finally{a.close();}
 });
 it('cambiar a transferencia descarta efectivo y retiro no conserva piso ni departamento en la orden',async()=>{
- const a=await web({closed:true});try{a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-floor','8');a.type('#f-apartment','C');a.type('#f-cash','25000');a.click('[data-type="pickup"]');a.click('[data-payment-choice="transferencia"]');expect(a.d.getElementById('f-cash')).toBeNull();a.click('#send');await wait(100);expect(a.orders[0]).not.toHaveProperty('cashTendered');expect(a.orders[0]).not.toHaveProperty('addressFloor');}finally{a.close();}
+ const a=await web();try{a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-floor','8');a.type('#f-apartment','C');a.type('#f-cash','25000');a.click('[data-type="pickup"]');a.click('[data-payment-choice="transferencia"]');expect(a.d.getElementById('f-cash')).toBeNull();a.click('#send');await wait(100);expect(a.orders[0]).not.toHaveProperty('cashTendered');expect(a.orders[0]).not.toHaveProperty('addressFloor');}finally{a.close();}
 });
 
 it('editar cantidades recalcula el mínimo y el envío sin perder dirección ni crear órdenes',async()=>{
@@ -114,7 +114,7 @@ it('al mediodía permite retiro con su horario, aunque delivery esté cerrado y 
   a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
   expect(a.d.querySelector('[data-service-label="delivery"]').textContent).toBe('Fuera de horario');
   expect(a.d.querySelector('[data-service-label="pickup"]').textContent).toBe('Retiro disponible');
-  expect(a.d.getElementById('send').disabled).toBe(true);a.click('[data-type="pickup"]');
+  expect(a.d.querySelector('[data-type=delivery]').disabled).toBe(true);expect(a.d.querySelector('[data-type=pickup]').getAttribute('aria-pressed')).toBe('true');
   expect(a.d.getElementById('send').disabled).toBe(false);a.click('#send');await wait(100);
   expect(a.orders).toHaveLength(1);expect(a.orders[0].source).toBe('pickup');expect(a.orders[0].shipping).toBe(0);
  }finally{a.close();}
@@ -123,14 +123,14 @@ it('retiro respeta el cierre exacto y el próximo turno, sin borrar datos al ava
  const a=await web({openingHours:sahtenOpeningHours(),at:'2026-10-30T18:29:00Z'});try{
   a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.click('[data-type="pickup"]');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
   expect(a.d.getElementById('send').disabled).toBe(false);a.setTime('2026-10-30T18:30:00Z');a.tickHours();
-  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.getElementById('pickup-hours').textContent).toContain('18:00');expect(a.d.getElementById('pickup-hours').textContent).toContain('fuera de horario');
+  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.querySelector('[data-type=pickup]').disabled).toBe(true);expect(a.d.querySelector('[data-type=pickup]').getAttribute('aria-pressed')).toBe('false');expect(a.d.querySelector('[data-service-label=pickup]').textContent).toContain('Fuera de horario');
   expect(a.d.getElementById('f-name').value).toBe('Cliente de prueba');expect(a.orders).toHaveLength(0);
  }finally{a.close();}
 });
 it('no ofrece retiro antes de las 12 y lo habilita al abrir, independientemente del delivery nocturno',async()=>{
  const a=await web({openingHours:sahtenOpeningHours(),at:'2026-10-30T14:59:00Z'});try{
   a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.click('[data-type="pickup"]');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');
-  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.getElementById('pickup-hours').textContent).toContain('12:00');a.setTime('2026-10-30T15:00:00Z');a.tickHours();
+  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.querySelector('[data-type=pickup]').disabled).toBe(true);expect(a.d.querySelector('[data-service-label=pickup]').textContent).toContain('Fuera de horario');a.setTime('2026-10-30T15:00:00Z');a.tickHours();
   expect(a.d.getElementById('send').disabled).toBe(false);expect(a.d.querySelector('[data-service-label="delivery"]').textContent).toBe('Fuera de horario');
  }finally{a.close();}
 });
@@ -140,8 +140,8 @@ it('recibe apertura y delivery en vivo sin publicar archivos, cambiar precios ni
   expect(a.d.getElementById('send').disabled).toBe(false);a.d.getElementById('f-name').focus();a.d.getElementById('f-name').setSelectionRange(3,7);
   const hours=sahtenOpeningHours();hours.exceptions=[{date:'2026-10-30',periods:[]}];a.setOpening(hours);a.setPrice(99999);a.w.dispatchEvent(new a.w.Event('focus'));
   await vi.waitFor(()=>expect(a.d.getElementById('send').disabled).toBe(true));
-  expect(a.d.getElementById('pickup-hours').textContent).toContain('fuera de horario');expect(a.w.__menu().products[0].price).toBe(20000);expect(a.d.activeElement.id).toBe('f-name');expect(a.d.activeElement.selectionStart).toBe(3);expect(a.d.activeElement.value).toBe('Cliente de prueba');
+  expect(a.d.querySelector('[data-type=pickup]').disabled).toBe(true);expect(a.d.querySelector('[data-service-label=pickup]').textContent).toContain('Fuera de horario');expect(a.w.__menu().products[0].price).toBe(20000);expect(a.d.activeElement.id).toBe('f-name');expect(a.d.activeElement.selectionStart).toBe(3);expect(a.d.activeElement.value).toBe('Cliente de prueba');
   hours.exceptions=[];a.setOpening(hours);const delivery=sahtenOpeningHours();a.setDeliveryHours(delivery);a.w.dispatchEvent(new a.w.Event('focus'));
-  await vi.waitFor(()=>expect(a.d.getElementById('send').disabled).toBe(false));expect(a.d.querySelector('[data-service-label="delivery"]').textContent).toBe('Dentro del horario');expect(a.orders).toHaveLength(0);
+  await vi.waitFor(()=>expect(a.d.querySelector('[data-type=pickup]').disabled).toBe(false));a.click('[data-type="pickup"]');expect(a.d.getElementById('send').disabled).toBe(false);expect(a.d.querySelector('[data-service-label="delivery"]').textContent).toBe('Dentro del horario');expect(a.orders).toHaveLength(0);
  }finally{a.close();}
 });
