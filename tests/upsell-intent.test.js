@@ -74,6 +74,13 @@ describe('intención irreversible del upsell incremental',()=>{
    const m=structuredClone(menu);m.promotions.upsells[0].enabled=false;
    await expect(verify(after,{menu:m})).rejects.toThrow(UpsellIntentError);
  });
+ it('cualquier cambio de porcentaje, umbral o exclusión invalida el comprobante',async()=>{
+   const m=structuredClone(menu);m.promotions.upsells[0].extraPercent=30;
+   await expect(verify(after,{menu:m})).rejects.toThrow(UpsellIntentError);
+   m.promotions.upsells[0].extraPercent=10;
+   m.promotions.upsells[0].suppressIfPresent.push('cocacola_600ml');
+   await expect(verify(after,{menu:m})).rejects.toThrow(UpsellIntentError);
+ });
  it('no acepta identificadores de producto ni cantidades falsas',()=>{
    expect(()=>normalizedItems([{id:'fatay',qty:0}])).toThrow(UpsellIntentError);
    expect(()=>normalizedItems([{id:'fatay',qty:100}])).toThrow(UpsellIntentError);
