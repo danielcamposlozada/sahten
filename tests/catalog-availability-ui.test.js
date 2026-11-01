@@ -43,7 +43,7 @@ it('la tienda actualiza la pausa sin recargar; conserva el precio del carrito, p
 });
 
 it('la tienda abierta recibe la pausa de delivery sin cambiar precios, conserva el carrito y deja elegir retiro',async()=>{
- const a=await web();try{a.d.querySelector('[data-inc]').click();a.w.openCart();a.d.querySelector('#cart-next').click();a.live({...a.m,delivery:{enabled:false}});a.w.dispatchEvent(new a.w.Event('focus'));await vi.waitFor(()=>expect(a.d.getElementById('delivery-card').textContent).toContain('Delivery pausado'));
+ const a=await web();try{a.d.querySelector('[data-inc]').click();a.w.openCart();a.d.querySelector('#cart-next').click();a.live({...a.m,delivery:{enabled:false}});a.w.dispatchEvent(new a.w.Event('focus'));await vi.waitFor(()=>expect(a.d.querySelector('[data-type=pickup]').getAttribute('aria-pressed')).toBe('true'));expect(a.d.querySelector('[data-type=delivery]').disabled).toBe(true);expect(a.d.getElementById('delivery-card')).toBeNull();
  expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.getElementById('msg').textContent).toContain('Delivery pausado');expect(a.w.__menu().products[0].price).toBe(12000);expect(a.d.querySelector('[data-type=pickup]')).toBeTruthy();a.d.querySelector('[data-type=pickup]').click();expect(a.d.getElementById('delivery-card')).toBeNull();expect(a.posts).toHaveLength(0);
  a.live({...a.m,delivery:{enabled:true}});a.w.dispatchEvent(new a.w.Event('focus'));await vi.waitFor(()=>expect(a.w.__menu().delivery.enabled).toBe(true));
  }finally{a.w.close();}

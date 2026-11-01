@@ -62,6 +62,20 @@
 .checkout-group .seg button{font-size:15px;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px}
 .checkout-group .seg svg{width:22px;height:22px;flex:none}
 .checkout-group .seg .on{border-width:2px}
+.checkout-group .seg button.is-unavailable,
+.checkout-group .seg button:disabled{
+  background:#e8e8e5;
+  border-color:#c7cbc6;
+  color:#747d75;
+  cursor:not-allowed;
+  box-shadow:none;
+  opacity:1;
+}
+.checkout-group .seg button.is-unavailable svg,
+.checkout-group .seg button:disabled svg{opacity:.58}
+.checkout-group .seg button.is-unavailable small,
+.checkout-group .seg button:disabled small{color:#69746d}
+
 .checkout-group .note{font-size:14px;line-height:1.5}
 .checkout-group .optional-fields{margin-top:12px;border-top:1px solid var(--border)}
 .optional-fields summary{font-size:14px;min-height:44px;line-height:1.5;padding:12px 0;font-weight:600;cursor:pointer}
