@@ -113,22 +113,36 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
         const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-        let order;
+        let order, upsellAcceptance=null;
         if(body.order?.upsellToken){
-          // Este endpoint SIEMPRE cobra por Mercado Pago: rechazar un reto
-          // de transferencia/efectivo antes de consumir el nonce o reservar.
+          // Este endpoint SIEMPRE cobra por Mercado Pago: el medio de pago
+          // debe coincidir antes de reservar o consumir el nonce.
           if(body.order.paymentMethod!=='mercadopago')fail('Revisá el medio de pago.',409,'invalid_payment_method');
           if(menu?.promotions?.enabled!==true)fail('La oferta ya no está vigente.',409,'promotions_off');
           const costs=await upsellCosts(sid);
           const secure=await offerParams(sid,menu,body.order,body.proof);
-          order=await acceptPreflightUpsell({...secure,menu,order:body.order,
+          upsellAcceptance={...secure,menu,order:body.order,
             token:body.order.upsellToken,requestId,expectedTotal:body.order.total,
-            costs,quoteContext:delivery,now:now(),commit:true,
-            consumeNonce:({nonce,storeId,sessionId,requestId,expiresAt})=>
-              repo.consumeUpsellNonce({nonce,storeId,sessionId,requestId,expiresAt})});
+            costs,quoteContext:delivery,now:now()};
+          // Primera pasada sin consumir: firma, contexto, importe, margen.
+          order=await acceptPreflightUpsell({...upsellAcceptance,commit:false});
         }else order=quoteOrder(menu,body.order||{},{...delivery,trustedCosts,now:now()});
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
+        // Reservar primero: si Supabase falla, el nonce permanece disponible.
+        // El canje ocurre antes de solicitar cualquier preferencia a Mercado Pago.
         const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
+        if (upsellAcceptance && !c.checkout_url && c.payment_status !== 'paid') {
+          try {
+            await acceptPreflightUpsell({...upsellAcceptance,commit:true,
+              consumeNonce:({nonce,storeId,sessionId,requestId,expiresAt})=>
+                repo.consumeUpsellNonce({nonce,storeId,sessionId,requestId,expiresAt})});
+          } catch(e) {
+            // La oferta no fue aceptada: liberar la reserva, jamás crear el cobro.
+            // No ocultar el error original si una liberación también falla.
+            try { await repo.run('release',{id:c.id}); } catch {}
+            throw e;
+          }
+        }
         if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
         const a = await repo.run('secrets', { account_id: c.account_id });
         try {
