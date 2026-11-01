@@ -37,7 +37,9 @@ function calculatedCommercial(s,p,chId){
 }
 
 function calculatedBase(s, p, channel = 'mostrador') {
-  const tier = getTier(s, p.tier);
+  // Recalibramos sólo Mostrador. Otros canales conservan tier y ajuste anteriores.
+  const tierId = channel !== 'mostrador' && p.formulaCalibration?.originalTier ? p.formulaCalibration.originalTier : p.tier;
+  const tier = getTier(s, tierId);
   const base = costPerUnit(s, p, channel) + gfAssigned(s, p, channel);
   let price = base * tier.factor * (p.priceAdjByChannel?.[channel] || p.priceAdj || 1);
   const disc = p.discount || 0;
