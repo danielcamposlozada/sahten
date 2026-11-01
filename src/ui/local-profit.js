@@ -78,11 +78,11 @@ export function installLocalProfitUi(w=window) {
       }catch(err){root.querySelector('[data-local-goal-error]').textContent=err.message;}
     });
   }
-  function renderProfitability() {
-    if(!visible()){d.getElementById('product-profitability')?.remove();return;}
-    const panel=d.getElementById('panel-productos');if(!panel)return;
-    let root=d.getElementById('product-profitability');
-    if(!root){root=d.createElement('section');root.id='product-profitability';root.className='local-profit-card local-profit-table';panel.prepend(root);}
+  function renderProfitability({panelId='panel-productos',rootId='product-profitability'}={}) {
+    if(!visible()){d.getElementById(rootId)?.remove();return;}
+    const panel=d.getElementById(panelId);if(!panel)return;
+    let root=d.getElementById(rootId);
+    if(!root){root=d.createElement('section');root.id=rootId;root.className='local-profit-card local-profit-table';panel.prepend(root);}
     const rows=profitRows().filter(x=>x.price>0);
     const warning=rows.filter(x=>!x.costVerified).length;
     const monthly=localMonthlyProductProfits(state);
@@ -98,11 +98,11 @@ export function installLocalProfitUi(w=window) {
       +'</tbody></table></div>'
       +'<p class="local-profit-disclaimer">Ordenados de menor a mayor margen. Ganancia mensual basada únicamente en pedidos locales completados con costos históricos. '+warning+' producto(s) tienen costos todavía no verificados; sus márgenes son orientativos. Las promociones y comisiones específicas pueden reducir la ganancia.</p>';
   }
-  function renderMerchProfitability(){
-    const panel=d.getElementById('panel-mercaderia');if(!panel)return;
-    let root=d.getElementById('merch-profitability');
+  function renderMerchProfitability({panelId='panel-mercaderia',rootId='merch-profitability'}={}){
+    const panel=d.getElementById(panelId);if(!panel)return;
+    let root=d.getElementById(rootId);
     if(!visible()){root?.remove();return;}
-    if(!root){root=d.createElement('section');root.id='merch-profitability';root.className='local-profit-card';panel.prepend(root);}
+    if(!root){root=d.createElement('section');root.id=rootId;root.className='local-profit-card';panel.prepend(root);}
     const resale=profitRows().filter(x=>x.productType==='resale');
     const merch=state.merchandise||[];
     root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">REVENTA Y MERCADERÍA</span><h2>Rentabilidad de artículos revendidos</h2>'
@@ -111,9 +111,47 @@ export function installLocalProfitUi(w=window) {
       +resale.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+money(x.price)+'</td><td>'+money(x.varCost+x.gf)+'</td><td>'+money(x.profit)+'</td><td><span class="local-margin '+(x.marginPct<35?'low':'high')+'">'+rounded(x.marginPct)+'</span></td></tr>').join('')+'</tbody></table></div>'
       :'<p>Aún no hay productos de reventa vinculados. Los '+merch.length+' artículos de mercadería solo tienen costo de compra; para medir margen deben asociarse a un producto con precio de venta.</p>');
   }
-  afterRender('renderDashboard',renderGoal);
-  afterRender('renderProductos',renderProfitability);
-  onPanelShow('mercaderia',renderMerchProfitability);
-  onDataChanged(()=>{renderGoal();renderProfitability();renderMerchProfitability();});
-  return {renderGoal,renderProfitability,renderMerchProfitability,localMonthlyProfit:()=>localMonthlyProfit(state)};
+  let activeTab='resumen';
+  function renderDashboardSummary(){
+    const anchor=d.getElementById('dash-kpis');if(!anchor)return;
+    let root=d.getElementById('dash-local-profit');
+    if(!visible()){root?.remove();return;}
+    if(!root){root=d.createElement('section');root.id='dash-local-profit';root.className='local-profit-card local-dashboard-summary';anchor.insertAdjacentElement('afterend',root);}
+    const data=localMonthlyProfit(state);
+    const percent=data.progressPct!=null?rounded(data.progressPct):'—';
+    const value=data.progressPct!=null?Math.min(100,Math.max(0,data.progressPct)):0;
+    root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">GANANCIA · CANAL LOCAL</span><h2>Meta de '+esc(monthLabel(data.month))+'</h2><p>Solo Mostrador y sahten.online.</p></div>'+
+      '<button class="local-module-open" type="button" data-open-profit>Ver Rentabilidad completa</button></div>'+
+      '<div class="local-profit-numbers"><strong>'+money(data.profit)+'</strong><div class="local-profit-secondary">'+
+      (data.goal>0?'<span>'+percent+' de '+money(data.goal)+'</span><span>'+money(data.remaining)+' para llegar</span>':'<span>Sin meta mensual configurada</span>')+
+      '</div></div><div class="local-profit-progress" role="progressbar" aria-label="Avance de ganancia mensual local" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(value)+'"><div style="width:'+value+'%"></div></div>'+
+      (data.missing?'<p class="local-profit-disclaimer">Resultado parcial · '+data.missing+' pedidos sin costo verificado.</p>':'');
+    root.querySelector('[data-open-profit]')?.addEventListener('click',()=>{
+      activeTab='metas';w.showPanel?.('rentabilidad');
+    });
+  }
+  function renderModule(){
+    const panel=d.getElementById('panel-rentabilidad');
+    if(!panel||!visible())return;
+    panel.querySelectorAll('[data-local-tab]').forEach(b=>{
+      b.setAttribute('aria-pressed',String(b.dataset.localTab===activeTab));
+      b.onclick=()=>{activeTab=b.dataset.localTab;renderModule();};
+    });
+    panel.querySelectorAll('[data-local-pane]').forEach(el=>{el.hidden=el.dataset.localPane!==activeTab;});
+    if(activeTab==='resumen'){
+      renderGoal({anchorId:'rentabilidad-goal-anchor',rootId:'rentabilidad-goal-card',summary:true});
+    } else if(activeTab==='metas'){
+      renderGoal({anchorId:'rentabilidad-goals-anchor',rootId:'rentabilidad-goals-card',summary:false});
+    } else if(activeTab==='productos'){
+      renderProfitability({panelId:'rentabilidad-productos',rootId:'rentabilidad-productos-table'});
+    } else if(activeTab==='mercaderia'){
+      renderMerchProfitability({panelId:'rentabilidad-mercaderia',rootId:'rentabilidad-mercaderia-table'});
+    }
+  }
+  afterRender('renderDashboard',renderDashboardSummary);
+  afterRender('renderProductos',()=>renderProfitability());
+  onPanelShow('mercaderia',()=>renderMerchProfitability());
+  onPanelShow('rentabilidad',renderModule);
+  onDataChanged(()=>{renderDashboardSummary();renderModule();});
+  return {renderGoal,renderDashboardSummary,renderModule,renderProfitability,renderMerchProfitability,localMonthlyProfit:()=>localMonthlyProfit(state)};
 }
