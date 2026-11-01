@@ -63,6 +63,37 @@ La app debe mostrar **dos análisis complementarios**: (1) contribución increme
 
 La regla actual `quotePromotions` aplica margen de cada SKU con `trustedCosts` y aún **NO** aplica este guard incremental más cesta. Por eso los cinco upsells permanecen desactivados mientras se implementa y comprueba por backend.
 
+## 4.a — Fatay como upsell progresivo (según gasto neto en platos)
+
+**Nueva regla preparada, todavía desactivada comercialmente.** El precio base de Fatay es $5.850. El mínimo de compra se mide solo sobre el valor **NETO de platos elegibles del carrito**, antes de sumar la Fatay extra, sin bebidas, envío, cupones o regalos. Así no se puede inflar el mínimo comprando más unidades descontadas.
+
+| Neto previo de platos elegibles | Descuento TOTAL en la Fatay adicional | Precio de la Fatay |
+|---|---:|---:|
+| Menos de $20.000 | No se ofrece la promoción adicional | Precio normal con pago |
+| Desde $20.000 | 20% | $4.680 |
+| Desde $35.000 | 25% | $4.387,50 |
+| Desde $50.000 | 30% | $4.095 |
+
+Son porcentajes totales (incluyen el 10% habitual donde aplique), NO «20/25/30 puntos» sobre otro descuento. El servidor cotiza el medio de pago y decide cuál es la diferencia de beneficio extra. Solo una Fatay adicional; nunca como promoción abierta de Fatay aislada ni si ya hay un combo 3U/4U/Combo Fatay. Se requiere aceptación explícita de la oferta y evaluación de costo incremental y margen del pedido completo. En fase actual estos descuentos siguen apagados.
+
+## 4.b — Mercadería y recomendaciones sensatas de bebidas
+
+**Migración aplicada en la nube (proyecto rev. 298):** diez bebidas compradas por pack pasaron de Ingredientes a Mercadería; una Fanta 220 ml, que antes no tenía artículo de compra, se agregó como mercadería con costo pendiente. Son once unidades de reventa activas en el **catálogo interno**, con 7 productos creados y 4 productos existentes reclasificados. Se conservaron fotos existentes, recetas, stock e identificadores y un snapshot para rollback dentro del proyecto. **El ingrediente Agua de cocina permanece en Ingredientes.**
+
+- **Bebidas 600 ml:** Coca-Cola, Zero, Sprite, Fanta = $2.500 cada una. Costo registrado por 12/24: $1.352 por unidad.
+- **Agua sin gas y con gas 600 ml:** $2.000; compra por 24/6, costo medio $914,83.
+- **Latas 220 ml:** Coca-Cola, Zero, Sprite, Sprite Zero, Fanta = $1.400 cada una. Coca-Cola 220 tiene costo de compra conocido $846,25; las otras cuatro latas tienen costo de proveedor **sin verificar** y no pueden recibir un descuento nuevo.
+- Los packs originales no eran todos por docena: se conservaron 6, 8, 12 y 24 unidades para que la cuenta de costo por botella sea correcta. No se transformó todo en docenas ficticias.
+- Las fotos que el usuario aportará más adelante permanecen pendientes. No se editan imágenes ni se publica la nueva categoría en `sahten.online` hasta validar su paquete/preview.
+
+La política de recomendación **no aplica descuento extra a bebidas**; conserva el 10% habitual por pago cuando corresponda. Solo una bebida sugerida si el carrito no tiene otra, nunca para compras de bebida sola:
+- **Shawarma / Árabe Clásico / Falafel Mix / Sándwich:** elegir una 600 ml (Coca, Zero, Sprite o agua) en función de la selección del usuario.
+- **Tablas para compartir:** favorecer bebidas 600 ml; no insistir en una lata 220 ml para varios comensales.
+- **Pedido individual liviano:** una lata 220 ml cuando la preferencia de tamaño lo justifique; si no está disponible o tiene el costo pendiente, no prometer beneficios extra.
+- Evitar sugerir hummus si el plato/tabla ya lo incluye o el carrito ya lo tiene. Priorizar **solo dos recomendaciones visibles**: una bebida pertinente y un dulce o complemento pertinente. Si no hay contexto, no mostrar ofertas.
+
+**El motor comercial requiere validar el beneficio escalonado por servidor, la disponibilidad y los medios de pago antes de activar campañas o mostrar precio de upsell.** Los productos nuevos aún no están en la web pública: sigue en 28 fichas. El sistema todavía no ha realizado la publicación web ni reemplazado imágenes.
+
 ## 4 bis. Venta cruzada y umbrales
 - Hummus, Aristilos y Falafel Mix se preparan como sugerencias **sin descuento adicional**.
 - La barra de envío gratis refleja el **neto** del carrito después de descuentos y la zona real; nunca subsidia entregas fuera de reglas.
