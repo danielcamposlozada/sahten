@@ -434,7 +434,18 @@ function sendStatus(){
   return 'Revisá el total y enviá tu pedido.';
 }
 function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]&&(k!=='mercadopago'||mpAvailable)});}
-function cartBenefit(method){return paymentDiscountQuote(subtotal(),method||pay,MENU.payments&&MENU.payments.benefit,'online');}
+function cartBenefit(method){
+  var selected=method||pay, legacy=paymentDiscountQuote(subtotal(),selected,MENU.payments&&MENU.payments.benefit,'online');
+  if(!MENU.promotions||MENU.promotions.enabled!==true)return legacy;
+  var rule=paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit);
+  var quote=quotePromotions({lines:lines().map(function(l){return {productId:l.id,unitPrice:l.unitPrice,qty:l.qty}}),
+    method:selected,channel:'online',config:Object.assign({},MENU.promotions,{
+      paymentPercent:rule.enabled&&rule.channels.online?rule.percent:0
+    })});
+  return {amount:quote.discount,label:quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
+    paymentDiscount:quote.appliedPromotionIds.length?null:legacy.paymentDiscount,
+    promotionQuote:quote};
+}
 function modernDelivery(){return !!(MENU&&MENU.delivery&&MENU.delivery.deliveryV2&&MENU.delivery.deliveryV2.active);}
 function shippingForMethod(method){return MENU.delivery?.enabled===false||geo||modernDelivery()?shippingFor(MENU.delivery,geo&&geo.lat,geo&&geo.lng,subtotal()-(modernDelivery()?cartBenefit(method).amount:0),{route:deliveryRoute,authorization:deliveryAuthorization,now:Date.now()+deliveryServerOffset,hasPaymentDiscount:!!cartBenefit(method).paymentDiscount}):null;}
 function recalcDelivery(){ship=shippingForMethod(pay);}
@@ -520,9 +531,12 @@ function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
   if(sending||step!=='details'||!lines().length)return;if(unavailableItems()){step='cart';sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
+  if(MENU.promotions?.enabled===true&&!modernDelivery()&&pay!=='mercadopago'){
+    sending=false;step='details';sheet();$('err').textContent='Las promociones requieren validación del servidor antes de enviar el pedido. Contactá al local.';return;
+  }
   if(pay==='mercadopago'){mpStart(o);return;}
   var s=sb();
-  if(modernDelivery()){
+  if(modernDelivery()||MENU.promotions?.enabled===true){
     var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.cashTendered,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
     deliveryApi('order',{order:o,requestId:deliverySubmission.id}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='details';sheet();$('err').textContent=e.message;});return;
   }
