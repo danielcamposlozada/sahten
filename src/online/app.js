@@ -2,6 +2,7 @@
 // Integración online con la app: publicar el menú (sin backend). Supabase y roles se suman en src/online/*.
 // ═══════════════════════════════════════════════════════════
 import { buildMenuJson, categoryPhotoKey } from './menuJson.js';
+import { kv } from '../project/kv.js';
 import { buildPublishFiles, buildPublishZip, writeToDirectory, optimizeImage, buildIndexHtml } from './publish.js';
 
 const w = window;
@@ -20,6 +21,7 @@ export function currentMenu(opts = {}) {
   if (w.SAHTEN.pricing?.prepare()) { w.SAHTEN.project.markDirty(); }
   const sb = w.SAHTEN_SUPABASE || {};
   const m = buildMenuJson(S, {
+    promotions: kv.json('sahten_promotions', {}),
     menuConfig: opts.forceSite && w.MENU_CONFIG && w.MENU_CONFIG.site ? { ...w.MENU_CONFIG, site: { ...w.MENU_CONFIG.site, enabled: true } } : (w.MENU_CONFIG || {}), tienda: w._getTiendaConfig ? w._getTiendaConfig() : {}, images: w.SAHTEN_IMAGES || {},
     supabase: sb, store: { name: S.project.name || (w.SAHTEN_PROJECT && w.SAHTEN_PROJECT.name), slug: sb.slug || '' },
     quoteIds: Object.fromEntries(S.products.map(p => [p.id, w.SAHTEN.pricing?.quoteIds(p).mostrador])),
