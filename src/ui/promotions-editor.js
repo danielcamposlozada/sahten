@@ -1,6 +1,6 @@
 import { kv } from '../project/kv.js';
 import { onPanelShow } from '../events.js';
-import { initialPromotionConfig, preparePromotionPlan, quotePromotions, localDateParts, scheduleMatches, expiryLabel } from '../core/promotions.js';
+import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatches, expiryLabel } from '../core/promotions.js';
 import { promotionReport } from '../core/promotions-report.js';
 import '../styles/promotions.css';
 
@@ -11,9 +11,8 @@ const options=[['online','Tienda online'],['mostrador','Mostrador']];
 const placements=[['ticket','Tickets'],['cart','Carrito'],['checkout','Checkout'],['menu','Menú']];
 function load() {
   const stored=kv.json(KEY,null);
-  const prepared=preparePromotionPlan(stored);
-  if(stored && prepared!==stored)kv.set(KEY,JSON.stringify(prepared));
-  return prepared;
+  return stored && stored.version===1 && Array.isArray(stored.campaigns)
+    ? stored : initialPromotionConfig();
 }
 function save(state) {kv.set(KEY,JSON.stringify(state));}
 function catalog(w) { return Array.isArray(w.PRODUCTS)?w.PRODUCTS.filter(p=>!p.recetaOnly):[]; }
@@ -198,7 +197,7 @@ export function installPromotionsEditor(w=window) {
       +'<p>La campaña de tablas se calcula automáticamente como el segundo y tercer viernes y sábado de cada mes. Los domingos permanecen excluidos.</p></section>';
   }
   function couponEditor(state){
-    const programs=Object.values(state.couponPrograms||initialPromotionConfig().couponPrograms);
+    const programs=Object.values(state.couponPrograms||{});
     return '<section class="promo-card"><h3>Cupones y recompensas · Plan precargado</h3>'
       +'<div class="promo-grid">'+programs.map(c=>'<article class="promo-note"><h4>'+esc(c.name)+'</h4>'
         +'<p><strong>Estado:</strong> Preparado, sin emisión</p>'
