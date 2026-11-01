@@ -20,9 +20,7 @@ const safeCart=items=>{
 function policy(menu,productId,offerId,method){
   if(menu?.promotions?.enabled!==true||menu.promotions.upsellGuardRequired===false)
     fail('promotions_off');
-  if(!['transferencia','efectivo'].includes(method))
-    // No asumir un costo nominal de Mercado Pago para rentabilidad incremental.
-    fail('payment_fee_not_verified');
+  if(!['transferencia','efectivo','mercadopago'].includes(method))fail('invalid_payment_method');
   const found=menu.promotions.upsells?.find(x=>x.id===offerId && x.enabled===true &&
     x.kind==='upsell' && x.maxUnits===1 && x.productIds?.includes(productId));
   if(!found)fail('offer_not_published');
@@ -34,6 +32,13 @@ function trustedCosts(costs){
     fail('upsell_costs_not_verified');
   return costs;
 }
+function paymentFee(costs,method){
+ if(method!=='mercadopago')return null;
+ const fee=costs?.trustedPaymentFeePercent;
+ if(typeof fee!=='number'||!Number.isFinite(fee)||fee<0||fee>100)
+   fail('upsell_payment_fee_not_verified');
+ return fee;
+}
 function validateOffer(quote,offerId,productId) {
   const line=quote.promotionSnapshot?.lines?.find(l=>l.productId===productId);
   if(!quote.promotionSnapshot?.appliedPromotionIds?.includes(offerId) ||
@@ -44,12 +49,13 @@ function validateOffer(quote,offerId,productId) {
 }
 function quote(menu,order,costs,selection,now,extras={},requireCustomer=false){
   const validated=trustedCosts(costs);
+  const trustedPaymentFeePercent=paymentFee(validated,order?.paymentMethod);
   return quoteOrder(menu,order,{
     allowOtherPayments:true,salesChannel:'online',validateCustomer:true,requireCustomer,now,
     trustedCosts:validated.trustedCosts,
     trustedEconomics:validated.trustedEconomics,
     trustedOrderCosts:validated.trustedOrderCosts,
-    trustedUpsellSelection:selection,
+    trustedUpsellSelection:selection,trustedPaymentFeePercent,
     ...extras
   });
 }
@@ -86,23 +92,28 @@ export async function preflightUpsell({
  * pedido debe usar exactamente el mismo requestId para reintentos idempotentes. */
 export async function acceptPreflightUpsell({
   storeId,sessionId,menuRevision,secret,menu,order,token,requestId,
-  consumeNonce,expectedTotal,costs,now=Date.now(),quoteContext={}
+  consumeNonce,expectedTotal,costs,now=Date.now(),quoteContext={},commit=true
 }={}){
   trustedCosts(costs);
   const items=safeCart(order?.items);
-  if(typeof consumeNonce!=='function')fail('upsell_nonce_missing');
+  if(commit && typeof consumeNonce!=='function')fail('upsell_nonce_missing');
   // Sólo valida firma/contexto sin consumir; todavía NO es prueba canjeada.
   const params={...context({storeId,sessionId,menuRevision,secret,order,now}),
     token,acceptedCart:items,requestId};
-  const dry=await verifyAcceptedUpsell({...params,consumeNonce:async()=>true});
+  let dry;
+  try{dry=await verifyAcceptedUpsell({...params,consumeNonce:async()=>true});}
+  catch(e){fail(e?.code||'upsell_challenge_invalid');}
   policy(menu,dry.productId,dry.offerId,order.paymentMethod);
   const priced=quote(menu,{...order,items},costs,
     {...dry,promotionId:dry.offerId},now,quoteContext,true);
   validateOffer(priced,dry.offerId,dry.productId);
   if(typeof expectedTotal!=='number'||!Number.isFinite(expectedTotal)||
      cents(expectedTotal)!==cents(priced.total))fail('quote_total_changed');
-  // La segunda verificación incluye el consumo atómico respaldado por Supabase.
-  const verified=await verifyAcceptedUpsell({...params,consumeNonce});
+  if(!commit)return priced;
+  // El mismo requestId de pago/orden permite reintentar un nonce ya canjeado.
+  let verified;
+  try{verified=await verifyAcceptedUpsell({...params,consumeNonce});}
+  catch(e){fail(e?.code||'upsell_challenge_invalid');}
   if(verified.promotionId!==dry.promotionId)fail('offer_mismatch');
   return priced;
 }
