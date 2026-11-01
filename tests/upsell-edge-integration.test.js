@@ -80,6 +80,17 @@ describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)
   expect(x.calls.some(([name])=>name==='reserve')).toBe(true);
   expect(x.fetchImpl).toHaveBeenCalledTimes(1);
  });
+ it('Mercado Pago no cobra como transferencia aunque el browser fuerce el método',async()=>{
+  const x=paymentSetup(),original=base('mercadopago');
+  const offer=await x.call('offer',offerBody(original));expect(offer.status).toBe(200);
+  const wrong={...selected(original,offer.data),paymentMethod:'transferencia'};
+  const result=await x.call('checkout',{storeId:sid,requestId:rid,proof,order:wrong});
+  expect(result.status).toBe(409);
+  expect(result.data.code).toBe('invalid_payment_method');
+  expect(x.repo.consumeUpsellNonce).not.toHaveBeenCalled();
+  expect(x.calls.some(([action])=>action==='reserve')).toBe(false);
+  expect(x.fetchImpl).not.toHaveBeenCalled();
+ });
  it('impide reservar o llamar a Mercado Pago con total alterado, sin consumir nonce',async()=>{
   const x=paymentSetup(),original=base('mercadopago');
   const offer=await x.call('offer',offerBody(original));
