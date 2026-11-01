@@ -21,7 +21,7 @@ it('sugiere dos complementos, los suma solo por click y no altera el descuento d
  site:null
  };
  const dom=new JSDOM(buildIndexHtml(menu),{url:'https://test.shop/',runScripts:'dangerously',
- pretendToBeVisual:true,beforeParse(w){w.scrollTo=()=>{};w.fetch=async()=>Response.json([]);}});
+ pretendToBeVisual:true,beforeParse(w){w.scrollTo=()=>{};w.fetch=async(url)=>String(url)==='menu.json'?Response.json(menu):Response.json([]);}});
  try{
   const w=dom.window,d=w.document;
   await vi.waitFor(()=>expect(d.querySelector('[data-inc="shawarma"]')).toBeTruthy());
