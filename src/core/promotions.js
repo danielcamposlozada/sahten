@@ -162,6 +162,29 @@ export const INITIAL_COUPON_PROGRAMS = {
   second_online:{enabled:false,name:'Segunda compra web',channel:'online',extraPercent:10,
     minEligibleSubtotal:40000,validDays:14,maxExtraAmount:4000,requiresConfirmedOrigin:true}
 };
+// Actualiza borradores guardados con la vieja 0.4.34 sin pisar selecciones personalizadas.
+// Si una campaña predeterminada no tenía productos elegidos, completamos el plan
+// y la mantenemos pausada: no activamos ofertas implícitamente en una migración.
+export function preparePromotionPlan(stored) {
+  if(!stored || stored.version!==1 || !Array.isArray(stored.campaigns))return initialPromotionConfig();
+  if(stored.planVersion>=2)return stored;
+  const plan=initialPromotionConfig();
+  const campaigns=stored.campaigns.map(c=>{
+    const p=plan.campaigns.find(x=>x.id===c.id);
+    return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
+      ? {...c,enabled:false,productIds:[...p.productIds]}:c;
+  });
+  const upsells=(stored.upsells||[]).map(c=>{
+    const p=plan.upsells.find(x=>x.id===c.id);
+    return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
+      ? {...c,enabled:false,productIds:[...p.productIds],
+         triggerProductIds:[...p.triggerProductIds],suppressIfPresent:[...p.suppressIfPresent]}:c;
+  });
+  return {...stored,planVersion:2,campaigns,upsells,
+    couponPrograms:stored.couponPrograms||plan.couponPrograms,
+    requireVerifiedCosts:true,checkoutProFeePercent:stored.checkoutProFeePercent??null};
+}
+
 export function initialPromotionConfig() {
   return {version:1,planVersion:2,enabled:false,paymentPercent:10,minMarginPct:40,
     requireVerifiedCosts:true,checkoutProFeePercent:null,
