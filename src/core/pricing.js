@@ -106,7 +106,8 @@ export function channelNetReceivedWithDisc(s, p, chId) {
 export function marginPct(price, cost) { return price > 0 ? (price - cost) / price : 0; }
 
 /** Ganancia extra generada por el factor de tier, por encima de costo + GF. */
-export const tierProfitPerUnit = (s, p) => (finalCommercial(p,'mostrador') != null || isPriceFixed(p, 'mostrador'))
+export const tierProfitPerUnit = (s, p) => finalCommercial(p, 'mostrador') != null
   ? mostradorFinalPrice(s, p) - costPerUnit(s, p) - gfAssigned(s, p)
+  : isPriceFixed(p, 'mostrador') ? 0
   : (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
 export const tierProfitTotal = s => s.products.reduce((a, p) => a + tierProfitPerUnit(s, p) * (p.avgMes || 0), 0);
