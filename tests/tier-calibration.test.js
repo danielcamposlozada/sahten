@@ -10,7 +10,7 @@ const mk=()=>{
  return createState({tiers:[{id:'T4',factor:1.4},{id:'T6',factor:1.5}],
  channels:[{id:'mostrador',enabled:true,surcharge:0.3,commission:0},{id:'rappi',enabled:true,surcharge:0.5,commission:0.3}],
  globalCommission:2,gastosOp:[],gastosS:[],project:{roundTo:50},
- products:[{id:'p',name:'Shawarma de pollo',tier:'T6',priceAdj:1,priceAdjByChannel:{mostrador:adj},
+ products:[{id:'p',name:'Shawarma de pollo',tier:'T4',formulaTierByChannel:{mostrador:'T6'},priceAdj:1,priceAdjByChannel:{mostrador:adj},
  pricingMode:{mostrador:'calculated'},priceTargets:{mostrador:target},fixedPrices:{mostrador:target},
  formulaCalibration:{originalTier:'T4'},pricingPolicies:{mostrador:{price:null,variableCost:variable,fixedCost:fixed}}}]
  });
@@ -36,7 +36,7 @@ describe('tier calibrado: la fórmula, no el precio anclado, es autoridad',()=>{
  it('el canal Rappi conserva el tier original antes de recalibración local',()=>{
    const s=mk(),p=s.products[0];
    const before=channelPrice(s,p,'rappi');
-   p.tier='T4';p.formulaCalibration=undefined;p.pricingMode={};p.fixedPrices={};p.priceTargets={};
+   p.formulaTierByChannel={};p.formulaCalibration=undefined;p.pricingMode={};p.fixedPrices={};p.priceTargets={};
    const after=channelPrice(s,p,'rappi');
    expect(after).toBe(before);
  });
