@@ -6,7 +6,28 @@ import { chromium } from 'playwright';
 const origin=process.env.SAHTEN_QA_URL||'http://127.0.0.1:4173';
 const out='qa/rentabilidad';
 await fs.mkdir(out,{recursive:true});
-const demo=await fs.readFile('src/project/demo.sahten.json','utf8');
+const fixture=JSON.parse(await fs.readFile('src/project/demo.sahten.json','utf8'));
+const date=new Date();
+const month=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit'}).format(date).replace(/\\//g,'-');
+fixture.project={...(fixture.project||{}),name:'SAHTEN · Demostración visual',
+  localProfitGoals:{...(fixture.project?.localProfitGoals||{}),[month]:120000}};
+fixture.sales=fixture.sales||{};
+fixture.sales.orders=fixture.sales.orders||[];
+fixture.costs=fixture.costs||{};
+fixture.costs.saleCosts=fixture.costs.saleCosts||{};
+const first=fixture.catalog?.productos?.[0]?.id||'demo1';
+const second=fixture.catalog?.productos?.[1]?.id||'demo2';
+fixture.sales.orders.push(
+  {id:'qa-rent-1',num:9001,origin:'mostrador',source:'pickup',status:'retirado',
+   createdAt:date.toISOString(),subtotal:72000,total:72000,items:[]},
+  {id:'qa-rent-2',num:9002,origin:'menu-online',source:'pickup',status:'entregado',
+   createdAt:date.toISOString(),subtotal:50000,total:50000,items:[]}
+);
+fixture.costs.saleCosts['qa-rent-1']={basis:'at-sale',channel:'mostrador',
+  items:[{productId:first,qty:4,revenue:72000,variable:17000,fixed:9000,commission:0}]};
+fixture.costs.saleCosts['qa-rent-2']={basis:'published-quote',channel:'mostrador',
+  items:[{productId:second,qty:3,revenue:50000,variable:15500,fixed:7800,commission:1250}]};
+const demo=JSON.stringify(fixture);
 const browser=await chromium.launch({headless:true});
 const errors=[];
 const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
@@ -16,20 +37,7 @@ await page.waitForFunction(()=>window.SAHTEN_READY===true,{timeout:60000});
 await page.evaluate(async (raw)=>{
   window.document.getElementById('proj-welcome')?.remove();
   await window.SAHTEN.project.session.openText(raw,null,'SAHTEN · Datos ilustrativos.sahten');
-  const w=window;
-  const date=new Date();
-  const month=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit'}).format(date).replace(/\//g,'-');
-  w.SAHTEN_PROJECT.localProfitGoals={...(w.SAHTEN_PROJECT.localProfitGoals||{}),[month]:120000};
-  const sample=[
-    {id:'qa-rent-1',origin:'mostrador',status:'retirado',createdAt:date.toISOString()},
-    {id:'qa-rent-2',origin:'menu-online',status:'entregado',createdAt:date.toISOString()}
-  ];
-  w.SAHTEN_ORDERS.push(...sample);
-  w.SAHTEN_SALE_COSTS['qa-rent-1']={basis:'at-sale',channel:'mostrador',
-    items:[{productId:w.PRODUCTS[0]?.id||'demo1',qty:4,revenue:72000,variable:17000,fixed:9000,commission:0}]};
-  w.SAHTEN_SALE_COSTS['qa-rent-2']={basis:'published-quote',channel:'mostrador',
-    items:[{productId:w.PRODUCTS[1]?.id||'demo2',qty:3,revenue:50000,variable:15500,fixed:7800,commission:1250}]};
-  w.showPanel('rentabilidad');
+  window.showPanel('rentabilidad');
   w.SAHTEN.localProfit.renderModule();
 },demo);
 await page.waitForSelector('#panel-rentabilidad.active #rentabilidad-goal-card .local-profit-progress',{timeout:30000});
