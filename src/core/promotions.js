@@ -135,61 +135,25 @@ export function quotePromotions({
     couponId:canCoupon&&used.has(coupon.id)?coupon.id:null,
     snapshotAt:new Date(now).toISOString()};
 }
-// Plan comercial SAHTEN v2: SKUs confirmados contra el catálogo publicado de sahten.online.
-// Se configuran como borradores. Ninguna campaña, cupón o anuncio se activa en producción.
 export const INITIAL_CAMPAIGNS = [
-  {id:'weekly-meals',name:'Lunes a miércoles · Favoritos seleccionados',kind:'public',enabled:false,
+  {id:'weekly-meals',name:'Lunes a miércoles · Platos seleccionados',kind:'public',enabled:false,
     extraPercent:5,priority:20,channels:['online','mostrador'],
     schedule:{type:'weekly',weekdays:[1,2,3]},
-    productIds:['p1779467294622','p1779997171373','sandwich_falafel','arabe_clasico','shawarma_pollo'],
-    advertising:{enabled:true,placement:['ticket','cart','menu'],message:'Lunes a miércoles · Hasta 15% con efectivo o transferencia en platos seleccionados'}},
-  {id:'central-tables',name:'Tablas para compartir · Segundo y tercer viernes/sábado',kind:'public',enabled:false,
+    productIds:[],
+    advertising:{enabled:true,placement:['ticket','cart'],message:'Hasta 15% en platos seleccionados'}},
+  {id:'central-tables',name:'Tablas para compartir · Fines de semana centrales',kind:'public',enabled:true,
     extraPercent:5,priority:30,channels:['online','mostrador'],
     schedule:{type:'central_weekends'},
-    productIds:['tabla_celebrar','p1779997050112'],
-    advertising:{enabled:true,placement:['ticket','cart','menu'],message:'Segundo y tercer viernes y sábado · Hasta 15% en tablas seleccionadas'}}
+    productIds:[],
+    advertising:{enabled:true,placement:['ticket','cart'],message:'Fines de semana de tablas · Hasta 15%'} }
 ];
 export const INITIAL_UPSELLS = [
-  {id:'baklava-up',name:'Baklava · Complemento dulce',kind:'upsell',enabled:false,
-    extraPercent:10,priority:40,minMarginPct:40,productIds:['baklava'],maxUnits:1,
-    triggerProductIds:['p1779467294622','p1779997171373','sandwich_falafel','arabe_clasico','shawarma_pollo'],
-    suppressIfPresent:['tabla_celebrar']}
+  {id:'baklava-up',name:'Complemento dulce',kind:'upsell',enabled:false,extraPercent:10,priority:40,
+    productIds:[],maxUnits:1,
+    triggerProductIds:[],
+    suppressIfPresent:[]}
 ];
-// Solo planificación y visibilidad en el editor: NO emitir ni canjear cupones desde un borrador.
-export const INITIAL_COUPON_PROGRAMS = {
-  first_online:{enabled:false,name:'Bienvenida web',channel:'online',extraPercent:5,
-    minEligibleSubtotal:30000,validDays:14,maxExtraAmount:null,requiresConfirmedOrigin:false},
-  second_online:{enabled:false,name:'Segunda compra web',channel:'online',extraPercent:10,
-    minEligibleSubtotal:40000,validDays:14,maxExtraAmount:4000,requiresConfirmedOrigin:true}
-};
-// Actualiza borradores guardados con la vieja 0.4.34 sin pisar selecciones personalizadas.
-// Si una campaña predeterminada no tenía productos elegidos, completamos el plan
-// y la mantenemos pausada: no activamos ofertas implícitamente en una migración.
-export function preparePromotionPlan(stored) {
-  if(!stored || stored.version!==1 || !Array.isArray(stored.campaigns))return initialPromotionConfig();
-  if(stored.planVersion>=2)return stored;
-  const plan=initialPromotionConfig();
-  const campaigns=stored.campaigns.map(c=>{
-    const p=plan.campaigns.find(x=>x.id===c.id);
-    return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
-      ? {...c,enabled:false,productIds:[...p.productIds]}:c;
-  });
-  const upsells=(stored.upsells||[]).map(c=>{
-    const p=plan.upsells.find(x=>x.id===c.id);
-    return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
-      ? {...c,enabled:false,productIds:[...p.productIds],
-         triggerProductIds:[...p.triggerProductIds],suppressIfPresent:[...p.suppressIfPresent]}:c;
-  });
-  return {...stored,planVersion:2,campaigns,upsells,
-    couponPrograms:stored.couponPrograms||plan.couponPrograms,
-    requireVerifiedCosts:true,checkoutProFeePercent:stored.checkoutProFeePercent??null};
-}
-
 export function initialPromotionConfig() {
-  return {version:1,planVersion:2,enabled:false,paymentPercent:10,minMarginPct:40,
-    requireVerifiedCosts:true,checkoutProFeePercent:null,
-    campaigns:JSON.parse(JSON.stringify(INITIAL_CAMPAIGNS)),
-    upsells:JSON.parse(JSON.stringify(INITIAL_UPSELLS)),
-    couponPrograms:JSON.parse(JSON.stringify(INITIAL_COUPON_PROGRAMS)),
-    ticket:{enabled:false,review:true,advertise:true}};
+  return {version:1,enabled:false,paymentPercent:10,minMarginPct:40,checkoutProFeePercent:null,campaigns:JSON.parse(JSON.stringify(INITIAL_CAMPAIGNS)),
+    upsells:JSON.parse(JSON.stringify(INITIAL_UPSELLS)),ticket:{enabled:false,review:true,advertise:true}};
 }
