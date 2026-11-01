@@ -8,7 +8,7 @@
 const BUSINESS = [
   'sahten_v4_data', 'sahten_proj_snapshots', 'sahten_active_proj', 'sahten-customization', 'sahten_menu_config', 'sahten_tienda_',
   'sahten_orders', 'sahten_customers', 'sahten_mostrador_discounts', 'sahten_mostrador_payments', 'sahten_report_data',
-  'sahten_gf_pages', 'sahten_notifications', 'sahten_tab_state',
+  'sahten_gf_pages', 'sahten_notifications', 'sahten_tab_state', 'sahten_promotions',
 ];
 export const isBusinessKey = k => typeof k === 'string' && BUSINESS.some(p => k === p || k.startsWith(p));
 

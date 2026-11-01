@@ -54,6 +54,9 @@ import { projectUi } from './project/ui.js';
 import { onlinePublish } from './online/app.js';
 import * as siteModule from './online/site.js';
 import { installSalesAvailability } from './ui/sales-availability.js';
+import { installPromotionsEditor, register as registerPromotionsPanel } from './ui/promotions-editor.js';
+import * as promotionEngine from './core/promotions.js';
+import { selectTicketAdvertisement } from './core/ticket-advertising.js';
 import { createOnline } from './online/index.js';
 import * as orderWorkflow from './online/order-workflow.js';
 import { events } from './events.js';
@@ -114,11 +117,14 @@ window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú On
 window.SAHTEN.orderWorkflow = orderWorkflow;
 window.SAHTEN.orderActions = installOrderActions(window);
 window.SAHTEN.salesAvailability = installSalesAvailability(window);
+window.SAHTEN.promotions = {...promotionEngine,selectTicketAdvertisement};
+window.SAHTEN.promotionsEditor = installPromotionsEditor(window);
 window.SAHTEN.online = { publish: onlinePublish };
 Object.assign(window.SAHTEN.online, createOnline({ w: window, project, events }));
 window.SAHTEN.online.publish = onlinePublish;
 window.SAHTEN.delivery = installDelivery(window);
 registerModules();
+registerPromotionsPanel();
 
 const RENDERS = ['showPanel', 'recalcAll', 'applyData', 'renderDashboard', 'renderProductos', 'renderProyeccion',
   'renderIngredientes', 'renderEnvases', 'renderMostrador', 'renderRecipeBody', 'renderCostReceta', 'renderStock', 'mkChart', 'mostSetTab', 'orderSetStatus'];
