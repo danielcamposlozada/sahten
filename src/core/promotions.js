@@ -132,24 +132,24 @@ export function quotePromotions({
     snapshotAt:new Date(now).toISOString()};
 }
 export const INITIAL_CAMPAIGNS = [
-  {id:'weekly-meals',name:'Lunes a miércoles · Platos seleccionados',kind:'public',enabled:true,
+  {id:'weekly-meals',name:'Lunes a miércoles · Platos seleccionados',kind:'public',enabled:false,
     extraPercent:5,priority:20,channels:['online','mostrador'],
     schedule:{type:'weekly',weekdays:[1,2,3]},
-    productIds:['p1779467294622','p1779997171373','sandwich_falafel','arabe_clasico','shawarma_pollo'],
+    productIds:[],
     advertising:{enabled:true,placement:['ticket','cart'],message:'Hasta 15% en platos seleccionados'}},
   {id:'central-tables',name:'Tablas para compartir · Fines de semana centrales',kind:'public',enabled:true,
     extraPercent:5,priority:30,channels:['online','mostrador'],
     schedule:{type:'central_weekends'},
-    productIds:['tabla_celebrar','p1779997050112'],
+    productIds:[],
     advertising:{enabled:true,placement:['ticket','cart'],message:'Fines de semana de tablas · Hasta 15%'} }
 ];
 export const INITIAL_UPSELLS = [
-  {id:'baklava-up',name:'Agregá Baklava',kind:'upsell',enabled:true,extraPercent:10,priority:40,
-    productIds:['baklava'],maxUnits:1,
-    triggerProductIds:['p1779467294622','p1779997171373','p1779997050112','sandwich_falafel','arabe_clasico','shawarma_pollo'],
-    suppressIfPresent:['tabla_celebrar']}
+  {id:'baklava-up',name:'Complemento dulce',kind:'upsell',enabled:false,extraPercent:10,priority:40,
+    productIds:[],maxUnits:1,
+    triggerProductIds:[],
+    suppressIfPresent:[]}
 ];
 export function initialPromotionConfig() {
-  return {version:1,enabled:false,paymentPercent:10,minMarginPct:40,checkoutProFeePercent:null,campaigns:structuredClone(INITIAL_CAMPAIGNS),
-    upsells:structuredClone(INITIAL_UPSELLS),ticket:{enabled:false,review:true,advertise:true}};
+  return {version:1,enabled:false,paymentPercent:10,minMarginPct:40,checkoutProFeePercent:null,campaigns:JSON.parse(JSON.stringify(INITIAL_CAMPAIGNS)),
+    upsells:JSON.parse(JSON.stringify(INITIAL_UPSELLS)),ticket:{enabled:false,review:true,advertise:true}};
 }
