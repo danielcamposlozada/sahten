@@ -40,7 +40,7 @@ describe('upsell marginal + margen de toda la cesta',()=>{
   it('falla de forma cerrada sin prueba server-side, con intento inventado en input o costo marginal faltante',()=>{
     for(const params of [
       {trustedUpsellSelection:null},
-      {trustedUpsellSelection:{verified:false,...selection}},
+      {trustedUpsellSelection:{...selection,verified:false}},
       {trustedUpsellSelection:{...selection,productId:'baklava'}},
       {trustedOrderCosts:null},
       {trustedEconomics:{...economies,[fatay]:{...economies[fatay],incrementalVerified:false}}},
