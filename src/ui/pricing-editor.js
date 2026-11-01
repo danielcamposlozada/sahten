@@ -123,7 +123,17 @@ export function installPricing(w = window) {
             }
           }
           product.pricingPolicies = staged.pricingPolicies; product.pricingHistory = staged.pricingHistory;
-          if (staged.priceTargets) product.priceTargets = staged.priceTargets;
+          if (staged.priceTargets) {
+            product.priceTargets = staged.priceTargets;
+            // Compatibilidad: las versiones anteriores leen fixedPrices, sin volver a fijar el precio en pricingPolicies.
+            product.fixedPrices = { ...(product.fixedPrices || {}) };
+            for (const [id, data] of Object.entries(drafts)) {
+              if (product.priceTargets[id] != null && data.price != null) {
+                product.fixedPrices[id] = product.priceTargets[id];
+                product.pricingPolicies[id] = { ...product.pricingPolicies[id], price: null };
+              }
+            }
+          }
           w.SAHTEN.project.markDirty(); w.scheduleSave(); w.recalcAll();
           if (w.currentPanel === 'menuonline') w.renderMenuOnline?.();
           if (w.currentPanel === 'mostrador') w.renderMostrador();
