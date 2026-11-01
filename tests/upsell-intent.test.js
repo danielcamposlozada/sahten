@@ -21,7 +21,7 @@ describe('Token de upsell no falsificable',()=>{
   expect(challenge.expiresAt-options.now).toBe(300000);
   const proof=await accepted(challenge);
   expect(proof).toMatchObject({verified:true,isIncremental:true,
-    productId:'fatay',eligibleUnits:1,offerId:options.offerId});
+    productId:'fatay',eligibleUnits:1,offerId:options.offerId,promotionId:options.offerId});
  });
  it('no permite fabricar la prueba ni eliminar productos de la cesta',async()=>{
   const challenge=await issueUpsellChallenge(options);

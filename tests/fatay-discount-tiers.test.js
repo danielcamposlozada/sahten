@@ -8,7 +8,7 @@ const expenses={shawarma_pollo:{verified:true,directCost:3000,fixedCost:1000,inc
  fatay:{verified:true,directCost:442.12,fixedCost:3138.42,incrementalVerified:true,additionalIncrementalCost:0},
  p1779467294622:{verified:true,directCost:1619.07,fixedCost:5155.98,incrementalVerified:true,additionalIncrementalCost:0}};
 const cost={shawarma_pollo:4000,fatay:3580.54,p1779467294622:6775.05};
-const intent={verified:true,isIncremental:true,productId:'fatay',eligibleUnits:1};
+const intent={verified:true,isIncremental:true,productId:'fatay',promotionId:'fatay-individual-up',eligibleUnits:1};
 const orderCosts={verified:true,additionalOrderCost:0,shippingSubsidy:0};
 const quote=(qty,method='transferencia',opts={})=>quotePromotions({config:base(),channel:'online',method,now:date,
  lines:[{productId:'shawarma_pollo',unitPrice:16000,qty},{productId:'fatay',unitPrice:5850,qty:1}],

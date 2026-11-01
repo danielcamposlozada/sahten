@@ -88,5 +88,5 @@ export async function verifyAcceptedUpsell({
  });
  if(consumed!==true)fail('upsell_token_already_used');
  return {verified:true,productId:claims.productId,isIncremental:true,
-   eligibleUnits:1,offerId:claims.offerId,requestId};
+   eligibleUnits:1,offerId:claims.offerId,promotionId:claims.offerId,requestId};
 }

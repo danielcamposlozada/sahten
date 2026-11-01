@@ -17,7 +17,8 @@ export function assessIncrementalUpsell({
   const deny = reason => ({ approved:false, reason });
   const proof = trustedUpsellSelection;
   if (!proof || proof.verified !== true || proof.productId !== productId ||
-      proof.isIncremental !== true || proof.eligibleUnits !== 1)
+      proof.promotionId !== upsell.id || proof.isIncremental !== true ||
+      proof.eligibleUnits !== 1)
     return deny('incremental_upsell_not_verified');
   if (upsell.maxUnits !== 1 || !upsell.triggerProductIds?.length)
     return deny('invalid_upsell_policy');
