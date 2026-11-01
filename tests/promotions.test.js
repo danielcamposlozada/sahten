@@ -62,6 +62,13 @@ describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
     expect(r.lines[1].appliedPromotionId).toBe('weekly-meals');
     expect(r.lines[1].promotionDiscount).toBe(790);
   });
+  it('rechaza ofertas que llevan el neto a cero aunque el costo declarado sea cero',()=>{
+    const p=cfg();p.campaigns[0].extraPercent=100;p.paymentPercent=0;
+    const r=quotePromotions({config:p,lines:[line('p1779467294622',16850)],
+      trustedCosts:{p1779467294622:0},method:'mercadopago',now:at('2026-11-02')});
+    expect(r.netSubtotal).toBe(16850);
+    expect(r.appliedPromotionIds).toEqual([]);
+  });
   it('expone fecha límite clara al cliente',()=>{
     expect(expiryLabel('2026-11-14')).toBe('Válido hasta el 14/11/2026');
   });
