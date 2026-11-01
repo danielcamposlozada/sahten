@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatches, expiryLabel, FOUR_FATAY_ID } from '../src/core/promotions.js';
-const cfg=()=>({...initialPromotionConfig(),enabled:true});
+const cfg=()=>{const c={...initialPromotionConfig(),enabled:true};c.campaigns[0].enabled=true;c.campaigns[0].productIds=['p1779467294622','sandwich_falafel','shawarma_pollo'];c.campaigns[1].enabled=true;c.campaigns[1].productIds=['tabla_celebrar'];c.upsells[0].enabled=true;c.upsells[0].productIds=['baklava'];c.upsells[0].triggerProductIds=['p1779467294622'];c.upsells[0].suppressIfPresent=['tabla_celebrar'];return c;};
 const line=(productId,unitPrice,qty=1)=>({productId,unitPrice,qty});
 const at=(s)=>new Date(s+'T15:00:00-03:00');
 describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
