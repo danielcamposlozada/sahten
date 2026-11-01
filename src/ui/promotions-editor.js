@@ -41,7 +41,7 @@ function runPreview(state,w,method,productId) {
     +'<small>Simulación local. No habilita descuentos en la tienda ni en caja.</small></div>';
 }
 export function installPromotionsEditor(w=window) {
-  let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
+  let selected='weekly-meals', simulationProduct='',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
   const get=()=>load();
   let liveState={published:false,campaigns:[]},liveLoaded=false;
   const liveRevision=id=>liveState.campaigns.find(c=>c.id===id)?.revision??null;
