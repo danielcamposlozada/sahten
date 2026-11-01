@@ -1,0 +1,39 @@
+name: Capturas reales de Rentabilidad
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/capture-rentabilidad.mjs'
+      - '.github/workflows/rentabilidad-captures.yml'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Arrancar la app REAL
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/sahten-preview.log 2>&1 &
+          echo $! > /tmp/sahten-preview.pid
+      - name: Capturar escritorio y móvil
+        run: node scripts/capture-rentabilidad.mjs
+      - name: Adjuntar capturas y diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sahten-rentabilidad-real-0.4.34
+          path: qa/rentabilidad/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Mostrar registros si falla
+        if: failure()
+        run: cat /tmp/sahten-preview.log || true
