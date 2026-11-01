@@ -52,3 +52,34 @@ describe('Tickets con importes conciliados',()=>{
   expect(x).toContain('&lt;script&gt;');
  });
 });
+
+describe('Promoción visual de ticket térmico',()=>{
+ it('imprime un bloque publicitario legible en 58 y 80 mm y separa el ahorro en la cuenta',()=>{
+   for(const width of [48,72]){
+     const order=sale({promotionTicketSnapshot:{kind:'campaign',headline:'Compartí más, disfrutá más',startsOn:'2026-11-07'}});
+     const doc=buildReceipt(order,{paper:{contentMm:width,pageSize:'auto'}});
+     expect(doc).toContain('receipt-promo-eyebrow');
+     expect(doc).toContain('PROMOCIÓN SAHTEN');
+     expect(doc).toContain('Compartí más, disfrutá más');
+     expect(doc).toContain('DESDE EL 07/11/2026');
+     expect(doc).toContain('receipt-saving-row');
+     expect(doc).toContain('$20.520');
+     expect(doc).toMatch(/border:2px solid #000/);
+   }
+ });
+ it('prioriza el código de cupón confirmado con etiqueta propia y llamada a la acción',()=>{
+   const doc=html(sale({promotionTicketSnapshot:{kind:'coupon',headline:'Volvé por más',code:'SAH-TICKET-EXAMPLE',label:'Válido según condiciones'}}));
+   expect(doc).toContain('TU PRÓXIMA COMPRA');
+   expect(doc).toContain('GUARDÁ ESTE CÓDIGO');
+   expect(doc).toContain('SAH-TICKET-EXAMPLE');
+   expect(doc).toContain('USALO EN SAHTEN.ONLINE');
+   expect(doc).toContain('Válido según condiciones');
+ });
+ it('omite cupones sin código y escapa el contenido promocional',()=>{
+   expect(html(sale({promotionTicketSnapshot:{kind:'coupon',headline:'Oferta sin código'}}))).not.toContain('receipt-promo-eyebrow">TU');
+   const doc=html(sale({promotionTicketSnapshot:{kind:'coupon',headline:'<script>alert(1)</script>',code:'X<&Y'}}));
+   expect(doc).not.toContain('<script>');
+   expect(doc).toContain('&lt;script&gt;');
+   expect(doc).toContain('X&lt;&amp;Y');
+ });
+});
