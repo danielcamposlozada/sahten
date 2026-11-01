@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "planVersion": 2,
+  "planVersion": 3,
   "enabled": false,
   "paymentPercent": 10,
   "minMarginPct": 40,
@@ -96,6 +96,17 @@
       ],
       "suppressIfPresent": [
         "tabla_celebrar"
+      ],
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás algo dulce? Una Baklava con hasta 20% total en pago elegible"
+      },
+      "activationBlockers": [
+        "validate_real_margin_40pct_after_payment_and_packaging",
+        "backend_reprice_required"
       ]
     }
   ],
@@ -125,5 +136,160 @@
     "enabled": false,
     "review": true,
     "advertise": true
+  },
+  "minMarginAbsolutePct": 35,
+  "productUpgrades": [
+    {
+      "id": "fatay-cuarta",
+      "name": "Fatay con la Cuarta (4U)",
+      "kind": "replace_product",
+      "enabled": false,
+      "approvedConcept": true,
+      "status": "pending_verified_cost",
+      "triggerProductId": "p1779467294622",
+      "replacementProductId": "p1779570052552",
+      "trigger": "cart",
+      "replaceInsteadOfAdd": true,
+      "unitsPrinted": 4,
+      "referenceListPrice": 18500,
+      "extraPercent": 0,
+      "onlyStandardPaymentBenefit": true,
+      "excludeCampaignsAndCoupons": true,
+      "requireExplicitCustomerAcceptance": true,
+      "requireVerifiedTargetCost": true,
+      "requireContributionMarginPct": 40,
+      "messages": {
+        "heading": "¿Le sumás una cuarta fatay?",
+        "description": "Cambiá tus 3 fatay por el combo de 4. El precio adicional se calcula con tu medio de pago.",
+        "cta": "Cambiar por 4 fatay"
+      },
+      "activationBlockers": [
+        "missing_computed_cost_for_replacement_sku",
+        "confirm_print_four_units_and_no_duplicate_line",
+        "verify_incremental_margin"
+      ]
+    }
+  ],
+  "crossSells": [
+    {
+      "id": "hummus-complement",
+      "name": "Sumá hummus",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "hummus",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "arabe_clasico"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Lo acompañás con un hummus?"
+    },
+    {
+      "id": "mamul-nuez-complement",
+      "name": "Mamul de Nuez",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "mamul_nuez",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "arabe_clasico"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Sumás un mamul de nuez de postre?"
+    },
+    {
+      "id": "mamul-datil-complement",
+      "name": "Mamul de Dátil",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "mamul_datil",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "arabe_clasico"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Sumás un mamul de dátil de postre?"
+    }
+  ],
+  "checkoutIncentives": [
+    {
+      "id": "shipping-progress",
+      "name": "Avance al beneficio de envío de la zona",
+      "kind": "delivery_threshold_progress",
+      "enabled": false,
+      "requiresDeliveryZone": true,
+      "basis": "discountedNetGoods",
+      "recalculateOn": [
+        "campaign_change",
+        "coupon_change",
+        "payment_method_change",
+        "delivery_zone_change"
+      ],
+      "extraDiscountPercent": 0
+    },
+    {
+      "id": "first-web-coupon-ticket",
+      "name": "QR del ticket a primera compra online",
+      "kind": "coupon_distribution",
+      "enabled": false,
+      "linkedCouponProgram": "first_online",
+      "deduplicateByIdentity": true,
+      "requirePaidOriginOrder": true,
+      "validDays": 14,
+      "oneCodePerOriginOrder": true
+    }
+  ],
+  "exclusions": {
+    "publicCampaigns": [
+      "fatay",
+      "shawarma_mixto",
+      "p1779570052552"
+    ],
+    "noExtraDiscountRecommendations": [
+      "hummus",
+      "mamul_nuez",
+      "mamul_datil"
+    ],
+    "notPublishedOrRequiresCostReview": [
+      "p1779570052552",
+      "p1779299917243"
+    ],
+    "deferredNotApproved": [
+      "25percent_random_reward",
+      "free_fatay_gift",
+      "free_delivery_beyond_zone_threshold",
+      "traditional_loyalty_points"
+    ],
+    "excludedPublicSkuNames": [
+      "Tabla para Compartir"
+    ]
+  },
+  "activationPolicy": {
+    "customerFacingCampaignsInitiallyOff": true,
+    "oneExtraPromotionPerSku": true,
+    "noAutomaticCampaignCouponStackingSameSku": true,
+    "minTargetContributionPct": 40,
+    "minAbsoluteContributionPct": 35,
+    "commissionAndShippingMustBeIncluded": true,
+    "paymentStandardBenefitIndependent": true,
+    "liveControlsPerCampaign": true,
+    "requireServerQuoteAtCheckout": true,
+    "requireVerifiedCosts": true,
+    "excludeExistingPaidOrdersFromRetroactiveChange": true
   }
 }
