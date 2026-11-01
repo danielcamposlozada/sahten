@@ -24,7 +24,7 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},trustedEconomics={},trustedUpsellSelection=null,trustedOrderCosts=null,now=Date.now()}={}) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},trustedEconomics={},trustedUpsellSelection=null,trustedOrderCosts=null,trustedPaymentFeePercent=null,now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
   const method=allowOtherPayments?input.paymentMethod:'mercadopago';
   if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
@@ -62,7 +62,11 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
     // Jamás leer estas pruebas de body.order: solo el backend puede inyectarlas.
     trustedEconomics,trustedUpsellSelection,trustedOrderCosts,
-    commissionPercent:method==='mercadopago'?Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10):0,
+    // Sin tasa de MP revisada, el upsell debe FALLAR CERRADO.
+    // No inventar una comisión del 10% por defecto.
+    commissionPercent:method==='mercadopago'
+      ? (typeof trustedPaymentFeePercent==='number'&&Number.isFinite(trustedPaymentFeePercent)&&trustedPaymentFeePercent>=0
+        ?trustedPaymentFeePercent:NaN):0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);

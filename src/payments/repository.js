@@ -13,6 +13,15 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
     run: (action, args) => request('/rest/v1/rpc/sahten_mp_backend', { method: 'POST', body: { action, args } }),
     async menu(storeId) { const rows = await request('/rest/v1/menus?select=json&store_id=eq.' + storeId); return rows?.[0]?.json; },
     async promotionCosts(storeId,channel='mostrador') { return await request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid:storeId,channel}}); },
+    // Todas son RPC privadas: la clave de servicio NUNCA llega al cliente.
+    upsellEconomics:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_upsell_verified_costs',
+      {method:'POST',body:{sid,channel}}),
+    issueUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_issue',
+      {method:'POST',body:args}),
+    readUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_read',
+      {method:'POST',body:args}),
+    redeemUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_redeem',
+      {method:'POST',body:args}),
     async canManage(storeId, user) {
       const rows = await request('/rest/v1/stores?select=id,owner,project_id&id=eq.' + storeId, { token: user.token });
       const store = rows?.[0]; if (!store) return false;
