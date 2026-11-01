@@ -56,3 +56,28 @@ it('bebidas para Shawarma SUPERMIX: solo las aprobadas, precio normal, sin expon
   expect(JSON.stringify(result)).not.toContain('secretCost');
   expect(JSON.stringify(result)).not.toContain('914.83');
 });
+
+it('cuando se publica una oferta Fatay exige HMAC, conserva sus tramos y no inventa comisión MP',()=>{
+ const state=demoState();
+ const first=buildMenuJson(state).products[0].id;
+ const m=buildMenuJson(state,{promotions:{enabled:true,
+  checkoutProFeePercent:null,paymentPercent:10,
+  upsells:[{id:'fatay-individual-up',enabled:true,kind:'upsell',name:'Sumá una Fatay',
+   extraPercent:10,priority:55,productIds:[first],maxUnits:1,
+   triggerProductIds:['main_product'],suppressIfPresent:[],
+   discountTiers:[{minEligibleNetSubtotal:20000,totalDiscountPercent:20},
+    {minEligibleNetSubtotal:35000,totalDiscountPercent:25},
+    {minEligibleNetSubtotal:50000,totalDiscountPercent:30}],
+   trustedCosts:{[first]:999},supplierSecret:'NEVER_PUBLISH'}],
+  campaigns:[]
+ }});
+ expect(m.promotions.enabled).toBe(true);
+ expect(m.promotions.upsellGuardRequired).toBe(true);
+ expect(m.promotions.checkoutProFeePercent).toBeNull();
+ expect(m.promotions.upsells[0].discountTiers).toEqual([
+  {minEligibleNetSubtotal:20000,totalDiscountPercent:20},
+  {minEligibleNetSubtotal:35000,totalDiscountPercent:25},
+  {minEligibleNetSubtotal:50000,totalDiscountPercent:30}]);
+ expect(JSON.stringify(m)).not.toContain('NEVER_PUBLISH');
+ expect(JSON.stringify(m)).not.toContain('trustedCosts');
+});
