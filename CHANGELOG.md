@@ -2,6 +2,15 @@
 
 ## Sin publicar
 
+## 0.4.34
+
+- **Rentabilidad como sección independiente**: Resumen, Metas e historial, Productos y Mercadería, con acceso desde Dashboard.
+- **Metas de ganancia local por mes**: objetivos independientes, edición de períodos anteriores y registro de cambios.
+- **Ventas locales reales**: progreso calculado con snapshots históricos de Mostrador y sahten.online, sin sumar marketplaces.
+- **Rentabilidad por producto**: ganancia unitaria, margen porcentual y ganancia acumulada del mes, con avisos por costos no verificados.
+- **Tiers locales por fórmula**: conserva precios y costos, protege los tiers generales de las plataformas.
+
+
 ## 0.4.33
 
 - **Delivery al guardar**: mínimos de compra, tarifas, beneficios y cobertura se envían a la tienda conectada desde «Guardar y aplicar en la web», sin publicar el catálogo ni subir archivos. Los horarios mantienen sus dos calendarios independientes. Incluye confirmación, cola sin conexión, reintento y aviso ante cambios desde otro equipo.
