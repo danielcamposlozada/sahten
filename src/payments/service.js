@@ -30,7 +30,7 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
   async function limited(bucket, max) { if (!await repo.run('limit', { bucket, max })) fail('Hubo demasiados intentos. Esperá unos minutos y volvé a probar.', 429, 'rate_limited'); }
   async function upsellCosts(sid){
     let costs;
-    try{costs=await repo.upsellEconomics(sid,'online');}catch{
+    try{costs=await repo.upsellEconomics(sid,'mostrador');}catch{
       fail('La oferta requiere costos aprobados por el negocio.',409,'upsell_costs_not_verified');
     }
     if(costs?.verified!==true||costs.trustedOrderCosts?.verified!==true)
