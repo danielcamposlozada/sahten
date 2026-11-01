@@ -25,17 +25,19 @@ function checkedSelect(keys,selected,namespace) {
 function runPreview(state,w,method,productId) {
   const p=catalog(w).find(p=>p.id===productId)||catalog(w)[0];
   if(!p)return '<p>No hay productos cargados.</p>';
-  const unitPrice=Number(p.pricingPolicies?.mostrador?.price??p.precioMostrador??p.fixedPrices?.mostrador??0);
+  const unitPrice=Number(w.mostradorFinalPrice?.(p)??p.pricingPolicies?.mostrador?.price??p.precioMostrador??p.fixedPrices?.mostrador??0);
   const costParts=p.pricingPolicies?.mostrador;
   const costs=costParts && costParts.variableCost!=null && costParts.fixedCost!=null
     ?{[p.id]:Number(costParts.variableCost)+Number(costParts.fixedCost)}:{};
   const q=quotePromotions({lines:[{productId:p.id,qty:1,unitPrice}],method,channel:'mostrador',
-    config:{...state,enabled:true},trustedCosts:costs,now:new Date()});
-  const net=q.netSubtotal, cost=costs[p.id], profit=cost!=null?net-cost:null;
+    config:{...state,enabled:true},trustedCosts:costs,now:new Date(),
+    commissionPercent:method==='mercadopago'?(Number(state.checkoutProFeePercent)||0):0});
+  const net=q.netSubtotal, cost=costs[p.id],fee=method==='mercadopago'?q.estimatedPaymentFee:0,profit=cost!=null?net-cost-fee:null;
   return '<div class="promo-sim-results"><div><span>Precio base</span><strong>'+fmt(q.subtotal)+'</strong></div>'
     +'<div><span>Descuento</span><strong>−'+fmt(q.discount)+'</strong></div>'
     +'<div><span>Precio proyectado</span><strong>'+fmt(net)+'</strong></div>'
-    +'<div><span>Resultado estimado</span><strong>'+(profit===null?'Sin costo verificado':fmt(profit))+'</strong></div>'
+    +'<div><span>Comisión estimada Checkout Pro</span><strong>'+(method==='mercadopago'&&state.checkoutProFeePercent==null?'Sin configurar':fmt(fee))+'</strong></div>'
+    +'<div><span>Resultado estimado</span><strong>'+(profit===null||method==='mercadopago'&&state.checkoutProFeePercent==null?'Datos insuficientes':fmt(profit))+'</strong></div>'
     +'<small>Simulación local. No habilita descuentos en la tienda ni en caja.</small></div>';
 }
 export function installPromotionsEditor(w=window) {
@@ -74,6 +76,7 @@ export function installPromotionsEditor(w=window) {
       else if(key==='from'||key==='until')c.schedule[key]=value||undefined;
       else if(key==='message')c.advertising.message=value;
       else if(key==='advertisingEnabled')c.advertising.enabled=value;
+      else if(key==='checkoutProFeePercent')state.checkoutProFeePercent=Math.max(0,Math.min(30,value));
       else if(key==='ticketEnabled')state.ticket.enabled=value;
       else if(key==='ticketAdvertise')state.ticket.advertise=value;
       save(state);render();
@@ -148,6 +151,7 @@ export function installPromotionsEditor(w=window) {
     return '<section class="promo-card"><h3>Simulador sin afectar ventas</h3>'
       +'<div class="promo-grid"><label class="promo-field"><span>Producto</span><select data-promo-sim-product>'+catalog(w).map(p=>'<option value="'+esc(p.id)+'" '+(p.id===simulationProduct?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label>'
       +'<label class="promo-field"><span>Medio de pago</span><select data-promo-sim-method>'+[['efectivo','Efectivo'],['transferencia','Transferencia'],['mercadopago','Checkout Pro']].map(([v,n])=>'<option value="'+v+'" '+(v===simulationMethod?'selected':'')+'>'+n+'</option>').join('')+'</select></label></div>'
+      +formField('promo-commission','Comisión real de Checkout Pro, IVA incluido (%)',state.checkoutProFeePercent??'','number','data-field="checkoutProFeePercent" min="0" max="30" step="0.01"')
       +runPreview(state,w,simulationMethod,simulationProduct)+'</section>';
   }
   function reportEditor(w){
