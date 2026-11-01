@@ -20,12 +20,13 @@ export function installLocalProfitUi(w=window) {
   });
   let selectedMonth=null,historyOpen=false;
   const monthLabel=m=>new Date(m+'-01T12:00:00-03:00').toLocaleString('es-AR',{month:'long',year:'numeric'});
-  function renderGoal(){
-    const anchor=d.getElementById('dash-kpis');
+  function renderGoal({anchorId='rentabilidad-goal-anchor',rootId='rentabilidad-goal-card',summary=false}={}){
+    const anchor=d.getElementById(anchorId);
+    const rerender=()=>renderGoal({anchorId,rootId,summary});
     if(!anchor)return;
-    let root=d.getElementById('dash-local-profit');
+    let root=d.getElementById(rootId);
     if(!visible()){root?.remove();return;}
-    if(!root){root=d.createElement('section');root.id='dash-local-profit';root.className='local-profit-card';anchor.insertAdjacentElement('afterend',root);}
+    if(!root){root=d.createElement('section');root.id=rootId;root.className='local-profit-card';anchor.insertAdjacentElement('afterend',root);}
     const current=currentLocalMonth();
     const month=selectedMonth&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth)?selectedMonth:current;
     const data=localMonthlyProfit(state,{month});
@@ -50,16 +51,16 @@ export function installLocalProfitUi(w=window) {
       +(data.missing?'Resultado parcial: faltan costos en algunos pedidos.':'Estimación después del GF asignado por pedido; no es un cierre contable.')+'</span>'
       +(canEdit()?'<button type="button" data-local-goal-edit>Configurar meta del mes</button>':'')+'</div>'
       +'<form data-local-goal-form hidden class="local-goal-form"><label>Meta para '+esc(monthLabel(month))+' ($)<input type="number" min="0" step="1000" data-local-goal-input value="'+(storedGoal??'')+'" required></label><button type="submit">Guardar meta de '+esc(month)+'</button><small data-local-goal-error role="alert"></small></form>'
-      +'<details class="local-month-history" '+(historyOpen?'open':'')+'><summary>Historial de metas y ganancias mensuales</summary><div class="local-profit-table-wrap"><table><thead><tr><th>Mes</th><th>Meta</th><th>Ganancia registrada</th><th>Avance</th><th>Datos</th><th>Acción</th></tr></thead><tbody>'
+      +(summary?'':'<details class="local-month-history" '+(historyOpen?'open':'')+'><summary>Historial de metas y ganancias mensuales</summary><div class="local-profit-table-wrap"><table><thead><tr><th>Mes</th><th>Meta</th><th>Ganancia registrada</th><th>Avance</th><th>Datos</th><th>Acción</th></tr></thead><tbody>'
       +history.map(h=>'<tr><td><strong>'+esc(monthLabel(h.month))+'</strong></td><td>'+(h.goal!=null?money(h.goal):'Sin configurar')+'</td><td>'+money(h.profit)+'</td><td>'+(h.goal>0?rounded(h.progressPct):'—')+'</td><td>'+(h.missing?'<span title="Faltan costos de pedidos">Parcial ('+h.missing+')</span>':'Verificado ('+h.covered+')')+'</td><td><button type="button" data-local-month="'+h.month+'">Ver / editar</button></td></tr>').join('')+'</tbody></table></div>'
       +(changes.length?'<details class="local-goal-audit"><summary>Registro de ediciones ('+changes.length+')</summary><ul>'+changes.slice(0,50).map(x=>'<li>'+esc(x.month)+' · '+(x.before==null?'Sin meta':money(x.before))+' → '+money(x.after)+' · '+esc(new Date(x.at).toLocaleString('es-AR'))+'</li>').join('')+'</ul></details>':'')
-      +'</details>';
+      +'</details>');
     root.querySelector('#local-profit-month')?.addEventListener('change',e=>{
       if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value))return;
-      selectedMonth=e.target.value;renderGoal();
+      selectedMonth=e.target.value;rerender();
     });
     root.querySelectorAll('[data-local-month]').forEach(b=>b.addEventListener('click',()=>{
-      selectedMonth=b.dataset.localMonth;historyOpen=true;renderGoal();
+      selectedMonth=b.dataset.localMonth;historyOpen=true;rerender();
     }));
     root.querySelector('.local-month-history')?.addEventListener('toggle',e=>{historyOpen=e.target.open;});
     root.querySelector('[data-local-goal-edit]')?.addEventListener('click',()=>{
@@ -73,7 +74,7 @@ export function installLocalProfitUi(w=window) {
       try {
         const changed=setMonthlyGoal(state,{month,amount:val,actor:d.body.dataset.role||'admin'});
         if(changed){w.SAHTEN?.project?.markDirty?.();w.scheduleSave?.();}
-        historyOpen=true;renderGoal();
+        historyOpen=true;rerender();
       }catch(err){root.querySelector('[data-local-goal-error]').textContent=err.message;}
     });
   }
