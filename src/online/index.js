@@ -103,6 +103,23 @@ export function createOnline({ w = window, project, events }) {
     context:()=>conn()?.storeId&&session.id?JSON.stringify([session.id,conn().url,conn().storeId]):'',
     enabled:()=>!!w.document&&ONLINE_ENABLED&&session.isOpen&&controller.info().signedIn&&!session.readOnly&&!remoteViewing&&writeScope(role())==='project',store:config,
   });
+  const promotionPublisher=createAvailabilityPublisher({
+    namespace:'promotion-campaigns',
+    publish:(id,enabled)=>controller.setPromotionCampaignState(id,enabled,w.SAHTEN.promotionsEditor?.liveRevision(id)??null),
+    context:()=>conn()?.storeId&&session.id?JSON.stringify([session.id,conn().url,conn().storeId]):'',
+    enabled:()=>!!w.document&&ONLINE_ENABLED&&session.isOpen&&controller.info().signedIn&&!session.readOnly&&!remoteViewing&&writeScope(role())==='project',
+    store:config,
+  });
+  promotionPublisher.onChange(info=>{
+    if(info.state==='publicado')readStates();
+    if(w.document)w.SAHTEN.promotionsEditor?.render();
+  });
+  w.addEventListener('sahten:promotion-campaign',e=>{
+    if(!conn()?.storeId||session.readOnly||writeScope(role())!=='project')return;
+    const {id,enabled}=e.detail||{};
+    if(typeof id==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(id)&&typeof enabled==='boolean')
+      promotionPublisher.set(id,enabled);
+  });
   const configurationPublisher=createAvailabilityPublisher({
     namespace:'delivery-configuration',accepts:value=>!!value&&value.configuration?.version===1&&typeof value.requestId==='string',
     publish:async(_id,value)=>{const row=await controller.setDeliveryConfiguration(value);w.SAHTEN.delivery?.configuration?.ack(value,row);return row;},
@@ -130,40 +147,41 @@ export function createOnline({ w = window, project, events }) {
   async function readStates(){
     if(readingStates||!w.document||!controller.info().signedIn||!conn()?.storeId||remoteViewing)return;
     readingStates=true;const id=session.id,storeId=conn().storeId,url=conn().url,deliveryBefore=w._getTiendaConfig?.().deliveryEnabled,zoneBefore=clone(w._getTiendaConfig?.().deliveryV2||null),hoursBefore=clone(w._getTiendaConfig?.()||{});
-    try{const [remote,delivery,zones,hours,configuration]=await Promise.all([controller.readAvailability(),controller.readDeliveryAvailability().catch(()=>null),controller.readDeliveryZoneState().catch(()=>null),controller.readServiceHours().catch(()=>null),controller.readDeliveryConfiguration().catch(()=>null)]);if(!w.document||id!==session.id||storeId!==conn()?.storeId||url!==conn()?.url)return;let changed=false;
+    try{const [remote,delivery,zones,hours,configuration,promotions]=await Promise.all([controller.readAvailability(),controller.readDeliveryAvailability().catch(()=>null),controller.readDeliveryZoneState().catch(()=>null),controller.readServiceHours().catch(()=>null),controller.readDeliveryConfiguration().catch(()=>null),controller.readPromotionCampaignStates().catch(()=>null)]);if(!w.document||id!==session.id||storeId!==conn()?.storeId||url!==conn()?.url)return;let changed=false;
       if(delivery&&!deliveryPublisher.info().changes.delivery&&deliveryBefore===w._getTiendaConfig?.().deliveryEnabled)w.SAHTEN.delivery?.operation?.applyRemote(delivery);
       if(zones)w.SAHTEN.delivery?.zoneOperation?.applyRemote(zones,zoneBefore);
       if(hours)w.SAHTEN.delivery?.hours?.applyRemote(hours,hoursBefore);
       if(configuration)w.SAHTEN.delivery?.configuration?.applyRemote(configuration,hoursBefore);
+      if(promotions)w.SAHTEN.promotionsEditor?.applyRemote(promotions);
       for(const row of remote.sales||[]){const p=w.PRODUCTS?.find(p=>p.id===row.id);if(!p||salesPublisher.info().changes[row.id])continue;if(JSON.stringify(row.salesAvailability)!==JSON.stringify(p.salesAvailability)){p.salesAvailability=row.salesAvailability;changed=true;}}
       for(const row of remote.visibility||[]){const p=w.PRODUCTS?.find(p=>p.id===row.id);if(!p||p.recetaOnly||availability.info().changes[row.id]||!w.MENU_CONFIG)continue;const hidden=w.MENU_CONFIG.hiddenProducts||[];if(hidden.includes(row.id)===row.visible){w.MENU_CONFIG.hiddenProducts=row.visible?hidden.filter(x=>x!==row.id):[...hidden,row.id];changed=true;}}
       if(changed){w._saveMenuConfig?.();if(!session.readOnly)project.markDirty();w._moAvailabilityStatus?.();if(w.currentPanel==='mostrador')w.renderMostrador();if(w.currentPanel==='menuonline')w.renderMenuOnline?.();if(w.currentPanel==='productos')w.renderProductos();}
     }catch{/* servidor anterior o desconectado: no cambia el proyecto ni publica datos */}finally{readingStates=false;}
   }
   const stateTimer=w.setInterval(()=>{if(w.document?.visibilityState!=='hidden')readStates();},30000);
-  w.addEventListener('beforeunload',()=>{w.clearInterval(stateTimer);availability.cancel();salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel();});
+  w.addEventListener('beforeunload',()=>{w.clearInterval(stateTimer);availability.cancel();salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); promotionPublisher.cancel();});
   w.addEventListener('focus',()=>readStates());
   availability.onChange(() => { if (!w.document) return; ui.renderAvailability(); w._moAvailabilityStatus?.(); });
   w.addEventListener('sahten:availability', e => {
     if (!conn().storeId || session.readOnly || writeScope(role()) !== 'project') return;
     const { id, available, resumeAt } = e.detail || {}; availability.set(id, available, resumeAt);
   });
-  w.addEventListener('online', () => {availability.flush().catch(() => {});salesPublisher.flush().catch(() => {});deliveryPublisher.flush().catch(() => {});zonePublisher.flush().catch(() => {});hoursPublisher.flush().catch(() => {});configurationPublisher.flush().catch(() => {});readStates();});
+  w.addEventListener('online', () => {availability.flush().catch(() => {});salesPublisher.flush().catch(() => {});deliveryPublisher.flush().catch(() => {});zonePublisher.flush().catch(() => {});hoursPublisher.flush().catch(() => {});configurationPublisher.flush().catch(() => {});promotionPublisher.flush().catch(() => {});readStates();});
 
   const api = {
-    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher, availability, salesPublisher, deliveryPublisher, zonePublisher, hoursPublisher, configurationPublisher, readStates, progress,
+    enabled: ONLINE_ENABLED, controller, role, setRole, conn, photoPublisher, availability, salesPublisher, deliveryPublisher, zonePublisher, hoursPublisher, configurationPublisher, promotionPublisher, readStates, progress,
     setAutoPhotos(on) { w.MENU_CONFIG.autoSyncPhotos = !!on; w._saveMenuConfig(); project.markDirty(); if (on) photoPublisher.schedule(); else photoPublisher.cancel(); },
     syncInfo: () => (sync ? sync.info() : { state: 'sin vincular', linked: !!conn().projectId, pending: false, conflict: null, version: null, role: role() }),
 
     /** Iniciar sesión en una tienda ya configurada (solo email y contraseña) y retomar la sincronización. */
     async signIn(email, password) {
-      await controller.signIn(email, password); ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates();
+      await controller.signIn(email, password); ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); promotionPublisher.resume(); readStates();
       if (conn().projectId) sync.sync().catch(() => { /* queda en cola */ });
     },
     /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
-    signOut() { availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
+    signOut() { availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); promotionPublisher.cancel(); photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 
-    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates(); return r; },
+    async connect(opts) { const r = await controller.connect({ ...opts, projectId: conn().projectId || null }); ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); promotionPublisher.resume(); readStates(); return r; },
 
     /** Subir el proyecto: lo crea en la nube y lo vincula con la tienda (para que el personal vea sus pedidos). */
     async linkProject() {
@@ -184,7 +202,7 @@ export function createOnline({ w = window, project, events }) {
 
     /** Abrir un proyecto de la nube según el rol: completo (dueño, admin, lectura) o sin costos (encargado, cajero). */
     async openRemote(id, roleName) {
-      const cl = need(); availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
+      const cl = need(); availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); promotionPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); stopView();
       const task = progress.start('Abriendo proyecto de la nube');
       try {
       task.update({ detail: 'Descargando base de datos…' });
@@ -199,7 +217,7 @@ export function createOnline({ w = window, project, events }) {
       setRole(roleName); session.setReadOnly(roleName === 'lectura');
       await controller.resume(); ensureSync();
       if (writeScope(roleName) !== 'none') { try { await sync.sync(); } catch (e) { /* queda en cola */ } }
-      availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates(); task.finish(); return true;
+      availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); promotionPublisher.resume(); readStates(); task.finish(); return true;
       } catch (e) { task.fail(e); throw e; }
     },
 
@@ -211,7 +229,7 @@ export function createOnline({ w = window, project, events }) {
 
     /** Vista remota (dueño): una copia de solo lectura que se refresca sola cuando cambia la versión en la nube. */
     async remoteView() {
-      const cl = need(); availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); const id = rid(); let version = -1;
+      const cl = need(); availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); promotionPublisher.cancel(); photoPublisher.cancel(); if (sync) sync.cancel(); const id = rid(); let version = -1;
       const load = async () => {
         const r = await cl.rpc('get_project_data', { pid: id }); if (r.version === version) return;
         const file = await controller.restoreFile(clone(r.data), w.SAHTEN_IMAGES || {}); file.online = { ...file.online, supabase: { ...conn(), projectId: id } };
@@ -237,7 +255,7 @@ export function createOnline({ w = window, project, events }) {
       if (!ONLINE_ENABLED || remoteViewing) return;
       photoPublisher.cancel(); if (sync) { sync.cancel(); sync = null; }
       stopView(); applyRole(role(), w);
-      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates(); } catch (e) { availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); /* sin conexión: sigue local */ }
+      try { await controller.resume(); if (controller.info().signedIn && conn().projectId) { ensureSync(); sync.sync().catch(() => {}); } availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); promotionPublisher.resume(); readStates(); } catch (e) { availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); /* sin conexión: sigue local */ }
     },
   };
   function stopView() { if (viewTimer) { clearInterval(viewTimer); viewTimer = null; } }

@@ -11,8 +11,8 @@ const options=[['online','Tienda online'],['mostrador','Mostrador']];
 const placements=[['ticket','Tickets'],['cart','Carrito'],['checkout','Checkout'],['menu','Menú']];
 function load() {
   const stored=kv.json(KEY,null);
-  if(stored && stored.version===1 && Array.isArray(stored.campaigns))return stored;
-  return initialPromotionConfig();
+  return stored && stored.version===1 && Array.isArray(stored.campaigns)
+    ? stored : initialPromotionConfig();
 }
 function save(state) {kv.set(KEY,JSON.stringify(state));}
 function catalog(w) { return Array.isArray(w.PRODUCTS)?w.PRODUCTS.filter(p=>!p.recetaOnly):[]; }
@@ -41,8 +41,23 @@ function runPreview(state,w,method,productId) {
     +'<small>Simulación local. No habilita descuentos en la tienda ni en caja.</small></div>';
 }
 export function installPromotionsEditor(w=window) {
-  let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
+  let selected='weekly-meals', simulationProduct='',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
   const get=()=>load();
+  let liveState={published:false,campaigns:[]},liveLoaded=false;
+  const liveRevision=id=>liveState.campaigns.find(c=>c.id===id)?.revision??null;
+  const canOperate=()=>!w.SAHTEN.project.session.readOnly
+    &&!w.document.body.classList.contains('role-no-costs')
+    &&['owner','admin'].includes(w.SAHTEN.online?.role?.()||'')
+    &&w.SAHTEN.online?.controller?.info()?.signedIn===true;
+  function applyRemote(remote){
+    if(!remote||!Array.isArray(remote.campaigns))return;
+    const next={published:remote.published===true,campaigns:remote.campaigns};
+    const changed=!liveLoaded||JSON.stringify(next)!==JSON.stringify(liveState);
+    liveState=next;liveLoaded=true;
+    const root=w.document.getElementById('promotions-editor');
+    const active=w.document.activeElement,editing=root?.contains(active)&&['INPUT','TEXTAREA','SELECT'].includes(active.tagName);
+    if(changed&&root&&!editing)render();
+  }
   function render() {
     const root=w.document.getElementById('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
@@ -52,11 +67,36 @@ export function installPromotionsEditor(w=window) {
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor():tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['extras','Complementos'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?extrasEditor(state,w):tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
+    root.querySelector('[data-promo-live-retry]')?.addEventListener('click',()=>{
+      w.SAHTEN.online?.promotionPublisher?.flush().catch(()=>{});
+      render();
+    });
+    root.querySelector('[data-promo-live-discard]')?.addEventListener('click',()=>{
+      const id=root.querySelector('[data-promo-live-discard]')?.dataset.promoLiveDiscard;
+      if(!id)return;
+      w.SAHTEN.online?.promotionPublisher?.discard(id);
+      w.SAHTEN.online?.readStates?.().catch(()=>{});
+      render();
+    });
+    root.querySelector('[data-promo-live-toggle]')?.addEventListener('click',async e=>{
+      const id=e.currentTarget.dataset.promoLiveToggle,
+        row=liveState.campaigns.find(x=>x.id===id),
+        pending=w.SAHTEN.online?.promotionPublisher?.info()?.changes?.[id];
+      if(!canOperate()||!liveState.published||!row||pending)return;
+      const enabled=!row.enabled,priorProject=w.SAHTEN.project.session.id;
+      if(!await w.sahtenConfirm(enabled?
+        'Se volverá a habilitar esta promoción en la web según su calendario y sus productos publicados.':
+        'La promoción dejará de aplicarse a nuevos pedidos de la web. Los pedidos anteriores no cambian.',
+        {title:enabled?'Reactivar promoción en vivo':'Pausar promoción en vivo',okLabel:enabled?'Reactivar':'Pausar'}))return;
+      if(priorProject!==w.SAHTEN.project.session.id||!canOperate())return;
+      w.dispatchEvent(new w.CustomEvent('sahten:promotion-campaign',{detail:{id,enabled}}));
+      render();
+    });
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
       if(!canEdit)return;
       const id='custom-'+Date.now().toString(36);
@@ -104,6 +144,25 @@ export function installPromotionsEditor(w=window) {
   function campaignEditor(state,c,canEdit) {
     if(!c)return '<p>No hay campañas.</p>';
     const disabled=canEdit?'':'disabled';
+    const remote=liveState.campaigns.find(row=>row.id===c.id);
+    const info=w.SAHTEN.online?.promotionPublisher?.info();
+    const pending=info?.changes?.[c.id];
+    const published=liveLoaded&&liveState.published&&!!remote;
+    const status=!liveLoaded?'Consultando el estado de la web…'
+      :!liveState.published?'Motor de promociones todavía no publicado en la tienda'
+      :!remote?'Esta campaña todavía no está publicada'
+      :pending?(info.states?.[c.id]==='publicando'?'Enviando el cambio a la tienda…'
+        :info.states?.[c.id]==='error'?'Error al sincronizar · la promoción sigue según el servidor'
+        :info.states?.[c.id]==='sin conexión'?'Sin conexión · cambio aún no aplicado en la tienda'
+        :'Cambio pendiente de confirmación')
+      :remote.enabled?'Promoción habilitada en la web':'Promoción pausada en la web';
+    const operable=published&&canOperate()&&!pending;
+    const recovery=pending?'<div><button type="button" data-promo-live-retry="'+esc(c.id)+'">Reintentar sincronización</button> '
+      +'<button type="button" data-promo-live-discard="'+esc(c.id)+'">Descartar cambio pendiente</button></div>':'';
+    const liveControls='<div class="promo-note" role="status"><strong>Estado real en sahten.online:</strong> '+esc(status)
+      +'<p>Este control es independiente del borrador y no requiere republicar la web.</p>'
+      +'<button type="button" data-promo-live-toggle="'+esc(c.id)+'"'+(operable?'':' disabled')
+      +'>'+(remote?.enabled?'Pausar en web':'Reactivar en web')+'</button>'+recovery+'</div>';
     return '<div class="promo-split"><section class="promo-card"><div class="promo-row"><h3>Editor de campañas</h3><button type="button" data-promo-new '+disabled+'>+ Nueva</button></div>'
       +'<label class="promo-field"><span>Campaña</span><select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre',c.name,'text','data-field="name" '+disabled)+'<label class="promo-field"><span>Tipo de calendario</span><select data-field="scheduleType" '+disabled+'>'+[['weekly','Semanal'],['central_weekends','2° y 3° viernes y sábado'],['dates','Fechas específicas'],['always','Siempre']].map(([v,t])=>'<option value="'+v+'" '+(c.schedule?.type===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
@@ -119,7 +178,7 @@ export function installPromotionsEditor(w=window) {
       +'<label class="promo-field"><span>Mensaje publicitario</span><textarea data-field="message" rows="3" '+disabled+'>'+esc(c.advertising?.message||'')+'</textarea></label>'
       +'<h4>Dónde se muestra</h4><div class="promo-choices">'+checkedSelect(placements,c.advertising?.placement,'placement')+'</div>'
       +'<label class="promo-checkbox"><input data-field="advertisingEnabled" type="checkbox" '+(c.advertising?.enabled?'checked':'')+' '+disabled+'> Activar publicidad según calendario</label>'
-      +'<div class="promo-note">Cambiar el porcentaje requiere simular la rentabilidad. El motor aplica una sola promoción adicional por producto. Los cambios se guardan como borrador del proyecto.</div>'
+      +liveControls+'<div class="promo-note">Cambiar el porcentaje requiere simular la rentabilidad. El motor aplica una sola promoción adicional por producto. Los cambios se guardan como borrador del proyecto.</div>'
       +'<button type="button" data-promo-preview>Simular esta campaña</button></section></div>';
   }
   function calendarEditor(state) {
@@ -137,9 +196,58 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-calendar">'+['L','M','X','J','V','S','D'].map(d=>'<b>'+d+'</b>').join('')+cells+'</div>'
       +'<p>La campaña de tablas se calcula automáticamente como el segundo y tercer viernes y sábado de cada mes. Los domingos permanecen excluidos.</p></section>';
   }
-  function couponEditor(){
-    return '<section class="promo-card"><h3>Cupones y recompensas</h3><p>Primera compra online: mínimo $30.000, 5 puntos adicionales. Segunda compra: mínimo $40.000, 10 puntos adicionales y máximo $4.000 extra.</p>'
-      +'<div class="promo-note"><strong>Emisión y canje:</strong> deben verificarse con el servidor y un cliente identificado. Una comanda reimpresa conserva el mismo cupón; la fecha se muestra como '+esc(expiryLabel('2026-11-14'))+'. Esta vista no crea cupones utilizables.</div></section>';
+  function extrasEditor(state,w) {
+    const lookup=id=>catalog(w).find(p=>p.id===id)?.name||id||'Producto no encontrado';
+    const up=state.productUpgrades||[],extra=state.upsells||[],cross=state.crossSells||[];
+    const upgrades=up.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+      +'<p><strong>Origen:</strong> '+esc(lookup(p.triggerProductId))+' → <strong>Reemplazo:</strong> '+esc(lookup(p.replacementProductId))+'</p>'
+      +'<p><strong>Operación:</strong> reemplazar el combo, nunca sumar ambos. La cocina recibe '+esc(p.unitsPrinted)+' unidades.</p>'
+      +'<p>Precio de lista de referencia: '+fmt(p.referenceListPrice)+' · Sin descuento adicional: solo beneficio de pago habitual.</p>'
+      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')
+      +' · costo de 4 unidades y margen incremental pendientes de validación</p></article>').join('');
+    const dessert=extra.map(p=>{
+      const details=p.historicalUnitEconomics||{};
+      const totalCashPercent=Number(details.proposedTotalCashDiscountPct??(Number(state.paymentPercent||10)+Number(p.extraPercent||0)));
+      const priced=Number(details.listPrice)>0
+        ?'<p>Precio de referencia: '+fmt(details.listPrice)
+          +' · Con efectivo/transferencia: '+fmt(details.listPrice*(1-totalCashPercent/100))
+          +' ('+esc(totalCashPercent)+'% total, solo si el servidor lo aprueba).</p>':'';
+      return '<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+        +'<p>Producto: '+esc((p.productIds||[]).map(lookup).join(', '))
+        +' · Máximo '+esc(p.maxUnits||1)+' unidad · +'+esc(p.extraPercent)+' puntos adicionales.</p>'
+        +priced
+        +'<p><strong>Análisis económico:</strong> costo directo incremental + margen del pedido completo; '
+        +'no cargar automáticamente otra vez todos los gastos fijos mensuales.</p>'
+        +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')
+        +' · control de rentabilidad y pago en servidor pendiente</p></article>';
+    }).join('');
+    const crossSelling=cross.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+      +'<p>Producto: '+esc(lookup(p.productId))+' · Sin descuento adicional; únicamente corresponde el beneficio por forma de pago.</p>'
+      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')+'</p></article>').join('');
+    const shipping=(state.checkoutIncentives||[]).filter(p=>p.kind==='delivery_threshold_progress')
+      .map(p=>'<p><strong>Progreso de envío:</strong> calcular sobre el subtotal NETO, y solo según la zona vigente. '
+        +(p.enabled?'Preparado':'Desactivado')+'. No concede envío gratis fuera de la política de zonas.</p>').join('');
+    return '<section class="promo-card"><h3>Complementos y descuentos selectivos</h3>'
+      +'<p>Estas propuestas están guardadas en el proyecto. No generan ofertas ni pedidos por sí solas. '
+      +'Los controles operativos se habilitan después de validar servidor, cobros y margen.</p>'
+      +'<h4>Reemplazo de combo</h4>'+(upgrades||'<p>Sin reemplazos configurados.</p>')
+      +'<h4>Upselling · algo salado o dulce</h4>'
+      +'<p>Mostrar como máximo dos opciones por carrito y aplicar solo un complemento con descuento; '
+      +'todas las ofertas están desactivadas hasta validar costo incremental, margen del pedido y cobro.</p>'
+      +(dessert||'<p>Sin descuentos de complementos.</p>')
+      +'<h4>Venta cruzada sin nuevos descuentos</h4>'+(crossSelling||'<p>Sin sugerencias.</p>')
+      +shipping+'</section>';
+  }
+  function couponEditor(state){
+    const programs=Object.values(state.couponPrograms||{});
+    return '<section class="promo-card"><h3>Cupones y recompensas · Plan precargado</h3>'
+      +'<div class="promo-grid">'+programs.map(c=>'<article class="promo-note"><h4>'+esc(c.name)+'</h4>'
+        +'<p><strong>Estado:</strong> Preparado, sin emisión</p>'
+        +'<p>Compra elegible mínima: '+fmt(c.minEligibleSubtotal)+' · +'+esc(c.extraPercent)+' puntos porcentuales</p>'
+        +'<p>Vigencia: '+esc(c.validDays)+' días desde la emisión confirmada'
+        +(c.maxExtraAmount!=null?' · Tope adicional: '+fmt(c.maxExtraAmount):'')+'</p>'
+        +'</article>').join('')+'</div>'
+      +'<div class="promo-note"><strong>Emisión y canje desactivados.</strong> Deben verificarse del lado del servidor, vincularse a un cliente y una compra confirmada, y pasar las pruebas de pago/reversión. Reimprimir un ticket jamás emite otro cupón. Vencimiento de ejemplo: '+esc(expiryLabel('2026-11-14'))+'.</div></section>';
   }
   function ticketEditor(state,canEdit){
     return '<section class="promo-card"><h3>Publicidad en comanda única</h3><p>Siempre primero: datos de cocina, entrega, importes y método de pago. Después: QR Google Reviews y una publicidad seleccionada.</p>'
@@ -161,6 +269,6 @@ export function installPromotionsEditor(w=window) {
       '</div><h4>Por campaña</h4>'+(Object.values(r.byPromotion).length?Object.values(r.byPromotion).map(v=>'<p>'+esc(v.id)+' · '+v.orders+' líneas · '+fmt(v.revenue)+' vendidos</p>').join(''):'<p>Sin operaciones promocionales registradas.</p>')+'</section>';
   }
   // Renderiza al abrir el panel. Los cambios afectan sólo los borradores de este proyecto.
-  return {render,get,save};
+  return {render,get,save,applyRemote,liveRevision,liveState:()=>liveState};
 }
 export function register(){onPanelShow('promociones',()=>window.SAHTEN.promotionsEditor?.render());}

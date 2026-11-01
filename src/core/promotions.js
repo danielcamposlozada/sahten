@@ -1,5 +1,6 @@
 // SAHTEN: motor puro. Nunca confiar en precios/costos/cupones suministrados por el navegador.
 // Recalcular en el servidor antes de aceptar un pedido. Los importes usan centavos enteros.
+import { assessIncrementalUpsell } from './upsell-economics.js';
 export const PROMOTIONS_VERSION = 1;
 export const PROMOTIONS_TZ = 'America/Argentina/Buenos_Aires';
 export const FOUR_FATAY_ID = 'p1779570052552';
@@ -68,7 +69,8 @@ function eligibleLine(candidate,line,lines) {
 export function quotePromotions({
   lines = [], method = '', channel = 'online', now = new Date(),
   config = {}, coupon = null, customerId = null,
-  commissionPercent = 0, trustedCosts = {}
+  commissionPercent = 0, trustedCosts = {},
+  trustedEconomics = {}, trustedUpsellSelection = null, trustedOrderCosts = null
 } = {}) {
   const source = Array.isArray(lines)?lines:[];
   const details=source.filter(l=>Number(l.qty)>0 && Number(l.unitPrice)>=0).map(l=>({
@@ -79,6 +81,7 @@ export function quotePromotions({
   const cash = ['efectivo','transferencia'].includes(method);
   const paymentPercent = cash ? Math.max(0,Math.min(100,Number(config.paymentPercent??10))) : 0;
   const campaigns = activeCampaigns(config,now,channel);
+  const strictUpsells = config.upsellGuardRequired === true || config.activationPolicy?.requireIncrementalAndBasketMarginCheck === true;
   const couponValid = couponIsEligible(coupon,{now,channel,customerId});
   const eligibleGross = details.reduce((n,l)=>n+(couponValid&&eligibleLine(coupon,l,details)?l.qty*l.unitCents:0),0);
   const canCoupon = couponValid && eligibleGross>=toCents(coupon.minEligibleSubtotal||0);
@@ -92,7 +95,7 @@ export function quotePromotions({
         id:c.id, name:c.name, extraPercent:Math.min(100,Number(c.extraPercent)||0), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits: c.maxUnits
       });
-      for(const c of (config.upsells||[])) if(c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
+      for(const c of (config.upsells||[])) if(!strictUpsells && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
         id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Number(coupon.extraPercent)||0,priority:1000,kind:'coupon'
@@ -126,6 +129,55 @@ export function quotePromotions({
       net:fromCents(base-lineDiscount),appliedPromotionId:winner?.id||null,
       appliedPromotionType:winner?.kind||null,costsVerified:known};
   });
+  // En modo servidor estricto, primero calcular campañas/cupones. Después,
+  // de manera independiente, como máximo UN upsell por pedido. No confiar en
+  // marcas de "artículo añadido" provenientes del JSON del cliente.
+  if(config.enabled && strictUpsells && trustedUpsellSelection?.verified === true) {
+    const pending=[];
+    for(const promotion of config.upsells || []) {
+      if(!promotion?.enabled || promotion.kind !== 'upsell' || promotion.maxUnits !== 1)continue;
+      const entry=details.find(l=>promotion.productIds?.includes(l.productId));
+      if(!entry || !eligibleLine(promotion,entry,details))continue;
+      const current=breakdown.find(l=>l.productId===entry.productId);
+      if(!current || current.appliedPromotionId || entry.qty!==1)continue;
+      // Escala Fatay: el mínimo se calcula sobre los platos disparadores
+      // ya cotizados por servidor (NETO, sin Fatay, envío ni otros complementos).
+      // El descuento objetivo es TOTAL en todos los medios de pago, no +30pp.
+      let extra=fromCents(amount(entry.unitCents,promotion.extraPercent));
+      if(Array.isArray(promotion.discountTiers) && promotion.discountTiers.length){
+        const qualifiedNet=breakdown.filter(l=>l.productId!==entry.productId
+          && promotion.triggerProductIds?.includes(l.productId))
+          .reduce((sum,l)=>sum+toCents(l.net),0);
+        const tier=promotion.discountTiers.filter(t=>
+          Number.isFinite(Number(t.minEligibleNetSubtotal))
+          && qualifiedNet>=toCents(t.minEligibleNetSubtotal)
+          && Number(t.totalDiscountPercent)>0 && Number(t.totalDiscountPercent)<=100
+        ).sort((a,b)=>Number(b.minEligibleNetSubtotal)-Number(a.minEligibleNetSubtotal))[0];
+        if(!tier)continue;
+        const targetTotal=amount(entry.unitCents,tier.totalDiscountPercent);
+        extra=fromCents(Math.max(0,targetTotal-toCents(current.discount)));
+      }
+      const verified=assessIncrementalUpsell({
+        lines:details,currentLines:breakdown,upsell:promotion,productId:entry.productId,
+        proposedExtra:extra,methodCommissionPercent:commissionPercent,
+        trustedEconomics,trustedUpsellSelection,trustedOrderCosts,
+        minBasketMarginPct:Number(config.activationPolicy?.basketContributionTargetPct||40),
+        minIncrementalMarginPct:Number(config.activationPolicy?.minIncrementalContributionPct||40)
+      });
+      if(verified.approved)pending.push({promotion,entry,current,extra,verified});
+    }
+    pending.sort((a,b)=>(Number(b.promotion.priority)||0)-(Number(a.promotion.priority)||0) ||
+      b.extra-a.extra || a.promotion.id.localeCompare(b.promotion.id));
+    if(pending[0]) {
+      const {promotion,entry,current,extra}=pending[0];
+      current.promotionDiscount=extra;
+      current.discount=fromCents(toCents(current.discount)+toCents(extra));
+      current.net=fromCents(toCents(current.net)-toCents(extra));
+      current.appliedPromotionId=promotion.id;
+      current.appliedPromotionType='upsell';
+      used.add(promotion.id);
+    }
+  }
   const totalDiscount=breakdown.reduce((n,l)=>n+toCents(l.discount),0);
   const net=gross-totalDiscount;
   const fee=amount(net,commissionPercent);
