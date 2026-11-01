@@ -31,7 +31,7 @@ it('sugiere dos complementos, los suma solo por click y no altera el descuento d
   expect(d.querySelector('.cart-addons').textContent).toContain('Coca-Cola 220 ml');
   expect(d.querySelector('.cart-addons').textContent).toContain('Baklava');
   expect(d.querySelector('.cart-addons').textContent).toContain('Porque agregaste Shawarma');
-  expect(d.querySelector('.cart-addons').textContent).toContain('precio indicado');
+  expect(d.querySelector('.cart-addons').textContent).toContain('precios son de lista');
   expect(d.querySelector('.cart-addons').textContent).not.toContain('20%');
   expect(d.querySelector('.cart-addons').textContent).not.toMatch(/% OFF|descuento extra/i);
   const b=d.querySelector('.cart-addon [data-inc="coke220"]');
