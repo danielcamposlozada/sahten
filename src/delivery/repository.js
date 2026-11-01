@@ -13,7 +13,15 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   return !!s.project_id&&await request('/rest/v1/rpc/has_project_role',{method:'POST',token:user.token,body:{pid:s.project_id,roles}})===true;
  }
  const repo={run,menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,
-  promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
+  promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),
+  upsellEconomics:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_upsell_verified_costs',
+    {method:'POST',body:{sid,channel}}),
+  issueUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_issue',
+    {method:'POST',body:args}),
+  readUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_read',
+    {method:'POST',body:args}),
+  redeemUpsellIntent:args=>request('/rest/v1/rpc/sahten_upsell_redeem',
+    {method:'POST',body:args}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
  repo.posRules=async sid=>{const store=(await request('/rest/v1/stores?select=project_id&id=eq.'+sid))?.[0];if(!store?.project_id)return {};const project=(await request('/rest/v1/projects?select=public&id=eq.'+store.project_id))?.[0];const pub=project?.public;const availability=await request('/rest/v1/rpc/get_product_sales_availability',{method:'POST',body:{p_store_id:sid}});const pauses=new Map((availability.sales||[]).map(p=>[p.id,p.salesAvailability]));return {...(pub?.sales||{}),catalog:pub?.products?.map(p=>({...p,salesAvailability:pauses.get(p.id)||p.salesAvailability})),project:pub?.project,tienda:pub?.online?.tiendaConfig};};
  repo.savePos=(sid,lid,p)=>request('/rest/v1/rpc/validate_delivery_pos_record',{method:'POST',body:{sid,lid,p}});
  async function authenticate(req){const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');if(!token||token===anonKey||token===serviceKey)return null;try{const u=await request('/auth/v1/user',{token});return u?.id?{id:u.id,token}:null;}catch{return null;}}
