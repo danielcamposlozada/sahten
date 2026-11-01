@@ -19,22 +19,29 @@ export const getUSD = s => parseFloat(s.usdRate) || 1200;
 // Roles sin acceso a costos (encargado, cajero) reciben los productos con `fixedPrices` ya calculados por el dueño:
 // { mostrador: precio final, rappi: precio, … }. Sin esa propiedad (el caso normal) todo se calcula como siempre.
 const fixed = (p, chId) => (p.fixedPrices && p.fixedPrices[chId] != null ? p.fixedPrices[chId] : null);
+/** Precio final comercial: importe real de venta, sin etiqueta de precio fijado. */
+const finalCommercial = (p, chId) => {
+  const n = p.priceTargets?.[chId];
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+};
 
 function calculatedBase(s, p, channel = 'mostrador') {
   const tier = getTier(s, p.tier);
   const base = costPerUnit(s, p, channel) + gfAssigned(s, p, channel);
-  let price = base * tier.factor * (p.priceAdj || 1);
+  let price = base * tier.factor * (p.priceAdjByChannel?.[channel] || p.priceAdj || 1);
   const disc = p.discount || 0;
   if (disc > 0) price = (p.discountType || 'pct') === 'pct' ? price * (1 - disc) : price - disc;
   return Math.max(0, RND(s, price));
 }
 
 export function mostradorPrice(s, p) {
+  if (finalCommercial(p, 'mostrador') != null) return finalCommercial(p, 'mostrador');
   if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
   return lockedAmount(p, 'mostrador', 'price', calculatedBase(s, p));
 }
 
 export function mostradorFinalPrice(s, p) {
+  if (finalCommercial(p, 'mostrador') != null) return finalCommercial(p, 'mostrador');
   if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
   const pinned = lockedAmount(p, 'mostrador', 'price', null);
   if (pinned !== null) return pinned;
@@ -48,6 +55,7 @@ export function mostradorFinalPrice(s, p) {
 export function channelPrice(s, p, chId) {
   const ch = getChannel(s, chId);
   if (!ch.enabled) return null;
+  if (finalCommercial(p, chId) != null) return finalCommercial(p, chId);
   if (fixed(p, chId) != null) return fixed(p, chId);
   const pinned = lockedAmount(p, chId, 'price', null);
   if (pinned !== null) return pinned;
@@ -71,7 +79,7 @@ export function channelNetReceived(s, p, chId) {
 
 /** Descuento efectivo de canal para un producto (no acumulable): producto › canal. */
 export function effectiveChannelDisc(s, p, chId) {
-  if (isPriceFixed(p, chId)) return 0;
+  if (finalCommercial(p, chId) != null || isPriceFixed(p, chId)) return 0;
   const prodDisc = ((p.channelDiscounts || {})[chId]) || 0;
   if (prodDisc > 0) return prodDisc / 100;
   const ch = getChannel(s, chId);
@@ -98,5 +106,8 @@ export function channelNetReceivedWithDisc(s, p, chId) {
 export function marginPct(price, cost) { return price > 0 ? (price - cost) / price : 0; }
 
 /** Ganancia extra generada por el factor de tier, por encima de costo + GF. */
-export const tierProfitPerUnit = (s, p) => isPriceFixed(p, 'mostrador') ? 0 : (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
+export const tierProfitPerUnit = (s, p) => finalCommercial(p, 'mostrador') != null
+  ? mostradorFinalPrice(s, p) - costPerUnit(s, p) - gfAssigned(s, p)
+  : isPriceFixed(p, 'mostrador') ? 0
+  : (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
 export const tierProfitTotal = s => s.products.reduce((a, p) => a + tierProfitPerUnit(s, p) * (p.avgMes || 0), 0);

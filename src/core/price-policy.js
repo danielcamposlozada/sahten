@@ -4,7 +4,12 @@ export const lockedAmount = (p, channel, key, fallback) => {
   const value = policyFor(p, channel)[key];
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
 };
-export const isPriceFixed = (p, channel = 'mostrador') => lockedAmount(p, channel, 'price', null) !== null || !!p?.priceFixedChannels?.includes(channel);
+export const isPriceFixed = (p, channel = 'mostrador') => {
+  // Un precio comercial normalizado prevalece sobre el antiguo valor de respaldo.
+  const target = p?.priceTargets?.[channel];
+  if (typeof target === 'number' && Number.isFinite(target) && target > 0) return false;
+  return lockedAmount(p, channel, 'price', null) !== null || !!p?.priceFixedChannels?.includes(channel);
+};
 const copy = value => JSON.parse(JSON.stringify(value));
 const KEYS = ['price', 'variableCost', 'fixedCost', 'commissionRate'];
 
