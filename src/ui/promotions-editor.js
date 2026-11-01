@@ -72,6 +72,17 @@ export function installPromotionsEditor(w=window) {
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
+    root.querySelector('[data-promo-live-retry]')?.addEventListener('click',()=>{
+      w.SAHTEN.online?.promotionPublisher?.flush().catch(()=>{});
+      render();
+    });
+    root.querySelector('[data-promo-live-discard]')?.addEventListener('click',()=>{
+      const id=root.querySelector('[data-promo-live-discard]')?.dataset.promoLiveDiscard;
+      if(!id)return;
+      w.SAHTEN.online?.promotionPublisher?.discard(id);
+      w.SAHTEN.online?.readStates?.().catch(()=>{});
+      render();
+    });
     root.querySelector('[data-promo-live-toggle]')?.addEventListener('click',async e=>{
       const id=e.currentTarget.dataset.promoLiveToggle,
         row=liveState.campaigns.find(x=>x.id===id),
@@ -140,13 +151,18 @@ export function installPromotionsEditor(w=window) {
     const status=!liveLoaded?'Consultando el estado de la web…'
       :!liveState.published?'Motor de promociones todavía no publicado en la tienda'
       :!remote?'Esta campaña todavía no está publicada'
-      :pending?(info.states?.[c.id]==='publicando'?'Enviando el cambio a la tienda…':'Cambio pendiente o sin conexión · verificar confirmación')
+      :pending?(info.states?.[c.id]==='publicando'?'Enviando el cambio a la tienda…'
+        :info.states?.[c.id]==='error'?'Error al sincronizar · la promoción sigue según el servidor'
+        :info.states?.[c.id]==='sin conexión'?'Sin conexión · cambio aún no aplicado en la tienda'
+        :'Cambio pendiente de confirmación')
       :remote.enabled?'Promoción habilitada en la web':'Promoción pausada en la web';
     const operable=published&&canOperate()&&!pending;
+    const recovery=pending?'<div><button type="button" data-promo-live-retry="'+esc(c.id)+'">Reintentar sincronización</button> '
+      +'<button type="button" data-promo-live-discard="'+esc(c.id)+'">Descartar cambio pendiente</button></div>':'';
     const liveControls='<div class="promo-note" role="status"><strong>Estado real en sahten.online:</strong> '+esc(status)
       +'<p>Este control es independiente del borrador y no requiere republicar la web.</p>'
       +'<button type="button" data-promo-live-toggle="'+esc(c.id)+'"'+(operable?'':' disabled')
-      +'>'+(remote?.enabled?'Pausar en web':'Reactivar en web')+'</button></div>';
+      +'>'+(remote?.enabled?'Pausar en web':'Reactivar en web')+'</button>'+recovery+'</div>';
     return '<div class="promo-split"><section class="promo-card"><div class="promo-row"><h3>Editor de campañas</h3><button type="button" data-promo-new '+disabled+'>+ Nueva</button></div>'
       +'<label class="promo-field"><span>Campaña</span><select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre',c.name,'text','data-field="name" '+disabled)+'<label class="promo-field"><span>Tipo de calendario</span><select data-field="scheduleType" '+disabled+'>'+[['weekly','Semanal'],['central_weekends','2° y 3° viernes y sábado'],['dates','Fechas específicas'],['always','Siempre']].map(([v,t])=>'<option value="'+v+'" '+(c.schedule?.type===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
