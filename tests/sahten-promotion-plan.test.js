@@ -42,10 +42,48 @@ describe('Plan del negocio SAHTEN en documento, nunca embebido en el instalador 
     expect(up.activationBlockers).toContain('missing_computed_cost_for_replacement_sku');
     expect(plan.campaigns.flatMap(c=>c.productIds)).not.toContain(up.replacementProductId);
   });
-  it('mantiene Hummus y Mamul como venta cruzada sin sumar descuentos',()=>{
+  it('Fatay, Baklava, ambos Mamul y Torta de Chocolate tienen upsells propios, todos apagados',()=>{
+    expect(plan.planVersion).toBe(4);
+    expect(plan.upsells).toHaveLength(5);
+    expect(plan.upsells.map(x=>x.productIds[0]).sort()).toEqual([
+      'baklava','fatay','mamul_datil','mamul_nuez','torta_de_chocolate'
+    ]);
+    expect(plan.upsells.every(c=>c.enabled===false&&c.maxUnits===1)).toBe(true);
+    expect(plan.upsells.map(c=>c.extraPercent).sort()).toEqual([5,5,5,10,10]);
+    expect(plan.upsells.every(c=>c.activationBlockers?.includes('server_basket_level_profit_guard_pending'))).toBe(true);
+    expect(plan.activationPolicy.maxDiscountedUpsellLinesPerOrder).toBe(1);
+    expect(plan.activationPolicy.maxUpsellCardsPerCart).toBe(2);
+  });
+  it('Fatay individual no entra en campañas públicas, pero sí como complemento en carrito',()=>{
+    const fatay=plan.upsells.find(c=>c.id==='fatay-individual-up');
+    expect(fatay).toMatchObject({kind:'upsell',enabled:false,extraPercent:10,marginAssessment:'incremental_unit_plus_basket'});
+    expect(fatay.suppressIfPresent).toContain('p1779467294622');
+    expect(fatay.suppressIfPresent).toContain('p1779570052552');
+    expect(fatay.displayOnlyWhenNotAlreadyInCart).toBe(true);
+    expect(plan.exclusions.publicCampaigns).toContain('fatay');
+    expect(plan.campaigns.flatMap(c=>c.productIds)).not.toContain('fatay');
+  });
+  it('venta cruzada sin descuento extra complementa upsells, sin repetir Mamul en ambas secciones',()=>{
     expect(plan.crossSells).toHaveLength(3);
-    expect(plan.crossSells.map(c=>c.productId).sort()).toEqual(['hummus','mamul_datil','mamul_nuez']);
+    expect(plan.crossSells.map(c=>c.productId).sort()).toEqual(['falafel_mix','hummus','p1780324945477']);
     expect(plan.crossSells.every(c=>c.enabled===false&&c.extraPercent===0&&c.standardPaymentBenefitOnly)).toBe(true);
+    expect(plan.crossSells.map(c=>c.productId)).not.toContain('mamul_nuez');
+    expect(plan.crossSells.map(c=>c.productId)).not.toContain('mamul_datil');
+  });
+  it('compara costo incremental con GF asignado sin contar automáticamente alquiler dos veces',()=>{
+    for(const [id,price,variable,fixed] of [
+      ['fatay',5850,442.12,3138.42],['baklava',7350,1294.46,2241.73],
+      ['mamul_nuez',7000,518.09,3138.42],['mamul_datil',7000,405.59,3362.59],
+      ['torta_de_chocolate',8200,1432.01,2510.74]
+    ]) {
+      const c=plan.upsells.find(x=>x.productIds.includes(id));
+      expect(c.historicalUnitEconomics).toMatchObject({listPrice:price,variableCost:variable,allocatedFixedCost:fixed});
+      const discounted=price*(1-(10+c.extraPercent)/100);
+      expect(discounted-variable).toBeGreaterThan(0);
+      expect(c.marginAssessment).toBe('incremental_unit_plus_basket');
+    }
+    expect(plan.activationPolicy.requireIncrementalAndBasketMarginCheck).toBe(true);
+    expect(plan.activationPolicy.doNotReallocateEntireMonthlyFixedCostPerAdditionalUnit).toBe(true);
   });
   it('la barra de envío calcula sobre NETO y no altera la política de zonas',()=>{
     expect(plan.checkoutIncentives.find(c=>c.id==='shipping-progress')).toMatchObject({
