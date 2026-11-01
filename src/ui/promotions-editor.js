@@ -55,7 +55,8 @@ export function installPromotionsEditor(w=window) {
     const changed=!liveLoaded||JSON.stringify(next)!==JSON.stringify(liveState);
     liveState=next;liveLoaded=true;
     const root=w.document.getElementById('promotions-editor');
-    if(changed&&root&&!root.contains(w.document.activeElement))render();
+    const active=w.document.activeElement,editing=root?.contains(active)&&['INPUT','TEXTAREA','SELECT'].includes(active.tagName);
+    if(changed&&root&&!editing)render();
   }
   function render() {
     const root=w.document.getElementById('promotions-editor');if(!root)return;
