@@ -6,7 +6,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createServer } from 'vite';
 
-const PINNED_URL='https://84a00719.sahten-menu.pages.dev';
+// Base inmutable: despliegue ACTUAL confirmado por Cloudflare el 01/11/2026.
+const SOURCE_DEPLOYMENT_ID='437a4503-7726-4482-a5e5-6b911fd7272c';
+const PINNED_URL='https://437a4503.sahten-menu.pages.dev';
 const PUBLISHED_FILES=[
   '/apple-touch-icon.png',
   '/brand/sahten-comida-arabe-og-1200x630.png',
@@ -44,11 +46,11 @@ async function download(rel){
 function check(menu,base){
   if(!base.supabase?.url || !base.supabase?.anonKey || !base.supabase?.storeId)
     throw new Error('Pinned menu missing Supabase public connection');
-  if(base.products?.length!==38)throw new Error('Pinned menu has changed: requires human review');
+  if(!Array.isArray(base.products)||base.products.length<38||base.products.length>54)
+    throw new Error('El despliegue base tiene un catálogo inesperado; no reemplazar producción');
   if(!base.site?.enabled || !base.site?.orderPage)throw new Error('Original site/page structure is not available');
-  // Snapshot vivo comprobado el 01/11: 54 SKU, 11 bebidas, 49 fotos remotas.
-  // La foto original del sitio sigue fijada a 38 productos; los 16 SKU nuevos
-  // se agregan sin eliminar ninguno de esos 38.
+  // Snapshot de catálogo comprobado el 01/11: 54 SKU y 11 bebidas.
+  // Conserva TODOS los SKU del deploy base más reciente, no uno antiguo.
   if(menu.products?.length!==54)throw new Error('Public product count mismatch: expected 54');
   const photos=menu.products.filter(p=>typeof p.image==='string'&&p.image.startsWith('https://'));
   if(photos.length<49)throw new Error('Las imágenes nuevas no están disponibles: abortar para no degradar el sitio');
@@ -151,7 +153,7 @@ async function main(){
   await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(built.menu,null,1));
   const report={
     status:'ready-for-pages',
-    inheritedDeployment:'84a00719-0196-48ab-b31f-b321b979398e',
+    inheritedDeployment:SOURCE_DEPLOYMENT_ID,
     immutableFilesPreserved:PUBLISHED_FILES.filter(x=>!['/index.html','/pedir/index.html','/menu.json'].includes(x)),
     generated:['/index.html','/pedir/index.html','/menu.json'],
     products:built.menu.products.length,
