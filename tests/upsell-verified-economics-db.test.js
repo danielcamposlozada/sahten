@@ -19,7 +19,9 @@ beforeAll(async()=>{
  await db.exec(read('supabase/schema.sql'));
  await db.exec('create schema if not exists sahten_catalog_private;');
  await db.query("insert into auth.users(id,email) values($1,'owner@test.invalid')",[owner]);
+ await db.exec(`select set_config('request.jwt.claim.sub','${owner}',false);set role authenticated;`);
  projectId=(await db.query("select public.create_project('Local','{}','{}') as id")).rows[0].id;
+ await db.exec('reset role');
  storeId=(await db.query("insert into public.stores(slug,name,owner,project_id) values('upsell-economics','Local',$1,$2) returning id",
  [owner,projectId])).rows[0].id;
  await db.query('insert into public.menus(store_id,json) values($1,$2)',[storeId,menu]);
