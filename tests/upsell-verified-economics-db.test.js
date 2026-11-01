@@ -37,7 +37,7 @@ it('motor OFF devuelve NULL aunque haya menú, sin revelar estructura financiera
 it('sin aprobación financiera el motor ON nunca devuelve costos utilizables para upsell',async()=>{
  await db.query('update public.menus set json=$2 where store_id=$1',
  [storeId,{...menu,promotions:{enabled:true,upsells:[]}}]);
- await db.query("update public.projects set data=data || '{"promotions":{"enabled":true}}'::jsonb where id=$1",[projectId]);
+ await db.query(`update public.projects set data=data || '{"promotions":{"enabled":true}}'::jsonb where id=$1`,[projectId]);
  const result=await runAs('service_role',query);
  expect(result).toMatchObject({verified:true,trustedOrderCosts:{verified:false}});
  expect(result.trustedPaymentFeePercent).toBeNull();
