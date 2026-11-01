@@ -31,7 +31,7 @@ export function originalCartFromAccepted(items,productId){
     invalid('not_a_single_incremental_item');
   return normalizedItems(lines.filter(l=>l.productId!==productId));
 }
-function orderContext({storeId,order,menu,items}){
+function orderContext({storeId,order,menu,items,promotionId=null}){
   if(!/^[a-f\d-]{36}$/i.test(String(storeId||'')))invalid('invalid_store');
   if(!['pickup','delivery'].includes(order?.source))invalid('invalid_source');
   if(!['mercadopago','efectivo','transferencia','tarjeta'].includes(order?.paymentMethod))
@@ -51,8 +51,10 @@ function orderContext({storeId,order,menu,items}){
       !Number.isFinite(Number(p.price))||Number(p.price)<=0)invalid('product_unavailable');
     return {productId,qty,unitCents:cents(p.price),revision:String(p.priceRevision||'')};
   });
+  const promotion=promotionId?(menu?.promotions?.upsells||[]).find(u=>u.id===promotionId):null;
+  if(promotionId&&!promotion)invalid('offer_policy_missing');
   return JSON.stringify({storeId,source:order.source,method:order.paymentMethod,
-    delivery,products});
+    delivery,products,promotion:promotion?JSON.stringify(promotion):null});
 }
 export async function cartHash(params){
   const bytes=new TextEncoder().encode(orderContext(params));
@@ -75,8 +77,8 @@ export async function issueUpsellIntent({storeId,menu,order,productId,promotionI
   const after=incrementalCart(before,productId);
   return {
     storeId,productId,promotionId,
-    beforeHash:await cartHash({storeId,order,menu,items:before}),
-    afterHash:await cartHash({storeId,order,menu,items:after}),
+    beforeHash:await cartHash({storeId,order,menu,items:before,promotionId}),
+    afterHash:await cartHash({storeId,order,menu,items:after,promotionId}),
     before,after
   };
 }
@@ -91,8 +93,8 @@ export async function verifyAcceptedUpsell({record,storeId,menu,order,requestId,
   if(!before.some(l=>offer.triggerProductIds?.includes(l.productId))||
     before.some(l=>offer.suppressIfPresent?.includes(l.productId)))invalid('offer_not_eligible');
   const [beforeHash,afterHash]=await Promise.all([
-    cartHash({storeId,order,menu,items:before}),
-    cartHash({storeId,order,menu,items:order.items})
+    cartHash({storeId,order,menu,items:before,promotionId:record.promotion_id}),
+    cartHash({storeId,order,menu,items:order.items,promotionId:record.promotion_id})
   ]);
   if(record.before_hash!==beforeHash||record.after_hash!==afterHash)
     invalid('cart_modified_after_offer');
