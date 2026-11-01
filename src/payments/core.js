@@ -24,7 +24,7 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},now=Date.now()}={}) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},trustedEconomics={},trustedUpsellSelection=null,trustedOrderCosts=null,now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
   const method=allowOtherPayments?input.paymentMethod:'mercadopago';
   if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
@@ -57,9 +57,11 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
   const promotion=menu.promotions?.enabled===true ? quotePromotions({
     lines:items,method,channel:salesChannel,now:new Date(now),
-    config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
+    config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,upsellGuardRequired:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
     // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
+    // Únicamente opciones inyectadas desde un backend autenticado, no desde input.
+    trustedEconomics,trustedUpsellSelection,trustedOrderCosts,
     commissionPercent:method==='mercadopago'?Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10):0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
