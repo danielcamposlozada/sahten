@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {initialPromotionConfig,quotePromotions,scheduleMatches} from '../src/core/promotions.js';
+import {initialPromotionConfig,preparePromotionPlan,quotePromotions,scheduleMatches} from '../src/core/promotions.js';
 
 const date=iso=>new Date(iso+'T12:00:00-03:00');
 describe('Plan comercial SAHTEN: precarga segura',()=>{
@@ -35,6 +35,36 @@ describe('Plan comercial SAHTEN: precarga segura',()=>{
       enabled:false,channel:'online',minEligibleSubtotal:40000,extraPercent:10,
       maxExtraAmount:4000,validDays:14,requiresConfirmedOrigin:true
     });
+  });
+  it('migra una configuración anterior sin productos y mantiene las campañas inactivas',()=>{
+    const old=initialPromotionConfig();
+    delete old.planVersion;
+    old.requireVerifiedCosts=false;
+    old.campaigns[0].productIds=[];
+    old.campaigns[0].enabled=true;
+    old.campaigns[1].productIds=[];
+    old.campaigns[1].enabled=true;
+    old.upsells[0].productIds=[];
+    old.upsells[0].triggerProductIds=[];
+    const prepared=preparePromotionPlan(old);
+    expect(prepared.planVersion).toBe(2);
+    expect(prepared.campaigns.map(c=>c.enabled)).toEqual([false,false]);
+    expect(prepared.campaigns[0].productIds).toHaveLength(5);
+    expect(prepared.campaigns[1].productIds).toHaveLength(2);
+    expect(prepared.upsells[0].productIds).toEqual(['baklava']);
+    expect(prepared.requireVerifiedCosts).toBe(true);
+    expect(old.campaigns[0].productIds).toEqual([]);
+    expect(preparePromotionPlan(prepared)).toBe(prepared);
+  });
+  it('no altera el borrador que el usuario ya había personalizado',()=>{
+    const old=initialPromotionConfig();
+    delete old.planVersion;
+    old.campaigns[0].productIds=['producto-personalizado'];
+    old.campaigns[0].enabled=true;
+    const prepared=preparePromotionPlan(old);
+    expect(prepared.campaigns[0].productIds).toEqual(['producto-personalizado']);
+    expect(prepared.campaigns[0].enabled).toBe(true);
+    expect(prepared.enabled).toBe(false);
   });
   it('Baklava: máximo una unidad y 10 puntos extra, sin activar ni duplicar Tabla para Celebrar',()=>{
     const p=initialPromotionConfig(),b=p.upsells[0];
