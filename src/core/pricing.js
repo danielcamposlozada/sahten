@@ -26,11 +26,12 @@ const finalCommercial = (p, chId) => {
 };
 /** Canal calculado: NO usa el precio anterior como valor de venta ni aplica un precio fijado. */
 const useCalculatedPrice = (p, chId) => p.pricingMode?.[chId] === 'calculated';
+const tierForPrice = (p,chId) => p.formulaTierByChannel?.[chId] && useCalculatedPrice(p,chId) ? p.formulaTierByChannel[chId] : p.tier;
 function calculatedCommercial(s,p,chId){
   const ch = getChannel(s,chId);
   const cost = costPerUnit(s,p,chId) + gfAssigned(s,p,chId);
   const adj = Number(p.priceAdjByChannel?.[chId] ?? p.priceAdj ?? 1);
-  let price = cost * getTier(s,p.tier).factor * (Number.isFinite(adj)?adj:1);
+  let price = cost * getTier(s,tierForPrice(p,chId)).factor * (Number.isFinite(adj)?adj:1);
   const discount=Number(p.discount)||0;
   if(discount>0)price=(p.discountType||'pct')==='pct'?price*(1-discount):price-discount;
   return Math.max(0,RND(s,price*(1+(ch.surcharge||0))*(1+globalComm(s))));
@@ -38,7 +39,7 @@ function calculatedCommercial(s,p,chId){
 
 function calculatedBase(s, p, channel = 'mostrador') {
   // Recalibramos sólo Mostrador. Otros canales conservan tier y ajuste anteriores.
-  const tierId = channel !== 'mostrador' && p.formulaCalibration?.originalTier ? p.formulaCalibration.originalTier : p.tier;
+  const tierId = tierForPrice(p,channel);
   const tier = getTier(s, tierId);
   const base = costPerUnit(s, p, channel) + gfAssigned(s, p, channel);
   let price = base * tier.factor * (p.priceAdjByChannel?.[channel] || p.priceAdj || 1);
