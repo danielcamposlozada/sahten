@@ -1,0 +1,105 @@
+name: SAHTEN.online | Checkout seguro (sin promociones)
+on:
+  pull_request:
+    paths:
+      - "scripts/deploy/sahten-safe-checkout.mjs"
+      - ".github/workflows/deploy-sahten-checkout.yml"
+      - "src/online/**"
+      - "src/core/checkout-service-choice.js"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/deploy/sahten-safe-checkout.mjs"
+      - ".github/workflows/deploy-sahten-checkout.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sahten-online-production
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run check:versions
+      - run: npm test
+      - run: npm run build
+      - name: Generar paquete de la web preservando archivos e imágenes
+        run: node scripts/deploy/sahten-safe-checkout.mjs
+      - name: Comprobar versión exportada
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const r=JSON.parse(fs.readFileSync('sahten-export/_deployment-report.json'));
+          if(r.products!==38||r.beverages!==11||r.promotionsEnabled||!r.checkoutAvailabilityFix||
+             r.immutableFilesPreserved.length!==16)throw new Error('Unsafe package');
+          for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg']){
+            if(!fs.statSync('sahten-export/'+p).size)throw new Error('Empty '+p);
+          }
+          console.log('Safe checkout package checked:',r.products,'products /',r.beverages,'drinks');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sahten-online-checkout-safe-package
+          path: sahten-export/
+          retention-days: 7
+
+  deploy:
+    needs: package
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sahten-online-checkout-safe-package
+          path: sahten-export
+      - name: Validar autorización Cloudflare y despliegue de origen
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$CF_TOKEN" || -z "$CF_ACCOUNT" ]]; then
+            echo "::error::Faltan CLOUDFLARE_API_TOKEN y/o CLOUDFLARE_ACCOUNT_ID. Paquete generado, producción sin cambios."
+            exit 1
+          fi
+          data=$(curl --fail --silent --show-error --retry 2 \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
+          current=$(echo "$data" | jq -er '.result.latest_deployment.id')
+          if [[ "$current" != "f68ab9a6-c165-422f-8cab-4ddc3b7a9cfc" ]]; then
+            echo "::error::La versión de producción cambió: no reemplazar un deploy más nuevo sin revisar el paquete."
+            exit 1
+          fi
+          echo "Origen de producción confirmado."
+      - name: Desplegar tienda sin activar promociones
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy sahten-export --project-name sahten-menu --branch main
+      - name: Comprobar que no se perdió el menú público
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..6}; do
+            if curl --fail --silent --show-error -H "Cache-Control: no-cache" \
+                 "https://sahten.online/menu.json?verify=$GITHUB_RUN_ID-$i" \
+                 | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const m=JSON.parse(s); if(m.products.length!==38||m.products.filter(p=>p.category==='Bebidas').length!==11||m.promotions?.enabled===true||Number(m.payments.benefit.percent)!==10)process.exit(1)})"; then
+              echo "Verificado: 38 productos, 11 bebidas, promociones apagadas."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::No se pudo confirmar el menú publicado. Revisar Cloudflare y considerar rollback."
+          exit 1
