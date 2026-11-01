@@ -13,6 +13,9 @@ export function installLocalProfitUi(w=window) {
   const d=w.document;
   const visible=()=>!d.body.classList.contains('role-no-costs');
   const canEdit=()=>visible()&&(!d.body.dataset.role||['owner','admin'].includes(d.body.dataset.role))&&!w.SAHTEN?.project?.session?.readOnly;
+  // Los pedidos del Mostrador pertenecen al módulo legado, NO al objeto state.
+  // Leer su API oficial en cada render garantiza datos vivos y evita una meta siempre en $0.
+  const financialState=()=>({...state,orders:typeof w.sahtenOrders==='function'?w.sahtenOrders():(state.orders||[])});
   const profitRows=()=>localProductProfitability({
     ...state,
     costPerUnit,gfAssigned,channelCommission,
@@ -29,11 +32,11 @@ export function installLocalProfitUi(w=window) {
     if(!root){root=d.createElement('section');root.id=rootId;root.className='local-profit-card';anchor.insertAdjacentElement('afterend',root);}
     const current=currentLocalMonth();
     const month=selectedMonth&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth)?selectedMonth:current;
-    const data=localMonthlyProfit(state,{month});
+    const data=localMonthlyProfit(financialState(),{month});
     const done=data.progressPct!=null&&data.progressPct>=100;
     const progress=data.progressPct==null?0:Math.max(0,Math.min(100,data.progressPct));
     const dayPct=data.daysInMonth?Math.min(100,Math.round(data.daysElapsed/data.daysInMonth*100)):0;
-    const history=monthlyGoalHistory(state,{count:18});
+    const history=monthlyGoalHistory(financialState(),{count:18});
     const changes=Array.isArray(state.project?.localProfitGoalChanges)?[...state.project.localProfitGoalChanges].reverse():[];
     const storedGoal=monthlyGoal(state,month);
     const percent=data.progressPct==null?'—':rounded(data.progressPct);
@@ -85,7 +88,7 @@ export function installLocalProfitUi(w=window) {
     if(!root){root=d.createElement('section');root.id=rootId;root.className='local-profit-card local-profit-table';panel.prepend(root);}
     const rows=profitRows().filter(x=>x.price>0);
     const warning=rows.filter(x=>!x.costVerified).length;
-    const monthly=localMonthlyProductProfits(state);
+    const monthly=localMonthlyProductProfits(financialState());
     root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">ANÁLISIS COMERCIAL · MOSTRADOR</span><h2>Rentabilidad por producto</h2>'
       +'<p>Precios vigentes; ganancia por unidad después de costo variable, GF asignado y comisión local, antes de promociones.</p></div>'
       +'<strong class="local-products-count">'+rows.length+' productos</strong></div>'
@@ -117,7 +120,7 @@ export function installLocalProfitUi(w=window) {
     let root=d.getElementById('dash-local-profit');
     if(!visible()){root?.remove();return;}
     if(!root){root=d.createElement('section');root.id='dash-local-profit';root.className='local-profit-card local-dashboard-summary';anchor.insertAdjacentElement('afterend',root);}
-    const data=localMonthlyProfit(state);
+    const data=localMonthlyProfit(financialState());
     const percent=data.progressPct!=null?rounded(data.progressPct):'—';
     const value=data.progressPct!=null?Math.min(100,Math.max(0,data.progressPct)):0;
     root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">GANANCIA · CANAL LOCAL</span><h2>Meta de '+esc(monthLabel(data.month))+'</h2><p>Solo Mostrador y sahten.online.</p></div>'+
@@ -153,5 +156,5 @@ export function installLocalProfitUi(w=window) {
   onPanelShow('mercaderia',()=>renderMerchProfitability());
   onPanelShow('rentabilidad',renderModule);
   onDataChanged(()=>{renderDashboardSummary();renderModule();});
-  return {renderGoal,renderDashboardSummary,renderModule,renderProfitability,renderMerchProfitability,localMonthlyProfit:()=>localMonthlyProfit(state)};
+  return {renderGoal,renderDashboardSummary,renderModule,renderProfitability,renderMerchProfitability,localMonthlyProfit:()=>localMonthlyProfit(financialState())};
 }
