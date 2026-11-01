@@ -43,8 +43,8 @@ const order=quoteOrder(menu,{
  customerPhone:'1111111111',items:[{productId:'mp_sandbox_smoke',qty:1}]
 },{validateCustomer:false,now});
 const checkout={id:randomUUID(),store_id:randomUUID(),order};
-const account={site_url:'https://sahten.online',mode:'test',account_id:String(seller.id)};
-const preference=buildPreference(checkout,account,'https://sahten.online/functions/v1/sahten-payments',now);
+const account={site_url:'https://example.org',mode:'test',account_id:String(seller.id)};
+const preference=buildPreference(checkout,account,'https://example.org/mp-smoke',now);
 const created=await mp('/checkout/preferences',{method:'POST',body:preference});
 if(!created?.id)throw Error('Mercado Pago no devolvió ID de preferencia.');
 const inspected=await mp('/checkout/preferences/'+encodeURIComponent(created.id));
