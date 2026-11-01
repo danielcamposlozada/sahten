@@ -118,6 +118,32 @@ describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)
   expect(x.fetchImpl).toHaveBeenCalledTimes(1);
   expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(2);
  });
+ it('si falla la reserva, no consume el nonce ni solicita pago a Mercado Pago',async()=>{
+  const x=paymentSetup(),original=base('mercadopago'),old=x.repo.run;
+  x.repo.run=vi.fn(async(action,args)=>{
+   if(action==='reserve')throw Error('db unavailable');
+   return old(action,args);
+  });
+  const offer=await x.call('offer',offerBody(original));
+  expect(offer.status).toBe(200);
+  const result=await x.call('checkout',{storeId:sid,requestId:rid,proof,
+   order:selected(original,offer.data)});
+  expect(result.status).toBe(500);
+  expect(x.repo.consumeUpsellNonce).not.toHaveBeenCalled();
+  expect(x.fetchImpl).not.toHaveBeenCalled();
+ });
+ it('nonce rechazado libera la reserva y nunca crea preferencia',async()=>{
+  const x=paymentSetup(),original=base('mercadopago');
+  x.repo.consumeUpsellNonce.mockResolvedValue(false);
+  const offer=await x.call('offer',offerBody(original));
+  expect(offer.status).toBe(200);
+  const result=await x.call('checkout',{storeId:sid,requestId:rid,proof,
+   order:selected(original,offer.data)});
+  expect(result.status).toBe(409);
+  expect(x.calls.map(([name])=>name)).toContain('reserve');
+  expect(x.calls.map(([name])=>name)).toContain('release');
+  expect(x.fetchImpl).not.toHaveBeenCalled();
+ });
  it('sin costos verificados o con promociones apagadas no hay tokens ni cobro',async()=>{
   const x=paymentSetup();x.m.promotions.enabled=false;
   expect((await x.call('offer',offerBody(base('mercadopago')))).status).toBe(409);
