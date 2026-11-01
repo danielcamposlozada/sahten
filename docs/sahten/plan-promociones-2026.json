@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "planVersion": 5,
+  "planVersion": 6,
   "enabled": false,
   "paymentPercent": 10,
   "minMarginPct": 40,
@@ -552,7 +552,8 @@
     "suppressRecommendationIfItemInCart": true,
     "suppressBeverageRecommendationIfAnyBeverageInCart": true,
     "contextualRecommendationsOnly": true,
-    "chooseFirstUsefulPair": "one_relevant_beverage_plus_one_relevant_sweet_or_savory"
+    "chooseFirstUsefulPair": "one_relevant_beverage_plus_one_relevant_sweet_or_savory",
+    "beverageRecommendationsIndependentOfPromotionalDiscountEngine": true
   },
   "initialProductSnapshot": {
     "snapshotDate": "2026-11-01",
@@ -659,7 +660,8 @@
           "p1793032422487",
           "bebida_agua_con_gas_600ml"
         ],
-        "priority": 40
+        "priority": 40,
+        "minEligibleSubtotal": 20000
       },
       {
         "id": "para_compartir",
@@ -691,9 +693,13 @@
           "bebida_sprite_zero_220ml",
           "p1793167440976"
         ],
-        "priority": 25
+        "priority": 25,
+        "maxEligibleSubtotal": 19999
       }
-    ]
+    ],
+    "renderOnlyPublishedProducts": true,
+    "enableOnlyAfterWebCatalogPublication": true,
+    "maxCardsWithOtherUpsells": 2
   },
   "beverageMigration": {
     "projectRevision": 298,
