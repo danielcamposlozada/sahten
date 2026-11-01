@@ -8,6 +8,45 @@ function promotionalFooter(snapshot,esc) {
     : snapshot.startsOn?'<p>Disponible desde '+esc(snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)+'/'+snapshot.startsOn.slice(0,4))+'</p>':'';
   return '<section class="receipt-promo"><strong>'+headline+'</strong>'+detail+'<p>Consultá las condiciones en SAHTEN.</p></section>';
 }
+/** El motor imprime importes confirmados; no calcula ni otorga promociones.
+ * Solo desglosa las cifras del snapshot cuando cuadran exactamente con el
+ * descuento recotizado. Si no coinciden, conserva el total original. */
+export function receiptDiscountLines(order) {
+  const cents=value=>{
+    if(typeof value!=='number'||!Number.isFinite(value)||value<0)return null;
+    return Math.round(value*100);
+  };
+  const total=cents(order.discountAmount??order.discount??0);
+  const subtotal=cents(order.subtotal);
+  if(total===null||subtotal===null||total>subtotal)return null;
+  const snapshot=order.promotionSnapshot;
+  if(!snapshot || !Array.isArray(snapshot.lines) ||
+     cents(snapshot.subtotal)!==subtotal ||
+     cents(snapshot.discount)!==total ||
+     cents(snapshot.netSubtotal)!==subtotal-total)
+    return null;
+  const products=new Map((order.items||[]).map(x=>[x.productId,x]));
+  if(snapshot.lines.length!==products.size)return null;
+  let basic=0,extra=0,used=new Set();
+  const specials=[];
+  for(const line of snapshot.lines){
+    if(!products.has(line.productId)||used.has(line.productId))return null;
+    used.add(line.productId);
+    const item=products.get(line.productId);
+    const base=cents(line.base),payment=cents(line.paymentDiscount),
+      promotion=cents(line.promotionDiscount),discount=cents(line.discount),
+      net=cents(line.net);
+    if(base===null||payment===null||promotion===null||discount===null||net===null||
+       Number(line.qty)!==Number(item.qty)||
+       base!==cents(item.lineTotal)||payment+promotion!==discount||
+       base-discount!==net)return null;
+    basic+=payment;extra+=promotion;
+    if(promotion>0)specials.push({productId:line.productId,name:String(item.name).slice(0,65),
+      amount:promotion/100,kind:String(line.appliedPromotionType||'promotion')});
+  }
+  if(basic+extra!==total)return null;
+  return {paymentAmount:basic/100,extras:specials};
+}
 export function buildReceipt(order, { paper, logoHtml = '', reviewHtml = '' } = {}) {
   const esc = escapeReceipt, money = value => '$' + Number(value || 0).toLocaleString('es-AR', {maximumFractionDigits:2});
   const compact = paper.contentMm <= 50, number = esc(String(order.num || 0).padStart(4,'0'));
@@ -31,7 +70,7 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
-${Number(order.discountAmount ?? order.discount)>0?row('Subtotal',money(order.subtotal))+row(order.paymentDiscount?'Dto. '+order.paymentDiscount.percent+' %':order.discountName || 'Descuento','−'+money(order.discountAmount ?? order.discount)):''}
+${Number(order.discountAmount ?? order.discount)>0?row('Subtotal',money(order.subtotal))+(function(){const parts=receiptDiscountLines(order);if(!parts)return row(order.paymentDiscount?'Dto. '+order.paymentDiscount.percent+' %':order.discountName || 'Descuento','−'+money(order.discountAmount ?? order.discount));let v='';if(parts.paymentAmount)v+=row('Beneficio por pago'+(order.promotionSnapshot?.paymentPercent?' '+order.promotionSnapshot.paymentPercent+' %':''),'−'+money(parts.paymentAmount));for(const extra of parts.extras)v+=row((extra.kind==='upsell'?'Complemento: ':'Promo: ')+extra.name,'−'+money(extra.amount));return v;})():''}
 ${delivery?row('Envío',order.shipping?money(order.shipping):'Gratis'):''}${order.deliverySnapshot?.discount>0?row('Ahorro envío',money(order.deliverySnapshot.discount)):''}${row('TOTAL',money(order.total),'total-row')}
 ${order.paymentName || order.paymentMethod?'<div class="payment">'+esc(order.paymentName || ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago'})[order.paymentMethod] || order.paymentMethod)+'</div>':''}
 ${cash.specified && cash.valid?row('Paga con',money(cash.tendered))+row('Vuelto',money(cash.change)):''}
