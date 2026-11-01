@@ -60,6 +60,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
     // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
+    commissionPercent:method==='mercadopago'?Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10):0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
