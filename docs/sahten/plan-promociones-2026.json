@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "planVersion": 3,
+  "planVersion": 4,
   "enabled": false,
   "paymentPercent": 10,
   "minMarginPct": 40,
@@ -106,7 +106,219 @@
       },
       "activationBlockers": [
         "validate_real_margin_40pct_after_payment_and_packaging",
-        "backend_reprice_required"
+        "backend_reprice_required",
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7350,
+        "variableCost": 1294.46,
+        "allocatedFixedCost": 2241.73,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 20
+      }
+    },
+    {
+      "id": "fatay-individual-up",
+      "name": "Sumá una Fatay",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 10,
+      "priority": 55,
+      "minMarginPct": 40,
+      "productIds": [
+        "fatay"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [
+        "p1779467294622",
+        "p1779570052552",
+        "p1789513991513"
+      ],
+      "promotionIntent": "incremental_cart_addon",
+      "marginAssessment": "incremental_unit_plus_basket",
+      "maxEligibleUnitsPerOrder": 1,
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 5850,
+        "variableCost": 442.12,
+        "allocatedFixedCost": 3138.42,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 20
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás una Fatay? Precio final sujeto al medio de pago"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    },
+    {
+      "id": "mamul-nuez-up",
+      "name": "Sumá un Mamul de Nuez",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 35,
+      "minMarginPct": 40,
+      "productIds": [
+        "mamul_nuez"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7000,
+        "variableCost": 518.09,
+        "allocatedFixedCost": 3138.42,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás un Mamul de Nuez?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    },
+    {
+      "id": "mamul-datil-up",
+      "name": "Sumá un Mamul de Dátil",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 35,
+      "minMarginPct": 40,
+      "productIds": [
+        "mamul_datil"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7000,
+        "variableCost": 405.59,
+        "allocatedFixedCost": 3362.59,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás un Mamul de Dátil?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    },
+    {
+      "id": "torta-chocolate-up",
+      "name": "Sumá una Torta de Chocolate",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 30,
+      "minMarginPct": 40,
+      "productIds": [
+        "torta_de_chocolate"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 8200,
+        "variableCost": 1432.01,
+        "allocatedFixedCost": 2510.74,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás una porción de Torta de Chocolate?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
       ]
     }
   ],
@@ -190,40 +402,46 @@
       "message": "¿Lo acompañás con un hummus?"
     },
     {
-      "id": "mamul-nuez-complement",
-      "name": "Mamul de Nuez",
+      "id": "aristilos-complement",
+      "name": "Aristilos (porción)",
       "kind": "recommendation",
       "enabled": false,
-      "productId": "mamul_nuez",
+      "productId": "p1780324945477",
       "extraPercent": 0,
       "standardPaymentBenefitOnly": true,
       "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
         "sandwich_falafel",
+        "arabe_clasico",
         "shawarma_pollo",
-        "arabe_clasico"
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
       ],
       "placement": [
         "cart"
       ],
-      "message": "¿Sumás un mamul de nuez de postre?"
+      "message": "¿Probás una porción de Aristilos?"
     },
     {
-      "id": "mamul-datil-complement",
-      "name": "Mamul de Dátil",
+      "id": "falafel-mix-complement",
+      "name": "Falafel Mix",
       "kind": "recommendation",
       "enabled": false,
-      "productId": "mamul_datil",
+      "productId": "falafel_mix",
       "extraPercent": 0,
       "standardPaymentBenefitOnly": true,
       "triggerProductIds": [
-        "sandwich_falafel",
-        "shawarma_pollo",
-        "arabe_clasico"
+        "p1779997171373",
+        "tabla_celebrar",
+        "p1779997050112"
       ],
       "placement": [
         "cart"
       ],
-      "message": "¿Sumás un mamul de dátil de postre?"
+      "message": "¿Sumás un Falafel Mix?"
     }
   ],
   "checkoutIncentives": [
@@ -262,8 +480,8 @@
     ],
     "noExtraDiscountRecommendations": [
       "hummus",
-      "mamul_nuez",
-      "mamul_datil"
+      "p1780324945477",
+      "falafel_mix"
     ],
     "notPublishedOrRequiresCostReview": [
       "p1779570052552",
@@ -277,6 +495,9 @@
     ],
     "excludedPublicSkuNames": [
       "Tabla para Compartir"
+    ],
+    "productUpgradeNotUpsell": [
+      "p1779570052552"
     ]
   },
   "activationPolicy": {
@@ -290,6 +511,30 @@
     "liveControlsPerCampaign": true,
     "requireServerQuoteAtCheckout": true,
     "requireVerifiedCosts": true,
-    "excludeExistingPaidOrdersFromRetroactiveChange": true
+    "excludeExistingPaidOrdersFromRetroactiveChange": true,
+    "maxDiscountedUpsellLinesPerOrder": 1,
+    "maxUpsellCardsPerCart": 2,
+    "upsellOfferRanking": "prefer_one_savory_and_one_dessert",
+    "requireIncrementalAndBasketMarginCheck": true,
+    "separateFixedOverheadFromIncrementalVariableCost": true,
+    "basketContributionTargetPct": 40,
+    "basketContributionAbsoluteFloorPct": 35,
+    "incidentalCostsInclude": [
+      "incremental_labor",
+      "packaging",
+      "transaction_fee",
+      "merchant_coupon_cost",
+      "subsidized_delivery",
+      "food_waste"
+    ],
+    "doNotReallocateEntireMonthlyFixedCostPerAdditionalUnit": true,
+    "contributionNeedsVolumeLiftValidation": true
+  },
+  "initialProductSnapshot": {
+    "snapshotDate": "2026-11-01",
+    "fixedCostAllocationNote": "existing fixedCost values are historical channel pricing locks; cost model distributes rent payroll utilities etc by estimated monthly sales and gfPctOverride; these are not automatically incremental",
+    "retailPriceSource": "sahten.online public menu",
+    "fixedAndVariableCostSource": "SAHTEN project pricingPolicies.mostrador",
+    "notACurrentPaymentFeeQuote": true
   }
 }
