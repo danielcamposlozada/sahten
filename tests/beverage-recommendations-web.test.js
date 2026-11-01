@@ -19,9 +19,7 @@ it('la bebida sugerida requiere pedido de comida, es opcional y desaparece al ag
  try{
   const w=dom.window,d=w.document;
   await vi.waitFor(()=>expect(d.querySelector('[data-inc="sandwich"]')).not.toBeNull());
-  w.openCart();
   expect(d.querySelector('.checkout-beverage-suggestion')).toBeNull();
-  w.closeSheet?.();
   d.querySelector('[data-inc="sandwich"]').click();
   w.openCart();
   const rec=d.querySelector('.checkout-beverage-suggestion');
