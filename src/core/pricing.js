@@ -24,6 +24,17 @@ const finalCommercial = (p, chId) => {
   const n = p.priceTargets?.[chId];
   return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
 };
+/** Canal calculado: NO usa el precio anterior como valor de venta ni aplica un precio fijado. */
+const useCalculatedPrice = (p, chId) => p.pricingMode?.[chId] === 'calculated';
+function calculatedCommercial(s,p,chId){
+  const ch = getChannel(s,chId);
+  const cost = costPerUnit(s,p,chId) + gfAssigned(s,p,chId);
+  const adj = Number(p.priceAdjByChannel?.[chId] ?? p.priceAdj ?? 1);
+  let price = cost * getTier(s,p.tier).factor * (Number.isFinite(adj)?adj:1);
+  const discount=Number(p.discount)||0;
+  if(discount>0)price=(p.discountType||'pct')==='pct'?price*(1-discount):price-discount;
+  return Math.max(0,RND(s,price*(1+(ch.surcharge||0))*(1+globalComm(s))));
+}
 
 function calculatedBase(s, p, channel = 'mostrador') {
   const tier = getTier(s, p.tier);
@@ -35,12 +46,14 @@ function calculatedBase(s, p, channel = 'mostrador') {
 }
 
 export function mostradorPrice(s, p) {
+  if (useCalculatedPrice(p,'mostrador')) return calculatedBase(s,p,'mostrador');
   if (finalCommercial(p, 'mostrador') != null) return finalCommercial(p, 'mostrador');
   if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
   return lockedAmount(p, 'mostrador', 'price', calculatedBase(s, p));
 }
 
 export function mostradorFinalPrice(s, p) {
+  if (useCalculatedPrice(p,'mostrador')) return calculatedCommercial(s,p,'mostrador');
   if (finalCommercial(p, 'mostrador') != null) return finalCommercial(p, 'mostrador');
   if (fixed(p, 'mostrador') != null) return fixed(p, 'mostrador');
   const pinned = lockedAmount(p, 'mostrador', 'price', null);
@@ -55,6 +68,7 @@ export function mostradorFinalPrice(s, p) {
 export function channelPrice(s, p, chId) {
   const ch = getChannel(s, chId);
   if (!ch.enabled) return null;
+  if (useCalculatedPrice(p,chId)) return calculatedCommercial(s,p,chId);
   if (finalCommercial(p, chId) != null) return finalCommercial(p, chId);
   if (fixed(p, chId) != null) return fixed(p, chId);
   const pinned = lockedAmount(p, chId, 'price', null);
@@ -106,7 +120,7 @@ export function channelNetReceivedWithDisc(s, p, chId) {
 export function marginPct(price, cost) { return price > 0 ? (price - cost) / price : 0; }
 
 /** Ganancia extra generada por el factor de tier, por encima de costo + GF. */
-export const tierProfitPerUnit = (s, p) => finalCommercial(p, 'mostrador') != null
+export const tierProfitPerUnit = (s, p) => (useCalculatedPrice(p,'mostrador') || finalCommercial(p, 'mostrador') != null)
   ? mostradorFinalPrice(s, p) - costPerUnit(s, p) - gfAssigned(s, p)
   : isPriceFixed(p, 'mostrador') ? 0
   : (getTier(s, p.tier).factor - 1) * (costPerUnit(s, p) + gfAssigned(s, p));
