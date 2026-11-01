@@ -3,7 +3,7 @@ import { costPerUnit } from '../core/costs.js';
 import { gfAssigned } from '../core/gf.js';
 import { channelPriceWithDisc, channelCommission } from '../core/pricing.js';
 import { afterRender, onDataChanged, onPanelShow } from '../events.js';
-import { localMonthlyProfit,localProductProfitability,localMonthlyProductProfits } from '../core/local-profit.js';
+import { localMonthlyProfit,localProductProfitability,localMonthlyProductProfits,monthlyGoal,setMonthlyGoal,monthlyGoalHistory,currentLocalMonth } from '../core/local-profit.js';
 import './local-profit.css';
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,43 +18,63 @@ export function installLocalProfitUi(w=window) {
     costPerUnit,gfAssigned,channelCommission,
     pricing:{channelPriceWithDisc}
   });
+  let selectedMonth=null,historyOpen=false;
+  const monthLabel=m=>new Date(m+'-01T12:00:00-03:00').toLocaleString('es-AR',{month:'long',year:'numeric'});
   function renderGoal(){
     const anchor=d.getElementById('dash-kpis');
     if(!anchor)return;
     let root=d.getElementById('dash-local-profit');
     if(!visible()){root?.remove();return;}
     if(!root){root=d.createElement('section');root.id='dash-local-profit';root.className='local-profit-card';anchor.insertAdjacentElement('afterend',root);}
-    const data=localMonthlyProfit(state);
-    const done=data.progressPct!=null && data.progressPct>=100;
+    const current=currentLocalMonth();
+    const month=selectedMonth&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth)?selectedMonth:current;
+    const data=localMonthlyProfit(state,{month});
+    const done=data.progressPct!=null&&data.progressPct>=100;
     const progress=data.progressPct==null?0:Math.max(0,Math.min(100,data.progressPct));
     const dayPct=data.daysInMonth?Math.min(100,Math.round(data.daysElapsed/data.daysInMonth*100)):0;
-    const label=new Date(data.month+'-01T12:00:00-03:00').toLocaleString('es-AR',{month:'long',year:'numeric'});
-    root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">CANAL LOCAL · '+esc(label)+'</span><h2>Meta mensual de ganancia</h2><p>Mostrador + pedidos de sahten.online · Excluye otras plataformas.</p></div>'
-      +(data.goal>0?'<div class="local-profit-goal"><small>Meta</small><strong>'+money(data.goal)+'</strong></div>':'')+'</div>'
+    const history=monthlyGoalHistory(state,{count:18});
+    const changes=Array.isArray(state.project?.localProfitGoalChanges)?[...state.project.localProfitGoalChanges].reverse():[];
+    const storedGoal=monthlyGoal(state,month);
+    const percent=data.progressPct==null?'—':rounded(data.progressPct);
+    root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">CANAL LOCAL · '+esc(monthLabel(month))+'</span><h2>Meta mensual de ganancia</h2><p>Mostrador + pedidos de sahten.online · Excluye otras plataformas.</p></div>'
+      +'<div class="local-month-tools"><label for="local-profit-month">Mes</label><input id="local-profit-month" type="month" min="2024-01" max="2099-12" value="'+esc(month)+'" aria-label="Seleccionar mes de ganancia"></div>'
+      +(data.goalConfigured?'<div class="local-profit-goal"><small>Meta del mes</small><strong>'+money(data.goal)+'</strong></div>':'')+'</div>'
       +'<div class="local-profit-numbers"><strong class="'+(data.profit<0?'negative':'')+'">'+money(data.profit)+'</strong>'
       +'<div class="local-profit-secondary">'+(data.goal>0?
-        '<span class="local-progress-state">'+(done?'Meta alcanzada':money(data.remaining)+' para llegar')+'</span><span>'+rounded(data.progressPct)+' completado</span>'
-        :'<span>Configurá tu objetivo de ganancia para mostrar el avance.</span>')+'</div></div>'
-      +'<div class="local-profit-progress" role="progressbar" aria-label="Avance de la meta mensual de ganancia local" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(progress)+'"><div style="width:'+progress+'%"></div></div>'
-      +'<div class="local-progress-axis"><span>0%</span><span>Mes transcurrido: '+dayPct+'%</span><span>100% de la meta</span></div>'
+        '<span class="local-progress-state">'+(done?'Meta alcanzada':money(data.remaining)+' para llegar')+'</span><span>'+percent+' de la meta</span>'
+        :'<span>'+(data.goalConfigured?'La meta de este mes está desactivada.':'Todavía no hay meta configurada para este mes.')+'</span>')+'</div></div>'
+      +'<div class="local-profit-progress" role="progressbar" aria-label="Avance de la meta mensual local" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(progress)+'"><div style="width:'+progress+'%"></div></div>'
+      +'<div class="local-progress-axis"><span>0%</span><span>'+(month===current?'Mes transcurrido: '+dayPct+'%':'Resultado de '+esc(monthLabel(month)))+'</span><span>100% de la meta</span></div>'
       +'<div class="local-profit-breakdown"><span><b>'+money(data.revenue)+'</b> ventas netas</span><span><b>−'+money(data.variable)+'</b> costo variable</span><span><b>−'+money(data.fixed)+'</b> GF asignado</span><span><b>−'+money(data.commission)+'</b> comisión</span><span><b>'+rounded(data.marginPct)+'</b> margen</span></div>'
       +'<div class="local-profit-foot"><span>'+data.covered+' pedidos con costos históricos'+(data.missing?' · <strong>'+data.missing+' sin costo auditado</strong>':'')+'. '
-      +(data.missing?'El resultado es parcial, NO el total del mes.':'Resultado estimado después del GF asignado por pedido; no es un cierre contable.')+'</span>'
-      +(canEdit()?'<button type="button" data-local-goal-edit>Editar meta</button>':'')+'</div>'
-      +'<div data-local-goal-form hidden class="local-goal-form"><label>Ganancia mensual deseada ($)<input type="number" min="0" step="1000" data-local-goal-input value="'+(Number(state.project?.localProfitGoal)||'')+'"></label><button type="button" data-local-goal-save>Guardar meta</button></div>';
+      +(data.missing?'Resultado parcial: faltan costos en algunos pedidos.':'Estimación después del GF asignado por pedido; no es un cierre contable.')+'</span>'
+      +(canEdit()?'<button type="button" data-local-goal-edit>Configurar meta del mes</button>':'')+'</div>'
+      +'<form data-local-goal-form hidden class="local-goal-form"><label>Meta para '+esc(monthLabel(month))+' ($)<input type="number" min="0" step="1000" data-local-goal-input value="'+(storedGoal??'')+'" required></label><button type="submit">Guardar meta de '+esc(month)+'</button><small data-local-goal-error role="alert"></small></form>'
+      +'<details class="local-month-history" '+(historyOpen?'open':'')+'><summary>Historial de metas y ganancias mensuales</summary><div class="local-profit-table-wrap"><table><thead><tr><th>Mes</th><th>Meta</th><th>Ganancia registrada</th><th>Avance</th><th>Datos</th><th>Acción</th></tr></thead><tbody>'
+      +history.map(h=>'<tr><td><strong>'+esc(monthLabel(h.month))+'</strong></td><td>'+(h.goal!=null?money(h.goal):'Sin configurar')+'</td><td>'+money(h.profit)+'</td><td>'+(h.goal>0?rounded(h.progressPct):'—')+'</td><td>'+(h.missing?'<span title="Faltan costos de pedidos">Parcial ('+h.missing+')</span>':'Verificado ('+h.covered+')')+'</td><td><button type="button" data-local-month="'+h.month+'">Ver / editar</button></td></tr>').join('')+'</tbody></table></div>'
+      +(changes.length?'<details class="local-goal-audit"><summary>Registro de ediciones ('+changes.length+')</summary><ul>'+changes.slice(0,50).map(x=>'<li>'+esc(x.month)+' · '+(x.before==null?'Sin meta':money(x.before))+' → '+money(x.after)+' · '+esc(new Date(x.at).toLocaleString('es-AR'))+'</li>').join('')+'</ul></details>':'')
+      +'</details>';
+    root.querySelector('#local-profit-month')?.addEventListener('change',e=>{
+      if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value))return;
+      selectedMonth=e.target.value;renderGoal();
+    });
+    root.querySelectorAll('[data-local-month]').forEach(b=>b.addEventListener('click',()=>{
+      selectedMonth=b.dataset.localMonth;historyOpen=true;renderGoal();
+    }));
+    root.querySelector('.local-month-history')?.addEventListener('toggle',e=>{historyOpen=e.target.open;});
     root.querySelector('[data-local-goal-edit]')?.addEventListener('click',()=>{
-      const form=root.querySelector('[data-local-goal-form]');
-      form.hidden=!form.hidden;
+      const form=root.querySelector('[data-local-goal-form]');form.hidden=!form.hidden;
       if(!form.hidden)form.querySelector('input')?.focus();
     });
-    root.querySelector('[data-local-goal-save]')?.addEventListener('click',()=>{
+    root.querySelector('[data-local-goal-form]')?.addEventListener('submit',e=>{
+      e.preventDefault();
       if(!canEdit())return;
-      const val=Number(root.querySelector('[data-local-goal-input]')?.value);
-      if(!Number.isFinite(val)||val<0||val>100000000000)return;
-      state.project.localProfitGoal=Math.round(val*100)/100;
-      w.SAHTEN?.project?.markDirty?.();
-      w.scheduleSave?.();
-      renderGoal();
+      const val=root.querySelector('[data-local-goal-input]')?.value;
+      try {
+        const changed=setMonthlyGoal(state,{month,amount:val,actor:d.body.dataset.role||'admin'});
+        if(changed){w.SAHTEN?.project?.markDirty?.();w.scheduleSave?.();}
+        historyOpen=true;renderGoal();
+      }catch(err){root.querySelector('[data-local-goal-error]').textContent=err.message;}
     });
   }
   function renderProfitability() {
