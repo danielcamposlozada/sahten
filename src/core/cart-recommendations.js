@@ -22,7 +22,8 @@ export function recommendCartAddons({products=[],cart=[],policy=null,showPrices=
   const complements=Array.isArray(policy.complements)?policy.complements:[];
   const suggestions=[];
   const hasBeverage=[...quantities.keys()].some(id=>catalog.get(id)?.category==='Bebidas');
-  const matching=r=>(r.triggerProductIds||[]).some(id=>has(id));
+  const triggerFor=r=>(r.triggerProductIds||[]).find(id=>has(id));
+  const matching=r=>Boolean(triggerFor(r));
   const ordered=(rows)=>[...rows].filter(Boolean).sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0));
   if(!hasBeverage){
     for(const group of ordered(groups)){
@@ -33,7 +34,8 @@ export function recommendCartAddons({products=[],cart=[],policy=null,showPrices=
         .find(p=>p?.category==='Bebidas'&&!has(p.id)&&published(p));
       if(product){
         suggestions.push({id:product.id,name:product.name,price:Number(product.price),
-          kind:'beverage',headline:String(group.name||'¿Sumás una bebida?').slice(0,100)});
+          kind:'beverage',headline:String(group.name||'¿Sumás una bebida?').slice(0,100),
+          contextProduct:catalog.get(triggerFor(group))?.name||''});
         break;
       }
     }
@@ -44,7 +46,8 @@ export function recommendCartAddons({products=[],cart=[],policy=null,showPrices=
     if(!p || !published(p) || p.category==='Bebidas' || has(p.id))continue;
     if(suggestions.some(x=>x.id===p.id))continue;
     suggestions.push({id:p.id,name:p.name,price:Number(p.price),
-      kind:'complement',headline:String(c.name||'¿Algo para acompañar?').slice(0,100)});
+      kind:'complement',headline:String(c.name||'¿Algo para acompañar?').slice(0,100),
+      contextProduct:catalog.get(triggerFor(c))?.name||''});
     break;
   }
   return suggestions.slice(0,2);
