@@ -208,10 +208,15 @@ export function installPromotionsEditor(w=window) {
     const dessert=extra.map(p=>{
       const details=p.historicalUnitEconomics||{};
       const totalCashPercent=Number(details.proposedTotalCashDiscountPct??(Number(state.paymentPercent||10)+Number(p.extraPercent||0)));
-      const priced=Number(details.listPrice)>0
+      const tiers=Array.isArray(p.discountTiers)&&p.discountTiers.length
+        ?'<p><strong>Escala de descuento TOTAL:</strong> '+p.discountTiers.map(t=>
+          'Desde '+fmt(t.minEligibleNetSubtotal)+' netos en platos → '+esc(t.totalDiscountPercent)+'% '
+          +'('+fmt(Number(details.listPrice)*(1-t.totalDiscountPercent/100))+')').join(' · ')
+          +'. No se cuenta la Fatay adicional ni el envío.</p>':'';
+      const priced=tiers||(Number(details.listPrice)>0
         ?'<p>Precio de referencia: '+fmt(details.listPrice)
           +' · Con efectivo/transferencia: '+fmt(details.listPrice*(1-totalCashPercent/100))
-          +' ('+esc(totalCashPercent)+'% total, solo si el servidor lo aprueba).</p>':'';
+          +' ('+esc(totalCashPercent)+'% total, solo si el servidor lo aprueba).</p>':'');
       return '<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
         +'<p>Producto: '+esc((p.productIds||[]).map(lookup).join(', '))
         +' · Máximo '+esc(p.maxUnits||1)+' unidad · +'+esc(p.extraPercent)+' puntos adicionales.</p>'
@@ -235,6 +240,13 @@ export function installPromotionsEditor(w=window) {
       +'<p>Mostrar como máximo dos opciones por carrito y aplicar solo un complemento con descuento; '
       +'todas las ofertas están desactivadas hasta validar costo incremental, margen del pedido y cobro.</p>'
       +(dessert||'<p>Sin descuentos de complementos.</p>')
+      +'<h4>Bebidas en Mercadería</h4>'
+      +'<p>11 bebidas de reventa con precios cargados. '+esc(state.beverageUpsellPolicy?.options?.filter(x=>!x.verified).length||0)
+      +' variantes conservan costo de proveedor pendiente. No hay descuento extra en bebidas.</p>'
+      +'<p>Recomendaciones por contexto: sándwich individual → latita; platos grandes o tablas → botella/agua; '
+      +'no mostrar sugerencias si el carrito ya tiene una bebida. Requiere publicación web sin perder fotos.</p>'
+      +'<p><strong>Estado:</strong> '+(state.beverageUpsellPolicy?.enabled?'Recomendaciones preparadas':'Recomendaciones desactivadas')
+      +'</p>'
       +'<h4>Venta cruzada sin nuevos descuentos</h4>'+(crossSelling||'<p>Sin sugerencias.</p>')
       +shipping+'</section>';
   }
