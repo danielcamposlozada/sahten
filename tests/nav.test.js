@@ -18,7 +18,7 @@ describe('navegación', () => {
   it('el menú lateral son enlaces con data-panel, y el cajón del celular tiene las mismas secciones', async () => {
     const a = await openApp(); const d = a.window.document;
     const side = [...d.querySelectorAll('.sidebar .nav-item')];
-    expect(side.length).toBe(16);
+    expect(side.length).toBe(17);
     side.forEach(el => { expect(el.tagName).toBe('A'); expect(el.getAttribute('href')).toBe('#/' + el.dataset.panel); expect(el.hasAttribute('onclick')).toBe(false); });
     const drawer = new Set([...d.querySelectorAll('.app-drawer-item')].map(e => e.dataset.panel));
     const sideSet = new Set(side.map(e => e.dataset.panel));
@@ -39,6 +39,24 @@ describe('navegación', () => {
     expect(w.currentPanel).toBe('reportes');
     w.close();
   }, 60000);
+
+  it('la sección Rentabilidad abre cuatro vistas sin cambiar el origen de las métricas',async()=>{
+    const a=await openApp(),d=a.window.document;
+    d.querySelector('.sidebar [data-panel="rentabilidad"]').click();
+    const panel=d.getElementById('panel-rentabilidad');
+    expect(panel.classList.contains('active')).toBe(true);
+    expect(a.window.location.hash).toBe('#/rentabilidad');
+    const tabs=[...panel.querySelectorAll('[data-local-tab]')].map(b=>b.dataset.localTab);
+    expect(tabs).toEqual(['resumen','metas','productos','mercaderia']);
+    panel.querySelector('[data-local-tab="metas"]').click();
+    expect(panel.querySelector('[data-local-pane="metas"]').hidden).toBe(false);
+    expect(panel.querySelector('[data-local-pane="resumen"]').hidden).toBe(true);
+    expect(panel.querySelector('.local-month-history')).not.toBeNull();
+    panel.querySelector('[data-local-tab="productos"]').click();
+    expect(panel.querySelector('[data-local-pane="productos"]').hidden).toBe(false);
+    expect(panel.querySelector('#rentabilidad-productos-table')).not.toBeNull();
+    a.window.close();
+  },60000);
 
   it('cambiar el hash (Atrás / enlace) navega sin volver a empujar historial', async () => {
     const a = await openApp(); const w = a.window, d = w.document;

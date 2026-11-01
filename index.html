@@ -57,6 +57,7 @@
       <div class="nav-section">Analizar</div>
       <a class="nav-item" href="#/ventas" data-panel="ventas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Ventas + GF</span></a>
       <a class="nav-item" href="#/proyeccion" data-panel="proyeccion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Proyección</span></a>
+      <a class="nav-item" href="#/rentabilidad" data-panel="rentabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m6 16 5-5 4 3 5-8"/></svg><span>Rentabilidad</span></a>
       <a class="nav-item" href="#/reportes" data-panel="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Reportes</span></a>
       <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0"></div>
       <a class="nav-item" href="#/wiki" data-panel="wiki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Guía de uso</span></a>
@@ -137,6 +138,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           <span>Recetas</span>
         </button>
+        <button class="app-drawer-item" id="ad-rentabilidad" data-panel="rentabilidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m6 16 5-5 4 3 5-8"/></svg><span>Rentabilidad</span></button>
         <button class="app-drawer-item" id="ad-reportes" data-panel="reportes">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
           <span>Reportes</span>
@@ -1085,6 +1087,29 @@
       <div id="panel-mostrador" class="panel"></div>
 
 <!-- PANEL REPORTES -->
+      <div id="panel-rentabilidad" class="panel">
+        <div class="local-module-heading">
+          <div><h2>Rentabilidad</h2><p>Canal local · ganancia real estimada, metas y productos</p></div>
+        </div>
+        <nav class="local-module-tabs" aria-label="Secciones de rentabilidad">
+          <button type="button" data-local-tab="resumen" aria-pressed="true">Resumen</button>
+          <button type="button" data-local-tab="metas" aria-pressed="false">Metas e historial</button>
+          <button type="button" data-local-tab="productos" aria-pressed="false">Productos</button>
+          <button type="button" data-local-tab="mercaderia" aria-pressed="false">Mercadería</button>
+        </nav>
+        <div id="rentabilidad-resumen" data-local-pane="resumen">
+          <div id="rentabilidad-goal-anchor"></div>
+        </div>
+        <div id="rentabilidad-metas" data-local-pane="metas" hidden>
+          <div id="rentabilidad-goals-anchor"></div>
+        </div>
+        <div id="rentabilidad-productos" data-local-pane="productos" hidden>
+          <div id="rentabilidad-productos-anchor"></div>
+        </div>
+        <div id="rentabilidad-mercaderia" data-local-pane="mercaderia" hidden>
+          <div id="rentabilidad-mercaderia-anchor"></div>
+        </div>
+      </div>
       <div id="panel-reportes" class="panel"></div>
 
 <!-- PANEL MENÚ ONLINE -->

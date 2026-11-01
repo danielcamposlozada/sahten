@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {localMonthlyProfit,localProductProfitability,currentLocalMonth} from '../src/core/local-profit.js';
+import {localMonthlyProfit,localProductProfitability,currentLocalMonth,monthlyGoal,setMonthlyGoal,monthlyGoalHistory} from '../src/core/local-profit.js';
 const order=(id,origin,status,createdAt='2026-11-01T15:00:00-03:00')=>({id,origin,status,createdAt});
 const cost=(revenue,variable,fixed,commission=0)=>({basis:'at-sale',channel:'mostrador',items:[{revenue,variable,fixed,commission}]});
 describe('barra de ganancia local del mes',()=>{
@@ -36,5 +36,56 @@ describe('métricas de rentabilidad por producto',()=>{
    const r=localProductProfitability(s)[0];
    expect(r.profit).toBe(6000);expect(r.marginPct).toBe(60);
    expect(r.cashProfit).toBe(5000);
+ });
+});
+
+describe('historial de metas locales por mes',()=>{
+ it('guardar noviembre no cambia octubre ni diciembre',()=>{
+   const s={project:{},orders:[],saleCosts:{}},now=new Date('2026-11-01T15:00:00-03:00');
+   expect(setMonthlyGoal(s,{month:'2026-10',amount:10000,now})).toBe(true);
+   expect(setMonthlyGoal(s,{month:'2026-11',amount:25000,now})).toBe(true);
+   expect(monthlyGoal(s,'2026-10',now)).toBe(10000);
+   expect(monthlyGoal(s,'2026-11',now)).toBe(25000);
+   expect(monthlyGoal(s,'2026-12',now)).toBe(null);
+   expect(localMonthlyProfit(s,{month:'2026-10',now}).goal).toBe(10000);
+   expect(localMonthlyProfit(s,{month:'2026-11',now}).goal).toBe(25000);
+   expect(s.project.localProfitGoalChanges.length).toBe(2);
+ });
+ it('una modificación registra el valor anterior y conserva metas de otros meses',()=>{
+   const s={project:{},orders:[]},now=new Date('2026-11-12T18:00:00-03:00');
+   setMonthlyGoal(s,{month:'2026-10',amount:10000,now});
+   setMonthlyGoal(s,{month:'2026-11',amount:20000,now});
+   expect(setMonthlyGoal(s,{month:'2026-11',amount:23000,now})).toBe(true);
+   expect(monthlyGoal(s,'2026-11',now)).toBe(23000);
+   expect(monthlyGoal(s,'2026-10',now)).toBe(10000);
+   expect(s.project.localProfitGoalChanges[2].before).toBe(20000);
+   expect(s.project.localProfitGoalChanges[2].after).toBe(23000);
+   expect(monthlyGoalHistory(s,{now,count:2}).length).toBe(2);
+ });
+ it('meta antigua global no se repite retroactivamente y se migra al mes actual',()=>{
+   const s={project:{localProfitGoal:35000},orders:[]},now=new Date('2026-11-11T13:00:00-03:00');
+   expect(monthlyGoal(s,'2026-10',now)).toBe(null);
+   expect(monthlyGoal(s,'2026-11',now)).toBe(35000);
+   expect(setMonthlyGoal(s,{month:'2026-11',amount:35000,now})).toBe(true);
+   expect(s.project.localProfitGoals['2026-11']).toBe(35000);
+   expect(monthlyGoal(s,'2026-12',now)).toBe(null);
+ });
+ it('conserva meta antigua de noviembre aunque primero se edite octubre',()=>{
+   const s={project:{localProfitGoal:35000},orders:[]},now=new Date('2026-11-11T13:00:00-03:00');
+   expect(setMonthlyGoal(s,{month:'2026-10',amount:20000,now})).toBe(true);
+   expect(monthlyGoal(s,'2026-10',now)).toBe(20000);
+   expect(monthlyGoal(s,'2026-11',now)).toBe(35000);
+ });
+ it('meta del mes anterior se conserva cuando comienza el siguiente',()=>{
+   const s={project:{},orders:[]};
+   const nov=new Date('2026-11-11T13:00:00-03:00');
+   setMonthlyGoal(s,{month:'2026-11',amount:40000,now:nov});
+   expect(monthlyGoal(s,'2026-11',new Date('2026-12-03T13:00:00-03:00'))).toBe(40000);
+   expect(monthlyGoal(s,'2026-12',new Date('2026-12-03T13:00:00-03:00'))).toBe(null);
+ });
+ it('no acepta metas inválidas',()=>{
+   const s={project:{},orders:[]};
+   expect(()=>setMonthlyGoal(s,{month:'2026-13',amount:1000})).toThrow();
+   expect(()=>setMonthlyGoal(s,{month:'2026-11',amount:-1})).toThrow();
  });
 });
