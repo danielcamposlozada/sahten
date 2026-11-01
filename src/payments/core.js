@@ -57,7 +57,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
   const promotion=menu.promotions?.enabled===true ? quotePromotions({
     lines:items,method,channel:salesChannel,now:new Date(now),
-    config:{...menu.promotions,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
+    config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
     // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
   }) : null;
