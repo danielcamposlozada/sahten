@@ -194,6 +194,23 @@ function deliverySetup(){
  const call=async(action,body)=>{const r=await service(req(action,{storeId:sid,...body}));return {status:r.status,data:await r.json()};};
  return {m,repo,orders,call,order};
 }
+describe('Delivery: bebidas de precio completo independientes de promociones',()=>{
+ it('acepta una bebida sin token promocional y conserva el beneficio por transferencia',async()=>{
+  const x=deliverySetup();x.m.promotions.enabled=false;
+  x.m.products.push({id:'bebida_agua_con_gas_600ml',name:'Agua con gas 600 ml',category:'Bebidas',
+   price:2000,priceRevision:'r1'});
+  const baseQuote=await x.call('quote',{order:x.order});
+  const withDrink={...x.order,items:[...x.order.items,
+   {productId:'bebida_agua_con_gas_600ml',qty:1}]};
+  const drinkQuote=await x.call('quote',{order:withDrink});
+  expect(baseQuote.status).toBe(200);expect(drinkQuote.status).toBe(200);
+  expect(drinkQuote.data.order.total-baseQuote.data.order.total).toBe(1800);
+  const done=await x.call('order',{order:{...withDrink,total:drinkQuote.data.order.total},requestId:rid});
+  expect(done.status).toBe(200);
+  expect(done.data.order.items.some(x=>x.productId==='bebida_agua_con_gas_600ml')).toBe(true);
+  expect(x.repo.consumeUpsellNonce).not.toHaveBeenCalled();
+ });
+});
 describe('Integración Edge de delivery y retiro (rutas simuladas)',()=>{
  it('cotiza con ruta verificada y confirma el pedido una sola vez tras validar token',async()=>{
   const x=deliverySetup(),offer=await x.call('offer',{order:x.order,upsellProof:proof,
