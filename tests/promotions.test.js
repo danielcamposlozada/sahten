@@ -52,6 +52,16 @@ describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
     const r=quotePromotions({config:c,lines:[line('shawarma_pollo',16000)],trustedCosts:{shawarma_pollo:9500},commissionPercent:8,method:'mercadopago',now:at('2026-11-02')});
     expect(r.lines[0].appliedPromotionId).toBe(null);expect(r.netSubtotal).toBe(16000);
   });
+  it('si un cupón alcanza su tope se recupera la campaña pública compatible en la siguiente línea',()=>{
+    const coupon={id:'second',status:'available',expiresOn:'2026-11-14',extraPercent:10,maxExtraAmount:1000,
+      productIds:['p1779467294622','sandwich_falafel']};
+    const r=quotePromotions({config:cfg(),now:at('2026-11-02'),method:'transferencia',
+      lines:[line('p1779467294622',16850),line('sandwich_falafel',15800)],coupon});
+    expect(r.lines[0].appliedPromotionId).toBe('second');
+    expect(r.lines[0].promotionDiscount).toBe(1000);
+    expect(r.lines[1].appliedPromotionId).toBe('weekly-meals');
+    expect(r.lines[1].promotionDiscount).toBe(790);
+  });
   it('expone fecha límite clara al cliente',()=>{
     expect(expiryLabel('2026-11-14')).toBe('Válido hasta el 14/11/2026');
   });
