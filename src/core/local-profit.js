@@ -29,15 +29,17 @@ export function setMonthlyGoal(s,{month,amount,now=new Date(),actor='admin'}={})
   if(!s.project||typeof s.project!=='object')s.project={};
   // If a legacy one-value goal exists, attach it to the current month before
   // editing any other period. Otherwise saving an older month would hide it.
+  let migrated=false;
   if(!s.project.localProfitGoals||!Object.keys(s.project.localProfitGoals).length){
     const old=Number(s.project.localProfitGoal),active=currentLocalMonth(now);
     if(Number.isFinite(old)&&old>0&&active){
       s.project.localProfitGoals={...s.project.localProfitGoals,[active]:Math.round(old*100)/100};
+      migrated=true;
     }
   }
   s.project.localProfitGoals||={};
   const previous=monthlyGoal(s,month,now);
-  if(previous===target&&Object.prototype.hasOwnProperty.call(s.project.localProfitGoals,month))return false;
+  if(!migrated&&previous===target&&Object.prototype.hasOwnProperty.call(s.project.localProfitGoals,month))return false;
   s.project.localProfitGoals[month]=target;
   s.project.localProfitGoalChanges||=[];
   s.project.localProfitGoalChanges.push({
