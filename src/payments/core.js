@@ -74,7 +74,9 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
       trustedUpsellSelection?.verified===true
         ? (typeof trustedPaymentFeePercent==='number'&&Number.isFinite(trustedPaymentFeePercent)&&trustedPaymentFeePercent>=0&&trustedPaymentFeePercent<=100
           ? trustedPaymentFeePercent : NaN)
-        : Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10)) : 0,
+        : (menu.promotions.upsellGuardRequired === true
+          ? Number(menu.promotions.checkoutProFeePercent)
+          : Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10))) : 0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
