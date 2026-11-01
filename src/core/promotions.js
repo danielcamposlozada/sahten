@@ -149,6 +149,6 @@ export const INITIAL_UPSELLS = [
     suppressIfPresent:['tabla_celebrar']}
 ];
 export function initialPromotionConfig() {
-  return {version:1,enabled:false,paymentPercent:10,minMarginPct:0,campaigns:structuredClone(INITIAL_CAMPAIGNS),
+  return {version:1,enabled:false,paymentPercent:10,minMarginPct:40,checkoutProFeePercent:null,campaigns:structuredClone(INITIAL_CAMPAIGNS),
     upsells:structuredClone(INITIAL_UPSELLS),ticket:{enabled:false,review:true,advertise:true}};
 }
