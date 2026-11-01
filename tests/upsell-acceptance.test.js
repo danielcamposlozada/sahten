@@ -4,7 +4,7 @@ import {PaymentError} from '../src/payments/core.js';
 const sid='b0a7ce44-8833-4a55-bb11-2c774daa3151',now=Date.parse('2026-11-01T17:00:00Z');
 const requestId='397e3c7f-d0a3-4b6a-b89a-a384d920d771';
 const id='4d125b6a-fb84-4cd9-ae72-4efa1dab7e04',promoId='fatay-individual-up';
-const base={source:'pickup',paymentMethod:'transferencia',items:[{productId:'shawarma_pollo',qty:2}]};
+const base={source:'pickup',paymentMethod:'transferencia',customerName:'Cliente de prueba',customerPhone:'1155551234',items:[{productId:'shawarma_pollo',qty:2}]};
 const menu={
  config:{enabled:true,showPrices:true},
  store:{name:'SAHTEN',currency:{symbol:'$',locale:'es-AR'}},
