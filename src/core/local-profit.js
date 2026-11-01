@@ -33,6 +33,24 @@ export function localMonthlyProfit(s,{month=currentLocalMonth(),now=new Date()}=
   result.complete=result.missing===0;
   return result;
 }
+export function localMonthlyProductProfits(s,{month=currentLocalMonth()}={}){
+  const items={};
+  for(const order of s.orders||[]){
+    if(!localOrigin(order)||!completed(order)||monthKey(order.createdAt||order.date)!==month)continue;
+    const entry=s.saleCosts?.[order.id];
+    if(!entry||!['at-sale','published-quote'].includes(entry.basis)||entry.channel!=='mostrador'||!Array.isArray(entry.items))continue;
+    for(const item of entry.items){
+      if(item.missing||!item.productId||!['qty','revenue','variable','fixed','commission'].every(k=>Number.isFinite(Number(item[k]))))continue;
+      const row=items[item.productId] ||= {productId:item.productId,qty:0,revenue:0,profit:0,orders:0};
+      row.qty+=Number(item.qty);
+      row.revenue+=Number(item.revenue);
+      row.profit+=Number(item.revenue)-Number(item.variable)-Number(item.fixed)-Number(item.commission);
+      row.orders++;
+    }
+  }
+  for(const row of Object.values(items)){row.revenue=cents(row.revenue);row.profit=cents(row.profit);}
+  return items;
+}
 export function localProductProfitability(s){
   const {channelPriceWithDisc}=s.pricing;
   return (s.products||[]).filter(p=>!p.recetaOnly).map(p=>{
