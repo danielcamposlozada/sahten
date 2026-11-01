@@ -406,11 +406,15 @@ function cartAddonSuggestions(){
   var options=recommendCartAddons({products:MENU.products,cart:lines(),
     policy:MENU.cartRecommendations||{enabled:false},showPrices:MENU.config.showPrices!==false});
   if(!options.length)return '';
-  return '<section class="cart-addons" aria-label="Sugerencias para acompañar tu pedido"><h3>Para acompañar</h3><div class="cart-addons-list">'
-    +options.map(function(p){return '<div class="cart-addon"><div class="cart-addon-copy"><strong>'
-      +esc(p.headline)+'</strong><span>'+esc(p.name)+' · '+fmt(p.price)
-      +'</span></div><button type="button" data-inc="'+esc(p.id)
-      +'" aria-label="Agregar '+esc(p.name)+' al pedido">Sumar</button></div>';}).join('')
+  return '<section class="cart-addons" aria-label="Recomendaciones relacionadas con tu pedido"><h3>Para completar tu pedido</h3>'
+    +'<p class="cart-addons-explain">Sugerencias según tu pedido. Los precios son de lista; los beneficios por medio de pago se calculan al confirmar. Estas recomendaciones no incluyen una oferta adicional.</p>'
+    +'<div class="cart-addons-list">'
+    +options.map(function(p){return '<div class="cart-addon"><div class="cart-addon-copy">'
+      +'<span class="cart-addon-context">Porque agregaste '+esc(p.contextProduct||'otros productos')+'</span>'
+      +'<strong>'+esc(p.headline)+'</strong>'
+      +'<span>'+esc(p.name)+' · <b>'+fmt(p.price)+'</b></span>'
+      +'</div><button type="button" data-inc="'+esc(p.id)
+      +'" aria-label="Agregar '+esc(p.name)+' a precio de lista">Agregar</button></div>';}).join('')
     +'</div></section>';
 }
 function closeSheet(){
