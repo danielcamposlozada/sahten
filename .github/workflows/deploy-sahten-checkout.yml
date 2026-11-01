@@ -65,12 +65,12 @@ jobs:
       - name: Validar autorización Cloudflare y despliegue de origen
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ -z "$CF_TOKEN" || -z "$CF_ACCOUNT" ]]; then
-            echo "::error::Faltan CLOUDFLARE_API_TOKEN y/o CLOUDFLARE_ACCOUNT_ID. Paquete generado, producción sin cambios."
+            echo "::error::Falta CLOUDFLARE_API_TOKEN o falta el identificador de cuenta. Paquete generado, producción sin cambios."
             exit 1
           fi
           data=$(curl --fail --silent --show-error --retry 2 \
@@ -86,7 +86,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
           command: pages deploy sahten-export --project-name sahten-menu --branch main
       - name: Comprobar que no se perdió el menú público
         shell: bash
