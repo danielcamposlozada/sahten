@@ -1,0 +1,721 @@
+{
+  "version": 1,
+  "planVersion": 6,
+  "enabled": false,
+  "paymentPercent": 10,
+  "minMarginPct": 40,
+  "requireVerifiedCosts": true,
+  "checkoutProFeePercent": null,
+  "campaigns": [
+    {
+      "id": "weekly-meals",
+      "name": "Lunes a miércoles · Platos seleccionados",
+      "kind": "public",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 20,
+      "channels": [
+        "online",
+        "mostrador"
+      ],
+      "schedule": {
+        "type": "weekly",
+        "weekdays": [
+          1,
+          2,
+          3
+        ]
+      },
+      "productIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo"
+      ],
+      "advertising": {
+        "enabled": true,
+        "placement": [
+          "ticket",
+          "cart",
+          "checkout",
+          "menu"
+        ],
+        "message": "Hasta 15% con efectivo o transferencia en platos seleccionados"
+      }
+    },
+    {
+      "id": "central-tables",
+      "name": "Tablas para compartir · Fines de semana centrales",
+      "kind": "public",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 30,
+      "channels": [
+        "online",
+        "mostrador"
+      ],
+      "schedule": {
+        "type": "central_weekends"
+      },
+      "productIds": [
+        "tabla_celebrar",
+        "p1779997050112"
+      ],
+      "advertising": {
+        "enabled": true,
+        "placement": [
+          "ticket",
+          "cart",
+          "checkout",
+          "menu"
+        ],
+        "message": "Segundo y tercer viernes y sábado · Hasta 15% en tablas seleccionadas"
+      }
+    }
+  ],
+  "upsells": [
+    {
+      "id": "baklava-up",
+      "name": "Baklava · Complemento dulce",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 10,
+      "priority": 40,
+      "minMarginPct": 40,
+      "productIds": [
+        "baklava"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo"
+      ],
+      "suppressIfPresent": [
+        "tabla_celebrar"
+      ],
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás algo dulce? Una Baklava con hasta 20% total en pago elegible"
+      },
+      "activationBlockers": [
+        "validate_real_margin_40pct_after_payment_and_packaging",
+        "backend_reprice_required",
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7350,
+        "variableCost": 1294.46,
+        "allocatedFixedCost": 2241.73,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 20
+      }
+    },
+    {
+      "id": "fatay-individual-up",
+      "name": "Sumá una Fatay",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 10,
+      "priority": 55,
+      "minMarginPct": 40,
+      "productIds": [
+        "fatay"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [
+        "p1779467294622",
+        "p1779570052552",
+        "p1789513991513"
+      ],
+      "promotionIntent": "incremental_cart_addon",
+      "marginAssessment": "incremental_unit_plus_basket",
+      "maxEligibleUnitsPerOrder": 1,
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 5850,
+        "variableCost": 442.12,
+        "allocatedFixedCost": 3138.42,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 30
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "Sumá una Fatay con 20%, 25% o 30% OFF según tus platos elegibles"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ],
+      "discountTiers": [
+        {
+          "minEligibleNetSubtotal": 20000,
+          "totalDiscountPercent": 20
+        },
+        {
+          "minEligibleNetSubtotal": 35000,
+          "totalDiscountPercent": 25
+        },
+        {
+          "minEligibleNetSubtotal": 50000,
+          "totalDiscountPercent": 30
+        }
+      ],
+      "thresholdBase": "eligible_trigger_products_net_excluding_addon_shipping_coupon_only",
+      "minRequiredCartContext": "savory_main_course",
+      "maxDiscountedUnitsPerCart": 1
+    },
+    {
+      "id": "mamul-nuez-up",
+      "name": "Sumá un Mamul de Nuez",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 35,
+      "minMarginPct": 40,
+      "productIds": [
+        "mamul_nuez"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7000,
+        "variableCost": 518.09,
+        "allocatedFixedCost": 3138.42,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás un Mamul de Nuez?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    },
+    {
+      "id": "mamul-datil-up",
+      "name": "Sumá un Mamul de Dátil",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 35,
+      "minMarginPct": 40,
+      "productIds": [
+        "mamul_datil"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 7000,
+        "variableCost": 405.59,
+        "allocatedFixedCost": 3362.59,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás un Mamul de Dátil?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    },
+    {
+      "id": "torta-chocolate-up",
+      "name": "Sumá una Torta de Chocolate",
+      "kind": "upsell",
+      "enabled": false,
+      "extraPercent": 5,
+      "priority": 30,
+      "minMarginPct": 40,
+      "productIds": [
+        "torta_de_chocolate"
+      ],
+      "maxUnits": 1,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "suppressIfPresent": [],
+      "marginAssessment": "incremental_unit_plus_basket",
+      "displayOnlyWhenNotAlreadyInCart": true,
+      "historicalUnitEconomics": {
+        "listPrice": 8200,
+        "variableCost": 1432.01,
+        "allocatedFixedCost": 2510.74,
+        "paymentBenefitPct": 10,
+        "proposedTotalCashDiscountPct": 15
+      },
+      "advertising": {
+        "enabled": false,
+        "placement": [
+          "cart"
+        ],
+        "message": "¿Sumás una porción de Torta de Chocolate?"
+      },
+      "activationBlockers": [
+        "server_basket_level_profit_guard_pending",
+        "include_real_incremental_labor_packaging_payment_fees_and_shipping",
+        "verify_customer_incrementality",
+        "one_discounted_upsell_per_cart_not_implemented",
+        "validate_checkout_and_receipts"
+      ]
+    }
+  ],
+  "couponPrograms": {
+    "first_online": {
+      "enabled": false,
+      "name": "Bienvenida web",
+      "channel": "online",
+      "extraPercent": 5,
+      "minEligibleSubtotal": 30000,
+      "validDays": 14,
+      "maxExtraAmount": null,
+      "requiresConfirmedOrigin": false
+    },
+    "second_online": {
+      "enabled": false,
+      "name": "Segunda compra web",
+      "channel": "online",
+      "extraPercent": 10,
+      "minEligibleSubtotal": 40000,
+      "validDays": 14,
+      "maxExtraAmount": 4000,
+      "requiresConfirmedOrigin": true
+    }
+  },
+  "ticket": {
+    "enabled": false,
+    "review": true,
+    "advertise": true
+  },
+  "minMarginAbsolutePct": 35,
+  "productUpgrades": [
+    {
+      "id": "fatay-cuarta",
+      "name": "Fatay con la Cuarta (4U)",
+      "kind": "replace_product",
+      "enabled": false,
+      "approvedConcept": true,
+      "status": "pending_verified_cost",
+      "triggerProductId": "p1779467294622",
+      "replacementProductId": "p1779570052552",
+      "trigger": "cart",
+      "replaceInsteadOfAdd": true,
+      "unitsPrinted": 4,
+      "referenceListPrice": 18500,
+      "extraPercent": 0,
+      "onlyStandardPaymentBenefit": true,
+      "excludeCampaignsAndCoupons": true,
+      "requireExplicitCustomerAcceptance": true,
+      "requireVerifiedTargetCost": true,
+      "requireContributionMarginPct": 40,
+      "messages": {
+        "heading": "¿Le sumás una cuarta fatay?",
+        "description": "Cambiá tus 3 fatay por el combo de 4. El precio adicional se calcula con tu medio de pago.",
+        "cta": "Cambiar por 4 fatay"
+      },
+      "activationBlockers": [
+        "missing_computed_cost_for_replacement_sku",
+        "confirm_print_four_units_and_no_duplicate_line",
+        "verify_incremental_margin"
+      ]
+    }
+  ],
+  "crossSells": [
+    {
+      "id": "hummus-complement",
+      "name": "Sumá hummus",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "hummus",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "arabe_clasico"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Lo acompañás con un hummus?"
+    },
+    {
+      "id": "aristilos-complement",
+      "name": "Aristilos (porción)",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "p1780324945477",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "p1779467294622",
+        "p1779997171373",
+        "sandwich_falafel",
+        "arabe_clasico",
+        "shawarma_pollo",
+        "tabla_celebrar",
+        "p1779997050112",
+        "falafel_mix",
+        "p1786210474707"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Probás una porción de Aristilos?"
+    },
+    {
+      "id": "falafel-mix-complement",
+      "name": "Falafel Mix",
+      "kind": "recommendation",
+      "enabled": false,
+      "productId": "falafel_mix",
+      "extraPercent": 0,
+      "standardPaymentBenefitOnly": true,
+      "triggerProductIds": [
+        "p1779997171373",
+        "tabla_celebrar",
+        "p1779997050112"
+      ],
+      "placement": [
+        "cart"
+      ],
+      "message": "¿Sumás un Falafel Mix?"
+    }
+  ],
+  "checkoutIncentives": [
+    {
+      "id": "shipping-progress",
+      "name": "Avance al beneficio de envío de la zona",
+      "kind": "delivery_threshold_progress",
+      "enabled": false,
+      "requiresDeliveryZone": true,
+      "basis": "discountedNetGoods",
+      "recalculateOn": [
+        "campaign_change",
+        "coupon_change",
+        "payment_method_change",
+        "delivery_zone_change"
+      ],
+      "extraDiscountPercent": 0
+    },
+    {
+      "id": "first-web-coupon-ticket",
+      "name": "QR del ticket a primera compra online",
+      "kind": "coupon_distribution",
+      "enabled": false,
+      "linkedCouponProgram": "first_online",
+      "deduplicateByIdentity": true,
+      "requirePaidOriginOrder": true,
+      "validDays": 14,
+      "oneCodePerOriginOrder": true
+    }
+  ],
+  "exclusions": {
+    "publicCampaigns": [
+      "fatay",
+      "shawarma_mixto",
+      "p1779570052552"
+    ],
+    "noExtraDiscountRecommendations": [
+      "hummus",
+      "p1780324945477",
+      "falafel_mix"
+    ],
+    "notPublishedOrRequiresCostReview": [
+      "p1779570052552",
+      "p1779299917243"
+    ],
+    "deferredNotApproved": [
+      "25percent_random_reward",
+      "free_fatay_gift",
+      "free_delivery_beyond_zone_threshold",
+      "traditional_loyalty_points"
+    ],
+    "excludedPublicSkuNames": [
+      "Tabla para Compartir"
+    ],
+    "productUpgradeNotUpsell": [
+      "p1779570052552"
+    ]
+  },
+  "activationPolicy": {
+    "customerFacingCampaignsInitiallyOff": true,
+    "oneExtraPromotionPerSku": true,
+    "noAutomaticCampaignCouponStackingSameSku": true,
+    "minTargetContributionPct": 40,
+    "minAbsoluteContributionPct": 35,
+    "commissionAndShippingMustBeIncluded": true,
+    "paymentStandardBenefitIndependent": true,
+    "liveControlsPerCampaign": true,
+    "requireServerQuoteAtCheckout": true,
+    "requireVerifiedCosts": true,
+    "excludeExistingPaidOrdersFromRetroactiveChange": true,
+    "maxDiscountedUpsellLinesPerOrder": 1,
+    "maxUpsellCardsPerCart": 2,
+    "upsellOfferRanking": "prefer_one_savory_and_one_dessert",
+    "requireIncrementalAndBasketMarginCheck": true,
+    "separateFixedOverheadFromIncrementalVariableCost": true,
+    "basketContributionTargetPct": 40,
+    "basketContributionAbsoluteFloorPct": 35,
+    "incidentalCostsInclude": [
+      "incremental_labor",
+      "packaging",
+      "transaction_fee",
+      "merchant_coupon_cost",
+      "subsidized_delivery",
+      "food_waste"
+    ],
+    "doNotReallocateEntireMonthlyFixedCostPerAdditionalUnit": true,
+    "contributionNeedsVolumeLiftValidation": true,
+    "upsellDiscountTiersApplyToAllMethods": true,
+    "minimumSpendExcludesUpsellAndShipping": true,
+    "onlyOneDiscountedUpsellPerCart": true,
+    "suppressRecommendationIfItemInCart": true,
+    "suppressBeverageRecommendationIfAnyBeverageInCart": true,
+    "contextualRecommendationsOnly": true,
+    "chooseFirstUsefulPair": "one_relevant_beverage_plus_one_relevant_sweet_or_savory",
+    "beverageRecommendationsIndependentOfPromotionalDiscountEngine": true
+  },
+  "initialProductSnapshot": {
+    "snapshotDate": "2026-11-01",
+    "fixedCostAllocationNote": "existing fixedCost values are historical channel pricing locks; cost model distributes rent payroll utilities etc by estimated monthly sales and gfPctOverride; these are not automatically incremental",
+    "retailPriceSource": "sahten.online public menu",
+    "fixedAndVariableCostSource": "SAHTEN project pricingPolicies.mostrador",
+    "notACurrentPaymentFeeQuote": true
+  },
+  "beverageUpsellPolicy": {
+    "enabled": false,
+    "kind": "contextual_recommendations",
+    "discountPercentExtra": 0,
+    "availableCatalogGroup": "Bebidas",
+    "options": [
+      {
+        "id": "cocacola_600ml",
+        "name": "Coca-Cola 600 ml",
+        "price": 2500,
+        "verified": true
+      },
+      {
+        "id": "bebida_cocacola_zero_600ml",
+        "name": "Coca-Cola Zero 600 ml",
+        "price": 2500,
+        "verified": true
+      },
+      {
+        "id": "bebida_sprite_600ml",
+        "name": "Sprite 600 ml",
+        "price": 2500,
+        "verified": true
+      },
+      {
+        "id": "bebida_fanta_600ml",
+        "name": "Fanta 600 ml",
+        "price": 2500,
+        "verified": true
+      },
+      {
+        "id": "p1793032422487",
+        "name": "Agua sin gas 600 ml",
+        "price": 2000,
+        "verified": true
+      },
+      {
+        "id": "bebida_agua_con_gas_600ml",
+        "name": "Agua con gas 600 ml",
+        "price": 2000,
+        "verified": true
+      },
+      {
+        "id": "p1793049167225",
+        "name": "Coca-Cola 220 ml",
+        "price": 1400,
+        "verified": true
+      },
+      {
+        "id": "bebida_cocacola_zero_220ml",
+        "name": "Coca-Cola Zero 220 ml",
+        "price": 1400,
+        "verified": false
+      },
+      {
+        "id": "bebida_sprite_220ml",
+        "name": "Sprite 220 ml",
+        "price": 1400,
+        "verified": false
+      },
+      {
+        "id": "bebida_sprite_zero_220ml",
+        "name": "Sprite Zero 220 ml",
+        "price": 1400,
+        "verified": false
+      },
+      {
+        "id": "p1793167440976",
+        "name": "Fanta 220 ml",
+        "price": 1400,
+        "verified": false
+      }
+    ],
+    "showMaxCards": 1,
+    "hideWhenAnyBeverageInBasket": true,
+    "hideWhenProductAlreadyInBasket": true,
+    "doNotDiscountWithoutSupplierCost": true,
+    "doNotClaimStockAvailableWithoutInventory": true,
+    "preserveImagesForReplacement": true,
+    "contexts": [
+      {
+        "id": "plato_individual",
+        "name": "Una bebida con tu plato",
+        "triggerProductIds": [
+          "sandwich_falafel",
+          "shawarma_pollo",
+          "shawarma_carne",
+          "shawarma_mixto",
+          "arabe_clasico",
+          "falafel_mix"
+        ],
+        "options": [
+          "cocacola_600ml",
+          "bebida_cocacola_zero_600ml",
+          "bebida_sprite_600ml",
+          "p1793032422487",
+          "bebida_agua_con_gas_600ml"
+        ],
+        "priority": 40,
+        "minEligibleSubtotal": 20000
+      },
+      {
+        "id": "para_compartir",
+        "name": "Bebida para acompañar una tabla",
+        "triggerProductIds": [
+          "tabla_celebrar",
+          "p1779997171373",
+          "p1779997050112"
+        ],
+        "options": [
+          "cocacola_600ml",
+          "bebida_sprite_600ml",
+          "bebida_cocacola_zero_600ml",
+          "p1793032422487"
+        ],
+        "priority": 30
+      },
+      {
+        "id": "pedido_chico",
+        "name": "Una lata con tu sándwich",
+        "triggerProductIds": [
+          "sandwich_falafel",
+          "shawarma_pollo"
+        ],
+        "options": [
+          "p1793049167225",
+          "bebida_sprite_220ml",
+          "bebida_cocacola_zero_220ml",
+          "bebida_sprite_zero_220ml",
+          "p1793167440976"
+        ],
+        "priority": 25,
+        "maxEligibleSubtotal": 19999
+      }
+    ],
+    "renderOnlyPublishedProducts": true,
+    "enableOnlyAfterWebCatalogPublication": true,
+    "maxCardsWithOtherUpsells": 2
+  },
+  "beverageMigration": {
+    "projectRevision": 298,
+    "from": "catalog.ingredientes",
+    "to": "catalog.mercaderia",
+    "purchasedRecordsMoved": 10,
+    "merchandiseRows": 11,
+    "resaleProducts": 11,
+    "newResaleProducts": 7,
+    "publicWebNotYetUpdated": true,
+    "unknownCostProductIds": [
+      "bebida_cocacola_zero_220ml",
+      "bebida_sprite_220ml",
+      "bebida_sprite_zero_220ml",
+      "p1793167440976"
+    ],
+    "retainedCookingWaterIngredientId": "ing_1779464718583"
+  }
+}
