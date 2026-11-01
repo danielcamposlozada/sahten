@@ -41,6 +41,7 @@ await page.evaluate(async (raw)=>{
   window.SAHTEN.localProfit.renderModule();
 },demo);
 await page.waitForSelector('#panel-rentabilidad.active #rentabilidad-goal-card .local-profit-progress',{timeout:30000});
+await page.waitForTimeout(1200);
 const stamp=await page.evaluate(()=>{
   const el=document.createElement('div');
   el.textContent='CAPTURA REAL DE LA APP · DATOS FICTICIOS DE PRUEBA';
@@ -64,9 +65,13 @@ const summary=await page.evaluate(()=>({
  activePanel:window.currentPanel,
  tabs:[...document.querySelectorAll('#panel-rentabilidad [data-local-tab]')].map(e=>e.dataset.localTab),
  profitText:document.querySelector('#rentabilidad-goal-card .local-profit-numbers')?.innerText,
+ actualProfit:window.SAHTEN.localProfit.localMonthlyProfit().profit,
+ ordersSeen:window.sahtenOrders?.().length||0,
+ costsSeen:Object.keys(window.SAHTEN.state?.saleCosts||{}).length,
  marker:document.body.innerText.includes('DATOS FICTICIOS DE PRUEBA')
 }));
 await fs.writeFile(path.join(out,'qa-summary.json'),JSON.stringify({summary,errors,stamp},null,2));
 await browser.close();
+if(summary.actualProfit<=0||summary.ordersSeen<2)throw new Error('Rentabilidad debe registrar ganancia de pedidos ficticios: '+JSON.stringify(summary));
 if(errors.length) throw new Error('Browser errors: '+errors.slice(0,5).join('; '));
 console.log('Capturas reales generadas:',summary);
