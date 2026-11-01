@@ -49,12 +49,17 @@ const created=await mp('/checkout/preferences',{method:'POST',body:preference});
 if(!created?.id)throw Error('Mercado Pago no devolvió ID de preferencia.');
 const inspected=await mp('/checkout/preferences/'+encodeURIComponent(created.id));
 if(inspected.external_reference!==checkout.id)throw Error('Referencia externa inconsistente.');
+if(inspected.metadata?.sahten_checkout_id!==checkout.id ||
+   inspected.metadata?.sahten_store_id!==checkout.store_id)
+  throw Error('Los identificadores privados de la compra no coinciden con los guardados por MP.');
+if(!inspected.items.every(i=>i.currency_id==='ARS'&&Number(i.unit_price)>0&&Number(i.quantity)>0))
+  throw Error('Mercado Pago guardó algún artículo con importe o moneda inválida.');
 if(!Array.isArray(inspected.items))throw Error('No hubo líneas registradas en MP.');
 const recorded=inspected.items.reduce((sum,item)=>sum+cents(item.unit_price)*Number(item.quantity||0),0);
 if(recorded!==cents(order.total))throw Error('El importe guardado por Mercado Pago no coincide con la cotización de Sahten.');
 const acceptedUrl=checkoutUrl(created);
 console.log(JSON.stringify({
  verified:true,sellerIsTestUser:true,country:'AR',quotedTotalARS:order.total,
- amountMatched:true,referenceMatched:true,checkoutHost:new URL(acceptedUrl).hostname,
+ amountMatched:true,referenceMatched:true,metadataMatched:true,currencyMatched:true,checkoutHost:new URL(acceptedUrl).hostname,
  paymentCreated:false,paymentApproved:false,productionUnchanged:true
 },null,2));
