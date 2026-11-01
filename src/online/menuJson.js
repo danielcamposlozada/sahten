@@ -61,6 +61,27 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
     },
     products: items,
+    // Las recomendaciones no son promociones de precio. Solo IDs publicados,
+    // nombres y contexto; nunca costos, clientes ni validaciones financieras.
+    cartRecommendations: promotions?.cartRecommendationPolicy?.enabled === true
+      ? {
+        enabled:true,
+        beverageContexts:(promotions.beverageUpsellPolicy?.contexts||[]).map(g=>({
+          id:txt(g.id,80),name:txt(g.name,90),priority:Number(g.priority)||0,
+          triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
+          options:(g.options||[]).filter(id=>items.some(p=>p.id===id&&p.category==='Bebidas')),
+          ...(g.minEligibleSubtotal!=null?{minEligibleSubtotal:Number(g.minEligibleSubtotal)}:{}),
+          ...(g.maxEligibleSubtotal!=null?{maxEligibleSubtotal:Number(g.maxEligibleSubtotal)}:{})
+        })).filter(g=>g.triggerProductIds.length>0&&g.options.length>0),
+        complements:(promotions.cartRecommendationPolicy.complements||[]).filter(g=>g.enabled!==false)
+          .map(g=>({
+            id:txt(g.id,80),name:txt(g.name,90),priority:Number(g.priority)||0,
+            productId:g.productId,
+            triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
+            suppressIfPresent:(g.suppressIfPresent||[]).filter(id=>items.some(p=>p.id===id))
+          }))
+          .filter(g=>items.some(p=>p.id===g.productId&&p.category!=='Bebidas')&&g.triggerProductIds.length>0)
+      } : {enabled:false},
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
       checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):10,
