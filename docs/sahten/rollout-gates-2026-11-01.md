@@ -6,7 +6,9 @@
 ## 1. API real de Mercado Pago
 - [x] Credential de vendedor ficticio MLA confirmada, sin imprimir el token.
 - [x] `POST /checkout/preferences` y `GET /checkout/preferences/{id}` reales, importe y referencia coinciden. GitHub Actions `41361489489`.
-- [ ] E2E Checkout Pro con **comprador ficticio distinto**, tarjeta de prueba `APRO` y `OTHE`, respuesta firmada a la ruta nueva, estado de orden y replay idempotente. La prueba de preferencia **NO** es una compra acreditada.
+- [x] Dos preferencias APRO/OTHE creadas realmente en Checkout Pro por el workflow de prueba `41363598826`, con importes/metadata verificados. NO hay pagos acreditados.
+- [ ] Completar ambas compras con **comprador ficticio distinto** usando tarjeta de prueba; verificar estado por referencia mediante `scripts/tests/mp-sandbox-checkout-e2e.mjs` en modo `verify`.
+- [ ] Probar por separado la firma, recepción y replay del webhook. La documentación oficial de Checkout Pro indica que los pagos con credenciales de prueba **no envían notificaciones reales**; no confundir una simulación con entrega real.
 - [ ] Garantizar aislamiento total de los datos de órdenes y webhooks sandbox respecto de la cuenta real de Sahten.
 
 ## 2. Seguridad del descuento
@@ -20,7 +22,8 @@
 - [x] 11 bebidas vinculadas con compra y precio unitario cargados en catálogo.
 - [x] Diferenciar **costo cargado** de **origen de compra verificado**. Cuatro referencias tienen el precio cargado, pero siguen etiquetadas como `missing_supplier_cost`/`costVerified=false`. No borrarlas ni afirmar que cuestan $0.
 - [x] Las recomendaciones a **precio de lista** pueden incluir las 11, sin prometer stock ni publicar costos privados. Política para SUPERMIX `p1779299917243`, otros shawarmas, platos y tablas.
-- [x] El SUPERMIX tiene receta de 7 ingredientes y costo calculado en el proyecto; el snapshot promocional `pricingPolicies.mostrador` no está completado.
+- [x] SUPERMIX incluye **7 ingredientes + 5 envases + 2 subproductos (tahini y Fatay)**; `receta_cost=2363` es solo el valor de ingredientes, **NO el costo total**. El snapshot promocional `pricingPolicies.mostrador` está incompleto. Nunca descontar basándose solo en `receta_cost`.
+- [x] `src/core/promotion-economics-audit.js` usa el motor completo de `costPerUnit` + `gfAssigned` y revisa referencias/costos de insumos, envases y subproductos. Es **solo auditoría**, no habilita descuentos. Pruebas con recetas compuestas y bebida con costo cargado/no aprobado.
 - [ ] **Cualquier descuento adicional** requiere fuente de costo aprobada, gasto de empaque/mano de obra incremental, comisión efectiva del medio, aportes de delivery y margen posterior >=40% (piso absoluto >=35%), por línea y carrito. No inventar ni prorratear gastos fijos de manera arbitraria.
 
 ## 4. Web segura y delivery
@@ -31,7 +34,7 @@
 - [ ] E2E de entrega con geocodificación/ruta realmente validada, autorización de excepción y conciliación con pedido.
 
 ## 5. Publicación controlada (bloqueada)
-- La producción de Cloudflare apunta actualmente al despliegue **437a4503-7726-4482-a5e5-6b911fd7272c**. El script conserva como origen una versión **84a00719-0196-48ab-b31f-b321b979398e** anterior. **NO desplegar** hasta verificar diseño, recursos y versión base nueva; el guard de origen en GitHub debe detener reemplazos antiguos.
+- La producción de Cloudflare apunta al despliegue **437a4503-7726-4482-a5e5-6b911fd7272c**. El script y su guard ahora parten de esa revisión actual; el workflow **no despliega por push/merge**, exige ejecución manual en `main` con `deploy=true`. El paquete se valida en PR; no se publicó nada.
 - Supabase: promoción pública desactivada, Edge pagos y delivery aún productivos antiguos; RPC de costos del PR no aplicada; falta secreto HMAC y aprobación económica.
 - [ ] Validar el paquete contra la versión más reciente de Cloudflare sin degradar el diseño de la web.
 - [ ] Validar Edge en sandbox aislado con credenciales de test, sin cambiar `mp_accounts` de producción.
