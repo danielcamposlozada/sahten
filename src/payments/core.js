@@ -24,7 +24,7 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,now=Date.now()}={}) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,trustedCosts={},now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
   const method=allowOtherPayments?input.paymentMethod:'mercadopago';
   if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
@@ -59,7 +59,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     lines:items,method,channel:salesChannel,now:new Date(now),
     config:{...menu.promotions,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
     // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
-    coupon:trustedCoupon,customerId:verifiedCustomerId,
+    coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
