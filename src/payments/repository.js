@@ -12,6 +12,7 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
   const repo = {
     run: (action, args) => request('/rest/v1/rpc/sahten_mp_backend', { method: 'POST', body: { action, args } }),
     async menu(storeId) { const rows = await request('/rest/v1/menus?select=json&store_id=eq.' + storeId); return rows?.[0]?.json; },
+    async promotionCosts(storeId,channel='mostrador') { return await request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid:storeId,channel}}); },
     async canManage(storeId, user) {
       const rows = await request('/rest/v1/stores?select=id,owner,project_id&id=eq.' + storeId, { token: user.token });
       const store = rows?.[0]; if (!store) return false;
