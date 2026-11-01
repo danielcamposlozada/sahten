@@ -145,3 +145,7 @@
 .cart-addon-copy span{font-size:13px;color:var(--catalog-muted)}
 .cart-addon button{flex:none;min-width:70px;min-height:44px;border:1px solid var(--primary);background:transparent;border-radius:10px;color:var(--primary);font-weight:700;cursor:pointer}
 .cart-addon button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+
+.cart-addons-explain{font-size:12px;line-height:1.4;color:var(--catalog-muted);margin:0 0 12px}
+.cart-addon-context{display:block;color:var(--primary);font-size:11px;font-weight:650;line-height:1.4}
+.cart-addon-copy span b{font-weight:750;color:var(--ink)}
