@@ -46,7 +46,10 @@ export function installPricing(w = window) {
     if(!container)release = bindModalFocus(box, { w, close, background: [d.querySelector('.app-shell'), d.querySelector('.main'), d.querySelector('.sidebar')] });
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     const draft = () => drafts[channel] ||= clone(policyFor(product, channel));
-    const proposed = () => ({ ...product, pricingPolicies: { ...product.pricingPolicies, [channel]: draft() } });
+    const proposed = () => ({ ...product,
+      pricingPolicies: { ...product.pricingPolicies, [channel]: draft() },
+      ...(product.priceTargets?.[channel]!=null&&draft().price!=null?{priceTargets:{...product.priceTargets,[channel]:draft().price}}:{})
+    });
     const automaticValues = () => ({
       price: channelPriceWithDisc(state, { ...proposed(), pricingPolicies: { ...product.pricingPolicies, [channel]: { ...draft(), price: null } } }, channel) || 0,
       variableCost: actualCostPerUnit(state, product), fixedCost: actualGfAssigned(state, product),
@@ -114,9 +117,16 @@ export function installPricing(w = window) {
         const staged = clone(product), now = new Date();
         try {
           // Validar todos los canales antes de modificar el producto vivo.
-          for (const [id, data] of Object.entries(drafts)) savePricePolicy(staged, id, data, { now, actor: d.body.dataset.role || 'local', reason: box.querySelector('#pricing-reason').value });
+          for (const [id, data] of Object.entries(drafts)) {
+            savePricePolicy(staged, id, data, { now, actor: d.body.dataset.role || 'local', reason: box.querySelector('#pricing-reason').value });
+            if(staged.priceTargets?.[id]!=null && data.price!=null){
+              staged.priceTargets={...staged.priceTargets,[id]:Math.round(data.price*100)/100};
+              staged.pricingPolicies[id]={...staged.pricingPolicies[id],price:null};
+            }
+          }
           e.target.disabled = true;
           product.pricingPolicies = staged.pricingPolicies; product.pricingHistory = staged.pricingHistory;
+          if(staged.priceTargets)product.priceTargets=staged.priceTargets;
           w.SAHTEN.project.markDirty(); w.scheduleSave(); w.recalcAll();
           if (w.currentPanel === 'menuonline') w.renderMenuOnline?.();
           if (w.currentPanel === 'mostrador') w.renderMostrador();
