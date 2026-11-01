@@ -558,7 +558,7 @@ function buildOrder(){
 }
 function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
-  if(sending||step!=='details'||!lines().length)return;if(unavailableItems()){step='cart';sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
+  if(sending||step!=='details'||!lines().length)return;if(unavailableItems()){step='cart';sheet();return;}if(syncServiceChoice(false)||!serviceAvailable(type)){sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
   if(MENU.promotions?.enabled===true&&!modernDelivery()&&pay!=='mercadopago'){
     sending=false;step='details';sheet();$('err').textContent='Las promociones requieren validación del servidor antes de enviar el pedido. Contactá al local.';return;
