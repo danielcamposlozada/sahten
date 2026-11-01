@@ -109,7 +109,7 @@ export function quotePromotions({
     const cost=trustedCosts[l.productId];
     const known=cost!=null && Number.isFinite(Number(cost)) && Number(cost)>=0;
     if(winner && config.requireVerifiedCosts && !known) {winner=null;extra=0;lineDiscount=payment;}
-    const minMargin=Number(config.minMarginPct);
+    const minMargin=Number(winner?.minMarginPct??config.minMarginPct);
     const fee=amount(base-lineDiscount,commissionPercent);
     if(winner && known && Number.isFinite(minMargin) && minMargin>0
       && base-lineDiscount-fee>0
