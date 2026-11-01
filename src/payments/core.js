@@ -89,13 +89,83 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
 
+/** Desglosa exactamente el total del checkout en importes válidos para Mercado Pago.
+ * No crea rebajas: usa ÚNICAMENTE el pedido ya recotizado por el servidor.
+ * Los redondeos de centavos se distribuyen sin alterar el total ni los SKU. */
+export function paymentPreferenceItems(order) {
+  if (!Array.isArray(order?.items) || !order.items.length) fail('El pedido no tiene productos válidos.',409,'payment_mismatch');
+  const source=order.items.map(item=>{
+    const qty=Number(item.qty);
+    if(!Number.isSafeInteger(qty)||qty<1||qty>99)fail('Cantidad de pago inválida.',409,'payment_mismatch');
+    const unit=cents(item.unitPrice);
+    if(unit<=0)fail('Precio de pago inválido.',409,'payment_mismatch');
+    return {id:String(item.productId),name:String(item.name),qty,base:unit*qty};
+  });
+  const gross=source.reduce((n,l)=>n+l.base,0);
+  if(gross!==cents(order.subtotal))fail('El subtotal del pedido cambió.',409,'payment_mismatch');
+  const reduction=cents(order.discount||0);
+  if(reduction>gross)fail('El descuento del pedido no es válido.',409,'payment_mismatch');
+  const snapshot=order.promotionSnapshot;
+  let net;
+  if(snapshot) {
+    if(!Array.isArray(snapshot.lines)||snapshot.lines.length!==source.length||
+      cents(snapshot.subtotal)!==gross||cents(snapshot.discount)!==reduction||
+      cents(snapshot.netSubtotal)!==gross-reduction)
+      fail('Las promociones del pedido no coinciden con el cobro.',409,'payment_mismatch');
+    const map=new Map();
+    for(const line of snapshot.lines) {
+      if(map.has(line.productId))fail('Líneas de promoción duplicadas.',409,'payment_mismatch');
+      map.set(line.productId,line);
+    }
+    net=source.map(l=>{
+      const q=map.get(l.id);
+      if(!q||Number(q.qty)!==l.qty||cents(q.base)!==l.base||
+        cents(q.net)+cents(q.discount)!==l.base)
+        fail('Línea de descuento inválida.',409,'payment_mismatch');
+      return cents(q.net);
+    });
+  } else {
+    // Beneficios no asignados a SKU: distribuirlos proporcionalmente entre
+    // productos, con resto en centavos y criterio estable por índice.
+    const portions=source.map((l,index)=>{
+      const exact=l.base*reduction/gross;
+      return {index,discount:Math.floor(exact),fraction:exact-Math.floor(exact)};
+    });
+    let left=reduction-portions.reduce((n,x)=>n+x.discount,0);
+    for(const p of [...portions].sort((a,b)=>b.fraction-a.fraction||a.index-b.index)) {
+      if(left--<=0)break;
+      p.discount+=1;
+    }
+    net=source.map((l,index)=>l.base-portions[index].discount);
+  }
+  if(net.reduce((n,x)=>n+x,0)!==gross-reduction)
+    fail('Los descuentos no cierran con el pedido.',409,'payment_mismatch');
+  const result=[];
+  for(let i=0;i<source.length;i++){
+    const item=source[i],amount=net[i];
+    if(amount<0||amount>item.base)fail('Importe de producto inválido.',409,'payment_mismatch');
+    const floor=Math.floor(amount/item.qty),remainder=amount%item.qty;
+    // Mercado Pago requiere unit_price decimal. Dos grupos como máximo por SKU
+    // representan el mismo producto, con diferencias de a lo sumo 1 centavo.
+    for(const [quantity,unitCents] of [[remainder,floor+1],[item.qty-remainder,floor]]) {
+      if(!quantity||!unitCents)continue; // unidades bonificadas a precio cero
+      result.push({id:item.id,title:item.name,currency_id:'ARS',quantity,unit_price:unitCents/100});
+    }
+  }
+  const shipping=cents(order.shipping||0);
+  if(shipping)result.push({id:'shipping',title:'Envío',currency_id:'ARS',quantity:1,unit_price:shipping/100});
+  const charged=result.reduce((n,l)=>n+cents(l.unit_price)*l.quantity,0);
+  if(!result.length||charged!==cents(order.total)||charged!==gross-reduction+shipping)
+    fail('El cobro no coincide con el total del pedido.',409,'payment_mismatch');
+  return result;
+}
+
 export function buildPreference(checkout, account, endpoint, now = Date.now()) {
   const base = siteUrl(account.site_url);
   const back = new URL(base); back.searchParams.set('mp_checkout', checkout.id);
   const notification = new URL(endpoint + '/webhook'); notification.searchParams.set('store_id', checkout.store_id);
   const order = checkout.order;
-  const items = order.items.map(i => ({ id: i.productId, title: i.name, currency_id: 'ARS', quantity: i.qty, unit_price: i.unitPrice }));
-  if (order.shipping) items.push({ id: 'shipping', title: 'Envío', currency_id: 'ARS', quantity: 1, unit_price: order.shipping });
+  const items = paymentPreferenceItems(order);
   return { items, external_reference: checkout.id, metadata: { sahten_store_id: checkout.store_id, sahten_checkout_id: checkout.id },
     back_urls: { success: back.href, pending: back.href, failure: back.href }, auto_return: 'approved', notification_url: notification.href,
     expires: true, expiration_date_from: new Date(now).toISOString(), expiration_date_to: new Date(now + 30 * 60000).toISOString(),
