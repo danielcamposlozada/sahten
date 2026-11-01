@@ -116,7 +116,8 @@ describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)
   expect(first.status).toBe(200);expect(again.status).toBe(200);
   expect(first.data.checkoutUrl).toBe(again.data.checkoutUrl);
   expect(x.fetchImpl).toHaveBeenCalledTimes(1);
-  expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(2);
+  // Una preferencia existente no necesita consumir el nonce otra vez.
+  expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(1);
  });
  it('si falla la reserva, no consume el nonce ni solicita pago a Mercado Pago',async()=>{
   const x=paymentSetup(),original=base('mercadopago'),old=x.repo.run;
