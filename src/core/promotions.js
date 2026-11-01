@@ -93,7 +93,7 @@ export function quotePromotions({
         kind:'campaign',maxUnits: c.maxUnits
       });
       for(const c of (config.upsells||[])) if(c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
-        selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits});
+        selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
         id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Number(coupon.extraPercent)||0,priority:1000,kind:'coupon'
       });
