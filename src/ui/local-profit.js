@@ -3,7 +3,7 @@ import { costPerUnit } from '../core/costs.js';
 import { gfAssigned } from '../core/gf.js';
 import { channelPriceWithDisc, channelCommission } from '../core/pricing.js';
 import { afterRender, onDataChanged, onPanelShow } from '../events.js';
-import { localMonthlyProfit,localProductProfitability } from '../core/local-profit.js';
+import { localMonthlyProfit,localProductProfitability,localMonthlyProductProfits } from '../core/local-profit.js';
 import './local-profit.css';
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -64,16 +64,18 @@ export function installLocalProfitUi(w=window) {
     if(!root){root=d.createElement('section');root.id='product-profitability';root.className='local-profit-card local-profit-table';panel.prepend(root);}
     const rows=profitRows().filter(x=>x.price>0);
     const warning=rows.filter(x=>!x.costVerified).length;
+    const monthly=localMonthlyProductProfits(state);
     root.innerHTML='<div class="local-profit-head"><div><span class="local-eyebrow">ANÁLISIS COMERCIAL · MOSTRADOR</span><h2>Rentabilidad por producto</h2>'
       +'<p>Precios vigentes; ganancia por unidad después de costo variable, GF asignado y comisión local, antes de promociones.</p></div>'
       +'<strong class="local-products-count">'+rows.length+' productos</strong></div>'
-      +'<div class="local-profit-table-wrap"><table><thead><tr><th>Producto</th><th>Precio</th><th>Costo variable</th><th>GF/unidad</th><th>Ganancia/unidad</th><th>Margen</th></tr></thead><tbody>'
+      +'<div class="local-profit-table-wrap"><table><thead><tr><th>Producto</th><th>Precio</th><th>Costo variable</th><th>GF/unidad</th><th>Ganancia/unidad</th><th>Margen</th><th>Ganancia este mes</th></tr></thead><tbody>'
       +rows.map(x=>'<tr><td><strong>'+esc(x.name)+'</strong>'+(x.costVerified?'':'<small>Costos por revisar</small>')+'</td>'
         +'<td>'+money(x.price)+'</td><td>'+money(x.varCost)+'</td><td>'+money(x.gf)+'</td>'
         +'<td class="'+(x.profit<0?'local-loss':'')+'"><strong>'+money(x.profit)+'</strong></td>'
-        +'<td><span class="local-margin '+(x.marginPct<35?'low':x.marginPct<45?'medium':'high')+'">'+rounded(x.marginPct)+'</span></td></tr>').join('')
+        +'<td><span class="local-margin '+(x.marginPct<35?'low':x.marginPct<45?'medium':'high')+'">'+rounded(x.marginPct)+'</span></td>'
+        +'<td><strong>'+(monthly[x.id]?money(monthly[x.id].profit):'—')+'</strong>'+(monthly[x.id]?'<small>'+monthly[x.id].qty+' unidades vendidas</small>':'')+'</td></tr>').join('')
       +'</tbody></table></div>'
-      +'<p class="local-profit-disclaimer">Ordenados de menor a mayor margen. '+warning+' producto(s) tienen costos todavía no verificados; sus márgenes son orientativos. Las promociones y comisiones específicas pueden reducir la ganancia.</p>';
+      +'<p class="local-profit-disclaimer">Ordenados de menor a mayor margen. Ganancia mensual basada únicamente en pedidos locales completados con costos históricos. '+warning+' producto(s) tienen costos todavía no verificados; sus márgenes son orientativos. Las promociones y comisiones específicas pueden reducir la ganancia.</p>';
   }
   function renderMerchProfitability(){
     const panel=d.getElementById('panel-mercaderia');if(!panel)return;
