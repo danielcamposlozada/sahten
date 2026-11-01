@@ -40,6 +40,24 @@ describe('navegación', () => {
     w.close();
   }, 60000);
 
+  it('la sección Rentabilidad abre cuatro vistas sin cambiar el origen de las métricas',async()=>{
+    const a=await openApp(),d=a.window.document;
+    d.querySelector('.sidebar [data-panel="rentabilidad"]').click();
+    const panel=d.getElementById('panel-rentabilidad');
+    expect(panel.classList.contains('active')).toBe(true);
+    expect(a.window.location.hash).toBe('#/rentabilidad');
+    const tabs=[...panel.querySelectorAll('[data-local-tab]')].map(b=>b.dataset.localTab);
+    expect(tabs).toEqual(['resumen','metas','productos','mercaderia']);
+    panel.querySelector('[data-local-tab="metas"]').click();
+    expect(panel.querySelector('[data-local-pane="metas"]').hidden).toBe(false);
+    expect(panel.querySelector('[data-local-pane="resumen"]').hidden).toBe(true);
+    expect(panel.querySelector('.local-month-history')).not.toBeNull();
+    panel.querySelector('[data-local-tab="productos"]').click();
+    expect(panel.querySelector('[data-local-pane="productos"]').hidden).toBe(false);
+    expect(panel.querySelector('#rentabilidad-productos-table')).not.toBeNull();
+    a.window.close();
+  },60000);
+
   it('cambiar el hash (Atrás / enlace) navega sin volver a empujar historial', async () => {
     const a = await openApp(); const w = a.window, d = w.document;
     d.querySelector('.sidebar [data-panel="stock"]').click();
