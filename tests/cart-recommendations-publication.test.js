@@ -36,7 +36,7 @@ it('sin activación explícita no aparece ningún producto sugerido',()=>{
   expect(buildMenuJson(st).cartRecommendations).toEqual({enabled:false});
   expect(buildMenuJson(st,{promotions:{enabled:true,cartRecommendationPolicy:{enabled:false}}}).cartRecommendations).toEqual({enabled:false});
 });
-it('bebidas para Shawarma SUPERMIX: solo las aprobadas, precio normal, sin exponer costos',()=>{
+it('bebidas para Shawarma SUPERMIX: incluir precio completo aunque compra no esté auditada, sin revelar costos',()=>{
   const state=demoState(),main=state.products[0],approved=state.products[1],blocked=state.products[2];
   main.id='p1779299917243';main.name='Shawarma SUPERMIX';
   approved.category='Bebidas';approved.name='Agua con gas 600 ml';
@@ -51,10 +51,11 @@ it('bebidas para Shawarma SUPERMIX: solo las aprobadas, precio normal, sin expon
         triggerProductIds:[main.id],options:[blocked.id,approved.id],priority:80}]}
   }});
   expect(result.cartRecommendations.beverageContexts).toHaveLength(1);
-  expect(result.cartRecommendations.beverageContexts[0].options).toEqual([approved.id]);
+  expect(result.cartRecommendations.beverageContexts[0].options).toEqual([blocked.id,approved.id]);
   expect(result.promotions).toEqual({enabled:false});
   expect(JSON.stringify(result)).not.toContain('secretCost');
   expect(JSON.stringify(result)).not.toContain('914.83');
+  expect(JSON.stringify(result)).not.toContain('846.25');
 });
 
 it('cuando se publica una oferta Fatay exige HMAC, conserva sus tramos y no inventa comisión MP',()=>{
