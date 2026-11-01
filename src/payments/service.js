@@ -1,5 +1,7 @@
 import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 import { PaymentError, fail, validUuid, siteUrl, quoteOrder, buildPreference, checkoutUrl, sha256, verifyWebhook, verifiedPayment, cents } from './core.js';
+import { preflightUpsell,acceptPreflightUpsell } from './upsell-hmac-quote.js';
+import { upsellRequestContext } from './upsell-request-context.js';
 
 const uuid = value => { if (!validUuid(value)) fail('Identificador no válido.'); return value; };
 const proof = value => { if (!/^[a-f0-9]{64}$/.test(value || '')) fail('La sesión de compra no es válida.'); return value; };
@@ -7,7 +9,7 @@ const publicAccount = a => a ? { connected: true, mode: a.mode, accountLabel: a.
 const publicCheckout = c => ({ id: c.id, mode: c.mode, paymentStatus: c.payment_status, total: c.order.total, currency: 'ARS', checkoutUrl: ['pending','rejected'].includes(c.payment_status) ? c.checkout_url : null });
 
 /** Inyectable para probar cuentas, importes, permisos y notificaciones sin hacer cobros. */
-export function createPaymentService({ repo, authenticate, fetchImpl = fetch, endpoint, now = () => Date.now(), originKey = async () => 'unknown', resolveDelivery = async () => ({}) }) {
+export function createPaymentService({ repo, authenticate, fetchImpl = fetch, endpoint, now = () => Date.now(), originKey = async () => 'unknown', resolveDelivery = async () => ({}), upsellSecret=null }) {
   const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization,apikey,content-type', 'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' };
   const response = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
   async function mp(path, token, options = {}) {
@@ -26,6 +28,18 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
     if (!origin || origin !== new URL(account.site_url).origin) fail('La compra debe iniciarse desde la web de este negocio.', 403);
   }
   async function limited(bucket, max) { if (!await repo.run('limit', { bucket, max })) fail('Hubo demasiados intentos. Esperá unos minutos y volvé a probar.', 429, 'rate_limited'); }
+  async function upsellCosts(sid){
+    let costs;
+    try{costs=await repo.upsellEconomics(sid,'online');}catch{
+      fail('La oferta requiere costos aprobados por el negocio.',409,'upsell_costs_not_verified');
+    }
+    if(costs?.verified!==true||costs.trustedOrderCosts?.verified!==true)
+      fail('La oferta requiere costos aprobados por el negocio.',409,'upsell_costs_not_verified');
+    return costs;
+  }
+  async function offerParams(sid,menu,order,sessionProof){
+    return upsellRequestContext({storeId:sid,menu,order,proof:proof(sessionProof),secret:upsellSecret});
+  }
   async function ownedCheckout(body) {
     const c = await repo.run('checkout', { id: uuid(body.id) });
     if (!c || c.proof_hash !== await sha256(proof(body.proof))) fail('No se encontró esta compra.', 404);
@@ -70,6 +84,25 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         const a = await repo.run('save_account', { store_id: sid, mode, site_url: site, account_id: String(seller.id), account_label: String(seller.nickname || 'Cuenta verificada').slice(0,100), credentials: { accessToken: token, webhookSecret: secret } });
         return response({ ...publicAccount(a), webhookUrl: endpoint + '/webhook?store_id=' + sid });
       }
+      if(route==='offer' && req.method==='POST'){
+        const sid=uuid(body.storeId),account=await repo.run('account',{store_id:sid});
+        if(!account)fail('Mercado Pago no está configurado.',409,'not_configured');
+        checkOrigin(req,account);
+        await limited('upsell-store:'+sid,100);
+        await limited('upsell-buyer:'+sid+':'+await originKey(req),16);
+        const menu=await repo.menu(sid),orderInput=body.order||{};
+        if(menu?.promotions?.enabled!==true)fail('No hay ofertas adicionales activadas.',409,'promotions_off');
+        if(orderInput.paymentMethod!=='mercadopago')fail('Elegí Mercado Pago para esta cotización.',409,'invalid_payment_method');
+        const hours=serviceHoursStatus(menu,orderInput.source,now());
+        if(!hours.open)fail(serviceHoursMessage(hours),409,'service_closed');
+        const quoteContext=menu.delivery?.deliveryV2?.active&&orderInput.source==='delivery'
+          ?await resolveDelivery(sid,menu,orderInput):{};
+        const costs=await upsellCosts(sid);
+        const secure=await offerParams(sid,menu,orderInput,body.proof);
+        return response(await preflightUpsell({...secure,menu,order:orderInput,
+          productId:String(body.productId||''),offerId:String(body.offerId||''),
+          costs,quoteContext,now:now()}));
+      }
       if (route === 'checkout' && req.method === 'POST') {
         const sid = uuid(body.storeId), requestId = uuid(body.requestId), hash = await sha256(proof(body.proof));
         const active = await repo.run('account', { store_id: sid }); if (!active) fail('Este negocio todavía no habilitó Mercado Pago.', 409, 'not_configured');
@@ -80,7 +113,17 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
         const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-        const order = quoteOrder(menu, body.order || {},{...delivery,trustedCosts,now:now()});
+        let order;
+        if(body.order?.upsellToken){
+          if(menu?.promotions?.enabled!==true)fail('La oferta ya no está vigente.',409,'promotions_off');
+          const costs=await upsellCosts(sid);
+          const secure=await offerParams(sid,menu,body.order,body.proof);
+          order=await acceptPreflightUpsell({...secure,menu,order:body.order,
+            token:body.order.upsellToken,requestId,expectedTotal:body.order.total,
+            costs,quoteContext:delivery,now:now(),commit:true,
+            consumeNonce:({nonce,storeId,sessionId,requestId,expiresAt})=>
+              repo.consumeUpsellNonce({nonce,storeId,sessionId,requestId,expiresAt})});
+        }else order=quoteOrder(menu,body.order||{},{...delivery,trustedCosts,now:now()});
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
         const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
         if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
