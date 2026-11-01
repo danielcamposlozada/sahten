@@ -1,5 +1,6 @@
 import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 import { PaymentError, fail, validUuid, siteUrl, quoteOrder, buildPreference, checkoutUrl, sha256, verifyWebhook, verifiedPayment, cents } from './core.js';
+import { prepareUpsellOffer, validateAcceptedOffer } from './upsell-acceptance.js';
 
 const uuid = value => { if (!validUuid(value)) fail('Identificador no válido.'); return value; };
 const proof = value => { if (!/^[a-f0-9]{64}$/.test(value || '')) fail('La sesión de compra no es válida.'); return value; };
@@ -70,6 +71,26 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         const a = await repo.run('save_account', { store_id: sid, mode, site_url: site, account_id: String(seller.id), account_label: String(seller.nickname || 'Cuenta verificada').slice(0,100), credentials: { accessToken: token, webhookSecret: secret } });
         return response({ ...publicAccount(a), webhookUrl: endpoint + '/webhook?store_id=' + sid });
       }
+      if (route === 'offer' && req.method === 'POST') {
+        const sid=uuid(body.storeId);
+        const account=await repo.run('account',{store_id:sid});
+        if(!account)fail('Mercado Pago no está configurado.',409,'not_configured');
+        checkOrigin(req,account);
+        await limited('upsell-store:'+sid,100);
+        await limited('upsell-buyer:'+sid+':'+await originKey(req),16);
+        const menu=await repo.menu(sid);
+        if(menu?.promotions?.enabled!==true)fail('Todavía no hay ofertas adicionales activadas.',409,'promotions_off');
+        const orderInput=body.order||{};
+        // Cotización opcional; nunca modificar datos de cliente o carrito aquí.
+        // Cualquier gasto sin revisión bloquea el token y el descuento.
+        const costs=await repo.upsellEconomics(sid,'mostrador');
+        const delivery=orderInput.source==='delivery'
+          ? await resolveDelivery(sid,menu,orderInput) : {};
+        const offer=await prepareUpsellOffer({repo,storeId:sid,menu,order:orderInput,
+          productId:String(body.productId||''),promotionId:String(body.promotionId||''),
+          costs,now:now(),...delivery});
+        return response(offer);
+      }
       if (route === 'checkout' && req.method === 'POST') {
         const sid = uuid(body.storeId), requestId = uuid(body.requestId), hash = await sha256(proof(body.proof));
         const active = await repo.run('account', { store_id: sid }); if (!active) fail('Este negocio todavía no habilitó Mercado Pago.', 409, 'not_configured');
@@ -80,7 +101,21 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
         const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-        const order = quoteOrder(menu, body.order || {},{...delivery,trustedCosts,now:now()});
+        let order;
+        if(body.order?.upsellIntentId){
+          if(menu.promotions?.enabled!==true)fail('La promoción ya no está disponible.',409,'promotions_off');
+          const costs=await repo.upsellEconomics(sid,'mostrador');
+          const quoteArgs={repo,storeId:sid,menu,order:body.order,requestId,costs,
+            now:now(),...delivery};
+          // Primero recotizar, después comprobar el total del cliente y recién
+          // entonces canjear atómicamente el comprobante de un solo uso.
+          const preview=await validateAcceptedOffer({...quoteArgs,commit:false});
+          if(cents(body.order.total)!==cents(preview.total))
+            fail('Cambió el total de la oferta. Volvé a confirmarla.',409,'menu_changed');
+          order=await validateAcceptedOffer({...quoteArgs,commit:true});
+        }else{
+          order=quoteOrder(menu,body.order||{},{...delivery,trustedCosts,now:now()});
+        }
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
         const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
         if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
