@@ -142,3 +142,60 @@ REVOKE ALL ON FUNCTION public.sahten_promotion_costs(uuid,text) FROM PUBLIC,anon
 GRANT EXECUTE ON FUNCTION public.sahten_promotion_costs(uuid,text) TO service_role;
 COMMENT ON FUNCTION public.sahten_promotion_costs(uuid,text)
  IS 'Service-only expense snapshot. Never embed its result in public menu.json.';
+
+
+-- Verificación detallada de costos para el nuevo guard incremental. 
+-- Desactivada comercialmente hasta que se validen gastos incrementales y prueba de selección.
+-- Nunca enviar el resultado a menu.json ni a un navegador.
+CREATE OR REPLACE FUNCTION public.sahten_promotion_economics(sid uuid, channel text DEFAULT 'mostrador')
+RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,sahten_private,pg_temp AS $$
+ WITH source AS (
+   SELECT pr.data
+   FROM public.stores s JOIN public.projects pr ON pr.id=s.project_id
+   WHERE s.id=sid
+ ), items AS (
+   SELECT item.value AS product, src.data
+   FROM source src CROSS JOIN LATERAL
+     jsonb_array_elements(COALESCE(src.data #> '{catalog,productos}','[]'::jsonb)) item
+ ), values_found AS (
+   SELECT product->>'id' AS product_id,
+     COALESCE(product #> ARRAY['pricingPolicies',channel,'variableCost'],
+       product #> '{pricingPolicies,mostrador,variableCost}') AS variable_value,
+     COALESCE(product #> ARRAY['pricingPolicies',channel,'fixedCost'],
+       product #> '{pricingPolicies,mostrador,fixedCost}') AS fixed_value,
+     data #> ARRAY['promotions','incrementalCostOverrides',product->>'id'] AS reviewed_override
+   FROM items WHERE product->>'id' ~ '^[a-zA-Z0-9_-]{1,100}$'
+ ), valid_costs AS (
+   SELECT product_id,
+     CASE WHEN jsonb_typeof(variable_value)='number'
+       AND (variable_value::text)::numeric>=0 THEN (variable_value::text)::numeric END AS direct,
+     CASE WHEN jsonb_typeof(fixed_value)='number'
+       AND (fixed_value::text)::numeric>=0 THEN (fixed_value::text)::numeric END AS allocated_fixed,
+     reviewed_override AS extra,
+     CASE WHEN jsonb_typeof(reviewed_override->'additionalIncrementalCost')='number'
+        AND (reviewed_override->>'additionalIncrementalCost')::numeric>=0
+        THEN (reviewed_override->>'additionalIncrementalCost')::numeric END AS additional
+   FROM values_found
+ ), economics AS (
+   SELECT product_id,direct,allocated_fixed,additional,
+     coalesce(extra->>'verified','false')='true'
+       AND extra->>'reviewedAt' IS NOT NULL
+       AND extra->>'reviewedBy' IS NOT NULL
+       AND additional IS NOT NULL AS incremental_verified
+   FROM valid_costs WHERE direct IS NOT NULL AND allocated_fixed IS NOT NULL
+ )
+ SELECT jsonb_build_object(
+   'costs',COALESCE(jsonb_object_agg(product_id,direct+allocated_fixed),'{}'::jsonb),
+   'economics',COALESCE(jsonb_object_agg(product_id,jsonb_build_object(
+     'verified',true,'directCost',direct,'fixedCost',allocated_fixed,
+     'additionalIncrementalCost',COALESCE(additional,0),
+     'incrementalVerified',incremental_verified)),'{}'::jsonb)
+ )
+ FROM economics;
+$$;
+REVOKE ALL ON FUNCTION public.sahten_promotion_economics(uuid,text)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.sahten_promotion_economics(uuid,text) TO service_role;
+COMMENT ON FUNCTION public.sahten_promotion_economics(uuid,text)
+  IS 'Service-only verified direct/fixed costs; incremental cost requires separate reviewed override. Do not expose publicly.';
