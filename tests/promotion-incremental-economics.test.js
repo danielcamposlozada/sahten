@@ -21,7 +21,7 @@ const economies={
   [baklava]:{verified:true,incrementalVerified:true,directCost:1294.46,fixedCost:2241.73,additionalIncrementalCost:0},
 };
 const costs={[shawarma]:7743.80,[fatay]:3580.54,[baklava]:3536.19};
-const selection={verified:true,isIncremental:true,productId:fatay,eligibleUnits:1};
+const selection={verified:true,isIncremental:true,productId:fatay,promotionId:'fatay-up',eligibleUnits:1};
 const orderCosts={verified:true,additionalOrderCost:0,shippingSubsidy:0};
 const request=(overrides={})=>quotePromotions({
   config,lines:[main,addon],method:'transferencia',channel:'online',now:at,
@@ -42,6 +42,8 @@ describe('upsell marginal + margen de toda la cesta',()=>{
       {trustedUpsellSelection:null},
       {trustedUpsellSelection:{...selection,verified:false}},
       {trustedUpsellSelection:{...selection,productId:'baklava'}},
+      {trustedUpsellSelection:{...selection,promotionId:'baklava-up'}},
+      {trustedUpsellSelection:{verified:true,productId:fatay,isIncremental:true,eligibleUnits:1}},
       {trustedOrderCosts:null},
       {trustedEconomics:{...economies,[fatay]:{...economies[fatay],incrementalVerified:false}}},
       {trustedEconomics:{[fatay]:economies[fatay]}},
