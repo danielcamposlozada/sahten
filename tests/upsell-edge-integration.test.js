@@ -1,5 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import {createPaymentService} from '../src/payments/service.js';
+import {quoteOrder} from '../src/payments/core.js';
 import {createDeliveryService} from '../src/delivery/service.js';
 import {sahtenDeliveryPolicy} from '../src/delivery/preset.js';
 import {circlePoints} from '../src/delivery/geometry.js';
@@ -66,6 +67,17 @@ function paymentSetup(){
  const call=async(route,body)=>{const r=await service(req(route,body,account.site_url));return {status:r.status,data:await r.json()};};
  return {repo,m,calls,call,fetchImpl};
 }
+describe('Rentabilidad: comisión MP nunca presumida al activar promociones',()=>{
+ it('sin comisión aprobada no cotiza promociones MP, aunque el checkout no lleve upsell',()=>{
+  const m=menu();
+  expect(()=>quoteOrder(m,base('mercadopago'),{now:at}))
+   .toThrow(/comisión aprobada/);
+  m.promotions.checkoutProFeePercent=7.4;
+  const quoted=quoteOrder(m,base('mercadopago'),{now:at});
+  expect(quoted.total).toBe(32000);
+  expect(quoted.promotionSnapshot.method).toBe('mercadopago');
+ });
+});
 describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)',()=>{
  it('cotiza, comprueba importe, consume un nonce y crea preferencia desde precio del servidor',async()=>{
   const x=paymentSetup(),original=base('mercadopago');
