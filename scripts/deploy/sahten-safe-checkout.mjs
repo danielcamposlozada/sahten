@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // SAHTEN: actualización conservadora de portada y /pedir/ en Cloudflare Pages.
-// Mantiene EXACTOS los otros 16 archivos del despliegue aprobado de 31/10.
+// Mantiene EXACTOS los otros 16 archivos del despliegue aprobado de 01/11.
 // Lee el catálogo vigente de Supabase en modo público. No publica campañas.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createServer } from 'vite';
 
-const PINNED_URL='https://f68ab9a6.sahten-menu.pages.dev';
+const PINNED_URL='https://84a00719.sahten-menu.pages.dev';
 const PUBLISHED_FILES=[
   '/apple-touch-icon.png',
   '/brand/sahten-comida-arabe-og-1200x630.png',
@@ -44,7 +44,7 @@ async function download(rel){
 function check(menu,base){
   if(!base.supabase?.url || !base.supabase?.anonKey || !base.supabase?.storeId)
     throw new Error('Pinned menu missing Supabase public connection');
-  if(base.products?.length!==28)throw new Error('Pinned menu has changed: requires human review');
+  if(base.products?.length!==38)throw new Error('Pinned menu has changed: requires human review');
   if(!base.site?.enabled || !base.site?.orderPage)throw new Error('Original site/page structure is not available');
   if(menu.products?.length!==38)throw new Error('Public product count mismatch: expected 38');
   const drinks=menu.products.filter(p=>p.category==='Bebidas');
@@ -90,6 +90,9 @@ async function main(){
       if(p.image && !/^https:\/\//.test(p.image) && !existed)p.image=null;
     }
     check(menu,base);
+    if(menu.cartRecommendations?.enabled===true && (!Array.isArray(menu.cartRecommendations.complements)
+      || !Array.isArray(menu.cartRecommendations.beverageContexts)))
+      throw new Error('Recommendation policy malformed');
     const landing=buildIndexHtml(menu);
     const storefront=buildIndexHtml(menu,{storefront:true});
     if(!landing.includes('function serviceAvailable(')||
@@ -114,7 +117,7 @@ async function main(){
   await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(built.menu,null,1));
   const report={
     status:'ready-for-pages',
-    inheritedDeployment:'f68ab9a6-c165-422f-8cab-4ddc3b7a9cfc',
+    inheritedDeployment:'84a00719-0196-48ab-b31f-b321b979398e',
     immutableFilesPreserved:PUBLISHED_FILES.filter(x=>!['/index.html','/pedir/index.html','/menu.json'].includes(x)),
     generated:['/index.html','/pedir/index.html','/menu.json'],
     products:built.menu.products.length,
