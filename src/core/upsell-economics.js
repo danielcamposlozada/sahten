@@ -4,6 +4,7 @@
 // Los valores de un carrito o request del cliente nunca constituyen esta prueba.
 const cents = value => Math.round(Number(value) * 100);
 const money = value => Math.round(value) / 100;
+const roundedPercent = value => Math.round(value * 100) / 100;
 const validMoney = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
 const marginPct = (revenue, totalCost) => revenue > 0 ? (revenue - totalCost) / revenue * 100 : -Infinity;
 export function assessIncrementalUpsell({
@@ -72,11 +73,11 @@ export function assessIncrementalUpsell({
   if (![targetBasket,targetIncremental].every(n=>Number.isFinite(n) && n>0 && n<=100))
     return deny('invalid_margin_target');
   if (basketMargin + 0.00001 < targetBasket)
-    return { ...deny('basket_margin_below_target'), basketMarginPct:money(basketMargin), incrementalMarginPct:money(incrementalMargin) };
+    return { ...deny('basket_margin_below_target'), basketMarginPct:roundedPercent(basketMargin), incrementalMarginPct:roundedPercent(incrementalMargin) };
   if (incrementalMargin + 0.00001 < targetIncremental)
-    return { ...deny('incremental_margin_below_target'), basketMarginPct:money(basketMargin), incrementalMarginPct:money(incrementalMargin) };
-  return { approved:true, reason:null, basketMarginPct:money(basketMargin),
-    incrementalMarginPct:money(incrementalMargin),
+    return { ...deny('incremental_margin_below_target'), basketMarginPct:roundedPercent(basketMargin), incrementalMarginPct:roundedPercent(incrementalMargin) };
+  return { approved:true, reason:null, basketMarginPct:roundedPercent(basketMargin),
+    incrementalMarginPct:roundedPercent(incrementalMargin),
     incrementalContribution:money(incrementalRevenue-incrementalCost),
     fullBasketContribution:money(realizedBasket-fullCost-orderCosts) };
 }
