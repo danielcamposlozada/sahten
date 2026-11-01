@@ -90,6 +90,23 @@ describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)
   expect(x.calls.some(([name])=>name==='reserve')).toBe(false);
   expect(x.fetchImpl).not.toHaveBeenCalled();
  });
+ it('reintentar el mismo requestId reutiliza preferencia y nonce; no duplica cobro',async()=>{
+  const x=paymentSetup(),original=base('mercadopago'),saved={url:null};
+  const old=x.repo.run;
+  x.repo.run=vi.fn(async(action,args)=>{
+   const record=await old(action,args);
+   if(action==='reserve'&&saved.url)return {...record,checkout_url:saved.url};
+   if(action==='preference')saved.url=args.checkout_url;
+   return record;
+  });
+  const offer=await x.call('offer',offerBody(original));
+  const payload={storeId:sid,requestId:rid,proof,order:selected(original,offer.data)};
+  const first=await x.call('checkout',payload),again=await x.call('checkout',payload);
+  expect(first.status).toBe(200);expect(again.status).toBe(200);
+  expect(first.data.checkoutUrl).toBe(again.data.checkoutUrl);
+  expect(x.fetchImpl).toHaveBeenCalledTimes(1);
+  expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(2);
+ });
  it('sin costos verificados o con promociones apagadas no hay tokens ni cobro',async()=>{
   const x=paymentSetup();x.m.promotions.enabled=false;
   expect((await x.call('offer',offerBody(base('mercadopago')))).status).toBe(409);
@@ -141,6 +158,24 @@ describe('Integración Edge de delivery y retiro (rutas simuladas)',()=>{
   expect(done.status).toBe(200);
   expect(x.orders).toHaveLength(1);
   expect(x.orders[0].total).toBe(offer.data.orderTotal);
+  expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(1);
+ });
+ it('repetir la misma orden entrega el registro previo sin volver a consumir el token',async()=>{
+  const x=deliverySetup(),old=x.repo.run;
+  let last=null;
+  x.repo.run=vi.fn(async(action,args)=>{
+   if(action==='submission')return last;
+   const value=await old(action,args);
+   if(action==='order')last=value;
+   return value;
+  });
+  const offer=await x.call('offer',{order:x.order,upsellProof:proof,
+   productId:'fatay',offerId:'fatay-individual-up'});
+  expect(offer.status).toBe(200);
+  const request={order:selected(x.order,offer.data),upsellProof:proof,requestId:rid};
+  const a=await x.call('order',request),b=await x.call('order',request);
+  expect(a.status).toBe(200);expect(b.status).toBe(200);
+  expect(x.orders).toHaveLength(1);
   expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(1);
  });
  it('cambiar la dirección tras emitir la oferta la invalida antes de generar el pedido',async()=>{
