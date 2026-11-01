@@ -29,7 +29,7 @@ export function setMonthlyGoal(s,{month,amount,now=new Date(),actor='admin'}={})
   if(!s.project||typeof s.project!=='object')s.project={};
   s.project.localProfitGoals||={};
   const previous=monthlyGoal(s,month,now);
-  if(previous===target)return false;
+  if(previous===target&&Object.prototype.hasOwnProperty.call(s.project.localProfitGoals,month))return false;
   s.project.localProfitGoals[month]=target;
   s.project.localProfitGoalChanges||=[];
   s.project.localProfitGoalChanges.push({
