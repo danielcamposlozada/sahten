@@ -89,12 +89,23 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       } : {enabled:false},
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
-      checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):10,
+      // El backend nunca debe aplicar upsells solo por ver el ítem en el carrito.
+      // Requiere token HMAC, canje de nonce y revisión de costos privados.
+      upsellGuardRequired:true,
+      checkoutProFeePercent: promotions.checkoutProFeePercent!=null&&promotions.checkoutProFeePercent!==''&&Number.isFinite(Number(promotions.checkoutProFeePercent))?Math.min(30,Math.max(0,Number(promotions.checkoutProFeePercent))):null,
       paymentPercent: Math.min(100,Math.max(0,Number(promotions.paymentPercent)||10)),
       campaigns:(promotions.campaigns||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,channels:c.channels,productIds:c.productIds,schedule:c.schedule,
         advertising:c.advertising?.enabled?{enabled:true,placement:c.advertising.placement,message:String(c.advertising.message||'').slice(0,180),advanceDays:c.advertising.advanceDays||4}:undefined})),
       ticket:{enabled:promotions.ticket?.enabled===true,advertise:promotions.ticket?.advertise===true},
-      upsells:(promotions.upsells||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,productIds:c.productIds,maxUnits:c.maxUnits,triggerProductIds:c.triggerProductIds,suppressIfPresent:c.suppressIfPresent})),
+      upsells:(promotions.upsells||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,productIds:c.productIds,maxUnits:c.maxUnits,triggerProductIds:c.triggerProductIds,suppressIfPresent:c.suppressIfPresent,
+        ...(Array.isArray(c.discountTiers)?{discountTiers:c.discountTiers.filter(t=>
+          Number.isFinite(Number(t.minEligibleNetSubtotal))&&Number(t.minEligibleNetSubtotal)>=0&&
+          Number.isFinite(Number(t.totalDiscountPercent))&&Number(t.totalDiscountPercent)>0&&
+          Number(t.totalDiscountPercent)<=100).map(t=>({
+            minEligibleNetSubtotal:Number(t.minEligibleNetSubtotal),
+            totalDiscountPercent:Number(t.totalDiscountPercent)
+          }))}:{}),
+      })),
       // No se expone el umbral de rentabilidad: la validación de costos ocurre en la administración.
     } : {enabled:false},
     site,
