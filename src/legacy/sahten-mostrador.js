@@ -212,6 +212,7 @@ function _renderPedidoTab() {
             <button type="button" data-most-view="list" aria-pressed="${mostradorView==='list'}" onclick="mostradorSetView('list')">☰ Lista</button>
           </div></div>
           <div id="most-result-count" class="most-result-count" role="status" aria-live="polite"></div>
+          <div id="most-promo-indicator" class="most-promo-indicator"></div>
           <div class="most-cats" id="most-cats"></div>
         </div>
         <div class="most-product-grid" id="most-product-grid"></div>
@@ -232,6 +233,11 @@ function _renderPedidoTab() {
       </section>
       <span class="sr-only" id="most-cart-announcement" role="status" aria-live="polite"></span>
     </div>`;
+  const currentPromos=SAHTEN.promotionsEditor?.get?.();
+  const nowPromos=currentPromos?.enabled
+    ? SAHTEN.promotions.activeCampaigns(currentPromos,new Date(),'mostrador') : [];
+  const promoSpot=document.getElementById('most-promo-indicator');
+  if(promoSpot&&nowPromos.length)promoSpot.textContent='Promociones activas: '+nowPromos.map(p=>p.name).join(' · ');
   _renderCats();
   _renderMostradorGrid();
   _renderCartExtras();
