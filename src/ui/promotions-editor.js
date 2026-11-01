@@ -67,8 +67,8 @@ export function installPromotionsEditor(w=window) {
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['extras','Complementos'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?extrasEditor(state,w):tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
@@ -195,6 +195,34 @@ export function installPromotionsEditor(w=window) {
     return '<section class="promo-card"><div class="promo-row"><h3>Calendario · '+cursor.toLocaleString('es-AR',{month:'long',year:'numeric'})+'</h3><div><button type="button" data-promo-month-prev aria-label="Mes anterior">←</button> <button type="button" data-promo-month-next aria-label="Mes siguiente">→</button></div></div>'
       +'<div class="promo-calendar">'+['L','M','X','J','V','S','D'].map(d=>'<b>'+d+'</b>').join('')+cells+'</div>'
       +'<p>La campaña de tablas se calcula automáticamente como el segundo y tercer viernes y sábado de cada mes. Los domingos permanecen excluidos.</p></section>';
+  }
+  function extrasEditor(state,w) {
+    const lookup=id=>catalog(w).find(p=>p.id===id)?.name||id||'Producto no encontrado';
+    const up=state.productUpgrades||[],extra=state.upsells||[],cross=state.crossSells||[];
+    const upgrades=up.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+      +'<p><strong>Origen:</strong> '+esc(lookup(p.triggerProductId))+' → <strong>Reemplazo:</strong> '+esc(lookup(p.replacementProductId))+'</p>'
+      +'<p><strong>Operación:</strong> reemplazar el combo, nunca sumar ambos. La cocina recibe '+esc(p.unitsPrinted)+' unidades.</p>'
+      +'<p>Precio de lista de referencia: '+fmt(p.referenceListPrice)+' · Sin descuento adicional: solo beneficio de pago habitual.</p>'
+      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')
+      +' · costo de 4 unidades y margen incremental pendientes de validación</p></article>').join('');
+    const dessert=extra.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+      +'<p>Producto: '+esc((p.productIds||[]).map(lookup).join(', '))
+      +' · Máximo '+esc(p.maxUnits||1)+' unidad con +'+esc(p.extraPercent)+' puntos adicionales.</p>'
+      +'<p>La oferta de 20% total en Baklava requiere costo, comisión y margen confirmados antes de activarse.</p>'
+      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')+'</p></article>').join('');
+    const crossSelling=cross.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+      +'<p>Producto: '+esc(lookup(p.productId))+' · Sin descuento adicional; únicamente corresponde el beneficio por forma de pago.</p>'
+      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')+'</p></article>').join('');
+    const shipping=(state.checkoutIncentives||[]).filter(p=>p.kind==='delivery_threshold_progress')
+      .map(p=>'<p><strong>Progreso de envío:</strong> calcular sobre el subtotal NETO, y solo según la zona vigente. '
+        +(p.enabled?'Preparado':'Desactivado')+'. No concede envío gratis fuera de la política de zonas.</p>').join('');
+    return '<section class="promo-card"><h3>Complementos y descuentos selectivos</h3>'
+      +'<p>Estas propuestas están guardadas en el proyecto. No generan ofertas ni pedidos por sí solas. '
+      +'Los controles operativos se habilitan después de validar servidor, cobros y margen.</p>'
+      +'<h4>Reemplazo de combo</h4>'+(upgrades||'<p>Sin reemplazos configurados.</p>')
+      +'<h4>Postre con beneficio</h4>'+(dessert||'<p>Sin descuentos de postre.</p>')
+      +'<h4>Venta cruzada sin nuevos descuentos</h4>'+(crossSelling||'<p>Sin sugerencias.</p>')
+      +shipping+'</section>';
   }
   function couponEditor(state){
     const programs=Object.values(state.couponPrograms||{});
