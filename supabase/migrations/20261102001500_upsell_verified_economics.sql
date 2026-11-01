@@ -3,6 +3,11 @@
 -- Datos financieros privados. No enviar este JSON al navegador.
 -- Los valores de costos directos/fijos de pricingPolicies son snapshot contable;
 -- el coste de producir UNA unidad extra exige revisión explícita.
+-- No convertir `receta_cost` en `variableCost`: por ejemplo SUPERMIX incluye
+-- envases y subproductos Fatay + tahini que no están dentro de ese importe.
+-- El motor original de Sahten calcula costo completo con costPerUnit/gfAssigned.
+-- Si faltan snapshots auditados, esta RPC no entrega economía aprobada (fail-closed).
+-- Los informes de src/core/promotion-economics-audit.js NO habilitan ofertas.
 CREATE OR REPLACE FUNCTION public.sahten_upsell_verified_costs(
  sid uuid,channel text DEFAULT 'mostrador'
 ) RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=''
