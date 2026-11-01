@@ -90,7 +90,7 @@ export function installPromotionsEditor(w=window) {
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
       +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor():tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
@@ -218,9 +218,16 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-calendar">'+['L','M','X','J','V','S','D'].map(d=>'<b>'+d+'</b>').join('')+cells+'</div>'
       +'<p>La campaña de tablas se calcula automáticamente como el segundo y tercer viernes y sábado de cada mes. Los domingos permanecen excluidos.</p></section>';
   }
-  function couponEditor(){
-    return '<section class="promo-card"><h3>Cupones y recompensas</h3><p>Primera compra online: mínimo $30.000, 5 puntos adicionales. Segunda compra: mínimo $40.000, 10 puntos adicionales y máximo $4.000 extra.</p>'
-      +'<div class="promo-note"><strong>Emisión y canje:</strong> deben verificarse con el servidor y un cliente identificado. Una comanda reimpresa conserva el mismo cupón; la fecha se muestra como '+esc(expiryLabel('2026-11-14'))+'. Esta vista no crea cupones utilizables.</div></section>';
+  function couponEditor(state){
+    const programs=Object.values(state.couponPrograms||initialPromotionConfig().couponPrograms);
+    return '<section class="promo-card"><h3>Cupones y recompensas · Plan precargado</h3>'
+      +'<div class="promo-grid">'+programs.map(c=>'<article class="promo-note"><h4>'+esc(c.name)+'</h4>'
+        +'<p><strong>Estado:</strong> Preparado, sin emisión</p>'
+        +'<p>Compra elegible mínima: '+fmt(c.minEligibleSubtotal)+' · +'+esc(c.extraPercent)+' puntos porcentuales</p>'
+        +'<p>Vigencia: '+esc(c.validDays)+' días desde la emisión confirmada'
+        +(c.maxExtraAmount!=null?' · Tope adicional: '+fmt(c.maxExtraAmount):'')+'</p>'
+        +'</article>').join('')+'</div>'
+      +'<div class="promo-note"><strong>Emisión y canje desactivados.</strong> Deben verificarse del lado del servidor, vincularse a un cliente y una compra confirmada, y pasar las pruebas de pago/reversión. Reimprimir un ticket jamás emite otro cupón. Vencimiento de ejemplo: '+esc(expiryLabel('2026-11-14'))+'.</div></section>';
   }
   function ticketEditor(state,canEdit){
     return '<section class="promo-card"><h3>Publicidad en comanda única</h3><p>Siempre primero: datos de cocina, entrega, importes y método de pago. Después: QR Google Reviews y una publicidad seleccionada.</p>'
