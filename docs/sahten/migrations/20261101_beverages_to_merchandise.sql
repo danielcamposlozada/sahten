@@ -75,7 +75,7 @@ BEGIN
         jsonb_build_object('unit','u','minimo',0),true);
   END LOOP;
   SELECT COALESCE(jsonb_agg(i),'[]'::jsonb) INTO new_ing
-  FROM jsonb_array_elements(cat->'ingredientes') i WHERE NOT i->>'id'=ANY(existing_ids);
+  FROM jsonb_array_elements(cat->'ingredientes') i WHERE NOT (i->>'id'=ANY(existing_ids));
   cat := jsonb_set(cat,'{ingredientes}',new_ing);
 
   -- Convertir referencias de ingredientes en referencias a Mercadería y eliminar
@@ -85,8 +85,8 @@ BEGIN
     FROM jsonb_array_elements(COALESCE(product->'ingredients','[]'::jsonb)) i
     WHERE NOT i->>'ingId'=ANY(existing_ids);
     merch_rows:=COALESCE(product->'merchandise','[]'::jsonb);
-    FOR ing_row IN SELECT * FROM jsonb_array_elements(COALESCE(product->'ingredients','[]'::jsonb))
-       WHERE ing_row->>'ingId'=ANY(existing_ids) LOOP
+    FOR ing_row IN SELECT j FROM jsonb_array_elements(COALESCE(product->'ingredients','[]'::jsonb)) j
+       WHERE j->>'ingId'=ANY(existing_ids) LOOP
       IF COALESCE((ing_row->>'qty')::numeric,0)>0 THEN
         merch_rows:=merch_rows||jsonb_build_array(jsonb_build_object(
           'merchId',ing_row->>'ingId','qty',(ing_row->>'qty')::numeric));
