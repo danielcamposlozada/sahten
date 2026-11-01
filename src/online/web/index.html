@@ -402,6 +402,16 @@ function openCart(){step='cart';sheet();showSheet();}
 function checkoutStep(next){if(sending||!['cart','details'].includes(next)||!lines().length)return;step=next;sheet();$('sheet').querySelector('.sheet-body').scrollTop=0;$('sheet').focus({preventScroll:true});}
 function checkoutSteps(){return '<ol class="checkout-steps" aria-label="Pasos del pedido"><li'+(step==='cart'?' aria-current="step"':'')+'><b aria-hidden="true">1</b>Pedido</li><li'+(step==='details'?' aria-current="step"':'')+'><b aria-hidden="true">2</b>Entrega y pago</li></ol>';}
 function cartItemsHtml(ls,prefix){prefix=prefix||'cart';return '<ul class="'+(prefix==='side'?'side-items':'cart-items')+'" aria-label="Productos de tu pedido">'+ls.map(function(l){return '<li class="cart-item"><div><div class="cart-item-name">'+esc(l.name)+(l.unavailable?' · No disponible':'')+'</div><div class="cart-item-unit">'+fmt(l.unitPrice)+' por unidad</div></div><div class="cart-item-price">'+fmt(l.lineTotal)+'</div><div class="cart-item-actions"><div class="cart-quantity"><button type="button" id="'+prefix+'-dec-'+esc(l.id)+'" data-dec="'+esc(l.id)+'" aria-label="Restar una unidad de '+esc(l.name)+'"'+(l.qty<=1?' disabled':'')+'>−</button><output aria-label="Cantidad de '+esc(l.name)+'" aria-live="polite">'+l.qty+'</output><button type="button" id="'+prefix+'-inc-'+esc(l.id)+'" data-inc="'+esc(l.id)+'" aria-label="Sumar una unidad de '+esc(l.name)+'"'+(l.qty>=999||l.unavailable?' disabled':'')+'>+</button></div><button type="button" class="cart-remove" id="'+prefix+'-remove-'+esc(l.id)+'" data-remove="'+esc(l.id)+'" aria-label="Quitar '+esc(l.name)+' del pedido">Quitar</button></div></li>';}).join('')+'</ul>';}
+function beverageCartSuggestion(){
+  // Nada se agrega automáticamente: una sola opción, nunca otro refresco si ya hay uno.
+  var result=recommendBeverage({products:MENU?.products||[],cart:lines(),
+    policy:MENU?.beverageRecommendations||null,showPrices:MENU?.config?.showPrices!==false});
+  if(!result)return '';
+  return '<section class="checkout-beverage-suggestion" aria-label="Sugerencia de bebida">'
+    +'<div><strong>'+esc(result.headline)+'</strong><p>'+esc(result.name)
+    +' · '+fmt(result.price)+'</p></div>'
+    +'<button type="button" data-inc="'+esc(result.id)+'" aria-label="Agregar '+esc(result.name)+' al pedido">Sumar</button></section>';
+}
 function closeSheet(){
   $('ov').classList.remove('on');document.body.classList.remove('modal-open');
   sheetBackground.forEach(function(x){x[0].inert=!!x[1]});sheetBackground=[];
@@ -485,7 +495,7 @@ function sheet(){
   if(payMethods().indexOf(pay)<0)pay=payMethods()[0]||'';
   recalcDelivery();
   if(step==='cart'){
-    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
+    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+beverageCartSuggestion()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
   }
 
   var canSend=selectedServiceStatus().open&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
