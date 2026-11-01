@@ -8,7 +8,7 @@ import { promotionReport } from '../src/core/promotions-report.js';
 const at='2026-11-02T15:00:00-03:00';
 const menu=()=>({products:[{id:'p1779467294622',name:'Promo Fatay (3U)',price:16850}],store:{currency:{symbol:'$',locale:'es-AR'}},
   config:{enabled:true,showPrices:true},payments:{methods:{transferencia:true,mercadopago:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}},
-  delivery:{enabled:true},promotions:{...initialPromotionConfig(),enabled:true,checkoutProFeePercent:8}});
+  delivery:{enabled:true},promotions:(()=>{const p={...initialPromotionConfig(),enabled:true,checkoutProFeePercent:8};p.campaigns[0].enabled=true;p.campaigns[0].productIds=['p1779467294622'];return p;})()});
 const input=(method)=>({source:'pickup',customerName:'Prueba',customerPhone:'1133335555',paymentMethod:method,
   items:[{productId:'p1779467294622',qty:1}],notes:'Sin salsa'});
 describe('integración v1: orden y ticket',()=>{
