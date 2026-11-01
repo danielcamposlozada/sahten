@@ -47,6 +47,7 @@ export function emptyFile(name = '') {
     projections: { snapshots: [], activeId: null, channelDist: {}, channelLocked: {}, manualMode: false, manualUnits: {} },
     online: { menuConfig: {}, tiendaConfig: {}, supabase: emptySupabase() },
     images: {},
+    promotions: {},
     ui: {},
   };
 }
@@ -86,6 +87,7 @@ export function legacyToFile(L, { modifiedAt = null, prev = null } = {}) {
   f.online = { menuConfig: clone(obj(L.menuConfig)), tiendaConfig: clone(obj(L.tiendaConfig)), supabase: { ...emptySupabase(), ...obj(L.supabase) } };
   f.online.tiendaConfig = prepareDeliveryConfig(f.online.tiendaConfig, f.online.supabase.slug);
   f.images = clone(obj(L.images));
+  f.promotions = clone(obj(L.promotions));
   f.ui = {};
   UI_KEYS.forEach(k => { if (L[k] !== undefined) f.ui[k] = clone(L[k]); });
   return prev ? mergeUnknown(prev, f) : f;
@@ -108,7 +110,7 @@ export function fileToLegacy(file) {
     usdRate: String(c.usdRate), globalCommission: String(c.globalCommission), customTC: c.customTC,
     customers: clone(s.customers), orders: clone(s.orders), mostradorDiscounts: clone(s.discounts), mostradorPayments: clone(s.payments),
     reportData: clone(s.reportData), menuConfig: clone(f.online.menuConfig), tiendaConfig: clone(f.online.tiendaConfig),
-    supabase: clone(f.online.supabase), images: clone(f.images), theme: f.settings.theme, customization: clone(f.settings.customization),
+    supabase: clone(f.online.supabase), images: clone(f.images), promotions: clone(obj(f.promotions)), theme: f.settings.theme, customization: clone(f.settings.customization),
   };
   if (c.gfDiscPct) { L.gfDiscPct = c.gfDiscPct; L.gfDiscNotes = c.gfDiscNotes || ''; }
   Object.entries(f.ui || {}).forEach(([k, v]) => { L[k] = clone(v); });

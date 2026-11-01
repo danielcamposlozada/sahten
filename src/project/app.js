@@ -28,6 +28,7 @@ function collect() {
   L.customization = kv.json('sahten-customization', {});
   L.theme = w.localStorage.getItem('sahten-theme');
   L.notifications = kv.json('sahten_notifications', []);
+  L.promotions = kv.json('sahten_promotions', {});
   L.tabState = kv.json('sahten_v4_data_tabs', {});
   return legacyToFile(L);
 }
@@ -62,6 +63,7 @@ async function apply(file, { fresh } = {}) {
     Object.assign(w.SAHTEN_SUPABASE, L.supabase || {});
     kv.set('sahten-customization', JSON.stringify(L.customization || {}));
     kv.set('sahten_notifications', JSON.stringify(L.notifications || []));
+    kv.set('sahten_promotions', JSON.stringify(L.promotions || {}));
     kv.set('sahten_v4_data_tabs', JSON.stringify(L.tabState || {}));
     w.applyData(L);
   });
