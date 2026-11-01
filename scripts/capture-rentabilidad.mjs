@@ -8,7 +8,7 @@ const out='qa/rentabilidad';
 await fs.mkdir(out,{recursive:true});
 const fixture=JSON.parse(await fs.readFile('src/project/demo.sahten.json','utf8'));
 const date=new Date();
-const month=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit'}).format(date).replace(/\\//g,'-');
+const month=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit'}).format(date).replaceAll('/','-');
 fixture.project={...(fixture.project||{}),name:'SAHTEN · Demostración visual',
   localProfitGoals:{...(fixture.project?.localProfitGoals||{}),[month]:120000}};
 fixture.sales=fixture.sales||{};
@@ -38,7 +38,7 @@ await page.evaluate(async (raw)=>{
   window.document.getElementById('proj-welcome')?.remove();
   await window.SAHTEN.project.session.openText(raw,null,'SAHTEN · Datos ilustrativos.sahten');
   window.showPanel('rentabilidad');
-  w.SAHTEN.localProfit.renderModule();
+  window.SAHTEN.localProfit.renderModule();
 },demo);
 await page.waitForSelector('#panel-rentabilidad.active #rentabilidad-goal-card .local-profit-progress',{timeout:30000});
 const stamp=await page.evaluate(()=>{
