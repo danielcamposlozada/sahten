@@ -2,6 +2,7 @@ import { salesPaused } from '../core/sales-availability.js';
 import { deliveryDetails, cashChangeQuote, cashOrderFields } from '../core/order-details.js';
 import { shippingFor, deliverySnapshot } from '../core/delivery.js';
 import { paymentDiscountQuote } from '../core/payment-benefit.js';
+import { quotePromotions } from '../core/promotions.js';
 import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 
 export class PaymentError extends Error {
@@ -22,7 +23,7 @@ export function siteUrl(value) {
 }
 
 /** El navegador aporta identificadores y cantidades; los importes siempre vienen del menú. */
-export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],now=Date.now()}={}) {
+export function quoteOrder(menu, input, {route=null,authorization=null,allowOtherPayments=false,validateCustomer=true,requireCustomer=true,salesChannel='online',commercialDiscount=null,allowedMethods=[],trustedCoupon=null,verifiedCustomerId=null,now=Date.now()}={}) {
   if (!menu?.products?.length || menu.config?.enabled === false || menu.config?.showPrices === false) fail('La tienda no recibe compras online.', 409);
   const method=allowOtherPayments?input.paymentMethod:'mercadopago';
   if (allowOtherPayments ? !menu.payments?.methods?.[method]&&!allowedMethods.includes(method) : menu.payments?.methods?.mercadopago === false) fail('Este negocio no acepta ese medio de pago en este menú.', 409, 'not_configured');
@@ -51,14 +52,28 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   }
   const name = text(input.customerName, 100), phone = text(input.customerPhone, 40);
   if (validateCustomer && requireCustomer && (name.length < 2 || phone.replace(/\D/g, '').length < 7)) fail('Completá nombre y teléfono.');
-  const benefit=paymentDiscountQuote(sub/100,method,menu.payments?.benefit,salesChannel,commercialDiscount);
+  const paymentPolicy=menu.payments?.benefit||{};
+  const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
+  const promotion=menu.promotions?.enabled===true ? quotePromotions({
+    lines:items,method,channel:salesChannel,now:new Date(now),
+    config:{...menu.promotions,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
+    // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
+    coupon:trustedCoupon,customerId:verifiedCustomerId,
+  }) : null;
+  const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
+  const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
+  const benefit=promotion
+    ? {amount:promotion.discount,label:promotion.discount?'Promociones y beneficios':'',
+        paymentDiscount:promotion.lines.every(l=>l.promotionDiscount===0)&&hasPaymentBenefit
+          ? paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel).paymentDiscount:null}
+    : oldBenefit;
   let shipping = 0, zoneName = '', lat = null, lng = null, address = 'Retiro en local', shippingQuote=null;
   if (source === 'delivery') {
     if (menu.delivery?.enabled === false) fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
     lat = Number(input.lat); lng = Number(input.lng); address = text(input.address, 300);
     if (input.lat == null || input.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || address.length < 5) fail('Seleccioná una dirección de entrega válida.');
     const modern=menu.delivery?.deliveryV2?.active;
-    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:!!benefit.paymentDiscount});
+    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:hasPaymentBenefit});
     if (!ship.ok && validateCustomer) fail(ship.belowMin ? 'No se alcanza el pedido mínimo de delivery.' : ship.status==='closed'?'El delivery está fuera de horario. Volvé durante el horario de atención.':ship.status==='hours_invalid'?'El horario de delivery necesita revisión del local.':ship.status==='authorization_required'?'La entrega requiere autorización del local.':ship.status==='route_unverified'?'No se pudo validar la ruta por calles.':'La dirección está fuera de cobertura o no está habilitada para entrega.',409,ship.status||'invalid_delivery');
     shippingQuote=ship;
     shipping = cents(ship.cost); zoneName = text(ship.zone?.name, 100);
@@ -68,7 +83,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const cash = cashChangeQuote(total / 100, input.cashTendered, method);
   if (validateCustomer && !cash.valid) fail('El efectivo indicado no alcanza el total del pedido.');
   return { ...deliveryDetails(input, source), ...cashOrderFields(total / 100, input.cashTendered, method), source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
-    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), total: total / 100, notes: text(input.notes, 1000),
+    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), ...(promotion?{promotionSnapshot:promotion}:{}), total: total / 100, notes: text(input.notes, 1000),
     ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
 
