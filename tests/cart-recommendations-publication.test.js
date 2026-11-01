@@ -45,8 +45,8 @@ it('bebidas para Shawarma SUPERMIX: incluir precio completo aunque compra no est
     enabled:false,
     cartRecommendationPolicy:{enabled:true,complements:[]},
     beverageUpsellPolicy:{enabled:true,
-      options:[{id:approved.id,verified:true,secretCost:914.83},
-        {id:blocked.id,verified:false,secretCost:846.25}],
+      options:[{id:approved.id,verified:true,secretCost:912.34},
+        {id:blocked.id,verified:false,secretCost:888.88}],
       contexts:[{id:'sandwich-small',name:'Bebida para tu SUPERMIX',
         triggerProductIds:[main.id],options:[blocked.id,approved.id],priority:80}]}
   }});
@@ -54,8 +54,8 @@ it('bebidas para Shawarma SUPERMIX: incluir precio completo aunque compra no est
   expect(result.cartRecommendations.beverageContexts[0].options).toEqual([blocked.id,approved.id]);
   expect(result.promotions).toEqual({enabled:false});
   expect(JSON.stringify(result)).not.toContain('secretCost');
-  expect(JSON.stringify(result)).not.toContain('914.83');
-  expect(JSON.stringify(result)).not.toContain('846.25');
+  expect(JSON.stringify(result)).not.toContain('912.34');
+  expect(JSON.stringify(result)).not.toContain('888.88');
 });
 
 it('cuando se publica una oferta Fatay exige HMAC, conserva sus tramos y no inventa comisión MP',()=>{
