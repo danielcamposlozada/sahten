@@ -407,7 +407,7 @@ function cartAddonSuggestions(){
     policy:MENU.cartRecommendations||{enabled:false},showPrices:MENU.config.showPrices!==false});
   if(!options.length)return '';
   return '<section class="cart-addons" aria-label="Recomendaciones relacionadas con tu pedido"><h3>Para completar tu pedido</h3>'
-    +'<p class="cart-addons-explain">Sugerencias según tu pedido. Los precios son de lista; los beneficios por medio de pago se calculan al confirmar. No hay descuento extra en estas sugerencias.</p>'
+    +'<p class="cart-addons-explain">Sugerencias según tu pedido. Los precios son de lista; los beneficios por medio de pago se calculan al confirmar. Estas recomendaciones no incluyen una oferta adicional.</p>'
     +'<div class="cart-addons-list">'
     +options.map(function(p){return '<div class="cart-addon"><div class="cart-addon-copy">'
       +'<span class="cart-addon-context">Porque agregaste '+esc(p.contextProduct||'otros productos')+'</span>'
