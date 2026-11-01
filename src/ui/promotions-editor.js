@@ -11,7 +11,29 @@ const options=[['online','Tienda online'],['mostrador','Mostrador']];
 const placements=[['ticket','Tickets'],['cart','Carrito'],['checkout','Checkout'],['menu','Menú']];
 function load() {
   const stored=kv.json(KEY,null);
-  if(stored && stored.version===1 && Array.isArray(stored.campaigns))return stored;
+  if(stored && stored.version===1 && Array.isArray(stored.campaigns)){
+    if(stored.planVersion>=2)return stored;
+    const plan=initialPromotionConfig();
+    // Migración conservadora: completar IDs faltantes en el borrador de 0.4.34,
+    // sin sobrescribir campañas que el dueño ya personalizó.
+    const campaigns=stored.campaigns.map(c=>{
+      const p=plan.campaigns.find(x=>x.id===c.id);
+      return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
+        ? {...c,enabled:false,productIds:[...p.productIds]}:c;
+    });
+    const upsells=(stored.upsells||[]).map(c=>{
+      const p=plan.upsells.find(x=>x.id===c.id);
+      return p&&(!Array.isArray(c.productIds)||c.productIds.length===0)
+        ? {...c,enabled:false,productIds:[...p.productIds],
+           triggerProductIds:[...p.triggerProductIds],suppressIfPresent:[...p.suppressIfPresent]}:c;
+    });
+    const prepared={...stored,planVersion:2,campaigns,upsells,
+      couponPrograms:stored.couponPrograms||plan.couponPrograms,
+      requireVerifiedCosts:true,
+      checkoutProFeePercent:stored.checkoutProFeePercent??null};
+    kv.set(KEY,JSON.stringify(prepared));
+    return prepared;
+  }
   return initialPromotionConfig();
 }
 function save(state) {kv.set(KEY,JSON.stringify(state));}
