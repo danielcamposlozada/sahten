@@ -43,7 +43,7 @@ describe('Plan del negocio SAHTEN en documento, nunca embebido en el instalador 
     expect(plan.campaigns.flatMap(c=>c.productIds)).not.toContain(up.replacementProductId);
   });
   it('Fatay, Baklava, ambos Mamul y Torta de Chocolate tienen upsells propios, todos apagados',()=>{
-    expect(plan.planVersion).toBe(4);
+    expect(plan.planVersion).toBe(5);
     expect(plan.upsells).toHaveLength(5);
     expect(plan.upsells.map(x=>x.productIds[0]).sort()).toEqual([
       'baklava','fatay','mamul_datil','mamul_nuez','torta_de_chocolate'
@@ -53,6 +53,32 @@ describe('Plan del negocio SAHTEN en documento, nunca embebido en el instalador 
     expect(plan.upsells.every(c=>c.activationBlockers?.includes('server_basket_level_profit_guard_pending'))).toBe(true);
     expect(plan.activationPolicy.maxDiscountedUpsellLinesPerOrder).toBe(1);
     expect(plan.activationPolicy.maxUpsellCardsPerCart).toBe(2);
+  });
+  it('la Fatay tiene exactamente tres mínimos NETOS escalonados, no porcentaje extra acumulable',()=>{
+    const fatay=plan.upsells.find(x=>x.id==='fatay-individual-up');
+    expect(fatay.discountTiers).toEqual([
+      {minEligibleNetSubtotal:20000,totalDiscountPercent:20},
+      {minEligibleNetSubtotal:35000,totalDiscountPercent:25},
+      {minEligibleNetSubtotal:50000,totalDiscountPercent:30}
+    ]);
+    expect(fatay.thresholdBase).toBe('eligible_trigger_products_net_excluding_addon_shipping_coupon_only');
+    expect(plan.activationPolicy.minimumSpendExcludesUpsellAndShipping).toBe(true);
+  });
+  it('las 11 bebidas quedan en Mercadería con precios exactos y 4 costos pendientes',()=>{
+    const drinks=plan.beverageUpsellPolicy;
+    expect(drinks.enabled).toBe(false);
+    expect(drinks.discountPercentExtra).toBe(0);
+    expect(drinks.options).toHaveLength(11);
+    expect(drinks.options.filter(x=>x.price===2500)).toHaveLength(4);
+    expect(drinks.options.filter(x=>x.price===2000)).toHaveLength(2);
+    expect(drinks.options.filter(x=>x.price===1400)).toHaveLength(5);
+    expect(drinks.options.filter(x=>x.verified===false)).toHaveLength(4);
+    expect(drinks.hideWhenAnyBeverageInBasket).toBe(true);
+    expect(drinks.contexts.every(x=>x.triggerProductIds.length>0)).toBe(true);
+    expect(plan.beverageMigration).toMatchObject({
+      purchasedRecordsMoved:10,resaleProducts:11,newResaleProducts:7,
+      retainedCookingWaterIngredientId:'ing_1779464718583'
+    });
   });
   it('Fatay individual no entra en campañas públicas, pero sí como complemento en carrito',()=>{
     const fatay=plan.upsells.find(c=>c.id==='fatay-individual-up');
