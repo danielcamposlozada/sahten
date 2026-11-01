@@ -35,6 +35,9 @@ async function _directUploadImageOld(productId) {
       if (typeof renderMostrador === 'function') renderMostrador();
     } catch(e) { alert('Error: ' + e.message); }
   };
+  // La publicidad se selecciona una sola vez al crear la orden y queda congelada para reimpresiones.
+  const promotionConfig=SAHTEN.promotionsEditor?.get?.();
+  if(promotionConfig?.enabled===true)order.promotionTicketSnapshot=SAHTEN.promotions.selectTicketAdvertisement(promotionConfig,{channel:'mostrador',now:new Date(order.createdAt)});
   input.click();
 }
 
@@ -65,6 +68,11 @@ async function _renderProductImageRow() {
       </div>
       <div class="prod-img-actions"><button class="btn" data-photo-pick="${p.id}">📷 Subir o cambiar foto</button><span style="font-size:11px;color:var(--muted)">También podés arrastrar una imagen sobre la foto.</span></div>
     </div>`;
+  const currentPromos=SAHTEN.promotionsEditor?.get?.();
+  const nowPromos=currentPromos?.enabled
+    ? SAHTEN.promotions.activeCampaigns(currentPromos,new Date(),'mostrador') : [];
+  const promoSpot=document.getElementById('most-promo-indicator');
+  if(promoSpot&&nowPromos.length)promoSpot.textContent='Promociones activas: '+nowPromos.map(p=>p.name).join(' · ');
   if (p.productType === 'resale') row.querySelector('.prod-img-meta > div:first-child')?.remove();
   body.insertBefore(row, body.firstChild);
 }
@@ -212,6 +220,7 @@ function _renderPedidoTab() {
             <button type="button" data-most-view="list" aria-pressed="${mostradorView==='list'}" onclick="mostradorSetView('list')">☰ Lista</button>
           </div></div>
           <div id="most-result-count" class="most-result-count" role="status" aria-live="polite"></div>
+          <div id="most-promo-indicator" class="most-promo-indicator"></div>
           <div class="most-cats" id="most-cats"></div>
         </div>
         <div class="most-product-grid" id="most-product-grid"></div>
@@ -350,7 +359,23 @@ function _cartItemsWithPrice() {
 function _calcCartTotals() {
   const items=_cartItemsWithPrice(); const subtotal=items.reduce((s,it)=>s+it.lineTotal,0);
   const manual=MOSTRADOR_DISCOUNTS.find(d=>d.id===mostradorActiveDiscountId);
-  const benefit=SAHTEN.paymentChoices.quote(subtotal,_mostSelectedPayment()?.method,_mostTiendaCfg().paymentBenefit,'mostrador',manual);
+  const method=_mostSelectedPayment()?.method;
+  const legacyBenefit=SAHTEN.paymentChoices.quote(subtotal,method,_mostTiendaCfg().paymentBenefit,'mostrador',manual);
+  const pc=SAHTEN.promotionsEditor?.get?.();
+  const paymentPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
+  const verifiedCosts=Object.fromEntries(items.flatMap(it=>{
+    const cost=it.product.pricingPolicies?.mostrador;
+    return cost?.variableCost!=null&&cost?.fixedCost!=null
+      ?[[it.product.id,Number(cost.variableCost)+Number(cost.fixedCost)]]:[];
+  }));
+  const quote=pc?.enabled===true?SAHTEN.promotions.quotePromotions({
+    lines:items.map(it=>({productId:it.product.id,qty:it.qty,unitPrice:it.unitPrice})),
+    config:{...pc,paymentPercent:paymentPolicy.enabled&&paymentPolicy.channels.mostrador?paymentPolicy.percent:0},
+    method,channel:'mostrador',trustedCosts:verifiedCosts
+  }):null;
+  const applied=quote&&(!manual||quote.discount>=legacyBenefit.amount)?quote:null;
+  const benefit=applied?{amount:applied.discount,label:applied.appliedPromotionIds.length?'Promociones y beneficios':'Beneficio por pago',
+    paymentDiscount:applied.appliedPromotionIds.length?null:legacyBenefit.paymentDiscount}:legacyBenefit;
   const discount=benefit.amount, disc=discount?{name:benefit.label}:null;
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
@@ -360,7 +385,7 @@ function _calcCartTotals() {
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
   const total=Math.round((subtotal-discount+shipping)*100)/100;
-  return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount,deliveryQuote};
+  return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount,deliveryQuote,...(applied?{promotionSnapshot:applied}:{})};
 }
 
 function _mostPaymentOptions() {
@@ -567,6 +592,7 @@ async function mostradorCheckout() {
     discountAmount: t.discount,
     discount: t.discount,
     paymentDiscount: t.paymentDiscount,
+    ...(t.promotionSnapshot?{promotionSnapshot:t.promotionSnapshot}:{}),
     shipping: t.shipping,
     ...(deliverySnapshot?{deliverySnapshot,deliveryValidationId}:{}),
     paymentId: mostradorActivePaymentId || null,
