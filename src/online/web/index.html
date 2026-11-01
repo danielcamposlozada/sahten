@@ -182,7 +182,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 var ORDER_PAGE=document.body.hasAttribute('data-storefront'), PREVIEW=document.body.hasAttribute('data-preview');
 var deliveryServerOffset=0,addressGeneration=0,addressAbort=null,addressSuggest=createAddressSuggestions();
 var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null,deliveryUpdateNotice='';
-var MENU=null, cart={}, type='delivery', geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
+var MENU=null, cart={}, type='delivery', serviceSelectionManual=false, geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
 /* Caligrafía de la marca sola (vector incrustado al publicar; solo con kit de marca). Devuelve '' si no hay. */
@@ -398,7 +398,7 @@ function showSheet(){
   document.querySelectorAll('.snav-menu[open]').forEach(function(el){el.removeAttribute('open')});
   $('ov').classList.add('on');document.body.classList.add('modal-open');$('sheet').focus({preventScroll:true});
 }
-function openCart(){step='cart';sheet();showSheet();}
+function openCart(){step='cart';serviceSelectionManual=false;sheet();showSheet();}
 function checkoutStep(next){if(sending||!['cart','details'].includes(next)||!lines().length)return;step=next;sheet();$('sheet').querySelector('.sheet-body').scrollTop=0;$('sheet').focus({preventScroll:true});}
 function checkoutSteps(){return '<ol class="checkout-steps" aria-label="Pasos del pedido"><li'+(step==='cart'?' aria-current="step"':'')+'><b aria-hidden="true">1</b>Pedido</li><li'+(step==='details'?' aria-current="step"':'')+'><b aria-hidden="true">2</b>Entrega y pago</li></ol>';}
 function cartItemsHtml(ls,prefix){prefix=prefix||'cart';return '<ul class="'+(prefix==='side'?'side-items':'cart-items')+'" aria-label="Productos de tu pedido">'+ls.map(function(l){return '<li class="cart-item"><div><div class="cart-item-name">'+esc(l.name)+(l.unavailable?' · No disponible':'')+'</div><div class="cart-item-unit">'+fmt(l.unitPrice)+' por unidad</div></div><div class="cart-item-price">'+fmt(l.lineTotal)+'</div><div class="cart-item-actions"><div class="cart-quantity"><button type="button" id="'+prefix+'-dec-'+esc(l.id)+'" data-dec="'+esc(l.id)+'" aria-label="Restar una unidad de '+esc(l.name)+'"'+(l.qty<=1?' disabled':'')+'>−</button><output aria-label="Cantidad de '+esc(l.name)+'" aria-live="polite">'+l.qty+'</output><button type="button" id="'+prefix+'-inc-'+esc(l.id)+'" data-inc="'+esc(l.id)+'" aria-label="Sumar una unidad de '+esc(l.name)+'"'+(l.qty>=999||l.unavailable?' disabled':'')+'>+</button></div><button type="button" class="cart-remove" id="'+prefix+'-remove-'+esc(l.id)+'" data-remove="'+esc(l.id)+'" aria-label="Quitar '+esc(l.name)+' del pedido">Quitar</button></div></li>';}).join('')+'</ul>';}
@@ -416,11 +416,38 @@ function setSheetContent(body,footer){
   if(s.contains(active)||active===s||$('ov').classList.contains('on')){var next=id&&$(id);(next||s).focus({preventScroll:true});}
 }
 function selectedServiceStatus(){return serviceHoursStatus(MENU,type,Date.now()+deliveryServerOffset);}
+function serviceAvailable(source){
+  return !!MENU&&(source!=='delivery'||MENU.delivery?.enabled!==false)&&serviceHoursStatus(MENU,source,Date.now()+deliveryServerOffset).open;
+}
+// En el inicio preferir delivery si ambos operan; si cierra o se pausa, pasar a retiro
+// sin requerir que el cliente elija una opción deshabilitada.
+function syncServiceChoice(reset){
+  var prior=type,wasAvailable=serviceAvailable(prior);
+  type=resolveCheckoutServiceChoice({current:type,manual:serviceSelectionManual,reset:!!reset,
+    deliveryAvailable:serviceAvailable('delivery'),pickupAvailable:serviceAvailable('pickup')});
+  if(reset||(type!==prior&&!wasAvailable))serviceSelectionManual=false;
+  if(type!==prior)recalcDelivery();
+  return type!==prior;
+}
 function serviceChoiceLabel(source){var h=serviceHoursStatus(MENU,source,Date.now()+deliveryServerOffset);return source==='delivery'&&MENU.delivery?.enabled===false?'Pausado por el local':h.open?(source==='pickup'?'Retiro disponible':'Dentro del horario'):'Fuera de horario';}
 function pickupNote(){var h=serviceHoursStatus(MENU,'pickup',Date.now()+deliveryServerOffset);return '<div class="note '+(h.open?'ok':'err')+'" id="pickup-hours" role="status">'+(h.open?'Retiro: '+esc(MENU.store.address||'en el local'):esc(serviceHoursMessage(h)))+'</div>';}
-function refreshServiceNotice(){document.querySelectorAll('[data-service-label]').forEach(function(el){el.textContent=serviceChoiceLabel(el.dataset.serviceLabel)});var pickup=$('pickup-hours');if(pickup)pickup.outerHTML=pickupNote();var card=$('delivery-card');if(card)card.innerHTML=shipNote();}
+function refreshServiceNotice(){
+  if(syncServiceChoice(false)){sheetKeepFocus();return;}
+  document.querySelectorAll('[data-type]').forEach(function(button){
+    var available=serviceAvailable(button.dataset.type);
+    button.disabled=!available;
+    button.setAttribute('aria-disabled',String(!available));
+    button.setAttribute('aria-pressed',String(available&&button.dataset.type===type));
+    button.classList.toggle('on',available&&button.dataset.type===type);
+    button.classList.toggle('is-unavailable',!available);
+  });
+  document.querySelectorAll('[data-service-label]').forEach(function(el){el.textContent=serviceChoiceLabel(el.dataset.serviceLabel)});
+  var pickup=$('pickup-hours');if(pickup)pickup.outerHTML=pickupNote();
+  var card=$('delivery-card');if(card)card.innerHTML=shipNote();
+}
 function sendStatus(){
   if(unavailableItems())return 'Hay productos no disponibles en tu pedido. Volvé al pedido y quitalos para continuar.';
+  if(type==='delivery'&&MENU.delivery?.enabled===false)return 'El delivery está pausado por el local. Podés elegir retiro.';
   if(!selectedServiceStatus().open)return serviceHoursMessage(selectedServiceStatus());
   if(sending)return pay==='mercadopago'?'Preparando el pago…':'Enviando pedido…';
   if(!payMethods().length)return 'La tienda todavía no habilitó un medio de pago.';
@@ -474,6 +501,7 @@ function orderTotalsHtml(){
 }
 function deliveryIcon(pickup){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">'+(pickup?'<path d="m3 10 9-7 9 7v11H3V10Z"/><path d="M9 21v-8h6v8"/>':'<path d="M2 5h12v12H2zm12 4h4l4 5v3h-8"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>')+'</svg>';}
 function sheet(){
+  if(step==='details')syncServiceChoice(false);
   var s=$('sheet'),ls=lines();
   s.querySelectorAll('[data-disclosure]').forEach(function(el){disclosures[el.dataset.disclosure]=el.open});
   if(step==='mp'){mpSheet();return;}
@@ -485,10 +513,11 @@ function sheet(){
     setSheetContent(checkoutSteps()+cartItemsHtml(ls)+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
   }
 
-  var canSend=selectedServiceStatus().open&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
+  var canSend=serviceAvailable(type)&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
+  var deliveryReady=serviceAvailable('delivery'),pickupReady=serviceAvailable('pickup');
   var productRows=ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+(l.unavailable?' · No disponible':'')+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('');
   var body=checkoutSteps()+'<div class="checkout-mobile-summary"><div class="checkout-summary"><strong>'+count()+(count()===1?' producto':' productos')+'</strong><button type="button" class="checkout-edit" data-checkout-step="cart">Editar pedido</button></div><details class="checkout-review"><summary>Ver productos</summary>'+productRows+'</details>'+orderTotalsHtml()+'</div>'+
-   '<section class="checkout-group" aria-labelledby="checkout-delivery-heading"><h3 id="checkout-delivery-heading">¿Cómo querés recibirlo?</h3><div class="seg" role="group" aria-label="Tipo de entrega"><button type="button" data-type="delivery" aria-pressed="'+(type==='delivery')+'" class="'+(type==='delivery'?'on':'')+'">'+deliveryIcon(false)+'<span>Delivery<small data-service-label="delivery">'+esc(serviceChoiceLabel('delivery'))+'</small></span></button><button type="button" data-type="pickup" aria-pressed="'+(type==='pickup')+'" class="'+(type==='pickup'?'on':'')+'">'+deliveryIcon(true)+'<span>Retiro en local<small data-service-label="pickup">'+esc(serviceChoiceLabel('pickup'))+'</small></span></button></div>'+
+   '<section class="checkout-group" aria-labelledby="checkout-delivery-heading"><h3 id="checkout-delivery-heading">¿Cómo querés recibirlo?</h3><div class="seg" role="group" aria-label="Tipo de entrega"><button type="button" data-type="delivery" aria-pressed="'+(deliveryReady&&type==='delivery')+'" aria-disabled="'+(!deliveryReady)+'" class="'+(deliveryReady?(type==='delivery'?'on':''):'is-unavailable')+'"'+(deliveryReady?'':' disabled')+'>'+deliveryIcon(false)+'<span>Delivery<small data-service-label="delivery">'+esc(serviceChoiceLabel('delivery'))+'</small></span></button><button type="button" data-type="pickup" aria-pressed="'+(pickupReady&&type==='pickup')+'" aria-disabled="'+(!pickupReady)+'" class="'+(pickupReady?(type==='pickup'?'on':''):'is-unavailable')+'"'+(pickupReady?'':' disabled')+'>'+deliveryIcon(true)+'<span>Retiro en local<small data-service-label="pickup">'+esc(serviceChoiceLabel('pickup'))+'</small></span></button></div>'+
    (type==='delivery'?'<div id="delivery-card">'+shipNote()+'</div>':pickupNote())+
    (MENU.config.deliveryNote&&type==='delivery'?'<div class="note">'+esc(MENU.config.deliveryNote)+'</div>':'')+
    (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" aria-required="true" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'"><button type="button" class="checkout-edit" data-delivery-search hidden style="display:none">Buscar de otra forma</button><div id="sugs"></div><details class="optional-fields" data-disclosure="address" '+(disclosures.address||form.addressFloor||form.addressApartment||form.deliveryReference?'open':'')+'><summary>Agregar piso, departamento o referencia</summary><div class="checkout-field-pair"><div><label for="f-floor">Piso (opcional)</label><input id="f-floor" maxlength="30" value="'+esc(form.addressFloor)+'"></div><div><label for="f-apartment">Departamento (opcional)</label><input id="f-apartment" maxlength="30" value="'+esc(form.addressApartment)+'"></div></div><label for="f-reference">Referencia para la entrega (opcional)</label><input id="f-reference" maxlength="200" placeholder="Timbre, entrada, entre calles…" value="'+esc(form.deliveryReference)+'"></details>':'')+'</section>'+
@@ -508,7 +537,7 @@ function sheet(){
 function refreshCashStatus(){var q=cashChangeQuote(total(),form.cashTendered,pay),el=$('cash-status');if(el)el.textContent=!q.specified?'Avisanos para preparar el vuelto.':q.valid?'Vuelto a preparar: '+fmt(q.change):q.shortfall?'El importe no alcanza. Faltan '+fmt(q.shortfall):'Revisá el importe.';if($('f-cash'))$('f-cash').setAttribute('aria-invalid',String(!q.valid));}
 function refreshTotals(){refreshCashStatus();document.querySelectorAll('.checkout-totals').forEach(function(el){el.outerHTML=orderTotalsHtml()});document.querySelectorAll('.payment-choice[data-payment-choice]').forEach(function(button){var amount=button.querySelector('.payment-choice-amount');if(amount)amount.textContent=amountForMethod(button.dataset.paymentChoice)});var b=$('send');if(b)b.textContent=(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total());}
 setInterval(function(){if(!$('ov').classList.contains('on')||step!=='details')return;recalcDelivery();refreshServiceNotice();refreshTotals();refreshSend();},15000);
-function refreshSend(){var b=$('send');if(!b)return;b.disabled=!selectedServiceStatus().open||unavailableItems()||!cashChangeQuote(total(),form.cashTendered,pay).valid||sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
+function refreshSend(){var b=$('send');if(!b)return;b.disabled=!serviceAvailable(type)||unavailableItems()||!cashChangeQuote(total(),form.cashTendered,pay).valid||sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
 function addressFallback(visible){var b=document.querySelector('[data-delivery-search]');if(b){b.hidden=!visible;b.style.display=visible?'inline-flex':'none';}}
 function suggest(v,automatic){clearTimeout(sugTimer);if(addressAbort)addressAbort.abort();addressAbort=new AbortController();var signal=addressAbort.signal,generation=++addressGeneration;sugs=[];renderSugs();addressFallback(false);if($('err'))$('err').textContent='';if(!v||v.length<4||automatic&&!/\d/.test(v))return;if($('sugs'))$('sugs').innerHTML='<p role="status">Buscando dirección…</p>';sugTimer=setTimeout(function(){
   var near=MENU.delivery&&MENU.delivery.lat!=null?'&viewbox='+[MENU.delivery.lng-0.4,MENU.delivery.lat+0.4,MENU.delivery.lng+0.4,MENU.delivery.lat-0.4].join(',')+'&bounded=0':'';
@@ -587,7 +616,7 @@ document.addEventListener('click',function(e){document.querySelectorAll('.snav-m
 document.addEventListener('input',function(e){if(e.target.id==='catalog-search'&&MENU&&MENU.config.enabled!==false){catalogQuery=e.target.value;renderCatalog();}});
 document.addEventListener('click',function(e){
   var t=e.target.closest('[data-start-checkout],[data-cat],[data-inc],[data-dec],[data-remove],[data-checkout-step],[data-type],[data-sug],[data-close],[data-delivery-search],[data-request-delivery],[data-refresh-delivery],#send');if(!t)return;
-  if(t.hasAttribute('data-start-checkout')){if(!lines().length||unavailableItems())return;step='details';sheet();showSheet();}
+  if(t.hasAttribute('data-start-checkout')){if(!lines().length||unavailableItems())return;if(!$('ov').classList.contains('on'))serviceSelectionManual=false;step='details';sheet();showSheet();}
   else if(t.dataset.cat!==undefined){activeCat=t.dataset.cat;render();var selectedCategory=Array.from($('cats').querySelectorAll('[data-cat]')).find(function(b){return b.dataset.cat===activeCat});if(selectedCategory)selectedCategory.focus({preventScroll:true});if(document.body.classList.contains('view-order')){try{history.replaceState(null,'',location.pathname+location.search+'#pedido'+(activeCat==='all'?'':'/'+encodeURIComponent(activeCat)));}catch(err){/* vista previa */}}}
   else if(t.dataset.inc!==undefined)change(t.dataset.inc,1);
   else if(t.dataset.dec!==undefined)change(t.dataset.dec,-1);
@@ -596,7 +625,7 @@ document.addEventListener('click',function(e){
   else if(t.hasAttribute('data-delivery-search')){suggest(form.address);}
   else if(t.hasAttribute('data-request-delivery')){requestDeliveryApproval();}
   else if(t.hasAttribute('data-refresh-delivery')){refreshDeliveryRoute();}
-  else if(t.dataset.type!==undefined){type=t.dataset.type;recalcDelivery();sheet();}
+  else if(t.dataset.type!==undefined){if(!serviceAvailable(t.dataset.type))return;type=t.dataset.type;serviceSelectionManual=true;recalcDelivery();sheet();}
   else if(t.dataset.sug!==undefined)pickSug(+t.dataset.sug);
   else if(t.hasAttribute('data-close'))closeSheet();
   else if(t.id==='send')send();
