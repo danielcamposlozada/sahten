@@ -66,7 +66,7 @@ export function installPromotionsEditor(w=window) {
     root.querySelectorAll('[data-field]').forEach(el=>el.addEventListener('change',()=>{
       if(!canEdit)return;const key=el.dataset.field,value=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;
       if(!c)return;
-      if(key==='name'||key==='extraPercent'||key==='enabled')c[key]=value;
+      if(key==='name'||key==='extraPercent'||key==='enabled')c[key]=key==='extraPercent'?Math.max(0,Math.min(20,value)):value;
       else if(key==='scheduleType')c.schedule={type:value,...(value==='weekly'?{weekdays:[1,2,3]}:value==='dates'?{dates:[]}:{})};
       else if(key==='dates')c.schedule.dates=value.split(',').map(s=>s.trim()).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s));
       else if(key==='weekdays')c.schedule.weekdays=value.split(',').map(Number).filter(n=>n>=0&&n<=6);
@@ -102,12 +102,12 @@ export function installPromotionsEditor(w=window) {
     const disabled=canEdit?'':'disabled';
     return '<div class="promo-split"><section class="promo-card"><div class="promo-row"><h3>Editor de campañas</h3><button type="button" data-promo-new '+disabled+'>+ Nueva</button></div>'
       +'<label class="promo-field"><span>Campaña</span><select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
-      +'<div class="promo-grid">'+formField('promo-title','Nombre',c.name)+'<label class="promo-field"><span>Tipo de calendario</span><select data-field="scheduleType" '+disabled+'>'+[['weekly','Semanal'],['central_weekends','2° y 3° viernes y sábado'],['dates','Fechas específicas'],['always','Siempre']].map(([v,t])=>'<option value="'+v+'" '+(c.schedule?.type===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
-      +'<input data-field="name" hidden value="'+esc(c.name)+'">' // input corrected below in listener
-      + (c.schedule?.type==='weekly'?formField('promo-week','Días de semana (0=domingo, 1=lunes)',(c.schedule.weekdays||[]).join(',')):'')
-      + (c.schedule?.type==='dates'?formField('promo-dates','Fechas (AAAA-MM-DD, separadas por comas)',(c.schedule.dates||[]).join(',')):'')
-      +'<div class="promo-grid">'+formField('promo-start','Desde (opcional)',c.schedule?.from||'','date')+formField('promo-end','Hasta (opcional)',c.schedule?.until||'','date')+'</div>'
-      +'<div class="promo-grid">'+formField('promo-extra','Puntos de descuento adicionales',c.extraPercent,'number','min="0" max="20" step="1"')
+      +'<div class="promo-grid">'+formField('promo-title','Nombre',c.name,'text','data-field="name" '+disabled)+'<label class="promo-field"><span>Tipo de calendario</span><select data-field="scheduleType" '+disabled+'>'+[['weekly','Semanal'],['central_weekends','2° y 3° viernes y sábado'],['dates','Fechas específicas'],['always','Siempre']].map(([v,t])=>'<option value="'+v+'" '+(c.schedule?.type===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
+      
+      + (c.schedule?.type==='weekly'?formField('promo-week','Días de semana (0=domingo, 1=lunes)',(c.schedule.weekdays||[]).join(','),'text','data-field="weekdays" '+disabled):'')
+      + (c.schedule?.type==='dates'?formField('promo-dates','Fechas (AAAA-MM-DD, separadas por comas)',(c.schedule.dates||[]).join(','),'text','data-field="dates" '+disabled):'')
+      +'<div class="promo-grid">'+formField('promo-start','Desde (opcional)',c.schedule?.from||'','date','data-field="from" '+disabled)+formField('promo-end','Hasta (opcional)',c.schedule?.until||'','date','data-field="until" '+disabled)+'</div>'
+      +'<div class="promo-grid">'+formField('promo-extra','Puntos de descuento adicionales',c.extraPercent,'number','min="0" max="20" step="1" data-field="extraPercent" '+disabled)
       +'<label class="promo-field"><span>Habilitar en calendario</span><input data-field="enabled" type="checkbox" '+(c.enabled?'checked':'')+' '+disabled+'></label></div>'
       +'<h4>Productos participantes</h4><div class="promo-choices">'+catalog(w).map(p=>'<label class="promo-checkbox"><input data-product="'+esc(p.id)+'" type="checkbox" '+((c.productIds||[]).includes(p.id)?'checked':'')+' '+disabled+'><span>'+esc(p.name)+'</span></label>').join('')+'</div>'
       +'<h4>Canales</h4><div class="promo-inline">'+checkedSelect(options,c.channels,'channel')+'</div></section>'
