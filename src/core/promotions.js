@@ -140,7 +140,23 @@ export function quotePromotions({
       if(!entry || !eligibleLine(promotion,entry,details))continue;
       const current=breakdown.find(l=>l.productId===entry.productId);
       if(!current || current.appliedPromotionId || entry.qty!==1)continue;
-      const extra=fromCents(amount(entry.unitCents,promotion.extraPercent));
+      // Escala Fatay: el mínimo se calcula sobre los platos disparadores
+      // ya cotizados por servidor (NETO, sin Fatay, envío ni otros complementos).
+      // El descuento objetivo es TOTAL en todos los medios de pago, no +30pp.
+      let extra=fromCents(amount(entry.unitCents,promotion.extraPercent));
+      if(Array.isArray(promotion.discountTiers) && promotion.discountTiers.length){
+        const qualifiedNet=breakdown.filter(l=>l.productId!==entry.productId
+          && promotion.triggerProductIds?.includes(l.productId))
+          .reduce((sum,l)=>sum+toCents(l.net),0);
+        const tier=promotion.discountTiers.filter(t=>
+          Number.isFinite(Number(t.minEligibleNetSubtotal))
+          && qualifiedNet>=toCents(t.minEligibleNetSubtotal)
+          && Number(t.totalDiscountPercent)>0 && Number(t.totalDiscountPercent)<=100
+        ).sort((a,b)=>Number(b.minEligibleNetSubtotal)-Number(a.minEligibleNetSubtotal))[0];
+        if(!tier)continue;
+        const targetTotal=amount(entry.unitCents,tier.totalDiscountPercent);
+        extra=fromCents(Math.max(0,targetTotal-toCents(current.discount)));
+      }
       const verified=assessIncrementalUpsell({
         lines:details,currentLines:breakdown,upsell:promotion,productId:entry.productId,
         proposedExtra:extra,methodCommissionPercent:commissionPercent,
