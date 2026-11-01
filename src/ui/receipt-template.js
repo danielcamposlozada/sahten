@@ -1,5 +1,13 @@
 import { deliveryAddressLines, cashChangeQuote } from '../core/order-details.js';
 const escapeReceipt = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function promotionalFooter(snapshot,esc) {
+  if(!snapshot||!['campaign','coupon'].includes(snapshot.kind))return '';
+  const headline=esc(snapshot.headline||'Beneficios SAHTEN');
+  const detail=snapshot.kind==='coupon'
+    ? '<p class="receipt-promocode">'+esc(snapshot.code||'')+'</p><p>'+esc(snapshot.label||'')+'</p>'
+    : snapshot.startsOn?'<p>Disponible desde '+esc(snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)+'/'+snapshot.startsOn.slice(0,4))+'</p>':'';
+  return '<section class="receipt-promo"><strong>'+headline+'</strong>'+detail+'<p>Consultá las condiciones en SAHTEN.</p></section>';
+}
 /** El motor imprime importes confirmados; no calcula ni otorga promociones.
  * Solo desglosa las cifras del snapshot cuando cuadran exactamente con el
  * descuento recotizado. Si no coinciden, conserva el total original. */
@@ -62,9 +70,9 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
-${Number(order.discountAmount ?? order.discount)>0?row('Subtotal',money(order.subtotal))+(function(){const parts=receiptDiscountLines(order);if(!parts)return row(order.paymentDiscount?'Dto. '+order.paymentDiscount.percent+' %':order.discountName || 'Descuento','−'+money(order.discountAmount ?? order.discount));let v='';if(parts.paymentAmount)v+=row('Beneficio por pago'+(order.promotionSnapshot?.paymentPercent?' '+order.promotionSnapshot.paymentPercent+' %':''),'−'+money(parts.paymentAmount));for(const extra of parts.extras)v+=row('Descuento en '+extra.name,'−'+money(extra.amount));return v;})():''}
+${Number(order.discountAmount ?? order.discount)>0?row('Subtotal',money(order.subtotal))+(function(){const parts=receiptDiscountLines(order);if(!parts)return row(order.paymentDiscount?'Dto. '+order.paymentDiscount.percent+' %':order.discountName || 'Descuento','−'+money(order.discountAmount ?? order.discount));let v='';if(parts.paymentAmount)v+=row('Beneficio por pago'+(order.promotionSnapshot?.paymentPercent?' '+order.promotionSnapshot.paymentPercent+' %':''),'−'+money(parts.paymentAmount));for(const extra of parts.extras)v+=row((extra.kind==='upsell'?'Complemento: ':'Promo: ')+extra.name,'−'+money(extra.amount));return v;})():''}
 ${delivery?row('Envío',order.shipping?money(order.shipping):'Gratis'):''}${order.deliverySnapshot?.discount>0?row('Ahorro envío',money(order.deliverySnapshot.discount)):''}${row('TOTAL',money(order.total),'total-row')}
 ${order.paymentName || order.paymentMethod?'<div class="payment">'+esc(order.paymentName || ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago'})[order.paymentMethod] || order.paymentMethod)+'</div>':''}
 ${cash.specified && cash.valid?row('Paga con',money(cash.tendered))+row('Vuelto',money(cash.change)):''}
-${order.notes?'<div class="notes">Nota: '+esc(order.notes)+'</div>':''}<div class="footer">Gracias por tu compra</div>${reviewHtml}</body></html>`;
+${order.notes?'<div class="notes">Nota: '+esc(order.notes)+'</div>':''}<div class="footer">Gracias por tu compra</div>${reviewHtml}${promotionalFooter(order.promotionTicketSnapshot,esc)}</body></html>`;
 }
