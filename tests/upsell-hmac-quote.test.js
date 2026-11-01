@@ -73,6 +73,19 @@ describe('Preflight HMAC y canje atómico sin publicar promociones',()=>{
  it('si Supabase no confirma el nonce, no existe oferta canjeada',async()=>{
   const p=await preflightUpsell(setup());
   await expect(acceptPreflightUpsell(setup({order:selected(),token:p.token,
-   requestId,expectedTotal:p.orderTotal,consumeNonce:async()=>false}))).rejects.toThrow('upsell_token_already_used');
+   requestId,expectedTotal:p.orderTotal,consumeNonce:async()=>false}))).rejects.toMatchObject({code:'upsell_token_already_used'});
  });
+ it('Mercado Pago exige comisión verificada y aplica el total cotizado por servidor',async()=>{
+  const mpMenu={...menu,payments:{...menu.payments,methods:{...menu.payments.methods,mercadopago:true}}};
+  const order={...base,paymentMethod:'mercadopago'};
+  await expect(preflightUpsell(setup({menu:mpMenu,order}))).rejects.toMatchObject({code:'upsell_payment_fee_not_verified'});
+  const reviewed={...costs,trustedPaymentFeePercent:7.4};
+  const result=await preflightUpsell(setup({menu:mpMenu,order,costs:reviewed}));
+  expect(result.paymentMethod).toBe('mercadopago');
+  expect(result.priceAfter).toBe(4680);
+  const ok=await acceptPreflightUpsell(setup({menu:mpMenu,order:{...order,items:[...base.items,{productId:'fatay',qty:1}]},
+    costs:reviewed,token:result.token,requestId,expectedTotal:result.orderTotal,consumeNonce:async()=>true}));
+  expect(ok.total).toBe(result.orderTotal);
+ });
+
 });
