@@ -27,7 +27,7 @@ describe('integración v1: orden y ticket',()=>{
     expect(o.total).toBe(15165);expect(o.promotionSnapshot).toBeUndefined();
   });
   it('el motor no imprime segunda comanda y deja Google Reviews primero',()=>{
-    const cfg=initialPromotionConfig();cfg.enabled=true;cfg.ticket.enabled=true;cfg.campaigns[0].advertising.enabled=true;
+    const cfg=initialPromotionConfig();cfg.enabled=true;cfg.ticket.enabled=true;cfg.campaigns[0].enabled=true;cfg.campaigns[0].advertising.enabled=true;
     const snapshot=selectTicketAdvertisement(cfg,{now:new Date(at),channel:'mostrador'});
     const html=buildReceipt({num:55,source:'pickup',createdAt:at,customerName:'Cliente',items:[{qty:1,name:'Fatay',lineTotal:16850}],
       subtotal:16850,discountAmount:1685,total:15165,notes:'Para llevar',
