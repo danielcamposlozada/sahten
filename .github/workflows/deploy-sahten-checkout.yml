@@ -40,12 +40,12 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const r=JSON.parse(fs.readFileSync('sahten-export/_deployment-report.json'));
-          if(r.products!==38||r.beverages!==11||r.promotionsEnabled||!r.checkoutAvailabilityFix||
+          if(r.products!==54||r.beverages!==11||r.remotePhotos<49||r.promotionsEnabled||!r.checkoutAvailabilityFix||
              r.immutableFilesPreserved.length!==16)throw new Error('Unsafe package');
           for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg']){
             if(!fs.statSync('sahten-export/'+p).size)throw new Error('Empty '+p);
           }
-          console.log('Safe checkout package checked:',r.products,'products /',r.beverages,'drinks');
+          console.log('Safe checkout package checked:',r.products,'products /',r.beverages,'drinks /',r.remotePhotos,'remote photos');
           NODE
       - uses: actions/upload-artifact@v4
         with:
@@ -95,8 +95,8 @@ jobs:
           for i in {1..6}; do
             if curl --fail --silent --show-error -H "Cache-Control: no-cache" \
                  "https://sahten.online/menu.json?verify=$GITHUB_RUN_ID-$i" \
-                 | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const m=JSON.parse(s); if(m.products.length!==38||m.products.filter(p=>p.category==='Bebidas').length!==11||m.promotions?.enabled===true||Number(m.payments.benefit.percent)!==10)process.exit(1)})"; then
-              echo "Verificado: 38 productos, 11 bebidas, promociones apagadas."
+                 | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const m=JSON.parse(s); if(m.products.length!==54||m.products.filter(p=>p.category==='Bebidas').length!==11||m.promotions?.enabled===true||Number(m.payments.benefit.percent)!==10)process.exit(1)})"; then
+              echo "Verificado: 54 productos, 11 bebidas, promociones apagadas."
               exit 0
             fi
             sleep 5
