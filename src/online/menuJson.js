@@ -27,7 +27,7 @@ export function publishableProducts(s, config = {}) {
  * s = estado del núcleo; menuConfig / tienda = secciones online del proyecto; images = { productId: dataURL }.
  * Las imágenes no van adentro: cada una se publica como archivo en img/<id>.jpg y acá solo se referencia.
  */
-export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, quoteIds = {}, now = new Date() } = {}) {
+export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, quoteIds = {}, promotions = null, now = new Date() } = {}) {
   const products = publishableProducts(s, menuConfig);
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
@@ -61,6 +61,13 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
     },
     products: items,
+    // No se publican costos, identificadores de clientes ni cupones privados.
+    promotions: promotions?.enabled === true ? {enabled:true,version:1,
+      paymentPercent: Math.min(100,Math.max(0,Number(promotions.paymentPercent)||10)),
+      campaigns:(promotions.campaigns||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,channels:c.channels,productIds:c.productIds,schedule:c.schedule})),
+      upsells:(promotions.upsells||[]).filter(c=>c.enabled).map(c=>({id:c.id,name:c.name,kind:c.kind,enabled:true,extraPercent:c.extraPercent,priority:c.priority,productIds:c.productIds,maxUnits:c.maxUnits,triggerProductIds:c.triggerProductIds,suppressIfPresent:c.suppressIfPresent})),
+      // No se expone el umbral de rentabilidad: la validación de costos ocurre en la administración.
+    } : {enabled:false},
     site,
     delivery: {
       enabled: tienda.deliveryEnabled !== false,
