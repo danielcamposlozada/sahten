@@ -27,5 +27,5 @@ jobs:
             echo "::error::NO EJECUTADO: configurar el secreto MP_SANDBOX_ACCESS_TOKEN (test seller) en GitHub Actions. No usar el token de producción ni el de Supabase."
             exit 1
           fi
-      - name: API real: validar vendedor ficticio, crear y releer preferencia sin procesar pagos
+      - name: "API real: validar vendedor ficticio, crear y releer preferencia sin procesar pagos"
         run: node scripts/tests/mp-real-sandbox-smoke.mjs
