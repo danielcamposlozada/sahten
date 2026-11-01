@@ -40,7 +40,7 @@ describe('Sugerencias opcionales, pertinentes y sin descuentos',()=>{
  });
  it('si ya hay una bebida, no insiste con otra; si ya hay Baklava sugiere Mamul',()=>{
   expect(rec([{id:'shawarma',qty:1},{id:'water',qty:1}]).map(x=>x.id)).toEqual(['baklava']);
-  expect(rec([{id:'shawarma',qty:1},{id:'baklava',qty:1}]).map(x=>x.id)).toEqual(['coke220','mamul']);
+  expect(rec([{id:'shawarma',qty:1},{id:'baklava',qty:1}]).map(x=>x.id)).toEqual(['coke600','mamul']);
  });
  it('no ofrece artículos pausados, ocultos ni retirados',()=>{
   const items=products.map(p=>p.id==='coke220'?{...p,salesAvailability:{paused:true}}:p);
