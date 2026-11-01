@@ -116,3 +116,29 @@ REVOKE ALL ON FUNCTION public.sahten_coupon_backend(text,jsonb) FROM PUBLIC,anon
 GRANT EXECUTE ON FUNCTION public.sahten_coupon_backend(text,jsonb) TO service_role;
 COMMENT ON FUNCTION public.sahten_coupon_backend(text,jsonb)
   IS 'Server-only coupon ledger. Caller must perform store admin/customer identity authorization before invoke.';
+
+-- Internal cost snapshot for server-side margin guard. Never exposed to anon/authenticated.
+CREATE OR REPLACE FUNCTION public.sahten_promotion_costs(sid uuid, channel text DEFAULT 'mostrador')
+RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path=pg_catalog,public,sahten_private,pg_temp
+AS $$
+ WITH st AS (
+  SELECT project_id FROM public.stores WHERE id=sid
+ ),
+ catalog AS (
+  SELECT jsonb_array_elements(pr.data#>'{catalog,productos}') p
+  FROM public.projects pr JOIN st ON st.project_id=pr.id
+ ), priced AS (
+  SELECT p->>'id' id,
+   COALESCE(NULLIF(p#>>ARRAY['pricingPolicies',channel,'variableCost'],''),p#>>'{pricingPolicies,mostrador,variableCost}') variable,
+   COALESCE(NULLIF(p#>>ARRAY['pricingPolicies',channel,'fixedCost'],''),p#>>'{pricingPolicies,mostrador,fixedCost}') fixed
+  FROM catalog
+ ) SELECT coalesce(jsonb_object_agg(id, (variable::numeric+fixed::numeric))
+   FILTER (WHERE variable IS NOT NULL AND fixed IS NOT NULL), '{}'::jsonb)
+ FROM priced;
+$$;
+REVOKE ALL ON FUNCTION public.sahten_promotion_costs(uuid,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.sahten_promotion_costs(uuid,text) TO service_role;
+COMMENT ON FUNCTION public.sahten_promotion_costs(uuid,text)
+ IS 'Service-only expense snapshot. Never embed its result in public menu.json.';
