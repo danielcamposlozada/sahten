@@ -55,6 +55,14 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   if (validateCustomer && requireCustomer && (name.length < 2 || phone.replace(/\D/g, '').length < 7)) fail('Completá nombre y teléfono.');
   const paymentPolicy=menu.payments?.benefit||{};
   const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
+  // Con campañas bajo guarda HMAC, una comisión MP desconocida impide
+  // validar el margen. No inferir 10% ni convertir NaN en comisión 0%.
+  if(menu.promotions?.enabled===true&&menu.promotions?.upsellGuardRequired===true&&method==='mercadopago'){
+    const fee=trustedUpsellSelection?.verified===true
+      ? trustedPaymentFeePercent : menu.promotions.checkoutProFeePercent;
+    if(typeof fee!=='number'||!Number.isFinite(fee)||fee<0||fee>100)
+      fail('Mercado Pago requiere una comisión aprobada para activar ofertas.',409,'upsell_payment_fee_not_verified');
+  }
   const promotion=menu.promotions?.enabled===true ? quotePromotions({
     lines:items,method,channel:salesChannel,now:new Date(now),
     config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,upsellGuardRequired:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
