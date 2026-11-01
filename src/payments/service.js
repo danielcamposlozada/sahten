@@ -84,6 +84,8 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         // Cotización opcional; nunca modificar datos de cliente o carrito aquí.
         // Cualquier gasto sin revisión bloquea el token y el descuento.
         const costs=await repo.upsellEconomics(sid,'mostrador');
+        if(costs?.verified!==true||costs.trustedOrderCosts?.verified!==true)
+          fail('La oferta requiere costos adicionales revisados por el negocio.',409,'upsell_costs_not_verified');
         const delivery=orderInput.source==='delivery'
           ? await resolveDelivery(sid,menu,orderInput) : {};
         const offer=await prepareUpsellOffer({repo,storeId:sid,menu,order:orderInput,
