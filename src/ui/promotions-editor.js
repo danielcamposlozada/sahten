@@ -205,11 +205,22 @@ export function installPromotionsEditor(w=window) {
       +'<p>Precio de lista de referencia: '+fmt(p.referenceListPrice)+' · Sin descuento adicional: solo beneficio de pago habitual.</p>'
       +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')
       +' · costo de 4 unidades y margen incremental pendientes de validación</p></article>').join('');
-    const dessert=extra.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
-      +'<p>Producto: '+esc((p.productIds||[]).map(lookup).join(', '))
-      +' · Máximo '+esc(p.maxUnits||1)+' unidad con +'+esc(p.extraPercent)+' puntos adicionales.</p>'
-      +'<p>La oferta de 20% total en Baklava requiere costo, comisión y margen confirmados antes de activarse.</p>'
-      +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')+'</p></article>').join('');
+    const dessert=extra.map(p=>{
+      const details=p.historicalUnitEconomics||{};
+      const totalCashPercent=Number(details.proposedTotalCashDiscountPct??(Number(state.paymentPercent||10)+Number(p.extraPercent||0)));
+      const priced=Number(details.listPrice)>0
+        ?'<p>Precio de referencia: '+fmt(details.listPrice)
+          +' · Con efectivo/transferencia: '+fmt(details.listPrice*(1-totalCashPercent/100))
+          +' ('+esc(totalCashPercent)+'% total, solo si el servidor lo aprueba).</p>':'';
+      return '<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
+        +'<p>Producto: '+esc((p.productIds||[]).map(lookup).join(', '))
+        +' · Máximo '+esc(p.maxUnits||1)+' unidad · +'+esc(p.extraPercent)+' puntos adicionales.</p>'
+        +priced
+        +'<p><strong>Análisis económico:</strong> costo directo incremental + margen del pedido completo; '
+        +'no cargar automáticamente otra vez todos los gastos fijos mensuales.</p>'
+        +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')
+        +' · control de rentabilidad y pago en servidor pendiente</p></article>';
+    }).join('');
     const crossSelling=cross.map(p=>'<article class="promo-note"><h4>'+esc(p.name)+'</h4>'
       +'<p>Producto: '+esc(lookup(p.productId))+' · Sin descuento adicional; únicamente corresponde el beneficio por forma de pago.</p>'
       +'<p><strong>Estado:</strong> '+(p.enabled?'Configurada':'Desactivada')+'</p></article>').join('');
@@ -220,7 +231,10 @@ export function installPromotionsEditor(w=window) {
       +'<p>Estas propuestas están guardadas en el proyecto. No generan ofertas ni pedidos por sí solas. '
       +'Los controles operativos se habilitan después de validar servidor, cobros y margen.</p>'
       +'<h4>Reemplazo de combo</h4>'+(upgrades||'<p>Sin reemplazos configurados.</p>')
-      +'<h4>Postre con beneficio</h4>'+(dessert||'<p>Sin descuentos de postre.</p>')
+      +'<h4>Upselling · algo salado o dulce</h4>'
+      +'<p>Mostrar como máximo dos opciones por carrito y aplicar solo un complemento con descuento; '
+      +'todas las ofertas están desactivadas hasta validar costo incremental, margen del pedido y cobro.</p>'
+      +(dessert||'<p>Sin descuentos de complementos.</p>')
       +'<h4>Venta cruzada sin nuevos descuentos</h4>'+(crossSelling||'<p>Sin sugerencias.</p>')
       +shipping+'</section>';
   }
