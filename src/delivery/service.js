@@ -73,6 +73,8 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
      if(operator||b.pos===true)fail('Las ofertas del mostrador se controlan en el sistema de caja.',409);
      if(ctx.menu.promotions?.enabled!==true)fail('No hay ofertas adicionales activadas.',409,'promotions_off');
      const economics=await repo.upsellEconomics(sid,'mostrador');
+     if(economics?.verified!==true||economics.trustedOrderCosts?.verified!==true)
+       fail('La oferta requiere costos adicionales revisados por el negocio.',409,'upsell_costs_not_verified');
      const offer=await prepareUpsellOffer({repo,storeId:sid,menu:ctx.menu,order:input,
        productId:String(b.productId||''),promotionId:String(b.promotionId||''),
        costs:economics,now:ctx.now,route:ctx.route,authorization:ctx.authorization});
