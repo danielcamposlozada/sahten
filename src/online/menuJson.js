@@ -66,7 +66,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     cartRecommendations: promotions?.cartRecommendationPolicy?.enabled === true
       ? {
         enabled:true,
-        beverageContexts:(promotions.beverageUpsellPolicy?.contexts||[]).map(g=>({
+        beverageContexts:(promotions.beverageUpsellPolicy?.enabled===true?promotions.beverageUpsellPolicy.contexts||[]:[]).map(g=>({
           id:txt(g.id,80),name:txt(g.name,90),priority:Number(g.priority)||0,
           triggerProductIds:(g.triggerProductIds||[]).filter(id=>items.some(p=>p.id===id)),
           options:(g.options||[]).filter(id=>items.some(p=>p.id===id&&p.category==='Bebidas')),
