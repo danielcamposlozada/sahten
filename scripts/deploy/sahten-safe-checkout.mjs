@@ -46,7 +46,13 @@ function check(menu,base){
     throw new Error('Pinned menu missing Supabase public connection');
   if(base.products?.length!==38)throw new Error('Pinned menu has changed: requires human review');
   if(!base.site?.enabled || !base.site?.orderPage)throw new Error('Original site/page structure is not available');
-  if(menu.products?.length!==38)throw new Error('Public product count mismatch: expected 38');
+  // Snapshot vivo comprobado el 01/11: 54 SKU, 11 bebidas, 49 fotos remotas.
+  // La foto original del sitio sigue fijada a 38 productos; los 16 SKU nuevos
+  // se agregan sin eliminar ninguno de esos 38.
+  if(menu.products?.length!==54)throw new Error('Public product count mismatch: expected 54');
+  const photos=menu.products.filter(p=>typeof p.image==='string'&&p.image.startsWith('https://'));
+  if(photos.length<49)throw new Error('Las imágenes nuevas no están disponibles: abortar para no degradar el sitio');
+  if(menu.products.some(p=>p.image&&!/^https:\/\//.test(p.image)))throw new Error('Imagen local inesperada: requiere empaquetado específico');
   const drinks=menu.products.filter(p=>p.category==='Bebidas');
   if(drinks.length!==11)throw new Error('Expected eleven published drinks');
   const price={2500:0,2000:0,1400:0};
@@ -121,6 +127,7 @@ async function main(){
     immutableFilesPreserved:PUBLISHED_FILES.filter(x=>!['/index.html','/pedir/index.html','/menu.json'].includes(x)),
     generated:['/index.html','/pedir/index.html','/menu.json'],
     products:built.menu.products.length,
+    remotePhotos:built.menu.products.filter(p=>p.image?.startsWith('https://')).length,
     beverages:built.menu.products.filter(p=>p.category==='Bebidas').length,
     promotionsEnabled:built.menu.promotions.enabled,
     originalBrandingPreserved:true,
