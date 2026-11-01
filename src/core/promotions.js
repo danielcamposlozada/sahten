@@ -98,24 +98,26 @@ export function quotePromotions({
         id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Number(coupon.extraPercent)||0,priority:1000,kind:'coupon'
       });
     }
-    // El mayor beneficio gana: nunca sumar campaña pública, upselling y cupón.
-    selections.sort((a,b)=>b.extraPercent-a.extraPercent || b.priority-a.priority);
-    let winner=selections[0]||null;
-    let extra=winner?amount(winner.maxUnits?Math.min(l.qty,winner.maxUnits)*l.unitCents:base,winner.extraPercent):0;
-    // Cupones: tope global por pedido, no por línea.
-    if(winner?.kind==='coupon') {extra=Math.min(extra,remainingCoupon.cents);remainingCoupon.cents-=extra;}
+    // Elegir la mayor rebaja REAL en esta línea (incluidos topes y márgenes).
     const payment=amount(base,paymentPercent);
-    let lineDiscount=Math.min(base,payment+extra);
     const cost=trustedCosts[l.productId];
     const known=cost!=null && Number.isFinite(Number(cost)) && Number(cost)>=0;
-    if(winner && config.requireVerifiedCosts && !known) {winner=null;extra=0;lineDiscount=payment;}
-    const minMargin=Number(winner?.minMarginPct??config.minMarginPct);
-    const fee=amount(base-lineDiscount,commissionPercent);
-    if(winner && known && Number.isFinite(minMargin) && minMargin>0
-      && base-lineDiscount-fee>0
-      && (base-lineDiscount-fee-toCents(cost)*l.qty)/(base-lineDiscount-fee)*100 < minMargin) {
-      winner=null;extra=0;lineDiscount=payment;
-    }
+    const candidates=selections.map(candidate=>{
+      const part=candidate.maxUnits?Math.min(l.qty,candidate.maxUnits)*l.unitCents:base;
+      const proposed=amount(part,candidate.extraPercent);
+      const extra=candidate.kind==='coupon'?Math.min(proposed,remainingCoupon.cents):proposed;
+      const discount=Math.min(base,payment+extra);
+      const fee=amount(base-discount,commissionPercent);
+      const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
+      if(config.requireVerifiedCosts&&!known)return null;
+      if(known&&Number.isFinite(minMargin)&&minMargin>0&&base-discount-fee>0&&
+        (base-discount-fee-toCents(cost)*l.qty)/(base-discount-fee)*100<minMargin)return null;
+      return {candidate,extra,discount};
+    }).filter(Boolean).sort((a,b)=>b.discount-a.discount||b.candidate.priority-a.candidate.priority);
+    const chosen=candidates[0]||null, winner=chosen?.candidate||null;
+    const extra=chosen?.extra||0;
+    const lineDiscount=chosen?.discount??payment;
+    if(winner?.kind==='coupon')remainingCoupon.cents-=extra;
     if(winner)used.add(winner.id);
     return {productId:l.productId,qty:l.qty,base:fromCents(base),paymentDiscount:fromCents(payment),
       promotionDiscount:fromCents(extra),discount:fromCents(lineDiscount),
