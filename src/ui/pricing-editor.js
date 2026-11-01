@@ -58,9 +58,9 @@ export function installPricing(w = window) {
       const fee = price * channelCommission(state, p, channel);
       const remaining = price - variable - fixed - fee;
       const result = box.querySelector('[data-price-preview]');
-      const pinned = draft().price != null;
-      result.innerHTML = `<div class="pricing-result-title">Resultado por unidad · ${pinned ? 'precio fijado' : 'precio automático'}</div><dl class="pricing-breakdown"><div><dt>Precio de venta</dt><dd data-result="price">${money(price)}</dd></div><div><dt>− Costo variable</dt><dd data-result="variable">${money(variable)}</dd></div><div><dt>− Gasto fijo asignado</dt><dd data-result="fixed">${money(fixed)}</dd></div><div><dt>− Comisión estimada (${(channelCommission(state, p, channel) * 100).toFixed(2)} %)</dt><dd data-result="fee">${money(fee)}</dd></div><div class="pricing-remainder"><dt>Resto después de costos</dt><dd data-result="remaining">${money(remaining)} <small>(${price ? (remaining / price * 100).toFixed(1) : '0'} %)</small></dd></div></dl><p data-formula-note>${pinned ? 'El precio está fijado: cambiar costos o comisión modifica el resto disponible, sin cambiar el precio de venta.' : 'El precio se recalcula con los costos asignados y las reglas de este canal. La comisión estimada se descuenta del ingreso; no aumenta el precio.'}</p>${remaining < 0 ? '<span role="status">El precio no cubre los costos asignados.</span>' : ''}`;
-      box.querySelector('[data-live-result]').innerHTML = `<span><small>Precio ${pinned ? 'fijado' : 'automático'}</small><strong>${money(price)}</strong></span><span><small>Resto por unidad</small><strong>${money(remaining)}</strong></span>`;
+      const pinned = draft().price != null, finalCommercial = product.priceTargets?.[channel] != null;
+      result.innerHTML = `<div class="pricing-result-title">Resultado por unidad · ${finalCommercial ? 'precio final comercial' : pinned ? 'precio fijado' : 'precio automático'}</div><dl class="pricing-breakdown"><div><dt>Precio de venta</dt><dd data-result="price">${money(price)}</dd></div><div><dt>− Costo variable</dt><dd data-result="variable">${money(variable)}</dd></div><div><dt>− Gasto fijo asignado</dt><dd data-result="fixed">${money(fixed)}</dd></div><div><dt>− Comisión estimada (${(channelCommission(state, p, channel) * 100).toFixed(2)} %)</dt><dd data-result="fee">${money(fee)}</dd></div><div class="pricing-remainder"><dt>Resto después de costos</dt><dd data-result="remaining">${money(remaining)} <small>(${price ? (remaining / price * 100).toFixed(1) : '0'} %)</small></dd></div></dl><p data-formula-note>${pinned ? 'El precio está fijado: cambiar costos o comisión modifica el resto disponible, sin cambiar el precio de venta.' : 'El precio se recalcula con los costos asignados y las reglas de este canal. La comisión estimada se descuenta del ingreso; no aumenta el precio.'}</p>${remaining < 0 ? '<span role="status">El precio no cubre los costos asignados.</span>' : ''}`;
+      box.querySelector('[data-live-result]').innerHTML = `<span><small>Precio ${finalCommercial ? 'final' : pinned ? 'fijado' : 'automático'}</small><strong>${money(price)}</strong></span><span><small>Resto por unidad</small><strong>${money(remaining)}</strong></span>`;
       const automatic = automaticValues();
       fields.forEach(([key]) => {
         const input = box.querySelector(`[data-value="${key}"]`), range = box.querySelector(`[data-range="${key}"]`);
@@ -116,7 +116,14 @@ export function installPricing(w = window) {
           // Validar todos los canales antes de modificar el producto vivo.
           for (const [id, data] of Object.entries(drafts)) savePricePolicy(staged, id, data, { now, actor: d.body.dataset.role || 'local', reason: box.querySelector('#pricing-reason').value });
           e.target.disabled = true;
+          if (product.priceTargets) {
+            staged.priceTargets = { ...product.priceTargets };
+            for (const [id, data] of Object.entries(drafts)) {
+              if (staged.priceTargets[id] != null && data.price != null) staged.priceTargets[id] = Math.round(data.price * 100) / 100;
+            }
+          }
           product.pricingPolicies = staged.pricingPolicies; product.pricingHistory = staged.pricingHistory;
+          if (staged.priceTargets) product.priceTargets = staged.priceTargets;
           w.SAHTEN.project.markDirty(); w.scheduleSave(); w.recalcAll();
           if (w.currentPanel === 'menuonline') w.renderMenuOnline?.();
           if (w.currentPanel === 'mostrador') w.renderMostrador();
