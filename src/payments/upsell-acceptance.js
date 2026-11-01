@@ -5,7 +5,7 @@ const unavailable=(reason='upsell_unavailable')=>{
   throw new PaymentError(reason==='intent_expired'?'La oferta venció. Volvé a elegirla.':
     'La oferta ya no está disponible. Actualizá el carrito.',409,reason);
 };
-function completeContext({menu,order,costs,selection,now,route,authorization}){
+function completeContext({menu,order,costs,selection,now,route,authorization,requireCustomer=false}){
   // El cliente NUNCA decide costos o selección verificada. Sólo el servicio Edge
   // aporta estas propiedades, leídas con privilegios de servidor.
   if(!costs||costs.verified!==true || !costs.trustedEconomics ||
@@ -16,7 +16,9 @@ function completeContext({menu,order,costs,selection,now,route,authorization}){
       !Number.isFinite(costs.trustedPaymentFeePercent) || costs.trustedPaymentFeePercent<0))
     unavailable('upsell_payment_fee_not_verified');
   return {
-    validateCustomer:false,allowOtherPayments:true,requireCustomer:false,now,
+    // Validar HORARIOS, cobertura y costos de envío incluso en la vista previa.
+    // Datos personales del comprador solo se exigen al confirmar el pedido.
+    validateCustomer:true,allowOtherPayments:true,requireCustomer,now,
     ...(route?{route}:{}),...(authorization?{authorization}:{}),
     trustedCosts:costs.trustedCosts,
     trustedEconomics:costs.trustedEconomics,
@@ -81,7 +83,8 @@ export async function validateAcceptedOffer({
     verified=await verifyAcceptedUpsell({record,storeId,menu,order,requestId,now});
   }catch(e){errorAsUnavailable(e);}
   const quoted=quoteOrder(menu,order,completeContext({
-    menu,order,costs,selection:verified.trustedSelection,now,route,authorization
+    menu,order,costs,selection:verified.trustedSelection,now,route,authorization,
+    requireCustomer:commit
   }));
   assertApplied(quoted,verified.trustedSelection.promotionId,verified.trustedSelection.productId);
   if(commit) {
