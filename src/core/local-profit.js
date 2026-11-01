@@ -5,9 +5,57 @@ const localOrigin=o=>['mostrador','menu-online','online','tienda-online'].includ
 const completed=o=>['retirado','entregado','completado','completed','delivered'].includes(String(o?.status||'').toLowerCase());
 const monthKey=(stamp)=>{const d=new Date(stamp);if(!Number.isFinite(d.valueOf()))return null;return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit'}).format(d).replace(/\//g,'-');};
 export function currentLocalMonth(now=new Date()){return monthKey(now);}
+const validMonth=month=>/^(20\d{2})-(0[1-9]|1[0-2])$/.test(String(month));
+export function monthlyGoal(s,month=currentLocalMonth(),now=new Date()){
+  if(!validMonth(month))return null;
+  const goals=s.project?.localProfitGoals;
+  if(goals&&Object.prototype.hasOwnProperty.call(goals,month)){
+    const n=Number(goals[month]);return Number.isFinite(n)&&n>=0?n:null;
+  }
+  // Previous versions stored a single value without a month. It is valid for the
+  // current month ONLY; never reassign that value to historical/future periods.
+  if((!goals||!Object.keys(goals).length)&&month===currentLocalMonth(now)){
+    const n=Number(s.project?.localProfitGoal);
+    return Number.isFinite(n)&&n>0?n:null;
+  }
+  return null;
+}
+export function setMonthlyGoal(s,{month,amount,now=new Date(),actor='admin'}={}){
+  if(!validMonth(month))throw new Error('Mes inválido (AAAA-MM).');
+  if(amount==null||String(amount).trim()==='')throw new Error('Ingresá una meta mensual.');
+  const n=Number(amount);
+  if(!Number.isFinite(n)||n<0||n>100000000000)throw new Error('Meta fuera de rango.');
+  const target=Math.round(n*100)/100;
+  if(!s.project||typeof s.project!=='object')s.project={};
+  s.project.localProfitGoals||={};
+  const previous=monthlyGoal(s,month,now);
+  if(previous===target)return false;
+  s.project.localProfitGoals[month]=target;
+  s.project.localProfitGoalChanges||=[];
+  s.project.localProfitGoalChanges.push({
+    month,before:previous,after:target,at:new Date(now).toISOString(),actor:String(actor).slice(0,48)
+  });
+  // Preserve older versions' field as a compatibility snapshot, but it no longer
+  // controls previous months or new periods.
+  if(month===currentLocalMonth(now))s.project.localProfitGoal=target;
+  return true;
+}
+export function monthlyGoalHistory(s,{now=new Date(),count=12}={}){
+  const month=currentLocalMonth(now);
+  if(!month)return [];
+  const [yy,mm]=month.split('-').map(Number);
+  const months=Math.max(1,Math.min(36,Math.floor(count)));
+  return Array.from({length:months},(_,i)=>{
+    const date=new Date(Date.UTC(yy,mm-1-i,1));
+    const m=date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0');
+    const summary=localMonthlyProfit(s,{month:m,now});
+    return {month:m,goal:monthlyGoal(s,m,now),profit:summary.profit,progressPct:summary.progressPct,
+      covered:summary.covered,missing:summary.missing,orders:summary.orders,complete:summary.complete};
+  });
+}
 export function localMonthlyProfit(s,{month=currentLocalMonth(),now=new Date()}={}){
   const result={month,orders:0,covered:0,missing:0,excluded:0,discountedSales:0,revenue:0,variable:0,fixed:0,commission:0,
-    profit:0,marginPct:null,goal:Number(s.project?.localProfitGoal)||0,daysElapsed:0,daysInMonth:0};
+    profit:0,marginPct:null,goal:monthlyGoal(s,month,now)||0,goalConfigured:monthlyGoal(s,month,now)!==null,daysElapsed:0,daysInMonth:0};
   for(const o of s.orders||[]){
     if(!localOrigin(o)||!completed(o)||monthKey(o.createdAt||o.date)!==month){result.excluded++;continue;}
     result.orders++;const entry=s.saleCosts?.[o.id];
