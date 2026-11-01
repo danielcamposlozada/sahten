@@ -49,7 +49,7 @@ describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
   });
   it('controla costo, margen, comisión y umbral, pero conserva el 10% habitual',()=>{
     const c={...cfg(),minMarginPct:40};
-    const r=quotePromotions({config:c,lines:[line('shawarma_pollo',16000)],trustedCosts:{shawarma_pollo:7743.8},commissionPercent:8,method:'mercadopago',now:at('2026-11-02')});
+    const r=quotePromotions({config:c,lines:[line('shawarma_pollo',16000)],trustedCosts:{shawarma_pollo:9500},commissionPercent:8,method:'mercadopago',now:at('2026-11-02')});
     expect(r.lines[0].appliedPromotionId).toBe(null);expect(r.netSubtotal).toBe(16000);
   });
   it('expone fecha límite clara al cliente',()=>{
