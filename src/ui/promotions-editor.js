@@ -43,6 +43,20 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
   const get=()=>load();
+  let liveState={published:false,campaigns:[]},liveLoaded=false;
+  const liveRevision=id=>liveState.campaigns.find(c=>c.id===id)?.revision??null;
+  const canOperate=()=>!w.SAHTEN.project.session.readOnly
+    &&!w.document.body.classList.contains('role-no-costs')
+    &&['owner','admin'].includes(w.SAHTEN.online?.role?.()||'')
+    &&w.SAHTEN.online?.controller?.info()?.signedIn===true;
+  function applyRemote(remote){
+    if(!remote||!Array.isArray(remote.campaigns))return;
+    const next={published:remote.published===true,campaigns:remote.campaigns};
+    const changed=!liveLoaded||JSON.stringify(next)!==JSON.stringify(liveState);
+    liveState=next;liveLoaded=true;
+    const root=w.document.getElementById('promotions-editor');
+    if(changed&&root&&!root.contains(w.document.activeElement))render();
+  }
   function render() {
     const root=w.document.getElementById('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
@@ -57,6 +71,20 @@ export function installPromotionsEditor(w=window) {
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render()}));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
+    root.querySelector('[data-promo-live-toggle]')?.addEventListener('click',async e=>{
+      const id=e.currentTarget.dataset.promoLiveToggle,
+        row=liveState.campaigns.find(x=>x.id===id),
+        pending=w.SAHTEN.online?.promotionPublisher?.info()?.changes?.[id];
+      if(!canOperate()||!liveState.published||!row||pending)return;
+      const enabled=!row.enabled,priorProject=w.SAHTEN.project.session.id;
+      if(!await w.sahtenConfirm(enabled?
+        'Se volverá a habilitar esta promoción en la web según su calendario y sus productos publicados.':
+        'La promoción dejará de aplicarse a nuevos pedidos de la web. Los pedidos anteriores no cambian.',
+        {title:enabled?'Reactivar promoción en vivo':'Pausar promoción en vivo',okLabel:enabled?'Reactivar':'Pausar'}))return;
+      if(priorProject!==w.SAHTEN.project.session.id||!canOperate())return;
+      w.dispatchEvent(new w.CustomEvent('sahten:promotion-campaign',{detail:{id,enabled}}));
+      render();
+    });
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
       if(!canEdit)return;
       const id='custom-'+Date.now().toString(36);
@@ -104,6 +132,20 @@ export function installPromotionsEditor(w=window) {
   function campaignEditor(state,c,canEdit) {
     if(!c)return '<p>No hay campañas.</p>';
     const disabled=canEdit?'':'disabled';
+    const remote=liveState.campaigns.find(row=>row.id===c.id);
+    const info=w.SAHTEN.online?.promotionPublisher?.info();
+    const pending=info?.changes?.[c.id];
+    const published=liveLoaded&&liveState.published&&!!remote;
+    const status=!liveLoaded?'Consultando el estado de la web…'
+      :!liveState.published?'Motor de promociones todavía no publicado en la tienda'
+      :!remote?'Esta campaña todavía no está publicada'
+      :pending?(info.states?.[c.id]==='publicando'?'Enviando el cambio a la tienda…':'Cambio pendiente o sin conexión · verificar confirmación')
+      :remote.enabled?'Promoción habilitada en la web':'Promoción pausada en la web';
+    const operable=published&&canOperate()&&!pending;
+    const liveControls='<div class="promo-note" role="status"><strong>Estado real en sahten.online:</strong> '+esc(status)
+      +'<p>Este control es independiente del borrador y no requiere republicar la web.</p>'
+      +'<button type="button" data-promo-live-toggle="'+esc(c.id)+'"'+(operable?'':' disabled')
+      +'>'+(remote?.enabled?'Pausar en web':'Reactivar en web')+'</button></div>';
     return '<div class="promo-split"><section class="promo-card"><div class="promo-row"><h3>Editor de campañas</h3><button type="button" data-promo-new '+disabled+'>+ Nueva</button></div>'
       +'<label class="promo-field"><span>Campaña</span><select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre',c.name,'text','data-field="name" '+disabled)+'<label class="promo-field"><span>Tipo de calendario</span><select data-field="scheduleType" '+disabled+'>'+[['weekly','Semanal'],['central_weekends','2° y 3° viernes y sábado'],['dates','Fechas específicas'],['always','Siempre']].map(([v,t])=>'<option value="'+v+'" '+(c.schedule?.type===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'
@@ -119,7 +161,7 @@ export function installPromotionsEditor(w=window) {
       +'<label class="promo-field"><span>Mensaje publicitario</span><textarea data-field="message" rows="3" '+disabled+'>'+esc(c.advertising?.message||'')+'</textarea></label>'
       +'<h4>Dónde se muestra</h4><div class="promo-choices">'+checkedSelect(placements,c.advertising?.placement,'placement')+'</div>'
       +'<label class="promo-checkbox"><input data-field="advertisingEnabled" type="checkbox" '+(c.advertising?.enabled?'checked':'')+' '+disabled+'> Activar publicidad según calendario</label>'
-      +'<div class="promo-note">Cambiar el porcentaje requiere simular la rentabilidad. El motor aplica una sola promoción adicional por producto. Los cambios se guardan como borrador del proyecto.</div>'
+      +liveControls+'<div class="promo-note">Cambiar el porcentaje requiere simular la rentabilidad. El motor aplica una sola promoción adicional por producto. Los cambios se guardan como borrador del proyecto.</div>'
       +'<button type="button" data-promo-preview>Simular esta campaña</button></section></div>';
   }
   function calendarEditor(state) {
@@ -161,6 +203,6 @@ export function installPromotionsEditor(w=window) {
       '</div><h4>Por campaña</h4>'+(Object.values(r.byPromotion).length?Object.values(r.byPromotion).map(v=>'<p>'+esc(v.id)+' · '+v.orders+' líneas · '+fmt(v.revenue)+' vendidos</p>').join(''):'<p>Sin operaciones promocionales registradas.</p>')+'</section>';
   }
   // Renderiza al abrir el panel. Los cambios afectan sólo los borradores de este proyecto.
-  return {render,get,save};
+  return {render,get,save,applyRemote,liveRevision,liveState:()=>liveState};
 }
 export function register(){onPanelShow('promociones',()=>window.SAHTEN.promotionsEditor?.render());}
