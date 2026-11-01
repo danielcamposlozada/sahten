@@ -118,3 +118,11 @@
 @media(max-width:420px){.checkout-group .payment-choice{padding:12px;gap:8px;min-height:96px;align-items:center}.checkout-group .payment-choice>svg{width:24px;height:24px}.checkout-group .payment-choice-copy{gap:4px;padding-right:12px}.checkout-group .payment-choice-copy strong{font-size:15px;line-height:1.35}.checkout-group .payment-choice-badge{font-size:13px}.checkout-group .payment-choice-check{position:absolute;top:10px;right:8px;width:12px;font-size:13px}}
 @media(max-width:760px){[data-storefront] #menuwrap .oback{display:none}.has-site.view-order #menuwrap .oback{display:none}}
 @media(prefers-reduced-motion:reduce){#menuwrap .card{transition:none}}
+
+
+/* Bebida opcional: una recomendación contextual, nunca una oferta invasiva. */
+.checkout-beverage-suggestion{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin:12px 0;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.checkout-beverage-suggestion strong{font-size:14px;color:var(--primary)}
+.checkout-beverage-suggestion p{margin:4px 0 0;font-size:13px;color:var(--checkout-muted)}
+.checkout-beverage-suggestion button{flex:none;min-height:44px;border:1px solid var(--primary);border-radius:10px;background:transparent;color:var(--primary);padding:8px 14px;font-weight:700;cursor:pointer}
+.checkout-beverage-suggestion button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
