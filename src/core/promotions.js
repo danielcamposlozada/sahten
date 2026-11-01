@@ -135,25 +135,38 @@ export function quotePromotions({
     couponId:canCoupon&&used.has(coupon.id)?coupon.id:null,
     snapshotAt:new Date(now).toISOString()};
 }
+// Plan comercial SAHTEN v2: SKUs confirmados contra el catálogo publicado de sahten.online.
+// Se configuran como borradores. Ninguna campaña, cupón o anuncio se activa en producción.
 export const INITIAL_CAMPAIGNS = [
-  {id:'weekly-meals',name:'Lunes a miércoles · Platos seleccionados',kind:'public',enabled:false,
+  {id:'weekly-meals',name:'Lunes a miércoles · Favoritos seleccionados',kind:'public',enabled:false,
     extraPercent:5,priority:20,channels:['online','mostrador'],
     schedule:{type:'weekly',weekdays:[1,2,3]},
-    productIds:[],
-    advertising:{enabled:true,placement:['ticket','cart'],message:'Hasta 15% en platos seleccionados'}},
-  {id:'central-tables',name:'Tablas para compartir · Fines de semana centrales',kind:'public',enabled:true,
+    productIds:['p1779467294622','p1779997171373','sandwich_falafel','arabe_clasico','shawarma_pollo'],
+    advertising:{enabled:true,placement:['ticket','cart','menu'],message:'Lunes a miércoles · Hasta 15% con efectivo o transferencia en platos seleccionados'}},
+  {id:'central-tables',name:'Tablas para compartir · Segundo y tercer viernes/sábado',kind:'public',enabled:false,
     extraPercent:5,priority:30,channels:['online','mostrador'],
     schedule:{type:'central_weekends'},
-    productIds:[],
-    advertising:{enabled:true,placement:['ticket','cart'],message:'Fines de semana de tablas · Hasta 15%'} }
+    productIds:['tabla_celebrar','p1779997050112'],
+    advertising:{enabled:true,placement:['ticket','cart','menu'],message:'Segundo y tercer viernes y sábado · Hasta 15% en tablas seleccionadas'}}
 ];
 export const INITIAL_UPSELLS = [
-  {id:'baklava-up',name:'Complemento dulce',kind:'upsell',enabled:false,extraPercent:10,priority:40,
-    productIds:[],maxUnits:1,
-    triggerProductIds:[],
-    suppressIfPresent:[]}
+  {id:'baklava-up',name:'Baklava · Complemento dulce',kind:'upsell',enabled:false,
+    extraPercent:10,priority:40,minMarginPct:40,productIds:['baklava'],maxUnits:1,
+    triggerProductIds:['p1779467294622','p1779997171373','sandwich_falafel','arabe_clasico','shawarma_pollo'],
+    suppressIfPresent:['tabla_celebrar']}
 ];
+// Solo planificación y visibilidad en el editor: NO emitir ni canjear cupones desde un borrador.
+export const INITIAL_COUPON_PROGRAMS = {
+  first_online:{enabled:false,name:'Bienvenida web',channel:'online',extraPercent:5,
+    minEligibleSubtotal:30000,validDays:14,maxExtraAmount:null,requiresConfirmedOrigin:false},
+  second_online:{enabled:false,name:'Segunda compra web',channel:'online',extraPercent:10,
+    minEligibleSubtotal:40000,validDays:14,maxExtraAmount:4000,requiresConfirmedOrigin:true}
+};
 export function initialPromotionConfig() {
-  return {version:1,enabled:false,paymentPercent:10,minMarginPct:40,checkoutProFeePercent:null,campaigns:JSON.parse(JSON.stringify(INITIAL_CAMPAIGNS)),
-    upsells:JSON.parse(JSON.stringify(INITIAL_UPSELLS)),ticket:{enabled:false,review:true,advertise:true}};
+  return {version:1,planVersion:2,enabled:false,paymentPercent:10,minMarginPct:40,
+    requireVerifiedCosts:true,checkoutProFeePercent:null,
+    campaigns:JSON.parse(JSON.stringify(INITIAL_CAMPAIGNS)),
+    upsells:JSON.parse(JSON.stringify(INITIAL_UPSELLS)),
+    couponPrograms:JSON.parse(JSON.stringify(INITIAL_COUPON_PROGRAMS)),
+    ticket:{enabled:false,review:true,advertise:true}};
 }
