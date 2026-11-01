@@ -76,6 +76,10 @@ describe('Rentabilidad: comisión MP nunca presumida al activar promociones',()=
   const quoted=quoteOrder(m,base('mercadopago'),{now:at});
   expect(quoted.total).toBe(32000);
   expect(quoted.promotionSnapshot.method).toBe('mercadopago');
+  // Cero explícito significa 0 %, no la comisión ficticia del 10 %.
+  m.promotions.checkoutProFeePercent=0;
+  const noFee=quoteOrder(m,base('mercadopago'),{now:at});
+  expect(noFee.promotionSnapshot.estimatedPaymentFee).toBe(0);
  });
 });
 describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)',()=>{
