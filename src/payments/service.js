@@ -79,8 +79,12 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         if(body.order?.source==='delivery'&&menu.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
         if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
         const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
-        const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-        const order = quoteOrder(menu, body.order || {},{...delivery,trustedCosts,now:now()});
+        const verifiedPricing=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
+        const trustedCosts=verifiedPricing?.costs||verifiedPricing||{};
+        const trustedEconomics=verifiedPricing?.economics||{};
+        // La solicitud del cliente nunca puede declarar una selección de upsell como verificada.
+        // Sin un intent firmado/validado y costos del pedido verificados no aplica el extra.
+        const order = quoteOrder(menu, body.order || {},{...delivery,trustedCosts,trustedEconomics,now:now()});
         if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
         const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
         if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
