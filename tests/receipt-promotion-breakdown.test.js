@@ -20,7 +20,7 @@ describe('Tickets con importes conciliados',()=>{
   const r=sale();const parsed=receiptDiscountLines(r);const rendered=html(r);
   expect(parsed).toEqual({paymentAmount:2410,extras:[{productId:'fatay',name:'Fatay',amount:1170,kind:'upsell'}]});
   expect(rendered).toContain('Beneficio por pago 10 %');
-  expect(rendered).toContain('Complemento: Fatay');
+  expect(rendered).toContain('Descuento en Fatay');
   expect(rendered).toContain('−$2.410');
   expect(rendered).toContain('−$1.170');
   expect(rendered).toContain('$20.520');
@@ -37,7 +37,7 @@ describe('Tickets con importes conciliados',()=>{
   expect(receiptDiscountLines(r)).toBeNull();
   expect(html(r)).toContain('Promociones y beneficios');
   expect(html(r)).toContain('−$3.580');
-  expect(html(r)).not.toContain('Complemento: Fatay');
+  expect(html(r)).not.toContain('Descuento en Fatay');
  });
  it('no muestra desglose de promociones cuando no hay snapshot del servidor',()=>{
   const r=sale();delete r.promotionSnapshot;
