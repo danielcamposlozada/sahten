@@ -582,6 +582,9 @@ async function mostradorCheckout() {
     orderType: mostradorOrderType,
     ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: deliverySnapshot?.effectiveZone?.name || (del.zone ? del.zone.name : null) } : {}),
   };
+  // La publicidad se selecciona una sola vez al crear la orden y queda congelada para reimpresiones.
+  const promotionConfig=SAHTEN.promotionsEditor?.get?.();
+  if(promotionConfig?.enabled===true)order.promotionTicketSnapshot=SAHTEN.promotions.selectTicketAdvertisement(promotionConfig,{channel:'mostrador',now:new Date(order.createdAt)});
   SAHTEN.pricing?.capture(order);
   SAHTEN_ORDERS.unshift(order); _saveOrders();
   SAHTEN.receipts.enqueue(order,{origin:'local'});
