@@ -115,6 +115,9 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
         let order;
         if(body.order?.upsellToken){
+          // Este endpoint SIEMPRE cobra por Mercado Pago: rechazar un reto
+          // de transferencia/efectivo antes de consumir el nonce o reservar.
+          if(body.order.paymentMethod!=='mercadopago')fail('Revisá el medio de pago.',409,'invalid_payment_method');
           if(menu?.promotions?.enabled!==true)fail('La oferta ya no está vigente.',409,'promotions_off');
           const costs=await upsellCosts(sid);
           const secure=await offerParams(sid,menu,body.order,body.proof);
