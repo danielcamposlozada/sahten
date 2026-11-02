@@ -98,7 +98,22 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
 
   // ── Pedidos ──────────────────────────────────────────
   const orders = {
-    async list(storeId, sinceIso) { return authed('/rest/v1/orders?select=*&store_id=eq.' + storeId + (sinceIso ? '&created_at=gt.' + encodeURIComponent(sinceIso) : '') + '&order=created_at.desc&limit=200'); },
+    async list(storeId, sinceIso, {offset=0,limit=200}={}) {
+      return authed('/rest/v1/orders?select=*&store_id=eq.' + encodeURIComponent(storeId)
+        + (sinceIso ? '&created_at=gt.' + encodeURIComponent(sinceIso) : '')
+        + '&order=created_at.desc&limit='+Math.min(200,Math.max(1,limit))
+        +'&offset='+Math.max(0,offset));
+    },
+    async listAll(storeId) {
+      const all=[],pageSize=200;
+      for(let page=0;page<100;page++){
+        const rows=await orders.list(storeId,null,{offset:page*pageSize,limit:pageSize});
+        if(!Array.isArray(rows))throw new SupabaseError('La nube devolvió una lista incompleta de pedidos.');
+        all.push(...rows);
+        if(rows.length<pageSize)return all;
+      }
+      throw new SupabaseError('El historial supera 20.000 pedidos; no se importó parcialmente.');
+    },
     async setStatus(id, status) { await authed('/rest/v1/orders?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { status } }); },
   };
 

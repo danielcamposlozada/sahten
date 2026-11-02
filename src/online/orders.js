@@ -1,8 +1,8 @@
 // Pedido que llega de la web (tabla orders de Supabase) → pedido del Mostrador. Puro.
 import { deliveryDetails, cashOrderFields } from '../core/order-details.js';
 import { savedPaymentDiscount } from '../core/payment-benefit.js';
-export const STATUS_FROM_REMOTE = { pendiente: 'pendiente', recibido: 'pendiente', preparando: 'en_preparacion', listo: 'listo', entregado: 'listo', cancelado: 'cancelado' };
-export const STATUS_TO_REMOTE = { pendiente: 'pendiente', en_preparacion: 'preparando', listo: 'listo', completada: 'entregado', cancelado: 'cancelado' };
+export const STATUS_FROM_REMOTE = { pendiente: 'pendiente', recibido: 'pendiente', preparando: 'en_preparacion', listo: 'listo', entregado: 'entregado', cancelado: 'cancelado' };
+export const STATUS_TO_REMOTE = { pendiente: 'pendiente', en_preparacion: 'preparando', listo: 'listo', completada: 'entregado', entregado: 'entregado', retirado: 'entregado', cancelado: 'cancelado' };
 export const PAYMENT_LABELS = { paid: 'Pago acreditado', overpaid: 'Cobro excedente · revisar', in_mediation: 'Pago en disputa', pending: 'Pago pendiente', partial: 'Pago incompleto', rejected: 'Pago rechazado', refunded: 'Reembolsado', partially_refunded: 'Reembolso parcial', charged_back: 'Contracargo', unverified: 'Sin pago verificado' };
 export function paymentFields(row) {
   const verified = row.payment_provider === 'mercadopago' && row.payment_ref;
@@ -28,7 +28,8 @@ export function toLocalOrder(row, existing = []) {
   return {
     ...paymentFields(row), ...deliveryDetails(p), ...cashOrderFields(p.total, p.cashTendered, p.paymentMethod),
     id: 'web_' + row.id, remoteId: row.id, num, webNum: p.num || null, source: p.source === 'pickup' ? 'pickup' : 'delivery', origin: 'menu-online',
-    createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: STATUS_FROM_REMOTE[row.status] || 'pendiente', remoteStatus: row.status,
+    createdAt: row.created_at || p.createdAt || new Date().toISOString(), status: row.status==='entregado'&&p.source==='pickup'?'retirado':STATUS_FROM_REMOTE[row.status] || 'pendiente', remoteStatus: row.status,
+    ...(['entregado','cancelado'].includes(row.status)?{completedAt:row.updated_at||row.created_at||new Date().toISOString()}:{}),
     customerName: String(p.customerName || 'Cliente online'), customerPhone: String(p.customerPhone || ''), customerEmail: String(p.customerEmail || ''), customerId: null,
     address: String(p.address || ''), lat: p.lat ?? null, lng: p.lng ?? null, paymentMethod: p.paymentMethod || '', paymentId: null, paymentName: ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago',tarjeta:'Tarjeta'})[p.paymentMethod] || p.paymentMethod || '',
     items, subtotal: +p.subtotal || items.reduce((s, i) => s + i.lineTotal, 0), discount, discountAmount: discount, discountId: paymentDiscount ? 'cash-transfer' : null, discountName: paymentDiscount?.label || (discount ? String(p.discountName || 'Descuento').slice(0,150) : null), paymentDiscount,

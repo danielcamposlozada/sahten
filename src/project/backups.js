@@ -11,12 +11,43 @@ export const dayKey = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth
 export const dailyName = (name, d) => `.${safe(name)}.backup-${dayKey(d)}.sahten`;
 export const preStrategyName = name => `.${safe(name)}.pre-estrategia.sahten`;
 export const preRestoreName = name => `.${safe(name)}.pre-restauracion.sahten`;
+export const preSyncName = name => `.${safe(name)}.pre-sincronizacion.sahten`;
 
 const DAILY_RE = /^\..*\.backup-(\d{4}-\d{2}-\d{2})\.sahten$/;
 const PRE_RE = /^\..*\.pre-estrategia\.sahten$/;
 const RESTORE_RE = /^\..*\.pre-restauracion\.sahten$/;
+const PRESYNC_RE = /^[.].*[.]pre-sincronizacion[.]sahten$/;
 
 export const BACKUP_DAYS = 14;
+export const BACKUP_HOURS = 48;
+const hourKey = d => dayKey(d) + 'T' + pad(d.getHours());
+export const hourlyName = (name, d) => `.${safe(name)}.hourly-${hourKey(d)}.sahten`;
+const HOURLY_RE = /^[.].*[.]hourly-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2})[.]sahten$/;
+
+/** Copia horaria local y conservadora: 48 horas, sin modificar ni reemplazar
+ * ningún respaldo diario. Se utiliza también antes de una descarga de nube. */
+export async function hourlyBackup(store, key, name, body, now = new Date()) {
+  const hour = hourKey(now);
+  const existing = (await store.list(key)).filter(n => HOURLY_RE.test(n));
+  if (existing.some(n => HOURLY_RE.exec(n)[1] === hour)) return { written:false, hour };
+  await store.put(key, hourlyName(name, now), body);
+  const limit = hourKey(new Date(now.getTime() - (BACKUP_HOURS - 1)*3600000));
+  for (const n of existing) if (HOURLY_RE.exec(n)[1] < limit) await store.remove(key, n);
+  return { written:true, hour };
+}
+/** Esta instantánea SIEMPRE se actualiza justo antes de aplicar cambios
+ * remotos: no basta la copia tomada al comienzo de la hora. */
+export async function preSyncBackup(store,key,name,body,now=new Date()){
+  await store.put(key,preSyncName(name),body);
+  const hourly=await hourlyBackup(store,key,name,body,now);
+  return {name:preSyncName(name),at:now.toISOString(),hourly};
+}
+export async function listHourlies(store, key) {
+  return (await store.list(key)).filter(n=>HOURLY_RE.test(n))
+    .map(n=>({name:n,hour:HOURLY_RE.exec(n)[1]}))
+    .sort((a,b)=>b.hour.localeCompare(a.hour));
+}
+
 
 /** Respaldo diario: si hoy ya hay uno no hace nada; si no, guarda `text` y conserva el historial de los últimos
  *  BACKUP_DAYS días (borra los más viejos). La carpeta de respaldos es por proyecto (id), así que renombrar no los pierde. */
@@ -50,5 +81,6 @@ export async function preRestoreBackup(store, key, name, text) {
 export async function listBackups(store, key, name, now = new Date()) {
   const names = await store.list(key);
   const d = names.filter(n => DAILY_RE.test(n)).map(n => ({ name: n, date: DAILY_RE.exec(n)[1] })).sort((a, b) => a.date < b.date ? 1 : -1)[0] || null;
-  return { daily: d, preStrategy: names.find(n => PRE_RE.test(n)) || null, preRestore: names.find(n => RESTORE_RE.test(n)) || null, today: dayKey(now) };
+  const h = names.filter(n => HOURLY_RE.test(n)).sort().at(-1) || null;
+  return { daily: d, hourly: h, preSync: names.find(n => PRESYNC_RE.test(n)) || null, preStrategy: names.find(n => PRE_RE.test(n)) || null, preRestore: names.find(n => RESTORE_RE.test(n)) || null, today: dayKey(now) };
 }

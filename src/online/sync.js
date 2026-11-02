@@ -6,6 +6,7 @@ import { contentHash } from '../project/schema.js';
 import { SupabaseError } from './supabase.js';
 import { writeScope, applyPublicToFile } from './roles.js';
 import { mergeCloudPromotions } from './promotion-sync.js';
+import { mergeOrderHistory, preserveLocalSales } from './order-preservation.js';
 
 const clone = v => JSON.parse(JSON.stringify(v));
 export const BACKOFF_MS = [30000, 60000, 120000, 300000];
@@ -13,6 +14,13 @@ export const BACKOFF_MS = [30000, 60000, 120000, 300000];
 /** Lo que viaja a la nube: el proyecto con referencias remotas; los binarios se suben antes a Storage. */
 export const stripForSync = file => { const f = clone(file); f.images = Object.fromEntries(Object.entries(f.images || {}).filter(([, v]) => /^https?:\/\//.test(v))); f.modifiedAt = null; return f; };
 export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; if(f.online)delete f.online.supabase; return contentHash(f); };
+/** Detecta conflictos que afectan sólo a pedidos/clientes, sin decidir automáticamente
+ * por el usuario si los cambios de catálogo, fotos, precios o costos son distintos. */
+export const structuralHash = file => {
+  const f=clone(file);
+  if(f.sales){delete f.sales.orders;delete f.sales.customers;}
+  return syncHash(f);
+};
 
 /** Decide qué hacer según qué lado cambió desde la última sincronización. */
 export function decide({ localHash, last, remoteVersion }) {
@@ -30,7 +38,7 @@ export function mergeOps(file, ops) {
   const f = clone(file);
   const byId = (a, b) => { const m = new Map((a || []).map(x => [x.id, x])); (b || []).forEach(x => { const o = m.get(x.id); if (!o || String(x.updatedAt || x.createdAt || '') >= String(o.updatedAt || o.createdAt || '')) m.set(x.id, x); }); return [...m.values()]; };
   const s = ops.sales || {};
-  if (s.orders) f.sales.orders = byId(f.sales.orders, s.orders).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  if (s.orders) f.sales.orders = mergeOrderHistory(f.sales.orders, s.orders);
   if (s.customers) f.sales.customers = byId(f.sales.customers, s.customers);
   if (ops.stock && ops.stock.items && Object.keys(ops.stock.items).length) { f.stock.items = { ...f.stock.items, ...ops.stock.items }; if (ops.stock.movements) f.stock.movements = ops.stock.movements; }
   return f;
@@ -113,7 +121,13 @@ export function createSync(deps) {
         if (act === 'noop') { await mergeStaffOps(check); lastAt = new Date(now()); attempt = 0; pending = false; set('al día'); return { action: 'noop' }; }
         if (act === 'push') return await push(f, lh, last() ? last().version : meta.version, check);
         if (act === 'pull') return await pull(check);
-        // conflicto: cambiaron los dos lados
+        // Si sólo difieren las operaciones, se reconcilian automáticamente:
+        // ni un clic ni la elección destructiva "mi versión / la nube".
+        const remote=await deps.client.rpc('get_project_data',{pid:deps.remoteId()});check();
+        if(remote?.data && structuralHash(remote.data)===structuralHash(f))
+          return await push(f,lh,remote.version,check);
+        // Cambios simultáneos de precios/catálogo/fotos requieren decisión;
+        // no se sacrifica seguridad por resolverlos silenciosamente.
         conflict = { remote: meta, local: { hash: lh } };
         const choice = resolve ? await resolve(conflict) : null;
         if (choice === 'theirs') return await pull(check);
@@ -189,13 +203,33 @@ export function createSync(deps) {
   };
 
   async function push(f, lh, baseVersion, check = guard()) {
-    const prepared = deps.prepareFile ? await deps.prepareFile(f, report) : f;
+    // No pisar pedidos que ya existen en la nube pero aún no están en
+    // este equipo. Incluso "usar mi versión" conserva el historial remoto.
+    const remote=await deps.client.rpc('get_project_data',{pid:deps.remoteId()});check();
+    if(Number(remote.version)!==Number(baseVersion)){
+      conflict={remote,local:{hash:lh}};set('conflicto');
+      return {action:'conflict',conflict};
+    }
+    if(syncHash(deps.collect())!==lh)throw new SupabaseError('El proyecto cambió al preparar el envío. Reintentá la sincronización.');
+    const combined=preserveLocalSales(remote.data,f);
+    const recovered=syncHash(combined)!==syncHash(f);
+    if(recovered) {
+      if(!deps.backupBeforeSync)throw new SupabaseError('No hay respaldo disponible para conciliar ventas.');
+      await deps.backupBeforeSync();check();
+      if(syncHash(deps.collect())!==lh)throw new SupabaseError('Los pedidos cambiaron durante el respaldo.');
+      await deps.apply(combined);
+      if(deps.hasLocalFile?.() && await deps.saveLocal()===false)
+        throw new SupabaseError('No se pudo guardar la copia local conciliada.');
+      check();
+    }
+    const prepared = deps.prepareFile ? await deps.prepareFile(combined, report) : combined;
     check();
-    report({ detail: 'Guardando base de datos en la nube…' });
+    report({ detail: 'Guardando proyecto y pedidos conciliados en la nube…' });
     const r = await deps.client.rpc('save_project', { pid: deps.remoteId(), p_data: stripForSync(prepared), p_public: deps.publicOf(prepared), base_version: baseVersion });
     check();
-    if (r.conflict) { conflict = { remote: r, local: { hash: lh } }; set('conflicto'); return { action: 'conflict', conflict }; }
-    save({ version: r.version, hash: lh, at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
+    if (r.conflict) { conflict = { remote: r, local: { hash: syncHash(combined) } }; set('conflicto'); return { action: 'conflict', conflict }; }
+    save({ version: r.version, hash: syncHash(combined), at: r.updated_at });
+    conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
     await mergeStaffOps(check);
     return { action: 'push', version: r.version };
   }
@@ -205,23 +239,37 @@ export function createSync(deps) {
     const r = await deps.client.rpc('get_project_data', { pid: deps.remoteId() });
     check();
     let incoming = r.data; const local = deps.collect(), before = syncHash(local);
+    if (!incoming || typeof incoming !== 'object') throw new SupabaseError('El servidor no devolvió un proyecto válido.');
     incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images, report) : { ...incoming, images: local.images };
     check();
-    // Cada dispositivo conserva su conexión local; el primer proyecto remoto puede no tener
-    // projectId (se asigna tras la creación). No borrar el vínculo al descargar una versión.
+    // No se copia la conexión de otro equipo.
     incoming.online={...(incoming.online||{}),supabase:{
       ...(incoming.online?.supabase||{}),...(local.online?.supabase||{}),projectId:deps.remoteId()
     }};
-    if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
-    report({ detail: 'Aplicando datos en este equipo…' }); await deps.apply(incoming);
+    if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales durante la descarga. No se reemplazó el proyecto.', { code: 'local_changed' });
+    // Conservar TODOS los pedidos y clientes locales, incluso cuando una copia
+    // remota más reciente tiene menos ventas. La ausencia nunca es un borrado.
+    const baseHash = syncHash(incoming);
+    incoming = preserveLocalSales(local, incoming);
+    const needsUpload = syncHash(incoming) !== baseHash;
+    if (!deps.backupBeforeSync) throw new SupabaseError('No hay respaldo previo de sincronización. Se canceló la descarga para proteger los pedidos.', {code:'backup_unavailable'});
+    report({ detail: 'Respaldando los pedidos antes de actualizar el equipo…' });
+    await deps.backupBeforeSync();
+    check();
+    if (syncHash(deps.collect()) !== before) throw new SupabaseError('Cambios locales nuevos: no se reemplazó el proyecto.', {code:'local_changed'});
+    report({ detail: 'Conciliando pedidos locales y remotos…' }); await deps.apply(incoming);
     check();
     if(deps.hasLocalFile?.()) {
       report({detail:'Guardando la copia local .sahten…'});
       if(await deps.saveLocal()===false)throw new SupabaseError('No se pudo guardar la copia local del proyecto.');
       check();
     }
-    save({ version: r.version, hash: syncHash(incoming), at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
-    return { action: 'pull', version: r.version };
+    // Si el equipo recuperó pedidos ausentes en la nube, el hash de base
+    // sigue siendo el remoto: el siguiente ciclo los sube automáticamente.
+    save({version:r.version,hash:needsUpload?baseHash:syncHash(incoming),at:r.updated_at});
+    conflict=null;pending=needsUpload;attempt=0;lastAt=new Date(now());set('al día');
+    if(needsUpload)timer.set(()=>api.sync().catch(()=>{}),5000);
+    return { action: 'pull', version: r.version, recovered: needsUpload };
   }
 
   // administrador/dueño: trae los pedidos y el stock que cargaron encargado y cajero
@@ -230,7 +278,16 @@ export function createSync(deps) {
       const ops = await deps.client.rpc('get_ops', { pid: deps.remoteId() });
       check();
       const f = deps.collect(); const merged = mergeOps(f, ops);
-      if (syncHash(merged) !== syncHash(f)) { await deps.apply(merged); const l = last(); if (l) save({ ...l, hash: syncHash(merged) }); }
+      if (syncHash(merged) !== syncHash(f)) {
+        if (!deps.backupBeforeSync) throw new SupabaseError('No hay respaldo disponible para conciliar pedidos.');
+        await deps.backupBeforeSync();
+        check();
+        if(syncHash(deps.collect())!==syncHash(f))throw new SupabaseError('Los pedidos cambiaron durante la conciliación.');
+        await deps.apply(merged);
+        if (deps.hasLocalFile?.() && await deps.saveLocal()===false) throw new SupabaseError('No se pudo guardar la conciliación.');
+        pending=true;
+        timer.set(()=>api.sync().catch(()=>{}),5000);
+      }
     } catch (e) { if (!(e instanceof SupabaseError)) throw e; }
   }
 
@@ -248,13 +305,28 @@ export function createSync(deps) {
     const meta = await fetchRemoteMeta(); check(); const l = last();
     if (!l || l.version !== meta.version) {
       const r = await deps.client.rpc('get_project_public', { pid: deps.remoteId() });
-      let incoming = applyPublicToFile(deps.collect(), r.public);
-      if (deps.restoreFile) incoming = await deps.restoreFile(incoming, deps.collect().images, report);
-      check(); await deps.apply(incoming); save({ version: r.version, hash: '' });
+      const oldLocal=deps.collect(),before=syncHash(oldLocal);
+      let incoming = applyPublicToFile(oldLocal, r.public);
+      if (deps.restoreFile) incoming = await deps.restoreFile(incoming, oldLocal.images, report);
+      check();
+      incoming=preserveLocalSales(oldLocal,incoming);
+      if(syncHash(deps.collect())!==before)throw new SupabaseError('Los pedidos locales cambiaron durante la descarga.');
+      if (!deps.backupBeforeSync) throw new SupabaseError('No hay respaldo antes de actualizar el proyecto.');
+      await deps.backupBeforeSync();check();
+      await deps.apply(incoming);
+      if(deps.hasLocalFile?.() && await deps.saveLocal()===false)throw new SupabaseError('No se pudo guardar la copia local de los pedidos.');
+      save({ version: r.version, hash: '' });
     }
     const ops = await deps.client.rpc('get_ops', { pid: deps.remoteId() });
     check();
-    const merged = mergeOps(deps.collect(), ops); await deps.apply(merged);
+    const beforeOps=deps.collect(),merged=mergeOps(beforeOps,ops);
+    if(syncHash(merged)!==syncHash(beforeOps)){
+      if(!deps.backupBeforeSync)throw new SupabaseError('Falta respaldo para conciliar pedidos.');
+      await deps.backupBeforeSync();check();
+      if(syncHash(deps.collect())!==syncHash(beforeOps))throw new SupabaseError('Cambió el proyecto durante la descarga.');
+      await deps.apply(merged);
+      if(deps.hasLocalFile?.() && await deps.saveLocal()===false)throw new SupabaseError('No se pudieron guardar los pedidos conciliados.');
+    }
     pending = false; attempt = 0; lastAt = new Date(now()); set('al día'); return { action: 'ops' };
   }
 

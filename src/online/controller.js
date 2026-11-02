@@ -35,19 +35,28 @@ export function createController(host) {
       const fields = paymentFields(row);
       // Solo adoptar estados remotos nuevos; no revertir una acción local aún en tránsito.
       if (!existing.remoteStatusPending && row.status && existing.remoteStatus !== row.status && STATUS_FROM_REMOTE[row.status]) {
-        fields.status = STATUS_FROM_REMOTE[row.status];
+        fields.status = row.status==='entregado' && (row.payload?.source==='pickup'||existing.source==='pickup') ? 'retirado' : STATUS_FROM_REMOTE[row.status];
         fields.remoteStatus = row.status;
-        if (['retirado', 'entregado', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
+        if (['entregado','retirado','completada', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
         else fields.completedAt = undefined;
       }
       if (JSON.stringify(fields) !== JSON.stringify(Object.fromEntries(Object.keys(fields).map(k => [k, existing[k]])))) { Object.assign(existing, fields); host.orders.save?.(); host.markDirty(); host.refresh(); }
       return;
     }
-    if (!['pendiente', 'preparando'].includes(row.status)) return;
+    // La reconexión también recupera órdenes terminadas/canceladas como historial
+    // (sin notificarlas como nuevas ni imprimirlas).
+    if (!STATUS_FROM_REMOTE[row.status]) return;
+    const isActive = ['pendiente','preparando'].includes(row.status);
     const o = toLocalOrder(row, host.orders.list());
     if (!o) return;
-    host.orders.add(o, { initial });
-    host.notify({ sound: !initial, title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'), body: o.customerName + ' · $' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' · delivery' : ' · retiro') });
+    host.orders.add(o, { initial:initial||!isActive });
+    if (isActive) {
+      host.notify({
+        sound: !initial,
+        title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'),
+        body: o.customerName + ' - ARS ' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' - delivery' : ' - retiro')
+      });
+    }
     host.refresh();
   }
 
@@ -57,10 +66,20 @@ export function createController(host) {
     const ctx = context();
     try {
       for (const o of host.orders.list().filter(o => o.remoteId && o.remoteStatusPending)) { await api.pushStatus(o); check(ctx); }
-      const rows = await ctx.client.orders.list(ctx.storeId); check(ctx);
-      rows.reverse().forEach(row => importRow(row, { initial: true }));
+      await refreshOrderHistory(ctx, { full:true });check(ctx);
     } catch (e) { if (e.code === 'project_changed') return; set('conectado', e.message); }
     feed = client.subscribeOrders(host.conn.storeId, { onInsert: importRow, onStatus: s => { lastFeed = s; emit(); } });
+  }
+  // Lectura completa al reabrir; lectura incremental en intervalos normales.
+  // Nunca se borra un pedido local porque no aparezca en una página de resultados.
+  async function refreshOrderHistory(ctx=context(), {full=false}={}) {
+    if(!ctx.client||!ctx.storeId)return 0;
+    const rows=full&&typeof ctx.client.orders.listAll==='function'
+      ? await ctx.client.orders.listAll(ctx.storeId)
+      : await ctx.client.orders.list(ctx.storeId);
+    check(ctx);
+    rows.slice().reverse().forEach(row=>importRow(row,{initial:true}));
+    return rows.length;
   }
   let lastFeed = '';
   /** El nombre de la tienda en Supabase sigue al nombre del negocio de este proyecto (best-effort: si falla no molesta). */
@@ -98,6 +117,7 @@ export function createController(host) {
     info: () => ({ mode, error, signedIn: !!(client && client.auth.user), email: client && client.auth.user && client.auth.user.email, configured: !!(host.conn.url && host.conn.anonKey), storeId: host.conn.storeId || '', slug: host.conn.slug || '', feed: lastFeed, lastSync }),
     onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     get client() { return client; },
+    async refreshOrders() { return refreshOrderHistory(context()); },
 
     /** Conectar: valida, inicia sesión (o crea la cuenta), busca o crea la tienda por slug y guarda la conexión en el proyecto. */
     async connect({ url, anonKey, slug, email, password, signUp = false, projectId = null }) {

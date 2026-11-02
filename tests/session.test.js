@@ -155,7 +155,7 @@ describe('abrir / nuevo / duplicar / exportar', () => {
 
 describe('respaldos', () => {
   let env; beforeEach(() => { env = makeEnv(); });
-  const names = () => env.backups.list(env.session.id);
+  const names = async () => (await env.backups.list(env.session.id)).filter(n=>n.includes('.backup-'));
 
   it('diario: al abrir por primera vez en el día, y se acumula el historial', async () => {
     await open(env);

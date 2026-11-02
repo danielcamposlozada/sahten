@@ -59,6 +59,7 @@ export function createOnline({ w = window, project, events }) {
       prepareFile: (f, report) => controller.prepareFile(f, report), restoreFile: (f, images, report) => controller.restoreFile(f, images, report),
       apply: async f => { await project.apply(f); session.markDirty(); w.SAHTEN.promotionsEditor?.render(); },
       backupBefore:()=>session.backupBeforeStrategy(),
+      backupBeforeSync:()=>session.backupBeforeSync(),
       hasLocalFile:()=>session.info().hasFile,
       saveLocal:()=>session.info().hasFile?session.saveNow({force:true}):false,
       store: config,
@@ -69,6 +70,21 @@ export function createOnline({ w = window, project, events }) {
   // cada guardado local programa una sincronización (local primero, nube por detrás)
   session.onChange(i => { if (i.status === 'saved' && sync && !session.readOnly) sync.schedule(); });
   w.addEventListener && w.addEventListener('online', () => { if (sync) sync.sync().catch(() => {}); if (photoPublisher.info().pending) photoPublisher.flush().catch(() => {}); });
+  // No depende de que el usuario pulse Sincronizar: revisa cambios cada 30 s,
+  // también cuando el equipo queda abierto sin nuevas ventas.
+  let syncTickBusy=false;
+  const syncTimer=w.setInterval(async()=>{
+    if(syncTickBusy||!ONLINE_ENABLED||remoteViewing||!session.isOpen||session.readOnly
+       ||!controller.info().signedIn||!conn()?.projectId)return;
+    syncTickBusy=true;
+    try {
+      if(sync) await sync.sync();
+      await controller.refreshOrders();
+      await session.backupHourly();
+    }catch(e){/* estado de sync y reconexión conservan el pedido local */}
+    finally{syncTickBusy=false;}
+  },30000);
+  w.addEventListener('beforeunload',()=>w.clearInterval(syncTimer));
 
   const need = () => { if (!controller.client || !controller.info().signedIn) throw new SupabaseError('Iniciá sesión en la conexión con Supabase primero.', { code: 'no_session' }); return controller.client; };
   const rid = () => { const id = conn().projectId; if (!id) throw new SupabaseError('El proyecto todavía no está en la nube.'); return id; };
