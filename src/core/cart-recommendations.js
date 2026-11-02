@@ -27,6 +27,7 @@ export function recommendCartAddons({products=[],cart=[],policy=null,showPrices=
   const ordered=(rows)=>[...rows].filter(Boolean).sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0));
   if(!hasBeverage){
     for(const group of ordered(groups)){
+      if(group.enabled===false)continue;
       if(!matching(group))continue;
       if(mainSubtotal<Number(group.minEligibleSubtotal||0)||
         (group.maxEligibleSubtotal!=null&&mainSubtotal>Number(group.maxEligibleSubtotal)))continue;
@@ -41,6 +42,7 @@ export function recommendCartAddons({products=[],cart=[],policy=null,showPrices=
     }
   }
   for(const c of ordered(complements)){
+    if(c.enabled===false)continue;
     if(!matching(c)|| (c.suppressIfPresent||[]).some(id=>has(id)))continue;
     const p=catalog.get(c.productId);
     if(!p || !published(p) || p.category==='Bebidas' || has(p.id))continue;

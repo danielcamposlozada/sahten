@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+## 0.4.38
+
+- **Estados comerciales sin confusión**: diferencia campañas activas, programadas por calendario, pausadas y propuestas no publicadas. El switch de un borrador se identifica como planificación, no como descuento vigente.
+- **Recomendaciones web editables**: administrar complementos y bebidas a precio completo con alta, edición, duplicación, eliminación y switch individual, sin tocar precios ni descuentos.
+- **Vista previa y condiciones de aparición**: elegir el producto sugerido, productos disparadores, exclusiones, prioridad y ubicación (primer paso del carrito), con simulación contextual.
+- **Publicación segura de sugerencias**: guardado directo en Supabase con permisos dueño/admin, validación de productos publicados y resolución de conflictos. Conserva reglas pausadas para reactivarlas.
+- **Borradores de descuentos y mejoras**: permite crear, editar, duplicar y eliminar propuestas locales mostrando el motivo del bloqueo. Los descuentos no aprobados y el canje de cupones no se activan al cambiar un flag local.
+
 ## 0.4.37
 
 - **Tickets separados para cocina y cliente**: la comanda imprime preparación y entrega sin importes, promociones ni QR; el ticket del cliente conserva los totales y el QR de reseñas.

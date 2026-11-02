@@ -1,0 +1,14 @@
+.rec-live-editor .rec-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.rec-live-editor .rec-actions button,.rec-rule-controls button,.rec-edit-form button{border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--card-bg,#fff);color:var(--ink);cursor:pointer;font:inherit;font-size:12px}
+.rec-rule-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center;max-width:400px}
+.rec-rule{align-items:start}.rec-rule strong{overflow-wrap:anywhere}
+.rec-rule-controls .promo-live-switch{min-width:100px}
+.rec-preview{border:1px dashed var(--border);border-radius:12px;padding:14px;margin:12px 0;background:var(--sand)}
+.rec-preview-item{background:var(--card-bg,#fff);border:1px solid var(--border);border-radius:7px;padding:8px;margin-top:6px}
+.rec-preview small{display:block;margin-top:8px}
+.rec-edit-form{margin-top:14px}.rec-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:7px;max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px;margin:10px 0}
+.rec-choices legend{font-weight:750;font-size:13px}.rec-choices p{grid-column:1 / -1}
+.rec-product-check{display:flex;align-items:center;gap:6px;font-size:12px}
+.rec-product-check input{width:auto;flex:none}
+.rec-edit-form .rec-primary{background:var(--primary);color:#fff;font-weight:750}
+.rec-rule-controls button:disabled,.rec-edit-form button:disabled{opacity:.45;cursor:not-allowed}
