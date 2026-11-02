@@ -1,6 +1,7 @@
 name: SAHTEN.online | Checkout seguro (sin promociones)
 on:
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     paths:
       - "scripts/deploy/sahten-safe-checkout.mjs"
       - ".github/workflows/deploy-sahten-checkout.yml"
@@ -61,8 +62,11 @@ jobs:
 
   deploy:
     needs: package
-    # NUNCA desplegar por un push a main. Requiere autorización manual explícita.
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/main'
+    # Publicación excepcional, autorizada por el dueño, SOLO después de unir PR #64.
+    # No desplegar por push regular: se conserva el modo manual para futuras versiones.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.number == 64 && github.event.pull_request.head.ref == 'release/sahten-safe-storefront-20261101' && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
