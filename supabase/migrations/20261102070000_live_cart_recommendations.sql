@@ -11,7 +11,7 @@ BEGIN
   ) THEN RAISE EXCEPTION 'forbidden' USING ERRCODE='42501'; END IF;
   SELECT m.json INTO doc FROM public.menus m WHERE m.store_id=p_store_id;
   IF doc IS NULL THEN RAISE EXCEPTION 'menu_not_published'; END IF;
-  rules:=COALESCE(doc->'cartRecommendations','{}'::jsonb);
+  rules:=COALESCE(doc#>'{cartRecommendations,ruleCatalog}',doc->'cartRecommendations','{}'::jsonb);
   RETURN jsonb_build_object(
     'published',true,'revision',rules->>'revision','rules',rules,
     'products',(SELECT COALESCE(jsonb_agg(jsonb_build_object(
@@ -42,7 +42,7 @@ BEGIN
   THEN RAISE EXCEPTION 'recommendation_rules_invalid'; END IF;
   SELECT m.json INTO doc FROM public.menus m WHERE m.store_id=p_store_id FOR UPDATE;
   IF doc IS NULL THEN RAISE EXCEPTION 'menu_not_published'; END IF;
-  rules:=COALESCE(doc->'cartRecommendations','{}'::jsonb);
+  rules:=COALESCE(doc#>'{cartRecommendations,ruleCatalog}',doc->'cartRecommendations','{}'::jsonb);
   IF rules->>'revision' IS DISTINCT FROM p_expected_revision THEN
     RAISE EXCEPTION 'recommendations_revision_conflict' USING ERRCODE='40001';
   END IF;
@@ -119,6 +119,15 @@ BEGIN
   candidate:=jsonb_build_object('enabled',true,'version',1,
     'complements',complements,'beverageContexts',groups,'revision',newrev,
     'paymentEligible','all','discountPercent',0);
+  -- Current published site does not read rule.enabled yet. Publish active rows only,
+  -- but keep paused rows in ruleCatalog for owner/admin reactivation without redeploy.
+  candidate:=jsonb_set(candidate,'{ruleCatalog}',candidate,true);
+  candidate:=jsonb_set(candidate,'{complements}',
+    COALESCE((SELECT jsonb_agg(x) FROM jsonb_array_elements(complements) x
+              WHERE x->>'enabled'='true'),'[]'::jsonb),true);
+  candidate:=jsonb_set(candidate,'{beverageContexts}',
+    COALESCE((SELECT jsonb_agg(x) FROM jsonb_array_elements(groups) x
+              WHERE x->>'enabled'='true'),'[]'::jsonb),true);
   UPDATE public.menus SET json=jsonb_set(doc,'{cartRecommendations}',candidate,true),
     updated_at=clock_timestamp() WHERE store_id=p_store_id;
   RETURN jsonb_build_object('published',true,'revision',newrev,'rules',candidate);
