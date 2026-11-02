@@ -176,6 +176,56 @@ export function installPromotionsEditor(w=window) {
       +'<button type="button" disabled title="Se habilita solo tras checkout y canje verificados">Publicar descuento · pendiente de integración</button>'
       +'</details>';
   }
+  function liveCampaignEditor(c){
+    const permitted=canOperate(),s=c.schedule||{type:'always'},adv=c.advertising||{};
+    const terms=campaignContext(c,{paymentPercent:liveManagement?.paymentPercent||10,productNames:liveNames()});
+    const d=permitted?'':'disabled';
+    const facts=[
+      ['Cuándo',terms.scheduleText+' · '+terms.hours],
+      ['Vigencia',terms.dates],['Canal',terms.channelNames.join(' y ')],
+      ['Descuento',terms.discount],['Medios de pago',terms.methods],
+      ['Límite',terms.cap],['Requisito',terms.extraRequirement],
+      ['Productos',terms.participating.map(x=>x.name).join(', ')],
+      ['Publicitado en',terms.ads.join(', ')||'Ninguno']
+    ];
+    const factsHtml=facts.map(([k,v])=>'<div class="promo-live-fact"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('');
+    const fields=[
+      formField('live-name','Nombre',c.name,'text','data-live-field="name" maxlength="100" '+d),
+      formField('live-percent','Puntos adicionales al 10% habitual',c.extraPercent??0,'number','data-live-field="extraPercent" min="0" max="10" step=".5" '+d),
+      formField('live-limit','Máximo unidades (vacío = sin tope)',c.maxUnits??'','number','data-live-field="maxUnits" min="1" max="30" '+d),
+      formField('live-priority','Prioridad',c.priority??0,'number','data-live-field="priority" min="0" max="100" '+d),
+      formField('live-from','Desde (opcional)',s.from||'','date','data-live-field="from" '+d),
+      formField('live-until','Hasta (opcional, vacío = sin vencimiento)',s.until||'','date','data-live-field="until" '+d),
+      formField('live-timefrom','Horario desde',s.startTime||'','time','data-live-field="startTime" '+d),
+      formField('live-timeuntil','Horario hasta',s.endTime||'','time','data-live-field="endTime" '+d)
+    ].join('');
+    const choices=(type,values,defs)=>defs.map(([id,label])=>
+      '<label class="promo-checkbox"><input type="checkbox" data-live-'+type+'="'+esc(id)+'" '
+      +((values||[]).includes(id)?'checked':'')+' '+d+'>'+esc(label)+'</label>').join('');
+    return '<section class="promo-card promo-live-editor" data-campaign-id="'+esc(c.id)+'">'
+      +'<div class="promo-row"><h3>Editar campaña publicada · sincronización directa</h3>'+liveSwitch(c.id)+'</div>'
+      +'<div class="promo-live-facts">'+factsHtml+'</div>'
+      +'<h4>Oferta comercial</h4><div class="promo-grid">'+fields+'</div>'
+      +'<label class="promo-field">Calendario<select data-live-field="scheduleType" '+d+'>'
+      +[['always','Todos los días'],['weekly','Días de la semana'],['central_weekends','2.º y 3.º viernes y sábado'],['dates','Fechas concretas']].map(([v,t])=>'<option value="'+v+'"'+(s.type===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'
+      +'<div class="promo-weekdays">'+choices('weekday',s.weekdays||[],WEEK_DAYS.map(([name,id])=>[id,name]))+'</div>'
+      +'<label class="promo-field">Fechas concretas (AAAA-MM-DD, separadas por coma)<input data-live-field="dates" value="'+esc((s.dates||[]).join(', '))+'" '+d+'></label>'
+      +'<h4>Canales</h4><div class="promo-inline">'+choices('channel',c.channels,options)+'</div>'
+      +'<details class="promo-live-products"><summary>Productos participantes · '+terms.participating.length+' elegidos</summary>'
+      +'<label class="promo-field">Buscar producto<input data-live-search placeholder="Filtrar la lista"></label>'
+      +'<div class="promo-choices">'+choices('product',c.productIds,(liveManagement?.products||catalog(w)).map(p=>[p.id,p.name||p.id]))+'</div></details>'
+      +'<h4>Publicidad de esta campaña</h4><label class="promo-checkbox"><input type="checkbox" data-live-field="advertisingEnabled" '+(adv.enabled?'checked':'')+' '+d+'> Mostrar anuncios (no modifica el descuento)</label>'
+      +'<label class="promo-field">Mensaje para el cliente<textarea data-live-field="message" rows="3" maxlength="190" '+d+'>'+esc(adv.message||'')+'</textarea></label>'
+      +'<div class="promo-inline">'+choices('placement',adv.placement,placements)+'</div>'
+      +'<div class="promo-grid"><label class="promo-field">Formato ticket<select data-live-field="ticketFormat" '+d+'>'
+      +[['','Automático'],['A','A · general'],['B','B · descuento'],['D','D · especial']].map(([v,t])=>'<option value="'+v+'"'+(adv.ticketFormat===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'
+      +formField('live-advance','Días de anticipo en ticket',adv.advanceDays??4,'number','data-live-field="advanceDays" min="0" max="14" '+d)+'</div>'
+      +'<p class="promo-note">Texto, vigencia y calendario se actualizan directamente. Cambiar descuento, productos o canales requiere comprobar costos y margen. Ningún cambio modifica pedidos anteriores.</p>'
+      +(liveSaveFeedback?'<p role="status">'+esc(liveSaveFeedback)+'</p>':'')
+      +'<button type="button" data-live-save '+(permitted&&!liveSaveBusy?'':'disabled')+'>'
+      +(liveSaveBusy?'Validando…':'Guardar en la web y todos los equipos')+'</button>'
+      +' <button type="button" data-live-reset>Descartar cambios</button></section>';
+  }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
       :!live.published?'El motor promocional no está publicado. No puede activarse desde este panel.'
@@ -605,6 +655,7 @@ export function installPromotionsEditor(w=window) {
     root.querySelector('[data-promo-sim-method]')?.addEventListener('change',e=>{simulationMethod=e.target.value;render()});
   }
   function campaignEditor(state,c,canEdit) {
+    if(c&&liveManagement?.campaigns?.some(x=>x.id===c.id))return liveCampaignEditor(c);
     if(!c)return '<section class="promo-card"><h3>No hay campañas</h3><button type="button" data-promo-new>+ Nueva campaña</button></section>';
     const disabled=canEdit?'':'disabled';
     const schedule=c.schedule??{type:'always'};
