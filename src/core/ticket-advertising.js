@@ -68,7 +68,13 @@ export function selectTicketAdvertisement(config, {
   const position = rotationKey === null ? 0 :
     Math.abs(Math.trunc(Number(rotationKey) || 0)) % eligible.length;
   const choice = eligible[position];
-  return { kind: 'campaign', audience: 'general',
+  // Los cuatro formatos aprobados son A (general), B (rebaja),
+  // C (cupón REAL emitido) y D (especial). C nunca se asigna a campañas.
+  const preference=choice.c.advertising?.ticketFormat || choice.c.advertising?.layout;
+  const layout=['A','B','D'].includes(preference) ? preference :
+    choice.c.schedule?.type==='central_weekends' ? 'D' :
+    choice.c.schedule?.type==='weekly' ? 'A' : 'B';
+  return { kind: 'campaign', audience: 'general', layout,
     campaignId: clean(choice.c.id, 90),
     headline: clean(choice.c.advertising?.message || choice.c.name),
     ...(choice.next ? { startsOn: choice.next } : {}),
