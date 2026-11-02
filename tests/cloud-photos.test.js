@@ -112,6 +112,7 @@ describe('proyecto con fotos en dos equipos', () => {
       const sync = createSync({ client, remoteId: () => id, setRemoteId: v => { id = v; }, role: () => 'owner', projectId: () => 'local',
         collect: () => structuredClone(file), apply: async f => { file = f; }, publicOf: () => ({}),
         prepareFile: f => s.images.prepare(f, 'store1'), restoreFile: (f, images) => s.images.restore(f, images),
+        backupBeforeSync: async () => true,
         store: { get: () => last, set: (k, v) => { last = v; } },
       });
       return { sync, file: () => file, connect: () => { id = 'rid'; } };
