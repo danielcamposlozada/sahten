@@ -25,7 +25,7 @@ function promotionalFooter(snapshot,esc) {
   const coupon=snapshot.kind==='coupon';
   const headline=esc(snapshot.headline||'Conocé más de SAHTEN');
   const label=String(snapshot.label||'').trim();
-  const date=typeof snapshot.startsOn==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(snapshot.startsOn)
+  const date=typeof snapshot.startsOn==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(snapshot.startsOn)
     ?snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)+'/'+snapshot.startsOn.slice(0,4):'';
   const code=coupon?'<div class="receipt-promo-codebox"><span>CÓDIGO PARA TU PRÓXIMA COMPRA</span><strong class="receipt-promocode">'+esc(snapshot.code)+'</strong></div>':'';
   const detail=coupon
