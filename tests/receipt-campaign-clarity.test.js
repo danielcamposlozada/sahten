@@ -34,6 +34,6 @@ describe('Claridad comercial en el ticket térmico compacto',()=>{
    const ad=selectTicketAdvertisement({enabled:true,ticket:{enabled:true,advertise:true},campaigns:[weekly]},
     {now:new Date('2026-11-02T16:00:00Z'),channel:'online',excludedPromotionIds:['weekly-meals']});
    expect(ad.startsOn).toBe('2026-11-09');
-   expect(ad.expiry).toBeUndefined();
+   expect(ad.expiry).toBe('Sin fecha de fin programada');
  });
 });
