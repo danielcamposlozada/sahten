@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+## 0.4.46
+
+- **Promociones en vivo:** las seis campañas publicadas se muestran desde Supabase aun cuando el archivo local tenga menos. Estados, calendario, nombres y switches verifican directamente el servidor y se reflejan en otras aplicaciones y la tienda online, sin importar archivos de catálogo.
+- **Borradores separados:** no se confunden ofertas activas con propuestas pendientes. Las propuestas no publicadas siguen accesibles en un panel plegable para revisión y publicación segura.
+- **Calendario:** las promociones permanentes sin fechas se reconocen como activas, no como programadas o sin validar.
+- **Tickets 58/80 mm:** publicidad aproximadamente 40% más compacta, condiciones claras, límite de unidad, medios de pago y fecha final real o ausencia de vencimiento programado, sin repetir descuentos aplicados. Se conservan los cuatro formatos aprobados A/B/C/D.
+- **Publicación:** lectura de condiciones comerciales publicadas y controles en vivo; ningún archivo debe subirse manualmente ni se crean cupones ficticios.
+
 ## 0.4.45
 
 - **Pedidos protegidos:** sincronización automática cada 30 segundos para proyectos conectados; antes de aplicar datos de la nube se guarda un respaldo y se conservan todos los pedidos locales y remotos por ID. Ya no se interpretan las ausencias en una copia parcial como borrados.
