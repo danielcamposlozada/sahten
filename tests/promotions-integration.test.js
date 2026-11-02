@@ -2,7 +2,7 @@ import { describe,it,expect } from 'vitest';
 import { quoteOrder } from '../src/payments/core.js';
 import { selectTicketAdvertisement } from '../src/core/ticket-advertising.js';
 import { initialPromotionConfig } from '../src/core/promotions.js';
-import { buildReceipt } from '../src/ui/receipt-template.js';
+import { buildReceipt,buildKitchenReceipt } from '../src/ui/receipt-template.js';
 import { receiptProfile } from '../src/ui/receipt-paper.js';
 import { promotionReport } from '../src/core/promotions-report.js';
 const at='2026-11-02T15:00:00-03:00';
@@ -33,14 +33,35 @@ describe('integración v1: orden y ticket',()=>{
       subtotal:16850,discountAmount:1685,total:15165,notes:'Para llevar',
       promotionTicketSnapshot:snapshot},{paper:receiptProfile(58),reviewHtml:'<div class="receipt-review">GOOGLE REVIEWS QR</div>'});
     expect(html).toContain('ORDEN #0055');expect(html).toContain('Para llevar');
-    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo">'));
+    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo'));
     expect(html.match(/<body>/g)).toHaveLength(1);
   });
   it('reimprimir utiliza la misma instantánea de publicidad; no genera un cupón',()=>{
     const o={num:9,createdAt:at,items:[],source:'pickup',subtotal:100,total:100,
-      promotionTicketSnapshot:{kind:'coupon',code:'SHT-ABCDEF',label:'Válido hasta el 14/11/2026',headline:'Tu próxima compra'}};
+      promotionTicketSnapshot:{kind:'coupon',code:'SHT-ABCDEF',expiresOn:'2026-11-14',label:'Válido hasta el 14/11/2026',headline:'Tu próxima compra'}};
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
+  });
+  it('comanda no contiene importes, cupones, publicidad ni QR de reseñas',()=>{
+    const order={num:15,createdAt:at,source:'delivery',address:'Calle 100',customerName:'María',
+      customerPhone:'1100000000',notes:'Sin cebolla',subtotal:18000,discountAmount:2700,total:15300,
+      items:[{productId:'p',name:'Falafel',qty:2,lineTotal:18000}],
+      promotionTicketSnapshot:{kind:'coupon',code:'SHT-TEST',expiresOn:'2026-12-01'}};
+    const k=buildKitchenReceipt(order,{paper:receiptProfile(58)});
+    expect(k).toContain('2 × Falafel');
+    expect(k).toContain('Sin cebolla');
+    expect(k).not.toContain('SHT-TEST');
+    expect(k).not.toContain('
+    const valid={status:'entregado',promotionSnapshot:{version:1,subtotal:10000,discount:1500,netSubtotal:8500,
+      appliedPromotionIds:['campaign'],lines:[{appliedPromotionId:'campaign',qty:1,net:8500,promotionDiscount:500}]}};
+    const r=promotionReport([valid,{...valid,status:'cancelado'}]);
+    expect(r.orders).toBe(1);expect(r.promotedOrders).toBe(1);
+    expect(r.byPromotion.campaign.discount).toBe(500);
+  });
+});
+);
+    expect(k).not.toContain('receipt-review');
+    expect(k).not.toContain('receipt-promo');
   });
   it('resultados calculados sólo sobre snapshots no cancelados',()=>{
     const valid={status:'entregado',promotionSnapshot:{version:1,subtotal:10000,discount:1500,netSubtotal:8500,
