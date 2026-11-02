@@ -35,9 +35,6 @@ async function _directUploadImageOld(productId) {
       if (typeof renderMostrador === 'function') renderMostrador();
     } catch(e) { alert('Error: ' + e.message); }
   };
-  // La publicidad se selecciona una sola vez al crear la orden y queda congelada para reimpresiones.
-  const promotionConfig=SAHTEN.promotionsEditor?.get?.();
-  if(promotionConfig?.enabled===true)order.promotionTicketSnapshot=SAHTEN.promotions.selectTicketAdvertisement(promotionConfig,{channel:'mostrador',now:new Date(order.createdAt)});
   input.click();
 }
 
@@ -759,7 +756,32 @@ async function orderDelete(orderId) {
 // ═══════════════════════════════════════════════════════════
 // COMANDA PRINTING
 // ═══════════════════════════════════════════════════════════
-function printComanda(orderId, options = {}) {
+async function ensurePublishedCustomerTicketPromotion(order) {
+  if(order.promotionTicketSnapshot)return;
+  const read=SAHTEN.online?.controller?.readPromotionTicketCampaigns;
+  if(typeof read!=='function')return;
+  try{
+    const config=await read();
+    if(config?.source!=='published_server'||config.enabled!==true)return;
+    // Ticket: recomendar una compra FUTURA online. Nunca destacar la misma
+    // promoción que el cliente acaba de aprovechar ni inventar códigos.
+    const applied=order.promotionSnapshot?.appliedPromotionIds||[];
+    const snapshot=SAHTEN.promotions.selectTicketAdvertisement(config,{
+      channel:'online',now:new Date(order.createdAt||Date.now()),
+      excludedPromotionIds:applied,rotationKey:order.num||0
+    });
+    if(snapshot){
+      order.promotionTicketSnapshot=snapshot;
+      _saveOrders();
+    }
+  }catch(err){
+    // No hay publicidad si la verificación de publicación no respondió;
+    // la impresión del documento contable sigue disponible.
+    SAHTEN.pushNotification?.({type:'system',title:'Publicidad de ticket no disponible',
+      body:'La orden #'+String(order.num||'')+' se imprime sin anuncios porque no se pudo consultar el estado publicado.'});
+  }
+}
+async function printComanda(orderId, options = {}) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
 
   // ── Resolve logo for printing ──
@@ -803,6 +825,7 @@ function printComanda(orderId, options = {}) {
     logoHtml = '<div class="brand">' + _esc(brandName) + '</div>';
   }
 
+  if(options.customer)await ensurePublishedCustomerTicketPromotion(o);
   const paper = SAHTEN.receiptPaper.current();
   const html = options.customer ? SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)}) : SAHTEN.receipts.kitchenHtml(o, {paper, logoHtml});
   const printing = options.direct ? SAHTEN.directPrinting.print(html, {paperWidthMm:paper.paperMm}) : SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm});
