@@ -267,19 +267,22 @@ export function installPromotionsEditor(w=window) {
       +(publishFeedback?'<p class="promo-note" role="status">'+esc(publishFeedback)+'</p>':'')
       +(verificationFeedback?'<p class="promo-note" role="status">'+esc(verificationFeedback)+'</p>':'')
       +'<div class="promo-note">Los borradores de Complementos, Mejoras y Cupones se gestionan en sus pestañas, separados de las ofertas publicadas.</div>'
-      +'<div class="promo-row"><div><strong>Proyecto local y nube</strong>'
-      +'<p>Para traer las últimas promociones sin reemplazar pedidos, stock ni catálogo, usá la actualización selectiva. El archivo local conserva un respaldo previo.</p>'
+      +'<details class="promo-local-import"><summary>Importar propuestas antiguas (opcional)</summary><div class="promo-row"><div><strong>Archivo local y nube</strong>'
+      +'<p>Los estados de las campañas publicadas se actualizan solos. Este control sólo sirve para importar borradores antiguos, sin reemplazar pedidos ni catálogo.</p>'
       +(syncFeedback?'<p role="status">'+esc(syncFeedback)+'</p>':'')+'</div>'
-      +'<button type="button" data-promo-sync '+(canSync?'':'disabled')+'>Actualizar promociones desde la nube</button></div>'
+      +'<button type="button" data-promo-sync '+(canSync?'':'disabled')+'>Importar borradores (opcional)</button></div></details>'
       +'</section>';
   }
   function render() {
     ensureLiveContext();
     const root=w.document?.getElementById?.('promotions-editor');if(!root)return;
-    const state=get(), campaigns=liveLoaded&&!liveError&&live.published?liveCatalog():(state.campaigns||[]), c=campaigns.find(x=>x.id===selected)||campaigns[0];
+    const state=get();
+    const published=liveLoaded&&!liveError&&live.published?liveCatalog():[];
+    const campaigns=published.length?[...published,...(state.campaigns||[]).filter(x=>!published.some(p=>p.id===x.id))]:(state.campaigns||[]);
+    const c=campaigns.find(x=>x.id===selected)||campaigns[0];
     if(c)selected=c.id;
     const canEdit=!w.document.body.classList.contains('role-no-costs')&&!w.SAHTEN?.project?.session?.readOnly;
-    const canEditSelected=canEdit&&state.campaigns?.some(x=>x.id===c?.id);
+    const canEditSelected=canEdit&&!!c&&!live.campaigns?.some(x=>x.id===c.id);
     const active=promotionOverview({...state,campaigns},{live:liveLoaded&&!liveError?live:null,now:new Date()}).active;
     const publishedLabel=liveError?'Estado web no verificado'
       :!liveApi()?.info?.()?.signedIn?'Conectá la tienda para ver el estado'
@@ -290,7 +293,7 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Activas verificadas</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
       +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['publishedRecs','Recomendaciones web'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
       + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEditSelected) : tab==='publishedRecs'?recEditor.render():tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor({...state,campaigns}):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor({...state,ticket:liveTicket?.ticket||state.ticket},canEdit&&!liveTicket):tab==='sim'?simEditor(state,w):reportEditor(w))
-      + '<p class="promo-caution">Los borradores son locales hasta publicarlos. Las campañas online verificadas se publican pausadas y requieren activación explícita; los cupones y descuentos por complemento continúan bloqueados.</p>';
+      + '<p class="promo-caution">El tablero consulta las campañas reales de la tienda. Los borradores que aún no cumplen requisitos no pueden aplicar descuentos ni emitir cupones.</p>';
     recEditor.bind(root);
     root.querySelectorAll('[data-rec-open]').forEach(btn=>btn.addEventListener('click',()=>{tab='publishedRecs';render();recEditor.refresh();}));
     root.querySelectorAll('[data-verify-draft]').forEach(b=>b.addEventListener('click',()=>{
@@ -610,9 +613,10 @@ export function installPromotionsEditor(w=window) {
       +[['mon-wed','Lunes y miércoles'],['weekly','Repetir cada semana'],['central','2.º y 3.º viernes y sábado'],['dates','Elegir fechas concretas']]
         .map(([id,name])=>'<option value="'+id+'">'+name+'</option>').join('')+'</select></label>'
       +'<button type="button" data-promo-new '+disabled+'>+ Crear borrador</button></div>'
-      +'<label class="promo-field">Editando<select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
+      +'<label class="promo-field">Campaña<select data-promo-campaign>'+(liveLoaded&&live.published?[...liveCatalog(),...(state.campaigns||[]).filter(x=>!live.campaigns.some(p=>p.id===x.id))]:state.campaigns).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
       +'<div class="promo-row"><button type="button" data-promo-duplicate '+disabled+'>Duplicar campaña como borrador</button>'
       +'<button type="button" data-promo-delete '+(canEdit&&liveLoaded&&!liveError&&!liveBusy&&!remote?'':'disabled')+'>Eliminar borrador local</button></div>'
+      +(remote?'<div class="promo-note">Campaña publicada. Las condiciones se consultan desde la web y la activación se controla mediante el interruptor en vivo; este formulario no sobrescribe las reglas del servidor.</div>':'')
       +'<h3>2. Qué ofrecés</h3>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre visible',c.name,'text','data-field="name" maxlength="100" '+disabled)
       +formField('promo-extra','Descuento adicional (puntos porcentuales)',c.extraPercent,'number','min="1" max="20" step="1" data-field="extraPercent" '+disabled)+'</div>'
