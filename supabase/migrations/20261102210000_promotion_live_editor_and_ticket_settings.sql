@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.get_store_promotion_management(p_store_id uuid
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path=pg_catalog,public,sahten_catalog_private,pg_temp
 AS $$
-DECLARE doc jsonb; rows jsonb;
+DECLARE doc jsonb; rows jsonb; products jsonb;
 BEGIN
  IF auth.uid() IS NULL OR NOT EXISTS (
    SELECT 1 FROM public.stores s WHERE s.id=p_store_id AND
@@ -27,7 +27,13 @@ BEGIN
    WITH ORDINALITY AS c(item,ord)
  LEFT JOIN sahten_catalog_private.promotion_campaign_states st
   ON st.store_id=p_store_id AND st.campaign_id=c.item->>'id';
+ SELECT coalesce(jsonb_agg(jsonb_build_object('id',p.value->>'id',
+  'name',p.value->>'name','price',p.value->'price')
+  ORDER BY p.ord),'[]'::jsonb) INTO products
+ FROM jsonb_array_elements(coalesce(doc->'products','[]'::jsonb))
+ WITH ORDINALITY p(value,ord);
  RETURN jsonb_build_object(
+  'products',products,
   'published',coalesce(doc#>>'{promotions,enabled}','false')='true',
   'campaigns',rows,'paymentPercent',coalesce(doc#>'{promotions,paymentPercent}','10'::jsonb),
   'ticket',coalesce(doc#>'{promotions,ticket}','{}'::jsonb),
