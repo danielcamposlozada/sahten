@@ -371,6 +371,15 @@ export function installPromotionsEditor(w=window) {
       [['Pedidos evaluados',r.orders],['Pedidos con promoción',r.promotedOrders],['Venta bruta evaluada',fmt(r.gross)],['Descuentos otorgados',fmt(r.discount)],['Venta neta de productos',fmt(r.netProducts)]].map(([k,v])=>'<div><span>'+k+'</span><strong>'+v+'</strong></div>').join('')+
       '</div><h4>Por campaña</h4>'+(Object.values(r.byPromotion).length?Object.values(r.byPromotion).map(v=>'<p>'+esc(v.id)+' · '+v.orders+' líneas · '+fmt(v.revenue)+' vendidos</p>').join(''):'<p>Sin operaciones promocionales registradas.</p>')+'</section>';
   }
+  // Reconciliación en vivo: misma frecuencia que el menú publicado, sin necesidad de recargar.
+  // No se envían cambios al servidor por abrir la pantalla.
+  if(typeof w.setInterval==='function')w.setInterval(()=>{
+    if(w.currentPanel!=='promociones'||w.document?.visibilityState==='hidden'||liveBusy||!liveApi()?.info?.()?.signedIn)return;
+    refreshLive();
+  },10000);
+  w.addEventListener?.('focus',()=>{
+    if(w.currentPanel==='promociones'&&liveApi()?.info?.()?.signedIn)refreshLive();
+  });
   // Renderiza al abrir el panel. Los cambios afectan sólo los borradores de este proyecto.
   return {render:()=>{render();if(!liveLoaded&&!liveBusy&&liveApi()?.info?.()?.signedIn===true)refreshLive();},get,save};
 }
