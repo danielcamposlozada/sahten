@@ -145,12 +145,12 @@ describe('menú y pedidos', () => {
     o.status = 'cancelado'; const second = s.ctl.pushStatus(o); expect(writes).toEqual(['preparando']); release();
     await Promise.all([first, second]); expect(writes).toEqual(['preparando', 'cancelado']); expect(o.remoteStatus).toBe('cancelado'); expect(o.remoteStatusPending).toBeUndefined();
   });
-  it('actualiza un reembolso de un pedido ya entregado sin duplicarlo ni importar pedidos históricos ajenos', async () => {
+  it('actualiza un reembolso y recupera pedidos históricos sin duplicarlos ni notificarlos', async () => {
     const row={id:'old-paid',status:'entregado',payment_provider:'mercadopago',payment_ref:'ref1',payment_status:'refunded',payload:{customerName:'Ana',total:1000}};
     const s=setup({conn,storage:{'online-session:p1':session},routes:{'/rest/v1/orders':{body:[row,{...row,id:'another-old'}]}}});
     s.orders.push({remoteId:'old-paid',status:'listo',paymentProvider:'mercadopago',paymentStatus:'paid',paymentReference:'ref1'});
     let saves=0;s.host.orders.save=()=>saves++;
-    await s.ctl.resume();expect(s.orders).toHaveLength(1);expect(s.orders[0]).toMatchObject({status:'entregado',paymentStatus:'refunded'});expect(saves).toBe(1);expect(s.notes).toHaveLength(0);
+    await s.ctl.resume();expect(s.orders).toHaveLength(2);expect(s.orders.find(o=>o.remoteId==='old-paid')).toMatchObject({status:'entregado',paymentStatus:'refunded'});expect(s.orders.find(o=>o.remoteId==='another-old').status).toBe('entregado');expect(saves).toBe(1);expect(s.notes).toHaveLength(0);
   });
   it('sin sesión guardada o vencida: lo informa y no escucha', async () => {
     const s = setup({ conn });
