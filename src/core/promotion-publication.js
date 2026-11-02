@@ -1,6 +1,20 @@
-// Gatekeeper for publishing zero-discount local proposals as live cart recommendations.
-// Actual publication still requires an authenticated owner/admin and server CAS validation.
+import { validateCampaignDraft } from './campaign-builder.js';
+// Gatekeeper: rules are checked again against the real catalog and costs by the server.
 export function publicationKind(type, proposal={}) {
+  if(type==='campaigns'){
+    if(proposal.enabled!==true)return {ready:false,reason:'Primero incluí la campaña en la planificación local.'};
+    if(!/^[a-z0-9][a-z0-9_-]{2,50}$/.test(String(proposal.id||'')) || proposal.kind!=='public')
+      return {ready:false,reason:'El identificador de la campaña no es válido.'};
+    const issues=validateCampaignDraft(proposal);
+    if(issues.length)return {ready:false,reason:issues.join(' ')};
+    if(!Array.isArray(proposal.channels)||proposal.channels.length!==1||proposal.channels[0]!=='online')
+      return {ready:false,reason:'La primera publicación verificada admite solo el canal Tienda online. Mostrador requiere cotización específica.'};
+    if(Number(proposal.extraPercent)>10)
+      return {ready:false,reason:'El adicional no puede superar 10 puntos: 10% habitual + 10% adicional = 20% máximo.'};
+    if(!Number.isInteger(Number(proposal.priority??10)) || Number(proposal.priority??10)>100)
+      return {ready:false,reason:'Revisá la prioridad (0–100).'};
+    return {ready:true,reason:'Lista para verificar costos y publicarse pausada. Después podrás activarla desde el switch en vivo.'};
+  }
   if (type!=='crossSells')return {ready:false,reason:type==='campaigns'
     ?'Las campañas deben publicarse y validarse con el motor de descuentos.'
     :type==='couponPrograms'?'El programa necesita emisión y canje único verificados en el servidor.'

@@ -93,7 +93,7 @@ export function quotePromotions({
     if(config.enabled && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
         id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
-        kind:'campaign',maxUnits: c.maxUnits
+        kind:'campaign',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct,requiresVerifiedCosts:c.requiresVerifiedCosts===true
       });
       for(const c of (config.upsells||[])) if(!strictUpsells && cash && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
@@ -112,7 +112,7 @@ export function quotePromotions({
       const discount=Math.min(base,payment+extra);
       const fee=amount(base-discount,commissionPercent);
       const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
-      if(config.requireVerifiedCosts&&!known)return null;
+      if((config.requireVerifiedCosts||candidate.requiresVerifiedCosts)&&!known)return null;
       // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
       const realized=base-discount-fee;
       if(known&&Number.isFinite(minMargin)&&minMargin>0&&

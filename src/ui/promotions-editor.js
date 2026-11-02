@@ -114,6 +114,16 @@ export function installPromotionsEditor(w=window) {
     return recEditor.get()?.rules?.complements?.find(x=>x.id===id)||null;
   }
   function draftPublicationControl(type,item){
+    if(type==='campaigns'){
+      const published=live.campaigns?.find(x=>x.id===item.id);
+      if(published)return '<span class="promo-note" role="status">Campaña publicada · '+(published.enabled?'Activa en web':'Pausada en web')+'</span>';
+      const gate=publicationKind(type,item);
+      if(!gate.ready)return '<p class="promo-caution">No se puede publicar todavía: '+esc(gate.reason)+'</p>';
+      if(!liveLoaded||!live.published||liveError)return '<p class="promo-note">Consultá primero el estado del motor promocional publicado.</p>';
+      return '<button type="button" class="rec-publish-btn" data-publish-campaign="'+esc(item.id)+'"'
+        +(canOperate()&&!publishBusy&&!liveBusy?'':' disabled')+'>Publicar campaña (pausada)</button>'
+        +(!canOperate()?'<small>Conectá la tienda como dueño o administrador para publicar.</small>':'');
+    }
     if(type!=='crossSells')return '';
     const published=publishedRecommendation(item.id);
     if(published)return '<span class="promo-note" role="status">'+(published.enabled===false?'Publicada, pero pausada en web':'Publicada y habilitada en web')+'</span>'
@@ -188,9 +198,40 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Activas verificadas</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
       +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['publishedRecs','Recomendaciones web'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
       + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='publishedRecs'?recEditor.render():tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
-      + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
+      + '<p class="promo-caution">Los borradores son locales hasta publicarlos. Las campañas online verificadas se publican pausadas y requieren activación explícita; los cupones y descuentos por complemento continúan bloqueados.</p>';
     recEditor.bind(root);
     root.querySelectorAll('[data-rec-open]').forEach(btn=>btn.addEventListener('click',()=>{tab='publishedRecs';render();recEditor.refresh();}));
+    root.querySelectorAll('[data-publish-campaign]').forEach(btn=>btn.addEventListener('click',async()=>{
+      if(!canOperate()||publishBusy||liveBusy||!live.published)return;
+      const draft=get().campaigns?.find(x=>x.id===btn.dataset.publishCampaign);
+      if(!draft)return;
+      const gate=publicationKind('campaigns',draft);
+      if(!gate.ready){publishFeedback=gate.reason;campaignFeedback=gate.reason;render();return;}
+      const accepted=await w.sahtenConfirm?.(
+        '¿Publicar «'+draft.name+'» en la tienda online? El servidor validará productos, costos y margen. Se publicará PAUSADA: no habrá descuentos nuevos hasta que uses el switch Activar.',
+        {title:'Publicar campaña pausada',okLabel:'Publicar pausada'});
+      if(accepted!==true||!canOperate()||publishBusy||liveBusy||currentLiveContext()!==liveContext)return;
+      const context=liveContext;
+      publishBusy=true;publishFeedback='Validando rentabilidad y publicación…';campaignFeedback=publishFeedback;render();
+      try{
+        const response=await liveApi().publishPromotionCampaignDraft(draft);
+        if(response?.published!==true || response.id!==draft.id || response.enabled!==false)
+          throw new Error('El servidor no confirmó una publicación pausada.');
+        const checked=await liveApi().readPromotionCampaignStates();
+        if(context!==currentLiveContext())return;
+        if(!checked?.campaigns?.some(x=>x.id===draft.id && x.enabled===false))
+          throw new Error('La campaña no aparece pausada en el menú del servidor.');
+        live=checked;liveLoaded=true;
+        publishFeedback='«'+draft.name+'» publicada en pausa. Para activarla, utilizá el switch en vivo.';
+        campaignFeedback=publishFeedback;
+      }catch(e){
+        if(context===currentLiveContext()){
+          publishFeedback='No se publicó: '+String(e?.message||e).slice(0,190);
+          campaignFeedback=publishFeedback;
+          try{const read=await liveApi().readPromotionCampaignStates();if(read)live=read;}catch{}
+        }
+      }finally{publishBusy=false;render();}
+    }));
     root.querySelectorAll('[data-publish-draft]').forEach(btn=>btn.addEventListener('click',async()=>{
       if(!canOperate()||publishBusy)return;
       const draft=get().crossSells?.find(x=>x.id===btn.dataset.publishDraft);
@@ -414,6 +455,7 @@ export function installPromotionsEditor(w=window) {
       +'<p>El estado publicado se controla por separado del borrador para que no haya activaciones accidentales.</p>'
       +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
       +(ready?liveSwitch(c.id):'<p class="promo-note">Esta campaña todavía es un borrador; su activación comercial no está publicada.</p>'+liveSwitch(c.id))
+      +draftPublicationControl('campaigns',c)
       +'<button type="button" data-live-refresh>Consultar estado web</button>'
       +'<h3>Mensaje y publicidad</h3>'
       +'<label class="promo-field">Mensaje publicitario<textarea data-field="message" rows="3" '+disabled+'>'+esc(c.advertising?.message||'')+'</textarea></label>'
