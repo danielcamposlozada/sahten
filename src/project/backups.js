@@ -20,7 +20,7 @@ export const BACKUP_DAYS = 14;
 export const BACKUP_HOURS = 48;
 const hourKey = d => dayKey(d) + 'T' + pad(d.getHours());
 export const hourlyName = (name, d) => `.${safe(name)}.hourly-${hourKey(d)}.sahten`;
-const HOURLY_RE = /^\\..*\\.hourly-(\\d{4}-\\d{2}-\\d{2}T\\d{2})\\.sahten$/;
+const HOURLY_RE = /^[.].*[.]hourly-([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2})[.]sahten$/;
 
 /** Copia horaria local y conservadora: 48 horas, sin modificar ni reemplazar
  * ningún respaldo diario. Se utiliza también antes de una descarga de nube. */
