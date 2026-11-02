@@ -69,7 +69,7 @@ function eligibleLine(candidate,line,lines) {
 export function quotePromotions({
   lines = [], method = '', channel = 'online', now = new Date(),
   config = {}, coupon = null, customerId = null,
-  commissionPercent = 0, trustedCosts = {},
+  commissionPercent = 0, trustedCosts = {}, clientPreview = false,
   trustedEconomics = {}, trustedUpsellSelection = null, trustedOrderCosts = null
 } = {}) {
   const source = Array.isArray(lines)?lines:[];
@@ -114,12 +114,12 @@ export function quotePromotions({
       const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
       // Una regla con piso de margen siempre exige un costo firmado por el servidor.
       // Evita aplicar descuentos ante la pérdida de un snapshot de costos.
-      if((config.requireVerifiedCosts||candidate.requiresVerifiedCosts||
+      if((!clientPreview&&(config.requireVerifiedCosts||candidate.requiresVerifiedCosts||
           (candidate.minMarginPct!=null && Number.isFinite(Number(candidate.minMarginPct))
-            && Number(candidate.minMarginPct)>0))&&!known)return null;
+            && Number(candidate.minMarginPct)>0)))&&!known)return null;
       // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
       const realized=base-discount-fee;
-      if(known&&Number.isFinite(minMargin)&&minMargin>0&&
+      if(!clientPreview&&known&&Number.isFinite(minMargin)&&minMargin>0&&
         (realized<=0||(realized-toCents(cost)*l.qty)/realized*100<minMargin))return null;
       return {candidate,extra,discount};
     }).filter(Boolean).sort((a,b)=>b.discount-a.discount||b.candidate.priority-a.candidate.priority);
