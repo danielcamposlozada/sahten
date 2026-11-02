@@ -194,6 +194,12 @@ export function createController(host) {
         p_rules:rules,p_expected_revision:expectedRevision
       });
     },
+    async readPromotionTicketCampaigns() {
+      if(!client||!host.conn.storeId)return null;
+      const ctx=context();
+      const result=await ctx.client.rpc('get_store_ticket_promotions',{p_store_id:ctx.storeId});
+      check(ctx);return result;
+    },
     async readPromotionCampaignStates() {
       if (!client || !host.conn.storeId) return null;
       const ctx=context(),result=await ctx.client.rpc('get_promotion_campaign_states',{p_store_id:ctx.storeId});check(ctx);return result;

@@ -29,7 +29,7 @@ it('cola enruta local/web por separado, espera el envío nativo y no repite hist
  const receipts=installReceipts(w);receipts.save({autoLocal:true,autoOnline:true,directLocal:false,directOnline:true});
  expect(receipts.enqueue(online,{origin:'online',initial:true})).toBe(false);
  receipts.enqueue(local);receipts.enqueue(online,{origin:'online'});await new Promise(r=>setTimeout(r,0));
- expect(w.printComanda.mock.calls).toEqual([['local',{automatic:true,direct:false}],['online',{automatic:true,direct:true}]]);
+ expect(w.printComanda.mock.calls).toEqual([['local',{automatic:true,direct:false,customer:true}],['online',{automatic:true,direct:true,customer:true}]]);
  expect(receipts.enqueue(online,{origin:'online'})).toBe(false);expect(w.pushNotification).not.toHaveBeenCalled();w.close();
 });
 it('render aislado conserva ticket/estilos, elimina código y fuentes externas, informa tamaño una sola vez',async()=>{

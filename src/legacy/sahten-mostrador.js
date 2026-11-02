@@ -35,9 +35,6 @@ async function _directUploadImageOld(productId) {
       if (typeof renderMostrador === 'function') renderMostrador();
     } catch(e) { alert('Error: ' + e.message); }
   };
-  // La publicidad se selecciona una sola vez al crear la orden y queda congelada para reimpresiones.
-  const promotionConfig=SAHTEN.promotionsEditor?.get?.();
-  if(promotionConfig?.enabled===true)order.promotionTicketSnapshot=SAHTEN.promotions.selectTicketAdvertisement(promotionConfig,{channel:'mostrador',now:new Date(order.createdAt)});
   input.click();
 }
 
@@ -674,6 +671,12 @@ function orderSetStatus(orderId, status) {
   if (final.includes(status)) o.completedAt = o.updatedAt;
   else delete o.completedAt;
   _saveOrders();
+  // Al aceptar un pedido recibido de la web, imprimir el TICKET DE CLIENTE
+  // únicamente si está activada la impresión automática para pedidos online.
+  // La comanda de cocina queda reservada para el botón explícito de la tarjeta.
+  if (previous === 'pendiente' && status === 'en_preparacion' && SAHTEN.orderWorkflow?.isOnlineOrder(o)) {
+    SAHTEN.receipts.enqueue(o,{origin:'online'});
+  }
   if (mostradorTab === 'delivery' && typeof _renderDeliveryTab === 'function') _renderDeliveryTab();
   else if (mostradorTab === 'historial') _renderHistorialTab();
 }
@@ -716,7 +719,7 @@ function openOrderDetail(orderId) {
     SAHTEN.pricing.orderDetail(o) +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">' +
     (o.stockDeducted?'<button class="btn" onclick="orderRestoreStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Devuelve al stock lo descontado por esta orden">↩ Revertir stock</button>':'<button class="btn" onclick="orderDeductStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Descuenta ingredientes y envases según las recetas">📦 Descontar stock</button>') +
-    '<button class="btn" onclick="printTicketCliente(\''+o.id+'\')" title="Imprimir ticket del cliente">▤ Ticket cliente</button><button class="btn btn-primary" onclick="printComanda(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir comanda</button>' +
+    '<button class="btn" onclick="printTicketCliente(\''+o.id+'\')" title="Imprimir ticket del cliente">▤ Ticket cliente</button>' +
     '<button class="btn" onclick="orderReopen(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar (reabrir)</button>' +
     '<button class="btn" style="color:var(--red);border-color:var(--red)" onclick="orderDelete(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> Eliminar</button>' +
     '</div></div></div>';
@@ -753,7 +756,32 @@ async function orderDelete(orderId) {
 // ═══════════════════════════════════════════════════════════
 // COMANDA PRINTING
 // ═══════════════════════════════════════════════════════════
-function printComanda(orderId, options = {}) {
+async function ensurePublishedCustomerTicketPromotion(order) {
+  if(order.promotionTicketSnapshot)return;
+  const read=SAHTEN.online?.controller?.readPromotionTicketCampaigns;
+  if(typeof read!=='function')return;
+  try{
+    const config=await read();
+    if(config?.source!=='published_server'||config.enabled!==true)return;
+    // Ticket: recomendar una compra FUTURA online. Nunca destacar la misma
+    // promoción que el cliente acaba de aprovechar ni inventar códigos.
+    const applied=order.promotionSnapshot?.appliedPromotionIds||[];
+    const snapshot=SAHTEN.promotions.selectTicketAdvertisement(config,{
+      channel:'online',now:new Date(order.createdAt||Date.now()),
+      excludedPromotionIds:applied,rotationKey:order.num||0
+    });
+    if(snapshot){
+      order.promotionTicketSnapshot=snapshot;
+      _saveOrders();
+    }
+  }catch(err){
+    // No hay publicidad si la verificación de publicación no respondió;
+    // la impresión del documento contable sigue disponible.
+    SAHTEN.pushNotification?.({type:'system',title:'Publicidad de ticket no disponible',
+      body:'La orden #'+String(order.num||'')+' se imprime sin anuncios porque no se pudo consultar el estado publicado.'});
+  }
+}
+async function printComanda(orderId, options = {}) {
   const o = SAHTEN_ORDERS.find(x=>x.id===orderId); if(!o) return;
 
   // ── Resolve logo for printing ──
@@ -797,6 +825,7 @@ function printComanda(orderId, options = {}) {
     logoHtml = '<div class="brand">' + _esc(brandName) + '</div>';
   }
 
+  if(options.customer)await ensurePublishedCustomerTicketPromotion(o);
   const paper = SAHTEN.receiptPaper.current();
   const html = options.customer ? SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)}) : SAHTEN.receipts.kitchenHtml(o, {paper, logoHtml});
   const printing = options.direct ? SAHTEN.directPrinting.print(html, {paperWidthMm:paper.paperMm}) : SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm});

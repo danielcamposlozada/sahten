@@ -7,7 +7,7 @@ function upcomingDate(c,now,maxDays) {
   return null;
 }
 const clean=(s,max=150)=>String(s||'').replace(/[\r\n<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,max);
-export function selectTicketAdvertisement(config,{now=new Date(),channel='mostrador',coupon=null,excludedPromotionIds=[]}={}){
+export function selectTicketAdvertisement(config,{now=new Date(),channel='mostrador',coupon=null,excludedPromotionIds=[],rotationKey=null}={}){
   if(config?.enabled!==true||config.ticket?.enabled!==true)return null;
   // El código individual YA debe haberse emitido por el backend; jamás generarlo al imprimir.
   if(coupon?.code&&coupon?.expiresOn&&coupon?.status==='available'){
@@ -20,6 +20,22 @@ export function selectTicketAdvertisement(config,{now=new Date(),channel='mostra
     c.advertising?.placement?.includes('ticket')&&(!c.channels||c.channels.includes(channel))):[];
   const upcoming=listed.map(c=>({c,next:upcomingDate(c,now,Math.max(0,Math.min(14,Number(c.advertising.advanceDays)||4)))}))
     .filter(v=>v.next).sort((a,b)=>a.next.localeCompare(b.next) || (b.c.priority||0)-(a.c.priority||0));
+  // Las promociones activas se alternan entre tickets; sólo se elige UNA.
+  // Las usadas en esta compra están excluidas y las próximas fechas sólo
+  // aparecen cuando no hay una campaña actualmente disponible.
+  const live=activeCampaigns(config,now,channel).filter(c=>
+    !applied.has(c.id)&&c.advertising?.enabled&&c.advertising.placement?.includes('ticket'))
+    .sort((a,b)=>(b.priority||0)-(a.priority||0)||String(a.id).localeCompare(String(b.id)));
+  if(rotationKey!==null){
+    const eligible=live.length?live:upcoming.map(v=>v.c);
+    if(!eligible.length)return null;
+    const index=(Math.abs(Number(rotationKey)||0)%eligible.length);
+    const chosen=eligible[index];
+    const next=live.length?null:upcoming.find(v=>v.c.id===chosen.id)?.next;
+    return {kind:'campaign',campaignId:clean(chosen.id,90),
+      headline:clean(chosen.advertising?.message||chosen.name),
+      ...(next?{startsOn:next}:{}),selectedAt:new Date(now).toISOString()};
+  }
   const found=upcoming[0] ? {c:upcoming[0].c,upcoming:upcoming[0].next}
     : activeCampaigns(config,now,channel).filter(c=>!applied.has(c.id)&&c.advertising?.enabled&&c.advertising.placement?.includes('ticket'))
       .sort((a,b)=>(b.priority||0)-(a.priority||0)).map(c=>({c}))[0];
