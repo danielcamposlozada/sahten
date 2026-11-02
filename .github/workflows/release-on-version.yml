@@ -9,6 +9,7 @@ on:
       - '.github/workflows/release-on-version.yml'
       - 'package.json'
       - 'src-tauri/tauri.conf.json'
+      - 'CHANGELOG.md'
   workflow_dispatch: {}
 permissions:
   contents: read
