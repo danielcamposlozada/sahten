@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+## 0.4.44
+
+- **Campañas públicas en ticket de cliente:** las promociones semanales y los fines de semana centrales participan en la rotación aunque existan descuentos permanentes.
+- **Ediciones futuras:** si el cliente ya usó una campaña recurrente, se anuncia sólo una edición posterior claramente fechada, nunca el mismo beneficio como premio personal.
+- **Comanda de cocina:** mantiene la exclusión de precios, QR y anuncios. Pruebas de impresión, rotación y reglas de campaña.
+
 ## 0.4.43
 
 - **Ticket de cliente predeterminado:** al cobrar en mostrador y al aceptar un pedido online se imprime el ticket del cliente una sola vez si la opción de impresión automática está habilitada; la comanda de cocina queda disponible únicamente desde el botón de la tarjeta.
