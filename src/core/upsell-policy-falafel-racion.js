@@ -18,7 +18,7 @@ export function falafelRacionUpsellDraft(fatayPolicy) {
   productIds:[FALAFEL_RACION_ID],
   triggerProductIds:[...(fatayPolicy.triggerProductIds||[])],
   suppressIfPresent:[
-   ...new Set([...(fatayPolicy.suppressIfPresent||[]),FALAFEL_RACION_ID,
+   ...new Set([...(fatayPolicy.suppressIfPresent||[]),
     'falafel_mix','sandwich_falafel'])
   ],
   discountTiers:tiers.map(t=>({...t})),
