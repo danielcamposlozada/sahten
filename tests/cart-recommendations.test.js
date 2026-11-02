@@ -52,6 +52,18 @@ describe('Sugerencias opcionales, pertinentes y sin descuentos',()=>{
   expect(rec([{id:'shawarma',qty:1}],{policy:{enabled:false}})).toEqual([]);
   expect(rec([{id:'shawarma',qty:1}],{showPrices:false})).toEqual([]);
  });
+ it('SUPERMIX real dispara bebidas de 220 o 600 ml según monto, sin rebaja implícita',()=>{
+  const revised=products.map(p=>p.id==='shawarma'?{...p,id:'p1779299917243',name:'Shawarma SUPERMIX',price:16850}:p);
+  const opts={...policy,beverageContexts:policy.beverageContexts.map(g=>({...g,
+   triggerProductIds:g.triggerProductIds.map(id=>id==='shawarma'?'p1779299917243':id)})),
+   complements:policy.complements.map(g=>({...g,
+    triggerProductIds:g.triggerProductIds.map(id=>id==='shawarma'?'p1779299917243':id)}))};
+  const small=recommendCartAddons({products:revised,cart:[{id:'p1779299917243',qty:1}],policy:opts});
+  const large=recommendCartAddons({products:revised,cart:[{id:'p1779299917243',qty:2}],policy:opts});
+  expect(small[0]).toMatchObject({id:'coke220',price:1400,kind:'beverage'});
+  expect(large[0]).toMatchObject({id:'coke600',price:2500,kind:'beverage'});
+  expect(small[0]).not.toHaveProperty('discount');
+ });
  it('siempre devuelve precio de lista sin descuentos ni costos financieros',()=>{
   for(const item of rec([{id:'shawarma',qty:1}])) {
    expect(item.price).toBe(products.find(p=>p.id===item.id).price);
