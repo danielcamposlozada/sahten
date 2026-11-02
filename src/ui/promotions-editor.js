@@ -445,6 +445,55 @@ export function installPromotionsEditor(w=window) {
       }catch(e){syncFeedback='No se pudo actualizar: '+String(e?.message||e).slice(0,220);}
       render();refreshLive();
     });
+    root.querySelector('.promo-live-editor')?.addEventListener('input',()=>{liveEditDirty=true;});
+    root.querySelector('[data-live-search]')?.addEventListener('input',ev=>{
+      const q=ev.target.value.toLowerCase();
+      root.querySelectorAll('.promo-live-products .promo-checkbox').forEach(el=>{
+        el.hidden=!el.textContent.toLowerCase().includes(q);
+      });
+    });
+    root.querySelector('[data-live-reset]')?.addEventListener('click',()=>{
+      liveEditDirty=false;liveSaveFeedback='Cambios descartados.';render();refreshLive();
+    });
+    root.querySelector('[data-live-save]')?.addEventListener('click',async()=>{
+      const el=root.querySelector('.promo-live-editor'),id=el?.dataset.campaignId,
+        c=liveCatalog().find(x=>x.id===id),revision=live.campaigns?.find(x=>x.id===id)?.revision??null;
+      if(!c||!canOperate()||liveSaveBusy||!liveApi()?.updatePromotionCampaignDetails)return;
+      const value=key=>el.querySelector('[data-live-field="'+key+'"]')?.value??'';
+      const checked=key=>!!el.querySelector('[data-live-field="'+key+'"]')?.checked;
+      const selected=(key)=>[...el.querySelectorAll('[data-live-'+key+']:checked')].map(x=>x.getAttribute('data-live-'+key));
+      const type=value('scheduleType'),schedule={type};
+      if(type==='weekly')schedule.weekdays=selected('weekday').map(Number).sort((a,b)=>a-b);
+      if(type==='dates')schedule.dates=value('dates').split(',').map(s=>s.trim()).filter(Boolean);
+      for(const k of ['from','until','startTime','endTime'])if(value(k))schedule[k]=value(k);
+      const adv={...c.advertising,enabled:checked('advertisingEnabled'),message:value('message').trim(),
+        placement:selected('placement'),advanceDays:Number(value('advanceDays')),
+        ticketFormat:value('ticketFormat')||null};
+      const candidate={name:value('name').trim(),priority:Number(value('priority')),
+        extraPercent:Number(value('extraPercent')),maxUnits:value('maxUnits')===''?null:Number(value('maxUnits')),
+        productIds:selected('product'),channels:selected('channel'),
+        schedule,advertising:adv};
+      const before={...c,schedule:c.schedule||{type:'always'},advertising:c.advertising||{}};
+      const changes=Object.fromEntries(Object.entries(candidate).filter(([k,v])=>
+        JSON.stringify(v)!==JSON.stringify(before[k])));
+      if(!Object.keys(changes).length){liveEditDirty=false;liveSaveFeedback='No hay cambios para publicar.';render();return;}
+      const economics=['extraPercent','productIds','channels'].some(k=>Object.hasOwn(changes,k));
+      const yes=await w.sahtenConfirm?.(economics
+        ?'El servidor volverá a verificar costos, precios y margen. Si no es rentable, rechazará el cambio. ¿Guardar?'
+        :'Guardar los cambios de esta campaña en Supabase y reflejarlos en la web y los demás equipos?',
+        {title:'Guardar campaña publicada',okLabel:'Guardar y sincronizar'});
+      if(yes!==true)return;
+      liveSaveBusy=true;liveSaveFeedback='Validando y guardando en el servidor…';
+      const status=el.querySelector('[role="status"]');if(status)status.textContent=liveSaveFeedback;
+      try{
+        await liveApi().updatePromotionCampaignDetails(id,changes,revision);
+        liveEditDirty=false;liveSaveFeedback='Cambios publicados y sincronizados. Los demás equipos verán la actualización.';
+        await refreshLive();
+      }catch(err){
+        liveSaveFeedback='No se guardó: '+String(err?.message||err).slice(0,220)+'. Revisá el conflicto o el margen.';
+        const p=el.querySelector('[role="status"]');if(p)p.textContent=liveSaveFeedback;
+      }finally{liveSaveBusy=false;}
+    });
     root.querySelectorAll('[data-live-toggle]').forEach(button=>button.addEventListener('click',async()=>{
       if(!canOperate()||liveBusy||!live.published)return;
       const row=live.campaigns.find(x=>x.id===button.dataset.liveToggle);if(!row)return;
