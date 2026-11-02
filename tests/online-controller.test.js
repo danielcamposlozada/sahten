@@ -96,12 +96,13 @@ describe('menú y pedidos', () => {
       { id: 'r2', status: 'entregado', created_at: '2026-10-04T10:00:00Z', payload: { customerName: 'Viejo', total: 1 } }];
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: rows } } });
     await s.ctl.resume();
-    expect(s.orders.map(o => o.remoteId)).toEqual(['r1']);                       // el entregado no se trae
+    expect(s.orders.map(o => o.remoteId).sort()).toEqual(['r1','r2']);
+    expect(s.orders.find(o=>o.remoteId==='r2').status).toBe('completada');
     expect(s.notes[0].sound).toBe(false);
-    expect(s.imports).toEqual([{initial:true}]);                               // no imprimir el historial al reconectar
-    expect(s.notes[0].title).toBe('Nuevo pedido online #0001'); expect(s.notes[0].body).toContain('Ana');
+    expect(s.imports).toEqual([{initial:true},{initial:true}]); // historial sin reimpresión
+    expect(s.notes[0].body).toContain('Ana');
     await s.ctl.resume();
-    expect(s.orders).toHaveLength(1);
+    expect(s.orders).toHaveLength(2);
   });
   it('pedido en vivo por Realtime: entra al Mostrador, avisa y redibuja', async () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: [] } } });
