@@ -26,5 +26,9 @@ jobs:
       - run: npm ci
       - name: PGlite atomicidad real e integraciones Edge sin red
         run: npx vitest run tests/upsell-delivery-atomic-db.test.js tests/upsell-edge-integration.test.js tests/upsell-hmac-quote.test.js tests/mercadopago.test.js
+      - name: Suite completa de regresión Sahten
+        run: npm test
+      - name: Compilar web
+        run: npm run build
       - name: Compilar sin desplegar ni activar promociones
         run: SAHTEN_ONLINE=false npm run build
