@@ -116,7 +116,7 @@ jobs:
                 d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
                 Number(d.payments?.benefit?.percent)!==10||
                 d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})"; && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})" then
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
               echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
               exit 0
             fi
