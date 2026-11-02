@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+- **Publicación de campañas desde borradores:** se habilita «Publicar campaña (pausada)» para campañas válidas en Tienda online. El servidor exige permisos dueño/admin, valida catálogo, costos reales, 40% de margen, descuentos dentro de 20% total y fecha/canal, e incorpora la campaña sin tocar precios, fotos ni pedidos.
+- **Activación separada:** publicar no aplica descuentos ni enciende switches. Solo después de la confirmación del servidor puede activarse o pausarse por campaña; se conserva el estado ante sincronizaciones completas del menú.
+- **Primer alcance controlado:** borradores de Mostrador, complementos con descuento, cupones y Mercado Pago siguen bloqueados hasta sus validaciones específicas. El motor de pedidos rechaza las nuevas campañas si faltan costos verificados.
+
 ## 0.4.39
 
 - **Publicar sugerencias directamente:** botón «Publicar en web» en la tarjeta de un borrador sin descuento y con ubicación carrito. Pide confirmación, valida el producto y las condiciones contra el catálogo publicado, escribe en el servidor con revisión y confirma el resultado antes de mostrar «Publicada».
