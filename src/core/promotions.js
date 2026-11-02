@@ -112,7 +112,10 @@ export function quotePromotions({
       const discount=Math.min(base,payment+extra);
       const fee=amount(base-discount,commissionPercent);
       const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
-      if((config.requireVerifiedCosts||candidate.requiresVerifiedCosts)&&!known)return null;
+      // Una regla con piso de margen siempre exige un costo firmado por el servidor.
+      // Evita aplicar descuentos ante la pérdida de un snapshot de costos.
+      if((config.requireVerifiedCosts||candidate.requiresVerifiedCosts||
+          (Number.isFinite(minMargin)&&minMargin>0))&&!known)return null;
       // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
       const realized=base-discount-fee;
       if(known&&Number.isFinite(minMargin)&&minMargin>0&&
