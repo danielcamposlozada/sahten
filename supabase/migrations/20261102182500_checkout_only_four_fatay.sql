@@ -55,7 +55,7 @@ BEGIN
   FROM jsonb_array_elements(project_data#>'{promotions,productUpgrades}') x),true);
  UPDATE public.projects SET data=next_project WHERE id=pid;
  IF (SELECT jsonb_array_length(json->'products') FROM public.menus WHERE store_id=sid)<>48
-    OR NOT EXISTS(SELECT 1 FROM public.menus m,CROSS JOIN LATERAL jsonb_array_elements(m.json->'products') p
+    OR NOT EXISTS(SELECT 1 FROM public.menus m CROSS JOIN LATERAL jsonb_array_elements(m.json->'products') p
        WHERE m.store_id=sid AND p->>'id'='p1779570052552'
        AND p->>'upsellOnly'='true' AND p->>'upgradeFrom'='p1779467294622'
        AND p->>'price'='18500')
