@@ -6,7 +6,7 @@ import {receiptProfile} from '../src/ui/receipt-paper.js';
 const order=()=>({num:245,source:'pickup',createdAt:'2026-11-02T16:30:00-03:00',
  items:[{productId:'fatay',name:'Fatay',qty:1,lineTotal:5850}],
  subtotal:5850,discountAmount:1170,total:4680,paymentMethod:'transferencia',
- promotionSnapshot:{appliedPromotionIds:['weekly-meals'],couponId:null,lines:[
+ promotionSnapshot:{subtotal:5850,discount:1170,netSubtotal:4680,appliedPromotionIds:['weekly-meals'],couponId:null,lines:[
   {productId:'fatay',qty:1,base:5850,paymentDiscount:0,promotionDiscount:1170,
    discount:1170,net:4680,appliedPromotionId:'weekly-meals',appliedPromotionType:'campaign'}
  ]}});
