@@ -351,7 +351,7 @@ export function installPromotionsEditor(w=window) {
       Object.assign(item,{name,extraPercent:pct,minEligibleSubtotal:min,maxExtraAmount:cap,
         validDays:days,channel,requiresConfirmedOrigin:root.querySelector('#coupon-origin')?.checked===true,enabled:false});
       couponEditing=null;save(state);render();
-    }));
+    });
     root.querySelectorAll('[data-draft-toggle]').forEach(button=>button.addEventListener('click',()=>{
       if(w.SAHTEN?.project?.session?.readOnly||w.document.body.classList.contains('role-no-costs'))return;
       const key=button.dataset.draftToggle,id=button.dataset.draftId;
