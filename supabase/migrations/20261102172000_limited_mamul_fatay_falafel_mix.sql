@@ -77,4 +77,5 @@ BEGIN
  IF (SELECT jsonb_array_length(json#>'{promotions,campaigns}')
     FROM public.menus WHERE store_id=sid)<>6
  THEN RAISE EXCEPTION 'publication_readback_failed';END IF;
-END $launch$;
+END;
+$launch$;
