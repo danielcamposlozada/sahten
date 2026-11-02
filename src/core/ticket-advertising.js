@@ -14,12 +14,19 @@ const clean = (s, max = 150) => String(s || '').replace(/[\r\n<>]/g, ' ').replac
 
 export function selectTicketAdvertisement(config, {
   now = new Date(), channel = 'mostrador', coupon = null,
-  excludedPromotionIds = [], appliedPromotionIds = null, rotationKey = null
+  excludedPromotionIds = [], appliedPromotionIds = null, rotationKey = null,
+  recentAdvertisements = [], avoidCampaignIds = []
 } = {}) {
   if (config?.enabled !== true || config.ticket?.enabled !== true) return null;
+  // Nunca anunciamos la misma oferta varias veces dentro del período
+  // de enfriamiento del cliente. El cobro original no cuenta como anuncio.
+  const previous=Array.isArray(recentAdvertisements)?recentAdvertisements:[];
+  const alreadyShownCoupon=!!coupon?.id&&previous.some(x=>x?.kind==='coupon'&&x.couponId===coupon.id);
+  const alreadyShownCampaigns=new Set(previous.filter(x=>x?.kind==='campaign').map(x=>x.campaignId).filter(Boolean));
+  const avoid=new Set(Array.isArray(avoidCampaignIds)?avoidCampaignIds:[]);
   // Un cupón es personal y sólo puede imprimirse si ya fue emitido por
   // el backend: nunca fabricamos códigos durante la impresión.
-  if (coupon?.code && coupon?.expiresOn && coupon?.status === 'available') {
+  if (!alreadyShownCoupon && coupon?.code && coupon?.expiresOn && coupon?.status === 'available') {
     return { kind: 'coupon', couponId: clean(coupon.id, 90), code: clean(coupon.code, 64),
       expiresOn: coupon.expiresOn, headline: clean(coupon.headline || 'Tu próxima compra online'),
       label: expiryLabel(coupon.expiresOn) };
@@ -43,7 +50,7 @@ export function selectTicketAdvertisement(config, {
     const days = c.advertising.advanceDays == null ? 4 :
       Math.max(0, Math.min(14, Number(c.advertising.advanceDays) || 0));
     const next = active ? null : upcomingDate(c, now, days);
-    if (!active && !next) return null;
+    if ((!active && !next) || alreadyShownCampaigns.has(c.id) || avoid.has(c.id)) return null;
     const wasApplied = applied.has(c.id);
     return { c, next, repeatEdition: wasApplied && !!next, repeatPurchase: wasApplied };
   }).filter(Boolean).sort((a, b) =>
