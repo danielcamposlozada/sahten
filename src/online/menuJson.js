@@ -29,7 +29,9 @@ export function publishableProducts(s, config = {}) {
  * Las imágenes no van adentro: cada una se publica como archivo en img/<id>.jpg y acá solo se referencia.
  */
 export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, quoteIds = {}, promotions = null, now = new Date() } = {}) {
-  const products = publishableProducts(s, menuConfig);
+  const hiddenFour='p1779570052552';
+  const activeUpgrade=promotions?.productUpgrades?.some(p=>p.id==='fatay-cuarta'&&p.enabled===true&&p.triggerProductId==='p1779467294622'&&p.replacementProductId===hiddenFour);
+  const products=publishableProducts(s,activeUpgrade?{...menuConfig,upsellOnlyProducts:[hiddenFour]}:menuConfig);
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
