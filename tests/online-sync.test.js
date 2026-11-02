@@ -49,6 +49,7 @@ function device(who, { remoteId = null, file, client } = {}) {
     client: d.client, remoteId: () => d.remoteId, setRemoteId: id => { d.remoteId = id; }, role: () => d.role, projectId: () => 'local-1',
     collect: () => JSON.parse(JSON.stringify(d.file)), apply: async f => { d.file = JSON.parse(JSON.stringify(f)); d.applied.push(f); },
     publicOf: f => toPublicProject(f, () => ({ mostrador: 1000 })),
+    backupBeforeSync: async () => true,
     store: { get: (k, dflt) => (k in d.cfg ? d.cfg[k] : dflt), set: (k, v) => { d.cfg[k] = v; } }, timer, now: () => Date.now(),
   });
   return d;
