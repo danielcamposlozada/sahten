@@ -14,9 +14,10 @@ function promotionalFooter(snapshot,esc) {
     +'<p>'+esc(snapshot.label||'Válido hasta '+snapshot.expiresOn)+'</p>'
     +'<small>Mostralo en caja o ingresalo online. Un solo uso.</small></section>';
   const layout=snapshot.layout==='D'?'D':/\d{1,2}\s*%|OFF|descuento/i.test(snapshot.headline||'')?'B':'A';
+  const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · CAMPAÑA GENERAL':snapshot.audience==='general'?'CAMPAÑA GENERAL':null;
   if(layout==='D')return '<section class="receipt-promo receipt-promo--D"><div class="receipt-promo-head">◆ SAHTEN ◆</div><strong>UNA PROPUESTA ESPECIAL</strong><p>'+text+'</p>'+(date?'<small>'+date+'</small>':'')+'</section>';
-  if(layout==='B')return '<section class="receipt-promo receipt-promo--B"><div class="receipt-promo-head">PROMOCIÓN DE DESCUENTO</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'<small>Se aplica según los días, productos y medios de pago participantes.</small></section>';
-  return '<section class="receipt-promo receipt-promo--A"><div class="receipt-promo-head">NOVEDADES SAHTEN</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'</section>';
+  if(layout==='B')return '<section class="receipt-promo receipt-promo--B"><div class="receipt-promo-head">'+esc(label||'PROMOCIÓN DE DESCUENTO')+'</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'<small>Se aplica según los días, productos y medios de pago participantes.</small></section>';
+  return '<section class="receipt-promo receipt-promo--A"><div class="receipt-promo-head">'+esc(label||'NOVEDADES SAHTEN')+'</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'</section>';
 }
 /** El motor imprime importes confirmados; no calcula ni otorga promociones.
  * Solo desglosa las cifras del snapshot cuando cuadran exactamente con el
