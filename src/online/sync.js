@@ -5,6 +5,7 @@
 import { contentHash } from '../project/schema.js';
 import { SupabaseError } from './supabase.js';
 import { writeScope, applyPublicToFile } from './roles.js';
+import { mergeCloudPromotions } from './promotion-sync.js';
 
 const clone = v => JSON.parse(JSON.stringify(v));
 export const BACKOFF_MS = [30000, 60000, 120000, 300000];
@@ -134,6 +135,49 @@ export function createSync(deps) {
         if (choice === 'theirs') return await pull(check);
         const f = deps.collect(); return await push(f, syncHash(f), conflict.remote.version, check);
       } catch (e) { transfer?.fail(e); if (offline(e)) return { action: 'offline' }; set('error', e.message); throw e; } finally { if (state === 'al día') transfer?.finish(); else transfer?.fail(error || 'Sincronización pendiente.'); transfer = null; busy = false; }
+    },
+
+    /** Copia SOLO promociones desde el proyecto remoto, respaldando y guardando el .sahten.
+     * No altera la versión base de sync: si hay ediciones independientes aparece conflicto,
+     * en lugar de sobrescribir ciegamente pedidos, catálogo u otros cambios remotos. */
+    async pullPromotionsFromCloud(){
+      if(busy)throw new SupabaseError('Ya se está sincronizando el proyecto.');
+      if(!deps.remoteId()||!['owner','admin'].includes(deps.role()))
+        throw new SupabaseError('Necesitás un proyecto vinculado y permisos de dueño o administrador.');
+      busy=true;transfer=deps.progress?.start('Actualizando promociones del proyecto');
+      const check=guard();
+      timer.clear(debounce);
+      try{
+        const original=deps.collect(),before=syncHash(original);
+        const remote=await deps.client.rpc('get_project_data',{pid:deps.remoteId()});
+        check();
+        if(!remote||!remote.data||!Number.isInteger(Number(remote.version)))
+          throw new SupabaseError('La nube no devolvió un proyecto válido.');
+        if(remote.data.project?.id&&original.project?.id&&remote.data.project.id!==original.project.id)
+          throw new SupabaseError('El proyecto local y el remoto no coinciden. No se aplicaron cambios.');
+        const merged=mergeCloudPromotions(original,remote.data);
+        if(syncHash(deps.collect())!==before)
+          throw new SupabaseError('El proyecto local cambió durante la descarga. Volvé a intentar.');
+        if(JSON.stringify(original.promotions||{})===JSON.stringify(merged.promotions))
+          return {action:'unchanged',version:remote.version};
+        if(!deps.backupBefore||!deps.saveLocal)
+          throw new SupabaseError('No hay respaldo o guardado local disponible.');
+        report({detail:'Respaldando proyecto antes de importar…'});
+        await deps.backupBefore();
+        check();
+        if(syncHash(deps.collect())!==before)
+          throw new SupabaseError('El proyecto local cambió al crear el respaldo. No se aplicaron cambios.');
+        report({detail:'Importando promociones sin reemplazar ventas ni catálogo…'});
+        await deps.apply(merged);
+        check();
+        await deps.saveLocal();
+        check();
+        // Queda pendiente la sincronización integral: CAS/conflictos originales intactos.
+        pending=true;conflict=null;set('promociones locales actualizadas');
+        return {action:'promotions_pull',version:remote.version};
+      }catch(e){
+        transfer?.fail(e);set('error',e?.message||String(e));throw e;
+      }finally{transfer=null;busy=false;}
     },
 
     /** Programar una sincronización (se llama en cada guardado local): espera 5 s y junta los cambios. */
