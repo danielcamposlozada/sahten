@@ -5,6 +5,7 @@
 ## 0.4.48
 
 - **Ticket de cliente: doble función correcta.** El descuento aplicado se mantiene como importe real en el desglose de la venta y puede anunciarse esa misma campaña al pie para que el cliente vuelva a comprar; eso no concede un segundo descuento en la operación.
+- **Frecuencia anti-repetición:** una misma campaña no vuelve a anunciarse a un cliente identificable durante 90 días desde su último ticket promocional. Si no se lo puede identificar, la rotación evita repetir los últimos tres anuncios disponibles en el historial del local. Si no hay opciones nuevas, se omite el bloque publicitario sin afectar el descuento cobrado.
 - **Canales publicitarios precisos.** En tickets se pueden rotar promociones publicadas de web, mostrador o ambos, y el anuncio indica claramente el canal válido para la próxima compra.
 - **Campañas recurrentes y permanentes.** Haber usado la oferta ya no la excluye ni la difiere artificialmente a una próxima edición si sigue aplicable. Si todavía no se encuentra en sus días de aplicación, se muestra la próxima fecha elegible.
 - **Reglas de seguridad.** Se conserva un único anuncio en ticket, cupón C exclusivamente emitido por backend, cuatro formatos A/B/C/D y comanda de cocina sin publicidad. No se modifican importes cobrados ni promociones publicadas.
