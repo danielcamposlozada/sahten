@@ -5,6 +5,7 @@ import { promotionReport } from '../core/promotions-report.js';
 import { promotionOverview, filterPromotionOverview } from '../core/promotion-overview.js';
 import { createLiveRecommendationEditor } from './live-cart-recommendations.js';
 import { publicationKind } from '../core/promotion-publication.js';
+import { promotionDraftReview } from '../core/promotion-draft-review.js';
 import { WEEK_DAYS, campaignTemplate, validateCampaignDraft, describeSchedule } from '../core/campaign-builder.js';
 import '../styles/promotions.css';
 
@@ -47,7 +48,7 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', campaignFeedback='', cursor=new Date();
   const get=()=>load();
-  let draftEditing=null, publishFeedback='',publishBusy=false,recInitialized=false;
+  let draftEditing=null, couponEditing=null, publishFeedback='',publishBusy=false,recInitialized=false;
   const recEditor=createLiveRecommendationEditor(w,()=>render());
   let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='',liveContext='',lastLiveAt=0;
   const liveApi=()=>w.SAHTEN?.online?.controller;
@@ -91,6 +92,17 @@ export function installPromotionsEditor(w=window) {
     return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Quitar':'Incluir')+' en planificación local '+(item.name||item.id))+'"'
       +' aria-checked="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
       +'<span class="promo-live-track"></span><span>'+(item.enabled?'En planificación':'Fuera de planificación')+'</span></button>';
+  }
+  function readinessChecklist(type,item){
+    const review=promotionDraftReview(type,item,catalog(w));
+    const missing=review.missing.length;
+    const places=review.placements.length?review.placements.map(id=>placements.find(([v])=>v===id)?.[1]||id).join(', '):'Sin ubicación configurada';
+    return '<details class="promo-note promo-draft-checklist"><summary>Revisar publicación · '+missing+' requisito'+(missing===1?'':'s')+' pendiente'+(missing===1?'':'s')+'</summary>'
+      +'<ul>'+review.checks.map(c=>'<li class="'+(c.ok?'is-ok':'is-pending')+'">'
+        +(c.ok?'✓ ':'○ ')+esc(c.label)+'</li>').join('')+'</ul>'
+      +(type==='couponPrograms'?'<small>Programa local, sin códigos emitidos. No se puede usar en checkout.</small>'
+        :'<small>Ubicaciones planificadas: '+esc(places)+'. No aparecen como descuentos activos hasta su publicación real.</small>')
+      +'</details>';
   }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
@@ -146,7 +158,7 @@ export function installPromotionsEditor(w=window) {
     const activeCount=merged.filter(x=>x.active).length;
     const pendingCount=merged.filter(x=>x.status==='pending'||x.status==='scheduled').length;
     const inactiveCount=merged.filter(x=>x.status==='inactive'||x.status==='draft').length;
-    const badges={active:'Activa ahora',inactive:'Pausada en web',scheduled:'Programada · espera calendario',pending:'Borrador habilitado · sin publicar',draft:'Borrador sin publicar'};
+    const badges={active:'Activa ahora',inactive:'Pausada en web',scheduled:'Programada · espera calendario',pending:'Pendiente de validación · no publicada',draft:'Borrador sin publicar'};
     const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
     const cards=visible.map(item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
@@ -159,10 +171,11 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-foot">'+(item.type==='crossSells'&&published?'Confirmada con el servidor':item.type==='campaigns'&&live.campaigns?.some(r=>r.id===item.id)?'Estado del servidor · calendario independiente':item.localEnabled?'Planificación local · NO publicada':'Borrador · NO publicado')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item)
+        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,item):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
-      +'<p>«Programada» significa que espera su día u horario. «Borrador» significa que todavía no está publicado. Los switches de borrador NO activan descuentos.</p></div>'
+      +'<p>«Programada» espera calendario. «Pendiente de validación» es una propuesta local, no una oferta publicada. Revisá los checks antes de intentar lanzar un beneficio.</p></div>'
       +'<button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button></div>'
       +'<div class="promo-overview-summary"><span><strong>'+overview.items.length+'</strong> propuestas locales</span>'
       +'<span><strong>'+activeCount+'</strong> activas verificadas</span>'
@@ -502,7 +515,8 @@ export function installPromotionsEditor(w=window) {
         +'<button type="button" data-draft-edit="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Editar</button>'
         +'<button type="button" data-draft-duplicate="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Duplicar</button>'
         +'<button type="button" data-draft-delete="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Eliminar</button></div>'
-        +draftPublicationControl(key,item)+'</article>';
+        +draftPublicationControl(key,item)
+        +readinessChecklist(key,item)+'</article>';
     }).join('');
     return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
       +'<p>Estos son BORRADORES del proyecto, no las recomendaciones publicadas. El switch cambia solo la planificación, NO activa descuentos.</p>'
