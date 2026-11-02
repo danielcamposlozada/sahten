@@ -224,6 +224,24 @@ export function createController(host) {
       if (!client || !host.conn.storeId) return null;
       const ctx=context(),result=await ctx.client.rpc('get_promotion_campaign_states',{p_store_id:ctx.storeId});check(ctx);return result;
     },
+    /** Lectura de todas las campañas publicadas, incluso las no anunciadas en tickets. */
+    async readPromotionCampaignDetails() {
+      if (!client || !host.conn.storeId) return null;
+      const ctx=context(),result=await ctx.client.rpc('get_store_promotion_management',{p_store_id:ctx.storeId});
+      check(ctx);return result;
+    },
+    /** Edita exclusivamente UNA campaña publicada con CAS y márgenes verificados en el servidor. */
+    async updatePromotionCampaignDetails(id,patch,revision=null){
+      return stateRpc('set_store_promotion_campaign_details',{
+        p_campaign_id:id,p_patch:patch,p_expected_revision:revision
+      });
+    },
+    /** Los dos controles del ticket se guardan en el menú del servidor, no en KV local. */
+    async updatePromotionTicketSettings(settings,revision=null){
+      return stateRpc('set_store_promotion_ticket_settings',{
+        p_settings:settings,p_expected_revision:revision
+      });
+    },
     async readDeliveryZoneState() {
       if (!client || !host.conn.storeId) return null;
       const ctx=context(),result=await ctx.client.rpc('get_delivery_zone_states',{p_store_id:ctx.storeId});check(ctx);return result;
