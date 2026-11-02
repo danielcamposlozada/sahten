@@ -6,8 +6,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createServer} from 'vite';
 
-const SOURCE_DEPLOYMENT_ID='2947fd13-6ec7-46f7-b8c2-2e293fe673d3';
-const PINNED_URL='https://2947fd13.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='91563746-1f00-4bba-8d58-16dbc96856d0';
+const PINNED_URL='https://91563746.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -99,19 +99,32 @@ async function run(){
   await fs.mkdir(path.dirname(target),{recursive:true});
   await fs.writeFile(target,content);
  }
+ // Parche mínimo de comportamiento: el marketing y las fotos quedan iguales.
+ // El landing histórico también consulta el menú vivo; debe excluir upsellOnly.
+ let homepage=assets.get('/index.html').toString('utf8');
+ const oldFilter="return !p.retired&&(activeCat==='all'||";
+ const safeFilter="return !p.retired&&!p.upsellOnly&&(activeCat==='all'||";
+ if(homepage.includes(oldFilter)){
+   if(homepage.split(oldFilter).length!==2)throw new Error('Ambiguous landing catalog filter');
+   homepage=homepage.replace(oldFilter,safeFilter);
+ }else if(!homepage.includes(safeFilter)){
+   throw new Error('Cannot guarantee hidden Fatay in original homepage');
+ }
+ await fs.writeFile(path.join(output,'index.html'),homepage);
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
  await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(menu,null,1));
  const report={
   status:'ready-for-safe-checkout-review',sourceDeploymentId:SOURCE_DEPLOYMENT_ID,
-  preserved:FILES.filter(f=>!['/pedir/index.html','/menu.json'].includes(f)),
-  generated:['/pedir/index.html','/menu.json'],
+  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json'].includes(f)),
+  generated:['/index.html','/pedir/index.html','/menu.json'],
   products:menu.products.length,remotePhotos:menu.products.filter(p=>p.image?.startsWith('https://')).length,
   beverages:menu.products.filter(p=>p.category==='Bebidas').length,
   campaigns:menu.promotions.campaigns.map(p=>p.id),
   hiddenFourIncluded:menu.products.some(p=>p.id==='p1779570052552'),
   fullPriceRecommendations:true,
   defaultCashBenefit:menu.payments.benefit.percent,
-  homepagePreservedExactly:assets.get('/index.html').byteLength>0
+  homepageLayoutPreserved:true,
+  homepageCatalogGuarded:homepage.includes('!p.upsellOnly')
  };
  await fs.writeFile(path.join(output,'_deployment-report.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report,null,2));
