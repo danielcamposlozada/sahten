@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.43
+
+- **Ticket de cliente predeterminado:** al cobrar en mostrador y al aceptar un pedido online se imprime el ticket del cliente una sola vez si la opción de impresión automática está habilitada; la comanda de cocina queda disponible únicamente desde el botón de la tarjeta.
+- **Campañas realmente publicadas en tickets:** la aplicación consulta la lista de publicidad publicada y habilitada en el servidor; alterna un único anuncio de compra futura, excluye promociones ya utilizadas en el pedido y no inventa cupones.
+- **Corrección del flujo de impresión:** se elimina la selección accidental de publicidad dentro de la carga de fotografías y se respeta el calendario comercial; se amplían las pruebas de aceptación.
+- **Web y base de datos:** las campañas de checkout y las ubicaciones de publicidad se gestionan en producción mediante sus despliegues y migraciones independientes. Actualizar la app no modifica por sí solo el sitio ni activa borradores sin verificar.
+
 ## 0.4.42
 
 - **Verificación de promociones con datos reales:** nuevo RPC autenticado solo lectura para complementos con descuento, mejoras y cupones: comprueba precio y producto publicado, disparadores, límite total de descuentos, costo base y margen estimado. Muestra margen y presupuesto máximo disponible antes de gastos extra, sin ofrecer falsa aprobación comercial.
