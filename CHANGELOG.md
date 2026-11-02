@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.40
+
 - **Publicación de campañas desde borradores:** se habilita «Publicar campaña (pausada)» para campañas válidas en Tienda online. El servidor exige permisos dueño/admin, valida catálogo, costos reales, 40% de margen, descuentos dentro de 20% total y fecha/canal, e incorpora la campaña sin tocar precios, fotos ni pedidos.
 - **Activación separada:** publicar no aplica descuentos ni enciende switches. Solo después de la confirmación del servidor puede activarse o pausarse por campaña; se conserva el estado ante sincronizaciones completas del menú.
 - **Primer alcance controlado:** borradores de Mostrador, complementos con descuento, cupones y Mercado Pago siguen bloqueados hasta sus validaciones específicas. El motor de pedidos rechaza las nuevas campañas si faltan costos verificados.
