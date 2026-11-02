@@ -97,7 +97,7 @@ describe('menú y pedidos', () => {
     const s = setup({ conn, storage: { 'online-session:p1': session }, routes: { '/rest/v1/orders': { body: rows } } });
     await s.ctl.resume();
     expect(s.orders.map(o => o.remoteId).sort()).toEqual(['r1','r2']);
-    expect(s.orders.find(o=>o.remoteId==='r2').status).toBe('completada');
+    expect(s.orders.find(o=>o.remoteId==='r2').status).toBe('entregado');
     expect(s.notes[0].sound).toBe(false);
     expect(s.imports).toEqual([{initial:true},{initial:true}]); // historial sin reimpresión
     expect(s.notes[0].body).toContain('Ana');
@@ -150,7 +150,7 @@ describe('menú y pedidos', () => {
     const s=setup({conn,storage:{'online-session:p1':session},routes:{'/rest/v1/orders':{body:[row,{...row,id:'another-old'}]}}});
     s.orders.push({remoteId:'old-paid',status:'listo',paymentProvider:'mercadopago',paymentStatus:'paid',paymentReference:'ref1'});
     let saves=0;s.host.orders.save=()=>saves++;
-    await s.ctl.resume();expect(s.orders).toHaveLength(1);expect(s.orders[0]).toMatchObject({status:'listo',paymentStatus:'refunded'});expect(saves).toBe(1);expect(s.notes).toHaveLength(0);
+    await s.ctl.resume();expect(s.orders).toHaveLength(1);expect(s.orders[0]).toMatchObject({status:'entregado',paymentStatus:'refunded'});expect(saves).toBe(1);expect(s.notes).toHaveLength(0);
   });
   it('sin sesión guardada o vencida: lo informa y no escucha', async () => {
     const s = setup({ conn });
