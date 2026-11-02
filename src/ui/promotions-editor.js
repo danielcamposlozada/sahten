@@ -445,6 +445,28 @@ export function installPromotionsEditor(w=window) {
       }catch(e){syncFeedback='No se pudo actualizar: '+String(e?.message||e).slice(0,220);}
       render();refreshLive();
     });
+    root.querySelector('[data-ticket-live-save]')?.addEventListener('click',async()=>{
+      if(!canOperate()||!liveManagement?.ticket||!liveApi()?.updatePromotionTicketSettings)return;
+      const next={
+        enabled:!!root.querySelector('[data-ticket-live="enabled"]')?.checked,
+        advertise:!!root.querySelector('[data-ticket-live="advertise"]')?.checked
+      };
+      const previous=liveManagement.ticket;
+      if(next.enabled===previous.enabled&&next.advertise===previous.advertise){
+        liveSaveFeedback='Estas opciones ya coinciden con la tienda.';render();return;
+      }
+      const yes=await w.sahtenConfirm?.('Actualizar la publicidad en todos los tickets de cliente nuevos y en las apps conectadas?',
+        {title:'Guardar publicidad',okLabel:'Guardar en vivo'});
+      if(yes!==true)return;
+      try{
+        await liveApi().updatePromotionTicketSettings(next,previous.revision??null);
+        liveSaveFeedback='Opciones del ticket publicadas y sincronizadas.';
+        await refreshLive();
+      }catch(e){
+        liveSaveFeedback='No se guardó el ajuste del ticket: '+String(e?.message||e).slice(0,200);
+        render();
+      }
+    });
     root.querySelector('.promo-live-editor')?.addEventListener('input',()=>{liveEditDirty=true;});
     root.querySelector('[data-live-search]')?.addEventListener('input',ev=>{
       const q=ev.target.value.toLowerCase();
@@ -867,10 +889,24 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-note"><strong>Emisión y canje:</strong> bloqueados hasta completar canje único del checkout. Una reimpresión no emite otro cupón. El switch sólo cambia el borrador.</div></section>';
   }
   function ticketEditor(state,canEdit){
-    return '<section class="promo-card"><h3>Publicidad en el ticket del cliente</h3><p>El ticket incluye importes, QR de reseñas y, cuando corresponda, una campaña A/B/D o cupón C. La comanda de cocina jamás incluye publicidad.</p>'
-      +'<label class="promo-checkbox"><input data-field="ticketEnabled" type="checkbox" '+(state.ticket?.enabled?'checked':'')+' '+(canEdit?'':'disabled')+'> Mostrar publicidad en el ticket del cliente</label>'
-      +'<label class="promo-checkbox"><input data-field="ticketAdvertise" type="checkbox" '+(state.ticket?.advertise?'checked':'')+' '+(canEdit?'':'disabled')+'> Anunciar campañas generales además de cupones</label>'
-      +'<div class="promo-note">'+(liveTicket?'Estado de publicidad publicado en la nube. Se actualiza automáticamente en las aplicaciones; no hace falta subir archivos.':'Esta opción sólo configura el proyecto local hasta conectarse con la tienda.')+' Los cupones se emiten únicamente desde el servidor.</div></section>';
+    const server=liveManagement?.ticket||liveTicket?.ticket;
+    const ticket=server||state.ticket||{};
+    const writable=canOperate()&&!!liveManagement?.ticket&&!liveBusy;
+    return '<section class="promo-card promo-ticket-controls"><h3>Publicidad en ticket de cliente · qué significa</h3>'
+      +'<p><strong>Publicidad</strong> es un aviso de una oferta para una compra futura. No aplica descuentos, no entrega cupones y no vuelve a anunciar como premio el descuento que se acaba de usar.</p>'
+      +'<div class="promo-ticket-option"><label class="promo-checkbox"><input type="checkbox" data-ticket-live="enabled" '
+      +(ticket.enabled?'checked':'')+' '+(writable?'':'disabled')+'> <strong>1. Permitir publicidad en tickets de cliente</strong></label>'
+      +'<small>Interruptor general: desactivado = no se imprime ninguna campaña ni cupón promocional. Los importes y el QR de Google Reviews permanecen.</small></div>'
+      +'<div class="promo-ticket-option"><label class="promo-checkbox"><input type="checkbox" data-ticket-live="advertise" '
+      +(ticket.advertise?'checked':'')+' '+(writable?'':'disabled')+'> <strong>2. Incluir anuncios de campañas generales</strong></label>'
+      +'<small>Cuando está activado el primero, éste permite rotar anuncios A/B/D de campañas habilitadas. Si se apaga, pueden imprimirse únicamente cupones C auténticos ya emitidos.</small></div>'
+      +'<div class="promo-live-facts"><div class="promo-live-fact"><small>Ambos apagados / primero apagado</small><strong>Sin publicidad</strong></div>'
+      +'<div class="promo-live-fact"><small>Primero encendido, segundo apagado</small><strong>Solo cupón C emitido</strong></div>'
+      +'<div class="promo-live-fact"><small>Ambos encendidos</small><strong>Campaña A/B/D o cupón real C, si corresponde</strong></div></div>'
+      +'<p class="promo-note">Los anuncios salen únicamente en el ticket del cliente, no en la comanda de cocina. Que una campaña esté habilitada NO significa que corresponda hoy: se controla el calendario, canal y edición.</p>'
+      +'<button type="button" data-ticket-live-save '+(writable?'':'disabled')+'>Guardar opciones en todos los equipos</button>'
+      +(liveSaveFeedback?'<p role="status">'+esc(liveSaveFeedback)+'</p>':'')
+      +'<p class="promo-overview-foot">'+(server?'Configuración leída de Supabase. Se refleja en los demás equipos y en los tickets nuevos.':'Todavía no se obtuvo configuración publicada; no se pueden guardar cambios locales como si fueran de producción.')+'</p></section>';
   }
   function simEditor(state,w) {
     return '<section class="promo-card"><h3>Simulador sin afectar ventas</h3>'
