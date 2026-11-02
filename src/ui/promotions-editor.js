@@ -3,6 +3,7 @@ import { onPanelShow } from '../events.js';
 import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatches, expiryLabel } from '../core/promotions.js';
 import { promotionReport } from '../core/promotions-report.js';
 import { promotionOverview, filterPromotionOverview } from '../core/promotion-overview.js';
+import { createLiveRecommendationEditor } from './live-cart-recommendations.js';
 import { WEEK_DAYS, campaignTemplate, validateCampaignDraft, describeSchedule } from '../core/campaign-builder.js';
 import '../styles/promotions.css';
 
@@ -45,6 +46,7 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', campaignFeedback='', cursor=new Date();
   const get=()=>load();
+  const recEditor=createLiveRecommendationEditor(w,()=>render());
   let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='',liveContext='',lastLiveAt=0;
   const liveApi=()=>w.SAHTEN?.online?.controller;
   const currentLiveContext=()=>[w.SAHTEN?.project?.session?.id||'',w.SAHTEN?.online?.conn?.()?.storeId||'',w.SAHTEN?.online?.conn?.()?.url||''].join('|');
@@ -84,9 +86,9 @@ export function installPromotionsEditor(w=window) {
   // es un control en vivo del servidor; no se finge publicar un borrador.
   function draftSwitch(key,item){
     const editable=!w.SAHTEN?.project?.session?.readOnly && !w.document.body.classList.contains('role-no-costs');
-    return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Desactivar':'Activar')+' borrador '+(item.name||item.id))+'"'
+    return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Quitar':'Incluir')+' en planificación local '+(item.name||item.id))+'"'
       +' aria-checked="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
-      +'<span class="promo-live-track"></span><span>'+(item.enabled?'Borrador activo':'Borrador pausado')+'</span></button>';
+      +'<span class="promo-live-track"></span><span>'+(item.enabled?'En planificación':'Fuera de planificación')+'</span></button>';
   }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
@@ -109,7 +111,7 @@ export function installPromotionsEditor(w=window) {
   function overviewEditor(state){
     const overview=promotionOverview(state,{now:new Date(),live:liveLoaded&&!liveError?live:null});
     const visible=filterPromotionOverview(overview.items,overviewFilter);
-    const badges={active:'Activa ahora',inactive:'Inactiva',scheduled:'Programada',pending:'Sin confirmar en web'};
+    const badges={active:'Activa ahora',inactive:'Pausada en web',scheduled:'Programada · espera calendario',pending:'Borrador habilitado · sin publicar',draft:'Borrador sin publicar'};
     const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
     const cards=visible.map(item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
@@ -118,23 +120,23 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-status is-'+esc(item.status)+'">'+esc(badges[item.status]||'Inactiva')+'</span>'
         +'<strong>'+esc(item.name)+'</strong>'
         +'<span class="promo-overview-detail">'+esc(item.detail)+'</span>'
-        +'<span class="promo-overview-foot">'+(item.localEnabled?'En planificación local':'Borrador desactivado')+'</span>'
+        +'<span class="promo-overview-foot">'+(item.type==='campaigns'&&live.campaigns?.some(r=>r.id===item.id)?'Estado del servidor · calendario independiente':item.localEnabled?'Planificación local · NO publicada':'Borrador · NO publicado')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
-      +'<p>Creá, planificá y controlá campañas desde acá. Los interruptores en vivo se habilitan solo cuando el servidor confirma una campaña publicada.</p></div>'
+      +'<p>«Programada» significa que espera su día u horario. «Borrador» significa que todavía no está publicado. Los switches de borrador NO activan descuentos.</p></div>'
       +'<button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button></div>'
-      +'<div class="promo-overview-summary"><span><strong>'+overview.items.length+'</strong> configuradas</span>'
+      +'<div class="promo-overview-summary"><span><strong>'+overview.items.length+'</strong> propuestas locales</span>'
       +'<span><strong>'+overview.active+'</strong> activas verificadas</span>'
       +'<span><strong>'+overview.pending+'</strong> pendientes/programadas</span>'
-      +'<span><strong>'+overview.inactive+'</strong> inactivas</span></div>'
+      +'<span><strong>'+overview.inactive+'</strong> pausadas / borradores</span></div>'
       +'<div class="promo-overview-toolbar" role="group" aria-label="Filtrar promociones">'
       +[['all','Todas'],['active','Activas'],['inactive','No activas']].map(([id,label])=>'<button type="button" data-promo-filter="'+id+'" aria-pressed="'+(overviewFilter===id)+'">'+label+'</button>').join('')
       +'</div>'
       +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
       +'<div class="promo-overview-grid">'+(cards||'<p class="promo-overview-empty">No hay promociones en este filtro.</p>')+'</div>'
-      +'<div class="promo-row"><button type="button" data-promo-create>+ Crear campaña</button><p>Los descuentos y cupones que no fueron publicados siguen en preparación.</p></div>'
+      +'<div class="promo-row"><button type="button" data-promo-create>+ Crear campaña</button><button type="button" data-rec-open>Gestionar recomendaciones publicadas</button></div>'
       +'<div class="promo-note">Activa = campaña confirmada por el servidor, motor habilitado y calendario vigente. Las sugerencias y los cupones sin validación de emisión no se anuncian como ofertas disponibles.</div>'
       +'<div class="promo-row"><div><strong>Proyecto local y nube</strong>'
       +'<p>Para traer las últimas promociones sin reemplazar pedidos, stock ni catálogo, usá la actualización selectiva. El archivo local conserva un respaldo previo.</p>'
@@ -156,10 +158,12 @@ export function installPromotionsEditor(w=window) {
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill" role="status">'+esc(publishedLabel)+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Activas verificadas</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['publishedRecs','Recomendaciones web'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='publishedRecs'?recEditor.render():tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
-    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();}));
+    recEditor.bind(root);
+    root.querySelectorAll('[data-rec-open]').forEach(btn=>btn.addEventListener('click',()=>{tab='publishedRecs';render();recEditor.refresh();}));
+    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();if(tab==='publishedRecs')recEditor.refresh();}));
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>refreshLive());
     root.querySelector('[data-promo-create]')?.addEventListener('click',()=>{tab='campaigns';render();root.querySelector('[data-promo-new]')?.focus();});
     root.querySelectorAll('[data-promo-filter]').forEach(b=>b.addEventListener('click',()=>{overviewFilter=b.dataset.promoFilter;render();}));
@@ -353,9 +357,9 @@ export function installPromotionsEditor(w=window) {
         +'</div>'+draftSwitch(key,item)+'</article>';
     }).join('');
     return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
-      +'<p>Configuración guardada en el proyecto. Ninguna propuesta de este apartado se publica por abrir esta pantalla.</p>'
+      +'<p>Estos son BORRADORES del proyecto, no las recomendaciones publicadas. El switch cambia solo la planificación, NO activa descuentos.</p>'
       +'<div class="promo-draft-list">'+(cards||'<p>No hay propuestas configuradas.</p>')+'</div>'
-      +'<div class="promo-note">Para ofrecer descuentos reales faltan aprobación de costos, cotización del servidor y activación individual. Mercado Pago queda excluido de esta etapa.</div></section>';
+      +'<div class="promo-note">Para ofrecer descuentos reales faltan aprobación de costos, cotización del servidor y activación individual. Mercado Pago queda excluido de esta etapa. Para editar lo que YA aparece en la web, entrá a «Recomendaciones web».</div><button type="button" data-rec-open>Gestionar recomendaciones publicadas</button></section>';
   }
   function couponEditor(state){
     const entries=Object.entries(state.couponPrograms||{});
