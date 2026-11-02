@@ -18,13 +18,13 @@ BEGIN
  specs:=jsonb_build_array(
  jsonb_build_object('id','postres-mamul-extra-nov26','name','Mamul de Nuez o Dátil · 12% total',
   'productIds',jsonb_build_array('mamul_nuez','mamul_datil'),'extraPercent',2,
-  'minimumMargin',38,'reservedExtraCost',150),
+  'minimumMargin',38,'reservedExtraCost',150,'expectedPrice',7000,'bufferFloor',35),
  jsonb_build_object('id','fatay-adicional-moderado-nov26','name','Fatay individual · 11% total',
   'productIds',jsonb_build_array('fatay'),'extraPercent',1,
-  'minimumMargin',31,'reservedExtraCost',150),
+  'minimumMargin',31,'reservedExtraCost',150,'expectedPrice',5850,'bufferFloor',28),
  jsonb_build_object('id','falafel-mix-moderado-nov26','name','Falafel Mix · 11% total',
   'productIds',jsonb_build_array('falafel_mix'),'extraPercent',1,
-  'minimumMargin',42,'reservedExtraCost',150)
+  'minimumMargin',42,'reservedExtraCost',150,'expectedPrice',8950,'bufferFloor',40)
  );
  FOR val IN SELECT x FROM jsonb_array_elements(specs) x LOOP
    rule_id:=val->>'id';
@@ -45,18 +45,11 @@ BEGIN
      THEN RAISE EXCEPTION 'published_cost_price_missing:%',sku;END IF;
      list_price:=(p->>'price')::numeric;
      real_cost:=(prices->>sku)::numeric;
-     IF list_price<> CASE sku
-        WHEN 'mamul_nuez' THEN 7000
-        WHEN 'mamul_datil' THEN 7000
-        WHEN 'fatay' THEN 5850
-        WHEN 'falafel_mix' THEN 8950 END
+     IF list_price<>(val->>'expectedPrice')::numeric
      THEN RAISE EXCEPTION 'unexpected_price:%',sku;END IF;
      net:=list_price*(100-10-extra)/100;
      IF net<=0 OR (net-real_cost)/net*100<minimum
-       OR (net-real_cost-cost_buffer)/net*100 <
-            CASE sku WHEN 'fatay' THEN 28
-                 WHEN 'falafel_mix' THEN 40
-                 ELSE 35 END
+       OR (net-real_cost-cost_buffer)/net*100 < (val->>'bufferFloor')::numeric
      THEN RAISE EXCEPTION 'commercial_exception_floor_not_met:%',sku;END IF;
    END LOOP;
    rule:=jsonb_build_object(
@@ -77,4 +70,5 @@ BEGIN
  IF (SELECT jsonb_array_length(json#>'{promotions,campaigns}')
     FROM public.menus WHERE store_id=sid)<>6
  THEN RAISE EXCEPTION 'publication_readback_failed';END IF;
-END $launch$;
+END;
+$launch$;
