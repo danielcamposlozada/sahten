@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+## 0.4.47
+
+- **Edición de campañas publicadas, directamente en vivo:** nombre, calendario, días/horarios, vigencia, canales, productos elegibles, porcentaje incremental, tope de unidades, prioridad, anuncios y formato A/B/D, con guardado directo en Supabase. El servidor valida permisos, revisiones y costos/márgenes cuando corresponde.
+- **Contexto completo en todas las campañas:** duración, días, límites, medios de pago, productos, % total y diferencia entre habilitación y aplicación.
+- **Ticket de cliente:** los dos controles publicitarios se explican y se sincronizan desde la nube; campaña A/B/D sólo con segundo control activo y cupones C sólo si el backend emitió uno.
+- **Impresión clara:** los anuncios térmicos informan días y horario, límite y ausencia de fecha de fin cuando corresponde.
+- **Seguridad:** no se tocan pedidos confirmados ni precios de catálogo y no se crean códigos promocionales ficticios.
+
 ## 0.4.46
 
 - **Promociones en vivo:** las seis campañas publicadas se muestran desde Supabase aun cuando el archivo local tenga menos. Estados, calendario, nombres y switches verifican directamente el servidor y se reflejan en otras aplicaciones y la tienda online, sin importar archivos de catálogo.
