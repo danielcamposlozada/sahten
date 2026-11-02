@@ -18,8 +18,8 @@ DECLARE result jsonb;
 BEGIN
   IF p_store_id IS NULL OR p_request_id IS NULL OR
      jsonb_typeof(p_payload) IS DISTINCT FROM 'object' OR
-     p_payload->>'paymentMethod' NOT IN ('efectivo','transferencia') OR
-     p_payload->>'source' NOT IN ('pickup','delivery') OR
+     coalesce(p_payload->>'paymentMethod','') NOT IN ('efectivo','transferencia') OR
+     coalesce(p_payload->>'source','') NOT IN ('pickup','delivery') OR
      jsonb_typeof(p_payload->'items') IS DISTINCT FROM 'array' OR
      jsonb_array_length(p_payload->'items') = 0 OR
      p_payload->>'total' IS NULL
