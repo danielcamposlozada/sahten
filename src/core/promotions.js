@@ -23,6 +23,9 @@ export function localDateParts(now = new Date()) {
       ?1+Math.floor((dayNumber-1-(1+(5-firstWeekday+7)%7))/7):0 };
 }
 export function scheduleMatches(rule = {}, now = new Date()) {
+  // Publicaciones comerciales sin calendario se mantienen siempre activas.
+  // Un objeto inválido/no configurado no habilita descuentos accidentalmente.
+  if(rule===null)rule={type:'always'};
   const d = localDateParts(now);
   if (rule.from && d.iso < rule.from || rule.until && d.iso > rule.until) return false;
   if (Array.isArray(rule.excludedDates) && rule.excludedDates.includes(d.iso)) return false;
