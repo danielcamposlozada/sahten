@@ -56,6 +56,6 @@ describe('Claridad comercial en el ticket térmico compacto',()=>{
    expect(receipt).toContain('VOLVÉ A APROVECHAR');
    expect(receipt).toContain('Solo online');
    expect(receipt).toContain('sahten.online');
-   expect((receipt.match(/receipt-promo--B/g)||[]).toHaveLength(1);
+   expect((receipt.match(/class="receipt-promo receipt-promo--B"/g)||[])).toHaveLength(1);
  });
 });
