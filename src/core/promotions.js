@@ -80,9 +80,9 @@ export function quotePromotions({
   const gross = details.reduce((n,l)=>n+l.qty*l.unitCents,0);
   const cash = ['efectivo','transferencia'].includes(method);
   const paymentPercent = cash ? Math.max(0,Math.min(100,Number(config.paymentPercent??10))) : 0;
-  const campaigns = activeCampaigns(config,now,channel);
+  const campaigns = cash ? activeCampaigns(config,now,channel) : [];
   const strictUpsells = config.upsellGuardRequired === true || config.activationPolicy?.requireIncrementalAndBasketMarginCheck === true;
-  const couponValid = couponIsEligible(coupon,{now,channel,customerId});
+  const couponValid = cash && couponIsEligible(coupon,{now,channel,customerId});
   const eligibleGross = details.reduce((n,l)=>n+(couponValid&&eligibleLine(coupon,l,details)?l.qty*l.unitCents:0),0);
   const canCoupon = couponValid && eligibleGross>=toCents(coupon.minEligibleSubtotal||0);
   const used = new Set();
@@ -92,13 +92,13 @@ export function quotePromotions({
     const selections=[];
     if(config.enabled && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
-        id:c.id, name:c.name, extraPercent:Math.min(100,Number(c.extraPercent)||0), priority:Number(c.priority)||0,
+        id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits: c.maxUnits
       });
-      for(const c of (config.upsells||[])) if(!strictUpsells && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
+      for(const c of (config.upsells||[])) if(!strictUpsells && cash && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
-        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Number(coupon.extraPercent)||0,priority:1000,kind:'coupon'
+        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(coupon.extraPercent)||0)),priority:1000,kind:'coupon'
       });
     }
     // Elegir la mayor rebaja REAL en esta línea (incluidos topes y márgenes).
