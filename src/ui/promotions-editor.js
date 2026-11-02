@@ -259,7 +259,7 @@ export function installPromotionsEditor(w=window) {
       item.advertising={...(item.advertising||{}),placement,enabled:false};
       if(draftEditing.key==='crossSells')item.placement=placement;
       item.enabled=false;draftEditing=null;save(state);render();
-    }));
+    });
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
       if(!canEdit)return;
