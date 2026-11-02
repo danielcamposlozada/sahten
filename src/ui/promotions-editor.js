@@ -420,6 +420,25 @@ export function installPromotionsEditor(w=window) {
       selected=id;campaignFeedback='Campaña creada como borrador. Elegí los productos y revisá el calendario antes de publicarla.';
       save(state);render();
     });
+    root.querySelector('[data-promo-duplicate]')?.addEventListener('click',()=>{
+      if(!canEdit||!c)return;
+      const id='custom-'+Date.now().toString(36);
+      if(state.campaigns.some(x=>x.id===id))return;
+      state.campaigns.push({...JSON.parse(JSON.stringify(c)),id,name:'Copia de '+String(c.name||'Campaña').slice(0,88),enabled:false});
+      selected=id;campaignFeedback='Nueva copia local, pausada y sin publicar. Revisá el calendario y el costo antes de activar.';
+      save(state);render();
+    });
+    root.querySelector('[data-promo-delete]')?.addEventListener('click',async()=>{
+      if(!canEdit||!c||!liveLoaded||liveError||liveBusy||live.campaigns.some(x=>x.id===c.id))return;
+      const target=c.id;
+      const yes=await w.sahtenConfirm?.('¿Eliminar el borrador local «'+c.name+'»? Sólo se permiten campañas sin publicar.',
+        {title:'Eliminar borrador',okLabel:'Eliminar'});
+      if(yes!==true||!canEdit||live.campaigns.some(x=>x.id===target))return;
+      state.campaigns=state.campaigns.filter(x=>x.id!==target);
+      selected=state.campaigns[0]?.id||'';
+      campaignFeedback='El borrador se eliminó del proyecto local. La web no cambió.';
+      save(state);render();
+    });
     root.querySelector('[data-promo-preview]')?.addEventListener('click',()=>{tab='sim';render()});
     root.querySelectorAll('[data-promo-weekday]').forEach(el=>el.addEventListener('change',()=>{
       if(!canEdit||!c)return;
@@ -496,6 +515,8 @@ export function installPromotionsEditor(w=window) {
         .map(([id,name])=>'<option value="'+id+'">'+name+'</option>').join('')+'</select></label>'
       +'<button type="button" data-promo-new '+disabled+'>+ Crear borrador</button></div>'
       +'<label class="promo-field">Editando<select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
+      +'<div class="promo-row"><button type="button" data-promo-duplicate '+disabled+'>Duplicar campaña como borrador</button>'
+      +'<button type="button" data-promo-delete '+(canEdit&&liveLoaded&&!liveError&&!liveBusy&&!remote?'':'disabled')+'>Eliminar borrador local</button></div>'
       +'<h3>2. Qué ofrecés</h3>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre visible',c.name,'text','data-field="name" maxlength="100" '+disabled)
       +formField('promo-extra','Descuento adicional (puntos porcentuales)',c.extraPercent,'number','min="1" max="20" step="1" data-field="extraPercent" '+disabled)+'</div>'
