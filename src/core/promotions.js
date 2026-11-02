@@ -90,12 +90,12 @@ export function quotePromotions({
   const breakdown=details.map(l=>{
     const base=l.unitCents*l.qty, isFour=l.productId===FOUR_FATAY_ID;
     const selections=[];
-    if(config.enabled && cash && !isFour) {
+    if(config.enabled && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
         id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits: c.maxUnits
       });
-      for(const c of (config.upsells||[])) if(!strictUpsells && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
+      for(const c of (config.upsells||[])) if(!strictUpsells && cash && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
         id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(coupon.extraPercent)||0)),priority:1000,kind:'coupon'
@@ -132,7 +132,7 @@ export function quotePromotions({
   // En modo servidor estricto, primero calcular campañas/cupones. Después,
   // de manera independiente, como máximo UN upsell por pedido. No confiar en
   // marcas de "artículo añadido" provenientes del JSON del cliente.
-  if(config.enabled && cash && strictUpsells && trustedUpsellSelection?.verified === true) {
+  if(config.enabled && strictUpsells && trustedUpsellSelection?.verified === true) {
     const pending=[];
     for(const promotion of config.upsells || []) {
       if(!promotion?.enabled || promotion.kind !== 'upsell' || promotion.maxUnits !== 1)continue;
