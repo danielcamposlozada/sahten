@@ -5,14 +5,14 @@ const local={project:{id:'local'},catalog:{productos:[{id:'x',price:20}]},sales:
 const remote={promotions:{version:1,enabled:true,ticket:{enabled:true},campaigns:[{id:'camp',enabled:true}],upsells:[{id:'fatay',enabled:true}],
  couponPrograms:{first_online:{enabled:true}}},sales:{orders:[]},catalog:{productos:[]}};
 describe('recuperación selectiva de promociones',()=>{
- it('no toca ventas/costos/catalogo/stock ni habilita descuentos',()=>{
+ it('no toca ventas/costos/catalogo/stock ni dispara publicación de descuentos',()=>{
   const m=mergeCloudPromotions(local,remote);
   expect(m.sales).toEqual(local.sales);expect(m.costs).toEqual(local.costs);
   expect(m.catalog).toEqual(local.catalog);expect(m.stock).toEqual(local.stock);
-  expect(m.promotions.enabled).toBe(false);expect(m.promotions.ticket.enabled).toBe(false);
-  expect(m.promotions.campaigns[0].enabled).toBe(false);
-  expect(m.promotions.upsells[0].enabled).toBe(false);
-  expect(m.promotions.couponPrograms.first_online.enabled).toBe(false);
+  expect(m.promotions.enabled).toBe(true);expect(m.promotions.ticket.enabled).toBe(true);
+  expect(m.promotions.campaigns[0].enabled).toBe(true);
+  expect(m.promotions.upsells[0].enabled).toBe(true);
+  expect(m.promotions.couponPrograms.first_online.enabled).toBe(true);
   expect(remote.promotions.campaigns[0].enabled).toBe(true);
  });
  it('falla cerrado con datos remotos no válidos',()=>{
