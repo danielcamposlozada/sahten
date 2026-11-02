@@ -763,12 +763,13 @@ async function ensurePublishedCustomerTicketPromotion(order) {
   try{
     const config=await read();
     if(config?.source!=='published_server'||config.enabled!==true)return;
-    // Ticket: recomendar una compra FUTURA online. Nunca destacar la misma
-    // promoción que el cliente acaba de aprovechar ni inventar códigos.
+    // El descuento utilizado sigue en el desglose de la compra.
+    // La publicidad (incluso de la misma campaña) invita a volver a comprar,
+    // en la web, mostrador o ambos, según los canales de cada promoción.
     const applied=order.promotionSnapshot?.appliedPromotionIds||[];
     const snapshot=SAHTEN.promotions.selectTicketAdvertisement(config,{
-      channel:'online',now:new Date(order.createdAt||Date.now()),
-      excludedPromotionIds:applied,rotationKey:order.num||0
+      channel:'any',now:new Date(order.createdAt||Date.now()),
+      appliedPromotionIds:applied,rotationKey:order.num||0
     });
     if(snapshot){
       order.promotionTicketSnapshot=snapshot;
