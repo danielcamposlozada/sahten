@@ -1,0 +1,134 @@
+name: SAHTEN.online | Checkout de promociones verificado
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "scripts/deploy/sahten-safe-promo-checkout.mjs"
+      - ".github/workflows/sahten-promo-checkout.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/deploy/sahten-safe-promo-checkout.mjs"
+      - ".github/workflows/sahten-promo-checkout.yml"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Publicar el checkout verificado (sólo main)"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sahten-online-production
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run check:versions
+      - run: npm test
+      - run: npm run build
+      - name: Preservar portada, fotos y preparar checkout con promociones
+        run: node scripts/deploy/sahten-safe-promo-checkout.mjs
+      - name: Revisar integridad del paquete antes de publicación
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
+          assert.equal(r.sourceDeploymentId,'2947fd13-6ec7-46f7-b8c2-2e293fe673d3');
+          assert.ok([47,48].includes(r.products));
+          assert.equal(r.remotePhotos>=47,true);
+          assert.equal(r.beverages,11);
+          assert.equal(r.campaigns.length,6);
+          assert.equal(r.homepagePreservedExactly,true);
+          assert.equal(r.defaultCashBenefit,10);
+          assert.equal(r.preserved.length,17);
+          for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg'])
+            assert.ok(fs.statSync('sahten-promo-export/'+p).size>0);
+          const html=fs.readFileSync('sahten-promo-export/pedir/index.html','utf8');
+          assert.ok(html.includes('function couponSection()'));
+          assert.ok(html.includes('function fatayUpgradePanel()'));
+          console.log('Safe checkout verified: '+r.products+' products, 6 campaigns');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sahten-online-guarded-promo-checkout
+          path: sahten-promo-export/
+          retention-days: 7
+
+  deploy:
+    needs: package
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sahten-online-guarded-promo-checkout
+          path: sahten-promo-export
+      - name: Exigir misma producción de origen y token oficial
+        shell: bash
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$CF_TOKEN" || -z "$CF_ACCOUNT" ]]; then
+            echo "::error::Cloudflare no está autorizado. Producción sin cambios."
+            exit 1
+          fi
+          data=$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
+          current=$(echo "$data" | jq -er '.result.latest_deployment.id')
+          if [[ "$current" != "2947fd13-6ec7-46f7-b8c2-2e293fe673d3" ]]; then
+            echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
+            exit 1
+          fi
+      - name: Desplegar sólo el checkout y JSON actualizados, preservando otros recursos
+        id: deploy_pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
+          command: pages deploy sahten-promo-export --project-name sahten-menu --branch main
+      - name: "Verificar producción: descuentos, productos y checkout"
+        run: |
+          set -euo pipefail
+          for i in {1..8}; do
+            if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://sahten.online/menu.json?verify=$GITHUB_RUN_ID-$i" | node -e "
+            let s='';process.stdin.on('data',x=>s+=x).on('end',()=>{
+             const d=JSON.parse(s);
+             if(![47,48].includes(d.products?.length)||
+                d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
+                Number(d.payments?.benefit?.percent)!==10||
+                d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | grep -q 'function couponSection()'; then
+              echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::No se pudo confirmar el checkout publicado."
+          exit 1
+      - name: Rollback de emergencia al deploy confirmado si falla verificación posterior
+        if: ${{ failure() && steps.deploy_pages.outcome == 'success' }}
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
+        run: |
+          curl --fail --silent --show-error -X POST \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{}' \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu/deployments/2947fd13-6ec7-46f7-b8c2-2e293fe673d3/rollback"
