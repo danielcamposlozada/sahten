@@ -64,7 +64,7 @@ describe('Promoción visual de ticket térmico',()=>{
      expect(doc).toContain('DESDE EL 07/11/2026');
      expect(doc).not.toContain('receipt-saving-row');
      expect(doc).toContain('$20.520');
-     expect(doc).toMatch(/border:2px solid #000/);
+     expect(doc).toMatch(/receipt-promo\{border:1\.4px solid #000/);
    }
  });
  it('prioriza el código de cupón confirmado con etiqueta propia y llamada a la acción',()=>{
