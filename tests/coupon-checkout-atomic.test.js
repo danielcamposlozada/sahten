@@ -6,7 +6,7 @@ const storeId='00000000-0000-4000-8000-000000000001';
 const requestId='00000000-0000-4000-8000-000000000002';
 const couponId='00000000-0000-4000-8000-000000000003';
 const validCode='SHT-ABCDEFGH';
-const coupon={
+const coupon={ok:true,
  id:couponId,status:'available',channel:'online',program:'manual',name:'Cupón de prueba',
  expiresOn:'2027-01-01',extraPercent:2,minEligibleSubtotal:5000,
  productIds:['baklava'],maxExtraAmount:1000
