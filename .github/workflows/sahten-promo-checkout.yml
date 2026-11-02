@@ -60,6 +60,7 @@ jobs:
           const html=fs.readFileSync('sahten-promo-export/pedir/index.html','utf8');
           assert.ok(html.includes('function couponSection()'));
           assert.ok(html.includes('function fatayUpgradePanel()'));
+          assert.ok(html.includes("if(rule===null)rule={type:'always'}"),'Campañas sin calendario deben cotizar');
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
           assert.ok(home.includes("!p.upsellOnly"),'Homepage must hide checkout-only Fatay');
           console.log('Safe checkout verified: '+r.products+' products, 6 campaigns');
@@ -94,7 +95,7 @@ jobs:
           fi
           data=$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
           current=$(echo "$data" | jq -er '.result.latest_deployment.id')
-          if [[ "$current" != "91563746-1f00-4bba-8d58-16dbc96856d0" ]]; then
+          if [[ "$current" != "91563746-1f00-4bba-8d58-16dbc96856d0" && "$current" != "7def245e-e977-48ad-9a90-053d010c60a6" ]]; then
             echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
             exit 1
           fi
@@ -116,7 +117,7 @@ jobs:
                 d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
                 Number(d.payments?.benefit?.percent)!==10||
                 d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()')||!s.includes("if(rule===null)rule={type:'always'}"))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
               echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
               exit 0
             fi
