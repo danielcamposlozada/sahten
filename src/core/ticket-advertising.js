@@ -1,4 +1,5 @@
 import { scheduleMatches, localDateParts, expiryLabel } from './promotions.js';
+import { ticketCampaignDetails } from './live-promotion-catalog.js';
 
 // El anuncio se refiere a UNA campaña publicada: no genera beneficios,
 // códigos ni derechos adicionales para el cliente que recibe el ticket.
@@ -68,6 +69,7 @@ export function selectTicketAdvertisement(config, {
   const position = rotationKey === null ? 0 :
     Math.abs(Math.trunc(Number(rotationKey) || 0)) % eligible.length;
   const choice = eligible[position];
+  const details=ticketCampaignDetails(choice.c);
   // Los cuatro formatos aprobados son A (general), B (rebaja),
   // C (cupón REAL emitido) y D (especial). C nunca se asigna a campañas.
   const preference=choice.c.advertising?.ticketFormat || choice.c.advertising?.layout;
@@ -76,7 +78,10 @@ export function selectTicketAdvertisement(config, {
     choice.c.schedule?.type==='weekly' ? 'A' : 'B';
   return { kind: 'campaign', audience: 'general', layout,
     campaignId: clean(choice.c.id, 90),
-    headline: clean(choice.c.advertising?.message || choice.c.name),
+    headline: clean((choice.c.advertising?.message || choice.c.name)
+      .replace(/^En tu próxima compra online:\s*/i,''),115),
+    ...(details.terms.length?{terms:clean(details.terms.join(' · '),130)}:{}),
+    ...(details.expiry?{expiry:details.expiry}:{}),
     ...(choice.next ? { startsOn: choice.next } : {}),
     ...(choice.repeatEdition ? { repeatEdition: true } : {}),
     selectedAt: new Date(now).toISOString() };

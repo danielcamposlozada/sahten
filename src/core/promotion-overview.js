@@ -11,7 +11,7 @@ export function promotionOverview(config={}, {live=null,now=new Date()}={}){
     for(const item of asArray(config[type])){
       if(!item||typeof item.id!=='string')continue;
       const row=type==='campaigns'?liveRows.get(item.id):null;
-      const inWindow=type!=='campaigns'||scheduleMatches(item.schedule||{},now);
+      const inWindow=type!=='campaigns'||scheduleMatches(item.schedule??null,now);
       // Nunca interpretar un flag local como beneficio en vivo.
       // La web prevalece sobre el borrador local: un proyecto puede estar desactualizado.
       const liveConfirmed=type==='campaigns'&&published&&row?.enabled===true;
