@@ -215,7 +215,10 @@ export function installPromotionsEditor(w=window) {
   }
   function overviewEditor(state){
     const connected=liveLoaded&&!liveError&&live.published===true;
-    const source=connected?{...state,campaigns:liveCatalog()}:state;
+    const source=connected?{...state,campaigns:[
+      ...liveCatalog(),
+      ...(state.campaigns||[]).filter(x=>!live.campaigns.some(r=>r.id===x.id))
+    ]}:state;
     const overview=promotionOverview(source,{now:new Date(),live:connected?live:null});
     const merged=overview.items.map(item=>{
       if(item.type!=='crossSells')return item;
@@ -223,7 +226,7 @@ export function installPromotionsEditor(w=window) {
       if(!published)return item;
       return {...item,status:published.enabled===false?'inactive':'active',active:published.enabled!==false};
     });
-    const operational=connected?merged.filter(item=>item.type==='campaigns'||
+    const operational=connected?merged.filter(item=>(item.type==='campaigns'&&live.campaigns.some(r=>r.id===item.id))||
       item.type==='crossSells'&&!!publishedRecommendation(item.id)):merged;
     const visible=filterPromotionOverview(operational,overviewFilter);
     const draftRows=connected?merged.filter(item=>!operational.includes(item)):[];
@@ -236,7 +239,7 @@ export function installPromotionsEditor(w=window) {
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
         :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
       const published=publishedRecommendation(item.id);
-      const isPublished=connected&&item.type==='campaigns';
+      const isPublished=connected&&item.type==='campaigns'&&live.campaigns.some(r=>r.id===item.id);
       return '<article class="promo-overview-card"><span class="promo-overview-category">'+esc(item.label)+'</span>'
         +'<span class="promo-overview-status is-'+esc(item.status)+'">'+esc(badges[item.status]||'Inactiva')+'</span>'
         +'<strong>'+esc(item.name)+'</strong>'
