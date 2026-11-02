@@ -231,7 +231,7 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-foot">'+(item.type==='crossSells'&&published?'Confirmada con el servidor':item.type==='campaigns'&&live.campaigns?.some(r=>r.id===item.id)?'Estado del servidor · calendario independiente':item.localEnabled?'Planificación local · NO publicada':'Borrador · NO publicado')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item)
-        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,(item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item):'')
+        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,{...((item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item),id:item.id}):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
@@ -426,8 +426,9 @@ export function installPromotionsEditor(w=window) {
         ||!Number.isInteger(days)||days<1||days>365||!['online','mostrador'].includes(channel)){
         w.sahtenAlert?.('Revisá nombre, descuento hasta 10 puntos, mínimo, tope y vigencia de 1 a 365 días.');return;
       }
+      const eligibleProductIds=[...root.querySelectorAll('[data-coupon-product]:checked')].map(x=>x.dataset.couponProduct);
       Object.assign(item,{name,extraPercent:pct,minEligibleSubtotal:min,maxExtraAmount:cap,
-        validDays:days,channel,requiresConfirmedOrigin:root.querySelector('#coupon-origin')?.checked===true,enabled:false});
+        validDays:days,channel,eligibleProductIds,requiresConfirmedOrigin:root.querySelector('#coupon-origin')?.checked===true,enabled:false});
       couponEditing=null;save(state);render();
     });
     root.querySelectorAll('[data-draft-toggle]').forEach(button=>button.addEventListener('click',()=>{
@@ -722,6 +723,11 @@ export function installPromotionsEditor(w=window) {
       +'<label class="promo-field">Canal previsto<select id="coupon-channel">'
       +[['online','Tienda online'],['mostrador','Mostrador']].map(([id,label])=>'<option value="'+id+'"'+((editing.channel||'online')===id?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'
       +'<label class="promo-checkbox"><input id="coupon-origin" type="checkbox" '+(editing.requiresConfirmedOrigin?'checked':'')+'> Requiere compra anterior confirmada</label>'
+      +'<fieldset class="rec-choices"><legend>Productos elegibles para la prueba económica</legend>'
+      +catalog(w).map(p=>'<label class="rec-product-check"><input type="checkbox" data-coupon-product="'+esc(p.id)+'"'
+        +(Array.isArray(editing.eligibleProductIds)&&editing.eligibleProductIds.includes(p.id)?' checked':'')+'>'+esc(p.name)+'</label>').join('')
+      +'</fieldset>'
+      +'<small>Elegí los productos a los que aplicará el cupón. Sin productos definidos, no se puede calcular su rentabilidad.</small>'
       +'<p>Guardar desactiva la planificación, no emite códigos ni modifica descuentos públicos.</p>'
       +'<div class="promo-row"><button type="button" data-coupon-save>Guardar borrador</button><button type="button" data-coupon-cancel>Cancelar</button></div></div>':'';
     return '<section class="promo-card"><h3>Cupones y recompensas ('+entries.length+')</h3>'
