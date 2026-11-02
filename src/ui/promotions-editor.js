@@ -171,7 +171,7 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-foot">'+(item.type==='crossSells'&&published?'Confirmada con el servidor':item.type==='campaigns'&&live.campaigns?.some(r=>r.id===item.id)?'Estado del servidor · calendario independiente':item.localEnabled?'Planificación local · NO publicada':'Borrador · NO publicado')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item)
-        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,item):'')
+        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,(item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
@@ -265,8 +265,16 @@ export function installPromotionsEditor(w=window) {
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>{refreshLive();recEditor.refresh();});
     root.querySelector('[data-promo-create]')?.addEventListener('click',()=>{tab='campaigns';render();root.querySelector('[data-promo-new]')?.focus();});
     root.querySelectorAll('[data-promo-filter]').forEach(b=>b.addEventListener('click',()=>{overviewFilter=b.dataset.promoFilter;render();}));
-    root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.openType;
-      if(tab==='campaigns')selected=b.dataset.openPromo;render();}));
+    root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{
+      tab=b.dataset.openType;
+      if(tab==='campaigns')selected=b.dataset.openPromo;
+      if(tab==='coupons')couponEditing=b.dataset.openPromo;
+      if(['extras','recommendations','upgrades'].includes(tab)){
+        draftEditing={key:{extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades'}[tab],
+          id:b.dataset.openPromo};
+      }
+      render();
+    }));
     root.querySelector('[data-promo-sync]')?.addEventListener('click',async()=>{
       if(!canOperate()||!w.SAHTEN?.online?.conn?.()?.projectId||!w.SAHTEN?.project?.session?.info?.()?.hasFile)return;
       const yes=await w.sahtenConfirm?.('Se importarán SOLO las promociones del proyecto en la nube. Se conservarán los pedidos, los costos, el stock y el catálogo locales; se guardará un respaldo antes de cambiar los borradores. ¿Continuar?',
