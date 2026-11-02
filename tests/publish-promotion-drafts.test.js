@@ -53,7 +53,7 @@ describe('Publicar desde la tarjeta del borrador',()=>{
       await vi.waitFor(()=>expect(api.setCartRecommendations).toHaveBeenCalledTimes(1));
       expect(state.rules.complements).toHaveLength(1);
       expect(state.rules.complements[0]).toMatchObject({id:'dulce-local',enabled:true,productId:'baklava'});
-      await vi.waitFor(()=>expect(w.document.querySelector('.promo-overview-card').textContent).toContain('Publicada'));
+      await vi.waitFor(()=>expect(w.document.querySelector('[data-open-promo="dulce-local"]').closest('.promo-overview-card').textContent).toContain('Publicada'));
       expect(w.document.querySelector('[data-publish-draft="dulce-local"]')).toBeNull();
       expect(w.sahtenConfirm).toHaveBeenCalledTimes(1);
       expect(api.readCartRecommendations.mock.calls.length).toBeGreaterThanOrEqual(2);
