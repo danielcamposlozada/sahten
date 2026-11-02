@@ -46,19 +46,22 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'2947fd13-6ec7-46f7-b8c2-2e293fe673d3');
+          assert.equal(r.sourceDeploymentId,'91563746-1f00-4bba-8d58-16dbc96856d0');
           assert.ok([47,48].includes(r.products));
           assert.equal(r.remotePhotos>=47,true);
           assert.equal(r.beverages,11);
           assert.equal(r.campaigns.length,6);
-          assert.equal(r.homepagePreservedExactly,true);
+          assert.equal(r.homepageLayoutPreserved,true);
+          assert.equal(r.homepageCatalogGuarded,true);
           assert.equal(r.defaultCashBenefit,10);
-          assert.equal(r.preserved.length,17);
+          assert.equal(r.preserved.length,16);
           for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg'])
             assert.ok(fs.statSync('sahten-promo-export/'+p).size>0);
           const html=fs.readFileSync('sahten-promo-export/pedir/index.html','utf8');
           assert.ok(html.includes('function couponSection()'));
           assert.ok(html.includes('function fatayUpgradePanel()'));
+          const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
+          assert.ok(home.includes("!p.upsellOnly"),'Homepage must hide checkout-only Fatay');
           console.log('Safe checkout verified: '+r.products+' products, 6 campaigns');
           NODE
       - uses: actions/upload-artifact@v4
@@ -91,7 +94,7 @@ jobs:
           fi
           data=$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
           current=$(echo "$data" | jq -er '.result.latest_deployment.id')
-          if [[ "$current" != "2947fd13-6ec7-46f7-b8c2-2e293fe673d3" && "$current" != "877bd4e8-b602-478f-943b-831a50e533d6" ]]; then
+          if [[ "$current" != "91563746-1f00-4bba-8d58-16dbc96856d0" ]]; then
             echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
             exit 1
           fi
@@ -113,7 +116,7 @@ jobs:
                 d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
                 Number(d.payments?.benefit?.percent)!==10||
                 d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})"; then
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})"; && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})" then
               echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
               exit 0
             fi
@@ -131,4 +134,4 @@ jobs:
             -H "Authorization: Bearer $CF_TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{}' \
-            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu/deployments/2947fd13-6ec7-46f7-b8c2-2e293fe673d3/rollback"
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu/deployments/91563746-1f00-4bba-8d58-16dbc96856d0/rollback"
