@@ -1,4 +1,5 @@
 import { recommendCartAddons } from '../core/cart-recommendations.js';
+import { preparePublishedRecommendation } from '../core/promotion-publication.js';
 import '../styles/live-recommendations.css';
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -130,7 +131,8 @@ export function createLiveRecommendationEditor(w,notify) {
       const latest=await api().readCartRecommendations();
       if(!latest?.published||latest.revision!==sent.revision)throw Error('No se confirmó la nueva revisión.');
       remote=clone(latest);editing=null;previewId='';message='Guardado y verificado en la web. Los cambios se reflejan al actualizar el menú en vivo.';
-    }catch(e){error=parseError(e);message='El cambio no está confirmado como publicado.';}
+      return true;
+    }catch(e){error=parseError(e);message='El cambio no está confirmado como publicado.';return false;}
     finally{busy=false;notify();}
   }
   function create(kind,copy=null){
@@ -196,5 +198,22 @@ export function createLiveRecommendationEditor(w,notify) {
       commit(copy);
     }));
   }
-  return {render,bind,refresh,get:()=>remote};
+  async function publishDraft(proposal){
+    if(!canEdit())throw new Error('Conectá la tienda con permisos de dueño o administrador.');
+    if(busy)throw new Error('Hay otra publicación en curso.');
+    // Never trust a stale local snapshot: validate against the current published catalog.
+    const fresh=await api()?.readCartRecommendations?.();
+    if(!fresh?.published||!fresh.rules||!Array.isArray(fresh.products))
+      throw new Error('No se pudo comprobar el catálogo publicado.');
+    remote=clone(fresh);
+    const row=preparePublishedRecommendation(proposal,products());
+    const copy=fromRules(remote.rules);
+    if(copy.complements.some(x=>x.id===row.id)||copy.beverageContexts.some(x=>x.id===row.id))
+      throw new Error('Esta sugerencia ya existe en la web. Abrí «Recomendaciones web» para modificarla.');
+    copy.complements.push(row);
+    const saved=await commit(copy);
+    if(!saved)throw new Error(error||'No se pudo confirmar la publicación.');
+    return true;
+  }
+  return {render,bind,refresh,get:()=>remote,publishDraft};
 }
