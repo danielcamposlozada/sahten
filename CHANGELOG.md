@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.36
+
 - **Centro de Promociones más simple**: plantillas de campañas semanales, lunes y miércoles, fines de semana centrales y fechas particulares, días como botones, rangos horarios, comprobación de campos y vista previa de planificación.
 - **Switches en vivo**: visibles en grilla, editor y control online; estado siempre confirmado con revisión del servidor y sincronización periódica de 10 segundos. No permiten activación comercial si el checkout promocional no está publicado y validado.
 - **Web preparada para cambios en vivo**: recarga el bloque promocional del menú de Supabase junto al resto de estados operativos, sin modificar el flujo de Mercado Pago ni habilitar nuevas campañas por defecto.
