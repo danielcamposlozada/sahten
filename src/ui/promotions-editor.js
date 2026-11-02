@@ -152,7 +152,7 @@ export function installPromotionsEditor(w=window) {
          +(c.ok?'✓ ':'○ ')+esc(c.label||c.id)+'</li>').join('')+'</ul>'
       +'<p class="promo-caution">No autoriza la publicación: faltan costos incrementales aprobados y/o integración de cobro y canje. El servidor no modifica descuentos al verificar.</p>'
       +'</div>':'';
-    return '<details class="promo-note promo-draft-checklist"'+(data?' open':'')+'><summary>Verificación '+(data?'del servidor': 'local')+' · '+missing+' requisito'+(missing===1?'':'s')+' local'+(missing===1?'':'es')+' pendiente'+(missing===1?'':'s')+'</summary>'
+    return '<details class="promo-note promo-draft-checklist"'+(data?' open':'')+'><summary>Revisar publicación · verificación '+(data?'del servidor': 'local')+' · '+missing+' requisito'+(missing===1?'':'s')+' local'+(missing===1?'':'es')+' pendiente'+(missing===1?'':'s')+'</summary>'
       +'<ul>'+review.checks.map(c=>'<li class="'+(c.ok?'is-ok':'is-pending')+'">'
         +(c.ok?'✓ ':'○ ')+esc(c.label)+'</li>').join('')+'</ul>'
       +'<p><small>Ubicaciones previstas: '+esc(places)+'. Planificación, no anuncio activo.</small></p>'
