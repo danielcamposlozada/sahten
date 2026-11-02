@@ -136,7 +136,7 @@ export function installPromotionsEditor(w=window) {
   }
   function render() {
     ensureLiveContext();
-    const root=w.document.getElementById('promotions-editor');if(!root)return;
+    const root=w.document?.getElementById?.('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
     if(c)selected=c.id;
     const canEdit=!w.document.body.classList.contains('role-no-costs')&&!w.SAHTEN?.project?.session?.readOnly;
