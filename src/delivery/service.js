@@ -93,7 +93,10 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
      trustedCoupon={...record,kind:'coupon'};
    }
    const trustedCosts=ctx.menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-   const order=quoteOrder(ctx.menu,input,{...ctx,trustedCosts,allowOtherPayments:true,validateCustomer:action==='order'||action==='validate-pos'});
+   const order=quoteOrder(ctx.menu,input,{...ctx,trustedCosts,trustedCoupon,allowOtherPayments:true,validateCustomer:action==='order'||action==='validate-pos'});
+   if(couponDigest && (order.promotionSnapshot?.couponId!==trustedCoupon?.id ||
+      !order.promotionSnapshot.appliedPromotionIds?.includes(trustedCoupon.id)))
+     fail('El cupón no aplica a esta compra. Revisá los productos y el descuento.',409,'coupon_not_applicable');
    if(action==='order'||action==='validate-pos'){
     if(cents(input.total)!==cents(order.total))fail('Cambió el total. Revisá el pedido y volvé a confirmar.',409,'menu_changed');
     if(action==='validate-pos'){const id=String(input.localOrderId||'');if(!/^ord_[a-z0-9]{6,80}$/.test(id))fail('Identificador de venta local inválido.');return response({order,validationId:await repo.savePos(sid,id,order)});}
