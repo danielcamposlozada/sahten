@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+- **Gestión integral de borradores:** los programas de cupones ahora se pueden crear, editar, duplicar y eliminar sin emitir códigos ni modificar pedidos. Se validan descuento de hasta 10 puntos adicionales, compra mínima, tope, vigencia y canal; al guardar quedan desactivados.
+- **Checks de publicación:** complementos con descuento, mejoras de producto y cupones muestran requisitos pendientes y ubicaciones previstas, diferenciando la planificación local de un beneficio disponible para clientes.
+- **Editar desde la vista general:** abre exactamente el borrador seleccionado, tanto en complementos como en mejoras, recomendaciones y cupones.
+- **Campañas locales:** duplicación segura; eliminación únicamente de borradores no publicados después de consultar el estado del servidor. No elimina campañas comerciales publicadas ni modifica el checkout.
+- **Seguridad comercial:** no se desbloquean ofertas con costos incrementales sin aprobar, descuentos escalonados superiores al límite, canje de cupones sin integrar ni descuentos de Mercado Pago.
+
 ## 0.4.40
 
 - **Publicación de campañas desde borradores:** se habilita «Publicar campaña (pausada)» para campañas válidas en Tienda online. El servidor exige permisos dueño/admin, valida catálogo, costos reales, 40% de margen, descuentos dentro de 20% total y fecha/canal, e incorpora la campaña sin tocar precios, fotos ni pedidos.
