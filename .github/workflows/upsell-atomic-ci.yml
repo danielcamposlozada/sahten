@@ -1,0 +1,30 @@
+name: Sahten HMAC — atomía delivery y pagos (sin despliegue)
+on:
+  push:
+    branches:
+      - feat/upsell-hmac-quote-preflight-20261101
+    paths:
+      - src/delivery/**
+      - src/payments/**
+      - src/core/upsell-*.js
+      - tests/upsell-*.test.js
+      - supabase/migrations/20261102013000_delivery_upsell_atomic_order.sql
+      - .github/workflows/upsell-atomic-ci.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: PGlite atomicidad real e integraciones Edge sin red
+        run: npx vitest run tests/upsell-delivery-atomic-db.test.js tests/upsell-edge-integration.test.js tests/upsell-hmac-quote.test.js tests/mercadopago.test.js
+      - name: Compilar sin desplegar ni activar promociones
+        run: SAHTEN_ONLINE=false npm run build
