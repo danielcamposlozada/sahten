@@ -64,7 +64,7 @@ describe('Frecuencia de publicidad en tickets de cliente',()=>{
       customerPhone:fresh.customerPhone,items:[],subtotal:10000,
       discountAmount:1000,total:9000,paymentDiscount:{percent:10},promotionTicketSnapshot:ad
     },{paper:receiptProfile(58)});
-    expect(receipt).toContain('Descuento');
+    expect(receipt).toContain('Dto. 10 %');
     expect(receipt).not.toContain('receipt-promo--B');
   });
   it('sin identidad confiable evita repetir la última publicidad del negocio, sin fingir que reconoce personas',()=>{
