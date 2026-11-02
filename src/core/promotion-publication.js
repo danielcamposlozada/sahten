@@ -7,7 +7,7 @@ export function publicationKind(type, proposal={}) {
     :type==='productUpgrades'?'La mejora requiere costo verificado y reemplazo seguro en checkout.'
     :'El complemento con descuento requiere márgenes y recotización verificados en checkout.'};
   if (proposal.enabled!==true)return {ready:false,reason:'Primero incluí la propuesta en la planificación local.'};
-  if (Number(proposal.extraPercent||0)!==0)return {ready:false,reason:'Solo se publican sugerencias sin descuento desde esta opción.'};
+  if (Number(proposal.extraPercent||0)!==0 || Number(proposal.discountPercent||0)!==0 || (Array.isArray(proposal.discountTiers)&&proposal.discountTiers.length>0))return {ready:false,reason:'Solo se publican sugerencias sin descuento desde esta opción.'};
   const places=proposal.placement||proposal.advertising?.placement||['cart'];
   if (!Array.isArray(places) || !places.length || places.some(x=>x!=='cart'))
     return {ready:false,reason:'Por ahora las sugerencias pueden publicarse únicamente en el carrito.'};
