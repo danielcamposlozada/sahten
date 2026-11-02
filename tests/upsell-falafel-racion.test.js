@@ -25,6 +25,7 @@ describe('Falafel: ración completa de seis con la política de Fatay individual
   expect(f.marginAssessment).toBe('incremental_unit_plus_basket');
   expect(f.minMarginPct).toBe(40);
   expect(f.activationBlockers).toContain('verify_six_croquettes_portion_cost_and_tahini');
+  expect(f.suppressIfPresent).not.toContain('falafel');
   expect(f.suppressIfPresent).toContain('falafel_mix');
   expect(f.suppressIfPresent).toContain('sandwich_falafel');
  });
