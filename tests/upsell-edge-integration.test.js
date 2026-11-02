@@ -42,7 +42,7 @@ const req=(route,body,origin)=>new Request('https://edge.test/'+route,{method:'P
 const offerBody=order=>({storeId:sid,proof,order,productId:'fatay',offerId:'fatay-individual-up'});
 function paymentSetup(){
  const m=menu(),calls=[],nonces=new Map();
- const account={id:'00000000-0000-4000-8000-000000000005',site_url:'https://sahten.online',mode:'test',
+ const account={id:'00000000-0000-4000-8000-000000000005',store_id:sid,account_id:'123',site_url:'https://sahten.online',mode:'test',
   credentials:{accessToken:'TEST-fake-token-only',webhookSecret:'fake-test-secret'}};
  const repo={
   menu:vi.fn(async()=>m),upsellEconomics:vi.fn(async()=>costs),
@@ -65,7 +65,7 @@ function paymentSetup(){
  const service=createPaymentService({repo,upsellSecret:secret,fetchImpl,
   authenticate:async()=>null,endpoint:'https://edge.test',originKey:async()=> 'buyer-hash',now:()=>at});
  const call=async(route,body)=>{const r=await service(req(route,body,account.site_url));return {status:r.status,data:await r.json()};};
- return {repo,m,calls,call,fetchImpl};
+ return {repo,m,calls,call,fetchImpl,service,account};
 }
 describe('Rentabilidad: comisión MP nunca presumida al activar promociones',()=>{
  it('sin comisión aprobada no cotiza promociones MP, aunque el checkout no lleve upsell',()=>{
@@ -95,6 +95,55 @@ describe('Integración Edge de Mercado Pago (proveedor simulado; SIN cobro real)
   expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(1);
   expect(x.calls.some(([name])=>name==='reserve')).toBe(true);
   expect(x.fetchImpl).toHaveBeenCalledTimes(1);
+ });
+ it('oferta firmada + compra MP ficticia + webhook aprobado y rechazado: no confundir retorno con pago',async()=>{
+  for(const status of ['approved','rejected']){
+   const x=paymentSetup(),original=base('mercadopago');
+   const offer=await x.call('offer',offerBody(original));
+   expect(offer.status).toBe(200);
+   const paidOrder=await x.call('checkout',{storeId:sid,requestId:rid,proof,
+    order:selected(original,offer.data)});
+   expect(paidOrder.status).toBe(200);
+   // La preferencia por sí sola NO genera un pedido ni prueba acreditación.
+   expect(x.calls.filter(([kind])=>kind==='payment')).toHaveLength(0);
+   const id='999',checkoutId='00000000-0000-4000-8000-000000000006';
+   x.fetchImpl.mockImplementation(async url=>{
+    if(String(url).includes('/v1/payments/'))return Response.json({
+     id:999,external_reference:checkoutId,collector_id:123,currency_id:'ARS',
+     live_mode:false,status,transaction_amount:offer.data.orderTotal,
+     date_last_updated:new Date(at).toISOString()
+    });
+    return Response.json({id:'preference-1',init_point:'https://www.mercadopago.com.ar/checkout/test'});
+   });
+   const oldRun=x.repo.run;
+   x.repo.run=vi.fn(async(action,args)=>{
+    if(action==='webhook_accounts')return [x.account];
+    if(action==='checkout')return {id:checkoutId,store_id:sid,account_id:x.account.id,
+     order:{total:offer.data.orderTotal},payment_status:'pending'};
+    return oldRun(action,args);
+   });
+   const ts=String(Math.floor(at/1000)),reqId='test-event-signed-001';
+   const payload='id:'+id+';request-id:'+reqId+';ts:'+ts+';';
+   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(x.account.credentials.webhookSecret),
+     {name:'HMAC',hash:'SHA-256'},false,['sign']);
+   const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(payload)));
+   const hash=[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');
+   const webhook=()=>new Request('https://edge.test/webhook?store_id='+sid+'&data.id='+id,{
+    method:'POST',headers:{'Content-Type':'application/json','x-request-id':reqId,
+     'x-signature':'ts='+ts+',v1='+hash},
+    body:JSON.stringify({type:'payment',data:{id}})
+   });
+   const signed=await x.service(webhook());
+   expect(signed.status).toBe(200);
+   const events=x.calls.filter(([action])=>action==='payment');
+   expect(events).toHaveLength(1);
+   expect(events[0][1]).toMatchObject({checkout_id:checkoutId,status});
+   const withoutSignature=new Request('https://edge.test/webhook?store_id='+sid+'&data.id='+id,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({type:'payment',data:{id}})});
+   expect((await x.service(withoutSignature)).status).toBe(401);
+   expect(x.calls.filter(([action])=>action==='payment')).toHaveLength(1);
+  }
  });
  it('Mercado Pago no cobra como transferencia aunque el browser fuerce el método',async()=>{
   const x=paymentSetup(),original=base('mercadopago');
