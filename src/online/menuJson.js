@@ -35,7 +35,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
-    ...(activeUpgrade&&p.id===hiddenFour?{upsellOnly:true}:{}),
+    ...(activeUpgrade&&p.id===hiddenFour?{upsellOnly:true,upgradeFrom:'p1779467294622'}:{}),
     ...(p.salesAvailability ? { salesAvailability: { paused: !!p.salesAvailability.paused, resumeAt: p.salesAvailability.resumeAt || null } } : {}),
     price: showPrices ? channelPriceWithDisc(s, p, 'mostrador') : 0,
     ...(quoteIds[p.id] ? { priceRevision: quoteIds[p.id] } : {}),
