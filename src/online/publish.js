@@ -33,7 +33,7 @@ import { buildSitePages } from './pages.js';
 import { brandFiles, brandInline } from './brand.js';
 
 /** El código compartido (envío por zonas y mensaje de WhatsApp) viaja adentro de la web, sin imports. */
-export const sharedScript = () => [storySrc, salesAvailabilitySrc, orderDetailsSrc, deliverySrc, serviceHoursSrc, checkoutServiceChoiceSrc, incentiveSrc, addressSuggestionsSrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc, paymentBenefitSrc, cartRecommendationsSrc, promotionsSrc, paymentChoiceSrc].map(s => s.replace(/^import[^\n]*\n/gm, '').replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
+export const sharedScript = () => [storySrc, salesAvailabilitySrc, orderDetailsSrc, deliverySrc, serviceHoursSrc, checkoutServiceChoiceSrc, incentiveSrc, addressSuggestionsSrc, messageSrc, contrastSrc, reviewLinkSrc, seoSrc, storefrontSrc, paymentBenefitSrc, cartRecommendationsSrc, promotionsSrc, fatayUpgradeSrc, paymentChoiceSrc].map(s => s.replace(/^import[^\n]*\n/gm, '').replace(/^export\s+/gm, '').replace(/<\/script/gi, '<\\/script')).join('\n');
 
 const safeJson = o => JSON.stringify(o).replace(/</g, '\\u003c').replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028').replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
 
