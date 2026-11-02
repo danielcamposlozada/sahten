@@ -14,8 +14,9 @@ function promotionalFooter(snapshot,esc) {
     +'<p>'+esc(snapshot.label||'Válido hasta '+snapshot.expiresOn)+'</p>'
     +'<small>Mostralo en caja o ingresalo online. Un solo uso.</small></section>';
   const layout=['A','B','D'].includes(snapshot.layout)?snapshot.layout:/\d{1,2}\s*%|OFF|descuento/i.test(snapshot.headline||'')?'B':'A';
-  const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · CAMPAÑA GENERAL':
-    snapshot.audience==='general'?'CAMPAÑA GENERAL':null;
+  const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · VOLVÉ A APROVECHAR':
+    snapshot.repeatPurchase?'VOLVÉ A APROVECHAR':
+    snapshot.audience==='general'?'PARA TU PRÓXIMA COMPRA':null;
   const terms=snapshot.terms?'<small class="receipt-promo-terms">'+esc(snapshot.terms)+'</small>':'';
   const validity=date||snapshot.expiry?'<small class="receipt-promo-validity">'+
     [date,snapshot.expiry?esc(snapshot.expiry):''].filter(Boolean).join(' · ')+'</small>':'';
@@ -23,7 +24,8 @@ function promotionalFooter(snapshot,esc) {
     (layout==='B'?'OFERTA ONLINE':'NOVEDADES SAHTEN'));
   return '<section class="receipt-promo receipt-promo--'+layout+'">'
     +'<div class="receipt-promo-head">'+header+'</div>'
-    +(layout==='D'&&snapshot.repeatEdition?'<small>PRÓXIMA EDICIÓN · CAMPAÑA PARA TODOS</small>':'')
+    +(layout==='D'&&snapshot.repeatEdition?'<small>PRÓXIMA EDICIÓN · VOLVÉ A APROVECHAR</small>':
+      layout==='D'&&snapshot.repeatPurchase?'<small>VOLVÉ A APROVECHAR</small>':'')
     +'<strong>'+text+'</strong>'+terms+validity+'</section>';
 }
 /** El motor imprime importes confirmados; no calcula ni otorga promociones.
