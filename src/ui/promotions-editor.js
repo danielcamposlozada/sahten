@@ -44,20 +44,31 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', cursor=new Date();
   const get=()=>load();
-  let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='';
+  let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='',liveContext='';
   const liveApi=()=>w.SAHTEN?.online?.controller;
+  const currentLiveContext=()=>[w.SAHTEN?.project?.session?.id||'',w.SAHTEN?.online?.conn?.()?.storeId||'',w.SAHTEN?.online?.conn?.()?.url||''].join('|');
+  function ensureLiveContext(){
+    const key=currentLiveContext();
+    if(liveContext!==key){liveContext=key;liveLoaded=false;liveError='';live={published:false,campaigns:[]};}
+  }
   const canOperate=()=>!w.SAHTEN?.project?.session?.readOnly
     && ['owner','admin'].includes(w.SAHTEN?.online?.role?.())
     && w.SAHTEN?.online?.controller?.info?.()?.signedIn===true;
   async function refreshLive(){
+    ensureLiveContext();
     if(liveBusy)return;
+    const context=liveContext;
     liveBusy=true;liveError='';
     try{
       const result=await liveApi()?.readPromotionCampaignStates?.();
+      if(context!==currentLiveContext())return;
       live=result&&Array.isArray(result.campaigns)?result:{published:false,campaigns:[]};
       liveLoaded=true;
-    }catch(err){liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);liveLoaded=true;}
-    finally{liveBusy=false;render();}
+    }catch(err){
+      if(context===currentLiveContext()){
+        liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);liveLoaded=true;
+      }
+    }finally{liveBusy=false;render();}
   }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
@@ -115,6 +126,7 @@ export function installPromotionsEditor(w=window) {
       +'</section>';
   }
   function render() {
+    ensureLiveContext();
     const root=w.document.getElementById('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
     if(c)selected=c.id;
@@ -297,6 +309,6 @@ export function installPromotionsEditor(w=window) {
       '</div><h4>Por campaña</h4>'+(Object.values(r.byPromotion).length?Object.values(r.byPromotion).map(v=>'<p>'+esc(v.id)+' · '+v.orders+' líneas · '+fmt(v.revenue)+' vendidos</p>').join(''):'<p>Sin operaciones promocionales registradas.</p>')+'</section>';
   }
   // Renderiza al abrir el panel. Los cambios afectan sólo los borradores de este proyecto.
-  return {render,get,save};
+  return {render:()=>{render();if(!liveLoaded&&!liveBusy&&liveApi()?.info?.()?.signedIn===true)refreshLive();},get,save};
 }
 export function register(){onPanelShow('promociones',()=>window.SAHTEN.promotionsEditor?.render());}
