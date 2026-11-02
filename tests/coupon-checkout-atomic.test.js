@@ -49,7 +49,7 @@ function setup(){
 }
 it('quote verifies coupon on server, then submits and redeems with one atomic call',async()=>{
  const s=setup();
- const quote=await s.call('quote');expect(quote.status).toBe(200);
+ const quote=await s.call('quote');expect(quote.status,JSON.stringify(quote.data)).toBe(200);
  expect(quote.data.order.total).toBe(6468);
  expect(quote.data.order.promotionSnapshot.couponId).toBe(couponId);
  const result=await s.call('order');
@@ -74,7 +74,7 @@ it('excludes Mercado Pago and operator coupon shortcuts',async()=>{
  expect(s.repo.lookupCoupon).not.toHaveBeenCalled();
 });
 it('retry with a different coupon or without the original coupon is a conflict',async()=>{
- const s=setup();expect((await s.call('order')).status).toBe(200);
+ const s=setup();{const first=await s.call('order');expect(first.status,JSON.stringify(first.data)).toBe(200);}
  const repeated=await s.call('order');expect(repeated.status).toBe(200);
  expect(s.repo.confirmCouponOrder).toHaveBeenCalledTimes(1);
  expect((await s.call('order',s.input,'SHT-BCDEFGHJ')).status).toBe(409);
