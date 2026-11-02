@@ -271,7 +271,7 @@ var activeCat='all',catalogQuery='',disclosures={};
 function catalogText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().trim();}
 function renderCatalog(){
   var query=catalogText(catalogQuery),words=query.split(/\s+/).filter(Boolean);
-  var list=MENU.products.filter(function(p){var text=catalogText([p.name,p.category,p.description].join(' '));return !p.retired&&(activeCat==='all'||p.category===activeCat)&&words.every(function(word){return text.includes(word)});});
+  var list=MENU.products.filter(function(p){var text=catalogText([p.name,p.category,p.description].join(' '));return !p.retired&&!p.upsellOnly&&(activeCat==='all'||p.category===activeCat)&&words.every(function(word){return text.includes(word)});});
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(catalogQuery?'No encontramos productos con esa búsqueda. Probá otro nombre o categoría.':'Todavía no hay productos para mostrar.')+'</div>';
   $('catalog-results').textContent=list.length+(list.length===1?' producto':' productos')+(activeCat!=='all'?' · '+activeCat:'')+(catalogQuery?' · Resultados de tu búsqueda':'');
 }
