@@ -144,6 +144,8 @@ export function createSync(deps) {
       if(busy)throw new SupabaseError('Ya se está sincronizando el proyecto.');
       if(!deps.remoteId()||!['owner','admin'].includes(deps.role()))
         throw new SupabaseError('Necesitás un proyecto vinculado y permisos de dueño o administrador.');
+      if(deps.hasLocalFile&&!deps.hasLocalFile())
+        throw new SupabaseError('Guardá primero una copia .sahten en este equipo para conservar los cambios.');
       busy=true;transfer=deps.progress?.start('Actualizando promociones del proyecto');
       const check=guard();
       timer.clear(debounce);
@@ -170,7 +172,8 @@ export function createSync(deps) {
         report({detail:'Importando promociones sin reemplazar ventas ni catálogo…'});
         await deps.apply(merged);
         check();
-        await deps.saveLocal();
+        if(await deps.saveLocal()===false)
+          throw new SupabaseError('No se pudo guardar el archivo .sahten. Revisá la ubicación del proyecto.');
         check();
         // Queda pendiente la sincronización integral: CAS/conflictos originales intactos.
         pending=true;conflict=null;set('promociones locales actualizadas');
@@ -206,6 +209,12 @@ export function createSync(deps) {
     check();
     if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
     report({ detail: 'Aplicando datos en este equipo…' }); await deps.apply(incoming);
+    check();
+    if(deps.hasLocalFile?.()) {
+      report({detail:'Guardando la copia local .sahten…'});
+      if(await deps.saveLocal()===false)throw new SupabaseError('No se pudo guardar la copia local del proyecto.');
+      check();
+    }
     save({ version: r.version, hash: syncHash(incoming), at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
     return { action: 'pull', version: r.version };
   }
