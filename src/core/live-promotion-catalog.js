@@ -35,10 +35,14 @@ export function ticketCampaignDetails(campaign={}) {
   else terms.push('Todos los días');
   if(schedule?.startTime||schedule?.endTime)terms.push((schedule.startTime||'00:00')+'–'+(schedule.endTime||'23:59'));
   if(Number.isFinite(limit)&&limit>0) terms.push('Hasta '+limit+' unidad'+(limit===1?'':'es')+' participante'+(limit===1?'':'s'));
-  if(Array.isArray(campaign.channels)&&campaign.channels.length===1&&campaign.channels[0]==='online')
-    terms.push('Solo online');
-  if(Number(campaign.extraPercent)>0&&Array.isArray(campaign.channels)&&campaign.channels.includes('online'))
-    terms.push('Efectivo o transferencia');
+  // Informar dónde es válido el BENEFICIO, sin confundirlo con el canal
+  // donde se compró ahora ni con el QR permanente sahten.online del ticket.
+  const channels = Array.isArray(campaign.channels)?campaign.channels:[];
+  if(channels.includes('online') && channels.includes('mostrador'))
+    terms.push('Web y mostrador');
+  else if(channels.includes('online'))terms.push('Solo online · sahten.online');
+  else if(channels.includes('mostrador'))terms.push('Solo mostrador');
+  if(Number(campaign.extraPercent)>0) terms.push('Efectivo o transferencia');
   const until=schedule?.until||null;
   return {terms,expiry:until?'Hasta '+until.slice(8,10)+'/'+until.slice(5,7)+'/'+until.slice(0,4):
     'Sin fecha de fin programada'};

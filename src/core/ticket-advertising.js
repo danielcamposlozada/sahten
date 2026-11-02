@@ -3,60 +3,56 @@ import { ticketCampaignDetails } from './live-promotion-catalog.js';
 
 // El anuncio se refiere a UNA campaña publicada: no genera beneficios,
 // códigos ni derechos adicionales para el cliente que recibe el ticket.
-function upcomingDate(c, now, maxDays, { nextEdition = false } = {}) {
-  // Si el cliente ya usó una campaña recurrente, evitamos volver a
-  // destacar la misma edición. Sólo anunciamos la edición DESPUÉS
-  // de una interrupción real en el calendario (ej. lunes siguiente).
-  let separated = !nextEdition || !scheduleMatches(c.schedule, now);
+function upcomingDate(c, now, maxDays) {
   for (let d = 1; d <= maxDays; d++) {
     const check = new Date(new Date(now).getTime() + d * 86400000);
-    if (!scheduleMatches(c.schedule, check)) {
-      if (nextEdition) separated = true;
-      continue;
-    }
-    if (separated) return localDateParts(check).iso;
+    if (scheduleMatches(c.schedule, check)) return localDateParts(check).iso;
   }
   return null;
 }
 const clean = (s, max = 150) => String(s || '').replace(/[\r\n<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
-const generalRecurring = c => c?.kind === 'public' &&
-  ['weekly', 'central_weekends'].includes(c?.schedule?.type);
 
 export function selectTicketAdvertisement(config, {
   now = new Date(), channel = 'mostrador', coupon = null,
-  excludedPromotionIds = [], rotationKey = null
+  excludedPromotionIds = [], appliedPromotionIds = null, rotationKey = null,
+  recentAdvertisements = [], avoidCampaignIds = []
 } = {}) {
   if (config?.enabled !== true || config.ticket?.enabled !== true) return null;
+  // Nunca anunciamos la misma oferta varias veces dentro del período
+  // de enfriamiento del cliente. El cobro original no cuenta como anuncio.
+  const previous=Array.isArray(recentAdvertisements)?recentAdvertisements:[];
+  const alreadyShownCoupon=!!coupon?.id&&previous.some(x=>x?.kind==='coupon'&&x.couponId===coupon.id);
+  const alreadyShownCampaigns=new Set(previous.filter(x=>x?.kind==='campaign').map(x=>x.campaignId).filter(Boolean));
+  const avoid=new Set(Array.isArray(avoidCampaignIds)?avoidCampaignIds:[]);
   // Un cupón es personal y sólo puede imprimirse si ya fue emitido por
   // el backend: nunca fabricamos códigos durante la impresión.
-  if (coupon?.code && coupon?.expiresOn && coupon?.status === 'available') {
+  if (!alreadyShownCoupon && coupon?.code && coupon?.expiresOn && coupon?.status === 'available') {
     return { kind: 'coupon', couponId: clean(coupon.id, 90), code: clean(coupon.code, 64),
       expiresOn: coupon.expiresOn, headline: clean(coupon.headline || 'Tu próxima compra online'),
       label: expiryLabel(coupon.expiresOn) };
   }
   if (config.ticket?.advertise === false) return null;
-  const applied = new Set(Array.isArray(excludedPromotionIds) ? excludedPromotionIds : []);
+  // La compra ya realizada nunca excluye una campaña de su propia publicidad.
+  // Seguimos aceptando excludedPromotionIds como alias legado del historial aplicado.
+  const applied = new Set(Array.isArray(appliedPromotionIds) ? appliedPromotionIds :
+    Array.isArray(excludedPromotionIds) ? excludedPromotionIds : []);
   const listed = Array.isArray(config.campaigns) ? config.campaigns.filter(c =>
     c?.kind === 'public' && c.enabled === true &&
     c.advertising?.enabled === true && c.advertising?.placement?.includes('ticket') &&
-    (!c.channels || c.channels.includes(channel))) : [];
+    (!c.channels || channel === 'any' || c.channels.includes(channel))) : [];
 
-  // Diferenciar un descuento ya consumido de una campaña pública:
-  // - Perpetua/única aplicada en esta compra: no se vuelve a anunciar.
-  // - Semanal o fines de semana centrales aplicada: sólo puede anunciarse
-  //   como PRÓXIMA EDICIÓN, con fecha futura, nunca como nuevo premio.
-  // - Las campañas de calendario próximas compiten en la misma rotación
-  //   que las vigentes; no quedan invisibles detrás de promociones permanentes.
+  // Ticket de cliente = 2 espacios independientes:
+  // (1) desglose del descuento YA COBRADO en el comprobante;
+  // (2) anuncio de la misma campaña u otra para una compra POSTERIOR.
+  // Haberla aprovechado no la descalifica, incluso en campañas permanentes.
   const eligible = listed.map(c => {
-    const wasApplied = applied.has(c.id);
-    if (wasApplied && !generalRecurring(c)) return null;
     const active = scheduleMatches(c.schedule, now);
-    const next = wasApplied
-      ? upcomingDate(c, now, 14, { nextEdition: true })
-      : active ? null : upcomingDate(c, now,
-        Math.max(0, Math.min(14, Number(c.advertising.advanceDays) || 4)));
-    if (wasApplied && !next || !active && !next) return null;
-    return { c, next, repeatEdition: wasApplied };
+    const days = c.advertising.advanceDays == null ? 4 :
+      Math.max(0, Math.min(14, Number(c.advertising.advanceDays) || 0));
+    const next = active ? null : upcomingDate(c, now, days);
+    if ((!active && !next) || alreadyShownCampaigns.has(c.id) || avoid.has(c.id)) return null;
+    const wasApplied = applied.has(c.id);
+    return { c, next, repeatEdition: wasApplied && !!next, repeatPurchase: wasApplied };
   }).filter(Boolean).sort((a, b) =>
     Number(!a.next) - Number(!b.next) ||
     (a.next || '').localeCompare(b.next || '') ||
@@ -84,5 +80,6 @@ export function selectTicketAdvertisement(config, {
     ...(details.expiry?{expiry:details.expiry}:{}),
     ...(choice.next ? { startsOn: choice.next } : {}),
     ...(choice.repeatEdition ? { repeatEdition: true } : {}),
+    ...(choice.repeatPurchase ? { repeatPurchase: true } : {}),
     selectedAt: new Date(now).toISOString() };
 }
