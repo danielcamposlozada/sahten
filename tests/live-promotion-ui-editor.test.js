@@ -25,7 +25,7 @@ it('edita una promoción real sin importar archivos y explica días, descuento, 
  w.sahtenConfirm=vi.fn(async()=>true);
  const editor=installPromotionsEditor(w);editor.render();
  try{
-   await vi.waitFor(()=>expect(w.document.querySelector('.promo-overview-card')).not.toBeNull());
+   await vi.waitFor(()=>expect(w.document.querySelector('[data-open-promo="'+item.id+'"]')).not.toBeNull());
    w.document.querySelector('[data-open-promo="'+item.id+'"]').click();
    const root=w.document;
    expect(root.querySelector('.promo-live-editor').textContent).toContain('Todos los días');
