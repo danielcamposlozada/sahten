@@ -22,6 +22,7 @@ import storefrontSrc from './storefront.js?raw';
 import paymentBenefitSrc from '../core/payment-benefit.js?raw';
 import cartRecommendationsSrc from '../core/cart-recommendations.js?raw';
 import promotionsSrc from '../core/promotions.js?raw';
+import fatayUpgradeSrc from '../core/fatay-upgrade.js?raw';
 import paymentChoiceSrc from '../ui/payment-choice.js?raw';
 import paymentChoiceCss from '../styles/payment-choice.css?raw';
 import { imageFileName, categoryPhotoKey } from './menuJson.js';
