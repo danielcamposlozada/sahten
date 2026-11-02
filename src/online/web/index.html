@@ -183,6 +183,7 @@ var ORDER_PAGE=document.body.hasAttribute('data-storefront'), PREVIEW=document.b
 var deliveryServerOffset=0,addressGeneration=0,addressAbort=null,addressSuggest=createAddressSuggestions();
 var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null,deliveryUpdateNotice='';
 var fatayUpgradeAccepted=false;
+var couponCode='',couponQuote=null,couponMessage='',couponBusy=false;
 var MENU=null, cart={}, type='delivery', serviceSelectionManual=false, geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
@@ -485,6 +486,47 @@ function sendStatus(){
   return 'Revisá el total y enviá tu pedido.';
 }
 function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]&&(k!=='mercadopago'||mpAvailable)});}
+function couponFingerprint(method){
+  return JSON.stringify([lines().map(function(l){return [l.id,l.qty,l.unitPrice]}),type,method||pay,
+    geo&&geo.lat,geo&&geo.lng,form.address,deliveryQuoteId,
+    MENU?.promotions?.version,MENU?.generatedAt]);
+}
+function activeCoupon(method){
+  return couponQuote && couponQuote.key===couponFingerprint(method) &&
+    couponQuote.code===couponCode.trim().toUpperCase()?couponQuote:null;
+}
+function couponSection(){
+  if(!sb()||MENU.promotions?.enabled!==true)return '';
+  var allowed=pay==='efectivo'||pay==='transferencia',active=activeCoupon(pay);
+  return '<div class="promo-coupon-entry"><label for="coupon-code">¿Tenés un cupón de Sahten?</label>'
+    +'<div class="promo-coupon-controls"><input type="text" id="coupon-code" autocomplete="off" maxlength="40"'
+    +' placeholder="SHT-XXXXXXXX" value="'+esc(couponCode)+'"'
+    +(allowed?'':' disabled')+'>'
+    +'<button type="button" data-coupon-apply'+(allowed&&!couponBusy?'':' disabled')+'>'
+    +(couponBusy?'Verificando…':'Aplicar')+'</button></div>'
+    +(active?'<p class="note ok">Cupón validado · descuento incluido en el total</p>':'')
+    +(couponMessage?'<p role="status">'+esc(couponMessage)+'</p>':'')
+    +(!allowed?'<p class="cart-help">Los cupones se aplican con efectivo o transferencia.</p>':'')
+    +'</div>';
+}
+function applyCoupon(){
+  if(couponBusy||!['efectivo','transferencia'].includes(pay)||!sb())return;
+  var code=couponCode.trim().toUpperCase(),key=couponFingerprint(pay);
+  if(!/^SHT-[A-HJ-NP-Z2-9]{8,30}$/.test(code)){
+    couponQuote=null;couponMessage='Revisá el formato del cupón.';sheet();return;
+  }
+  couponBusy=true;couponQuote=null;couponMessage='Verificando el cupón con Sahten…';sheet();
+  deliveryApi('quote',{order:buildOrder(),couponCode:code}).then(function(v){
+    if(key!==couponFingerprint(pay)||code!==couponCode.trim().toUpperCase())return;
+    if(!v.order?.promotionSnapshot?.couponId||!Number.isFinite(Number(v.order.discount)))
+      throw new Error('El cupón no puede aplicarse a los productos del pedido.');
+    couponQuote={key:key,code:code,couponId:v.order.promotionSnapshot.couponId,
+      discount:Number(v.order.discount)};
+    couponMessage='Cupón verificado para este pedido.';
+  }).catch(function(e){
+    couponQuote=null;couponMessage=e.message||'No fue posible validar este cupón.';
+  }).finally(function(){couponBusy=false;recalcDelivery();sheet();});
+}
 function cartBenefit(method){
   var selected=method||pay, legacy=paymentDiscountQuote(subtotal(),selected,MENU.payments&&MENU.payments.benefit,'online');
   if(!MENU.promotions||MENU.promotions.enabled!==true)return legacy;
@@ -493,7 +535,8 @@ function cartBenefit(method){
     method:selected,channel:'online',clientPreview:true,config:Object.assign({},MENU.promotions,{
       paymentPercent:rule.enabled&&rule.channels.online?rule.percent:0
     })});
-  return {amount:quote.discount,label:quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
+  var accepted=activeCoupon(selected);
+  return {amount:accepted?accepted.discount:quote.discount,label:accepted?'Promociones y cupón':quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
     paymentDiscount:quote.appliedPromotionIds.length?null:legacy.paymentDiscount,
     promotionQuote:quote};
 }
@@ -537,7 +580,7 @@ function sheet(){
     setSheetContent(checkoutSteps()+cartItemsHtml(ls)+fatayUpgradePanel()+cartAddonSuggestions()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
   }
 
-  var canSend=serviceAvailable(type)&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
+  var canSend=(!couponCode.trim()||!!activeCoupon(pay))&&serviceAvailable(type)&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
   var deliveryReady=serviceAvailable('delivery'),pickupReady=serviceAvailable('pickup');
   var productRows=ls.map(function(l){return '<div class="row"><span>'+esc(l.name)+' ×'+l.qty+(l.unavailable?' · No disponible':'')+'</span><span>'+fmt(l.lineTotal)+'</span></div>'}).join('');
   var body=checkoutSteps()+'<div class="checkout-mobile-summary"><div class="checkout-summary"><strong>'+count()+(count()===1?' producto':' productos')+'</strong><button type="button" class="checkout-edit" data-checkout-step="cart">Editar pedido</button></div><details class="checkout-review"><summary>Ver productos</summary>'+productRows+'</details>'+orderTotalsHtml()+'</div>'+
@@ -547,21 +590,26 @@ function sheet(){
    (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" aria-required="true" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'"><button type="button" class="checkout-edit" data-delivery-search hidden style="display:none">Buscar de otra forma</button><div id="sugs"></div><details class="optional-fields" data-disclosure="address" '+(disclosures.address||form.addressFloor||form.addressApartment||form.deliveryReference?'open':'')+'><summary>Agregar piso, departamento o referencia</summary><div class="checkout-field-pair"><div><label for="f-floor">Piso (opcional)</label><input id="f-floor" maxlength="30" value="'+esc(form.addressFloor)+'"></div><div><label for="f-apartment">Departamento (opcional)</label><input id="f-apartment" maxlength="30" value="'+esc(form.addressApartment)+'"></div></div><label for="f-reference">Referencia para la entrega (opcional)</label><input id="f-reference" maxlength="200" placeholder="Timbre, entrada, entre calles…" value="'+esc(form.deliveryReference)+'"></details>':'')+'</section>'+
    '<section class="checkout-group" aria-labelledby="checkout-contact-heading"><h3 id="checkout-contact-heading">Tus datos</h3><label for="f-name">Nombre</label><input id="f-name" aria-required="true" autocomplete="name" value="'+esc(form.name)+'"><label for="f-phone">Teléfono</label><input id="f-phone" aria-required="true" type="tel" autocomplete="tel" value="'+esc(form.phone)+'"><p class="cart-help">Para coordinar tu pedido con el local.</p></section>'+
    '<section class="checkout-group" aria-label="Pago y notas">'+paymentChoiceHtml({methods:payMethods(),selected:pay,percent:paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).enabled&&paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).channels.online?paymentBenefitPolicy(MENU.payments.benefit).percent:0,amounts:Object.fromEntries(payMethods().map(function(k){return [k,amountForMethod(k)]}))})+
+   couponSection()+
    (pay==='efectivo'?'<label for="f-cash">¿Con cuánto vas a pagar? (opcional)</label><input id="f-cash" type="number" inputmode="decimal" min="0" max="100000000" step="0.01" placeholder="Por ejemplo, 20000" value="'+esc(form.cashTendered)+'"><p id="cash-status" role="status"></p>':'')+
    '<details class="optional-fields" data-disclosure="notes" '+(disclosures.notes||form.notes?'open':'')+'><summary>Agregar una nota al pedido</summary><label for="f-notes">Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea></details></section>';
   var footer='<h3 class="checkout-total-heading">Tu pedido</h3><div class="checkout-footer-products">'+productRows+'</div>'+orderTotalsHtml()+'<div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="checkout-back" data-checkout-step="cart">Volver al pedido</button>';
   setSheetContent(body,footer);
   var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
-  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');bind('f-floor','addressFloor');bind('f-apartment','addressApartment');bind('f-reference','deliveryReference');
+  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');bind('f-floor','addressFloor'); 
+  if($('coupon-code'))$('coupon-code').addEventListener('input',function(){
+    couponCode=this.value.toUpperCase();couponQuote=null;couponMessage='';refreshTotals();refreshSend();
+  });
+  s.querySelector('[data-coupon-apply]')?.addEventListener('click',applyCoupon);bind('f-apartment','addressApartment');bind('f-reference','deliveryReference');
   if($('f-cash'))$('f-cash').addEventListener('input',function(){form.cashTendered=this.value;refreshCashStatus();refreshSend();});refreshCashStatus();
-  s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
+  s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;if(pay!=='efectivo'&&pay!=='transferencia'){couponCode='';couponQuote=null;couponMessage='';}sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
   if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;deliveryRoute=null;deliveryAuthorization=null;deliveryQuoteId=null;deliveryGeneration++;addressGeneration++;deliveryLoading=false;deliveryError='';recalcDelivery();var card=$('delivery-card');if(card)card.innerHTML=shipNote();document.querySelectorAll('[data-shipping-total]').forEach(function(el){el.remove()});refreshTotals();suggest(this.value,true);refreshSend();});
   renderSugs();
 }
 function refreshCashStatus(){var q=cashChangeQuote(total(),form.cashTendered,pay),el=$('cash-status');if(el)el.textContent=!q.specified?'Avisanos para preparar el vuelto.':q.valid?'Vuelto a preparar: '+fmt(q.change):q.shortfall?'El importe no alcanza. Faltan '+fmt(q.shortfall):'Revisá el importe.';if($('f-cash'))$('f-cash').setAttribute('aria-invalid',String(!q.valid));}
 function refreshTotals(){refreshCashStatus();document.querySelectorAll('.checkout-totals').forEach(function(el){el.outerHTML=orderTotalsHtml()});document.querySelectorAll('.payment-choice[data-payment-choice]').forEach(function(button){var amount=button.querySelector('.payment-choice-amount');if(amount)amount.textContent=amountForMethod(button.dataset.paymentChoice)});var b=$('send');if(b)b.textContent=(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total());}
 setInterval(function(){if(!$('ov').classList.contains('on')||step!=='details')return;recalcDelivery();refreshServiceNotice();refreshTotals();refreshSend();},15000);
-function refreshSend(){var b=$('send');if(!b)return;b.disabled=!serviceAvailable(type)||unavailableItems()||!cashChangeQuote(total(),form.cashTendered,pay).valid||sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
+function refreshSend(){var b=$('send');if(!b)return;b.disabled=!!couponCode.trim()&&!activeCoupon(pay)||!serviceAvailable(type)||unavailableItems()||!cashChangeQuote(total(),form.cashTendered,pay).valid||sending||payMethods().indexOf(pay)<0||!(form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading)));var status=$('send-status');if(status)status.textContent=sendStatus();}
 function addressFallback(visible){var b=document.querySelector('[data-delivery-search]');if(b){b.hidden=!visible;b.style.display=visible?'inline-flex':'none';}}
 function suggest(v,automatic){clearTimeout(sugTimer);if(addressAbort)addressAbort.abort();addressAbort=new AbortController();var signal=addressAbort.signal,generation=++addressGeneration;sugs=[];renderSugs();addressFallback(false);if($('err'))$('err').textContent='';if(!v||v.length<4||automatic&&!/\d/.test(v))return;if($('sugs'))$('sugs').innerHTML='<p role="status">Buscando dirección…</p>';sugTimer=setTimeout(function(){
   var near=MENU.delivery&&MENU.delivery.lat!=null?'&viewbox='+[MENU.delivery.lng-0.4,MENU.delivery.lat+0.4,MENU.delivery.lng+0.4,MENU.delivery.lat-0.4].join(',')+'&bounded=0':'';
@@ -583,7 +631,7 @@ function buildOrder(){
 }
 function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
-  if(sending||step!=='details'||!lines().length)return;if(unavailableItems()){step='cart';sheet();return;}if(syncServiceChoice(false)||!serviceAvailable(type)){sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
+  if(sending||step!=='details'||!lines().length||couponBusy||couponCode.trim()&&!activeCoupon(pay))return;if(unavailableItems()){step='cart';sheet();return;}if(syncServiceChoice(false)||!serviceAvailable(type)){sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
   if(MENU.promotions?.enabled===true&&!modernDelivery()&&pay!=='mercadopago'){
     sending=false;step='details';sheet();$('err').textContent='Las promociones requieren validación del servidor antes de enviar el pedido. Contactá al local.';return;
@@ -591,14 +639,14 @@ function send(){
   if(pay==='mercadopago'){mpStart(o);return;}
   var s=sb();
   if(modernDelivery()||MENU.promotions?.enabled===true){
-    var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.cashTendered,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
-    deliveryApi('order',{order:o,requestId:deliverySubmission.id}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='details';sheet();$('err').textContent=e.message;});return;
+    var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.cashTendered,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes,couponCode.trim()]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
+    deliveryApi('order',{order:o,requestId:deliverySubmission.id,...(activeCoupon(pay)?{couponCode:couponCode.trim().toUpperCase()}:{})}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='details';sheet();$('err').textContent=e.message;});return;
   }
   fetch(s.url+'/rest/v1/orders',{method:'POST',headers:sbHeaders({Prefer:'return=minimal'}),body:JSON.stringify({store_id:s.storeId,payload:o})})
    .then(function(r){if(!r.ok)return r.json().catch(function(){return {};}).then(function(data){var error=new Error('HTTP '+r.status);error.deliveryPaused=String(data.message||'').includes('delivery_service_paused');throw error;});sending=false;finish(o,true);})
    .catch(function(error){sending=false;step='details';if(error.deliveryPaused){MENU.delivery=Object.assign({},MENU.delivery,{enabled:false});render();sheet();return;}sheet();var e=$('err');if(e)e.innerHTML='<div class="note err"><b>No pudimos enviar tu pedido.</b> Revisá tu conexión y reintentá'+(MENU.store.whatsapp?', o pedilo por WhatsApp.':'.')+(MENU.store.whatsapp?'<br><a href="'+esc(waLink(o))+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>':'')+'</div>';});
 }
-function finish(o,sent){deliverySubmission=null;fatayUpgradeAccepted=false;cart={};form.cashTendered='';step='done';render();sheet();showSheet();}
+function finish(o,sent){deliverySubmission=null;fatayUpgradeAccepted=false;cart={};couponCode='';couponQuote=null;couponMessage='';form.cashTendered='';step='done';render();sheet();showSheet();}
 function done(){
   var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
   var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';
