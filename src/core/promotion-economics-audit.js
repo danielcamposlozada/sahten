@@ -5,6 +5,7 @@
 import {costPerUnit,comboResolveProps} from './costs.js';
 import {gfAssigned,absorbsGF,gfPerUnit} from './gf.js';
 import {channelPriceWithDisc} from './pricing.js';
+import {auditFalafelRacion} from './upsell-falafel-racion-audit.js';
 const amount=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;
 const positive=x=>Number.isFinite(Number(x))&&Number(x)>0;
 const round=x=>Math.round(Number(x)*100)/100;
@@ -48,6 +49,12 @@ export function auditProductPromotionEconomics(state,productId,{channel='mostrad
  const product=(state?.products||[]).find(p=>p.id===productId);
  if(!product)return {productId,sourceComplete:false,issues:['product_missing'],discountApproved:false};
  const issues=lineages(state,product);
+ const sixCroquetteAudit=productId==='falafel'?auditFalafelRacion(state):null;
+ if(sixCroquetteAudit){
+  issues.push(...sixCroquetteAudit.issues);
+  if(sixCroquetteAudit.directCostUnderstatement>0.01)
+   issues.push('sale_tahini_and_packaging_diluted_in_batch_cost');
+ }
  const direct=costPerUnit(state,product,channel);
  const fixed=gfAssigned(state,product,channel);
  const price=channelPriceWithDisc(state,product,channel);
@@ -63,6 +70,8 @@ export function auditProductPromotionEconomics(state,productId,{channel='mostrad
   // Estos importes son datos internos; no son costos firmados/auditados del backend.
   unitDirectCost:round(direct),unitFixedAllocation:round(fixed),
   unitCostWithFixedAllocation:round(fullCost),
+  // Solo dato de análisis privado: corregir receta + tahini + empaques por venta.
+  sixCroquetteSaleCostEstimate:sixCroquetteAudit?.correctedCostEstimate??null,
   listPrice:price==null?null:round(price),
   grossMarginBeforeFees:price>0?round((price-fullCost)/price*100):null,
   discountedUnitMarginApproved:false,discountApproved:false,
