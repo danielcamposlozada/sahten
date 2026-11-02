@@ -665,11 +665,17 @@ function refreshSalesAvailability(){
   if(rulesChanged){deliveryGeneration++;deliveryRoute=null;deliveryAuthorization=null;deliveryQuoteId=null;deliveryLoading=false;deliveryError='';deliveryUpdateNotice='Condiciones de envío actualizadas. Revisá el importe antes de confirmar.';}
   var recBefore=JSON.stringify(MENU.cartRecommendations||{enabled:false});
   MENU.cartRecommendations=live.cartRecommendations||{enabled:false};
+  // Los controles de campaña del local modifican el menú vivo en Supabase.
+  // Si el motor no está publicado, nunca mostrar descuentos de una copia anterior.
+  var promoBefore=JSON.stringify(MENU.promotions||{enabled:false});
+  MENU.promotions=live.promotions?.enabled===true&&live.promotions?.version===1
+    ?JSON.parse(JSON.stringify(live.promotions)):{enabled:false};
+  var promoChanged=promoBefore!==JSON.stringify(MENU.promotions);
   var before=JSON.stringify(MENU.products.map(function(p){return [p.id,p.salesAvailability,p.retired]})),old=new Map(MENU.products.map(function(p){return [p.id,p]}));
   var next=live.products.map(function(p){var existing=old.get(p.id);return existing?Object.assign({},existing,{salesAvailability:p.salesAvailability||null,retired:false}):p;});
   MENU.products.forEach(function(p){if(cart[p.id]&&!next.some(function(n){return n.id===p.id}))next.push(Object.assign({},p,{retired:true,salesAvailability:{paused:true,resumeAt:null}}));});
   MENU.products=next;MENU.config.categories=live.config?.categories||MENU.config.categories;
-  if(deliveryChanged||recBefore!==JSON.stringify(MENU.cartRecommendations)||before!==JSON.stringify(next.map(function(p){return [p.id,p.salesAvailability,p.retired]}))){var focused=document.activeElement,focusId=focused?.id,start=focused?.selectionStart,end=focused?.selectionEnd;recalcDelivery();render();if($('ov').classList.contains('on'))sheet();var input=focusId&&$(focusId);if(input){input.focus({preventScroll:true});if(typeof start==='number'&&input.setSelectionRange)try{input.setSelectionRange(start,end);}catch{}}}
+  if(deliveryChanged||promoChanged||recBefore!==JSON.stringify(MENU.cartRecommendations)||before!==JSON.stringify(next.map(function(p){return [p.id,p.salesAvailability,p.retired]}))){var focused=document.activeElement,focusId=focused?.id,start=focused?.selectionStart,end=focused?.selectionEnd;recalcDelivery();render();if($('ov').classList.contains('on'))sheet();var input=focusId&&$(focusId);if(input){input.focus({preventScroll:true});if(typeof start==='number'&&input.setSelectionRange)try{input.setSelectionRange(start,end);}catch{}}}
   if(rulesChanged&&type==='delivery'&&geo&&modernDelivery()&&$('ov').classList.contains('on'))refreshDeliveryRoute(true);
  }).catch(function(){/* conserva el catálogo al perder conexión; el servidor valida al confirmar */}).finally(function(){availabilityRefreshing=false;});
 }
