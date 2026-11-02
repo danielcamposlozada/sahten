@@ -17,7 +17,7 @@ export function availableCheckoutUpsell(menu,cart,{method}={}){
  .find(o=>o.product)||null;
 }
 export function checkoutUpsellFingerprint(state){
- const items=(state.items||[]).map(x=>[String(x.productId||x.id),Number(x.qty)]).sort((a,b)=>a[0].localeCompare(b[0]));
+ const items=(state.items||[]).map(x=>[String(x.productId||x.id),Number(x.qty),Number(x.unitPrice||0),String(x.priceRevision||''),!!x.unavailable]).sort((a,b)=>a[0].localeCompare(b[0]));
  return JSON.stringify([items,state.method,state.source,state.name,state.phone,state.address,
   state.addressFloor,state.addressApartment,state.reference,state.notes,state.cashTendered,
   state.lat,state.lng,state.shipping,state.deliveryQuoteId,state.routeRevision,state.menuRevision]);
