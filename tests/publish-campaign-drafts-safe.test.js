@@ -1,7 +1,7 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import {JSDOM} from 'jsdom';
 import {kv} from '../src/project/kv.js';
-import {initialPromotionConfig} from '../src/core/promotions.js';
+import {initialPromotionConfig,quotePromotions} from '../src/core/promotions.js';
 import {publicationKind} from '../src/core/promotion-publication.js';
 import {installPromotionsEditor} from '../src/ui/promotions-editor.js';
 afterEach(()=>kv.clear());
@@ -37,6 +37,23 @@ function setup({canConfirm=true,readOnly=false}={}){
   installPromotionsEditor(w).render();
   return {dom,w,api,state};
 }
+describe('Checkout confiable de campañas publicadas',()=>{
+  const config={enabled:true,paymentPercent:10,campaigns:[{
+    id:'draft-campaign',kind:'public',enabled:true,name:'Campaña',
+    channels:['online'],productIds:['hummus'],extraPercent:5,
+    minMarginPct:40,requiresVerifiedCosts:true,schedule:{type:'always'}
+  }]};
+  const quote=(method,costs={})=>quotePromotions({lines:[{productId:'hummus',qty:1,unitPrice:10000}],
+    method,channel:'online',config, trustedCosts:costs});
+  it('no aplica campaña sin costo verificado ni margen mínimo',()=>{
+    expect(quote('transferencia').discount).toBe(1000);
+    expect(quote('transferencia',{hummus:7000}).discount).toBe(1000);
+    const valid=quote('transferencia',{hummus:4000});
+    expect(valid.discount).toBe(1500);
+    expect(valid.lines[0].appliedPromotionId).toBe('draft-campaign');
+    expect(quote('mercadopago',{hummus:4000}).discount).toBe(0);
+  });
+});
 describe('Publicar campaña online pausada',()=>{
   it('requiere confirmación, verifica servidor y no activa el descuento',async()=>{
     const {dom,w,api,state}=setup();
