@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+## 0.4.37
+
+- **Tickets separados para cocina y cliente**: la comanda imprime preparación y entrega sin importes, promociones ni QR; el ticket del cliente conserva los totales y el QR de reseñas.
+- **Cuatro estilos publicitarios para tickets**: formatos A (campaña general), B (descuento), C (cupón previamente emitido) y D (promoción especial), compactos y monocromáticos. La impresión no genera códigos nuevos ni vuelve a anunciar campañas ya aplicadas en ese pedido.
+- **Tarjetas de pedidos**: comanda con impresora en cabecera, botón «Ticket cliente» visible y «Copiar ruta» como única acción de ruta en delivery.
+- **Editor de promociones**: switches para propuestas de complementos, recomendaciones, mejoras y cupones, diferenciando planificación local de campañas publicadas; texto aclarado para publicidad en tickets.
+- **Seguridad de cupones**: registro privado preparado en servidor; el canje real en web y mostrador aún no está habilitado. No se anuncian cupones sin códigos válidos del servidor.
+
 ## 0.4.36
 
 - **Centro de Promociones más simple**: plantillas de campañas semanales, lunes y miércoles, fines de semana centrales y fechas particulares, días como botones, rangos horarios, comprobación de campos y vista previa de planificación.
