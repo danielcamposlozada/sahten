@@ -35,9 +35,9 @@ export function createController(host) {
       const fields = paymentFields(row);
       // Solo adoptar estados remotos nuevos; no revertir una acción local aún en tránsito.
       if (!existing.remoteStatusPending && row.status && existing.remoteStatus !== row.status && STATUS_FROM_REMOTE[row.status]) {
-        fields.status = STATUS_FROM_REMOTE[row.status];
+        fields.status = row.status==='entregado' && (row.payload?.source==='pickup'||existing.source==='pickup') ? 'retirado' : STATUS_FROM_REMOTE[row.status];
         fields.remoteStatus = row.status;
-        if (['completada', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
+        if (['entregado','retirado','completada', 'cancelado'].includes(fields.status)) fields.completedAt = row.updated_at || new Date().toISOString();
         else fields.completedAt = undefined;
       }
       if (JSON.stringify(fields) !== JSON.stringify(Object.fromEntries(Object.keys(fields).map(k => [k, existing[k]])))) { Object.assign(existing, fields); host.orders.save?.(); host.markDirty(); host.refresh(); }
