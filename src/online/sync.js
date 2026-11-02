@@ -5,13 +5,14 @@
 import { contentHash } from '../project/schema.js';
 import { SupabaseError } from './supabase.js';
 import { writeScope, applyPublicToFile } from './roles.js';
+import { mergeCloudPromotions } from './promotion-sync.js';
 
 const clone = v => JSON.parse(JSON.stringify(v));
 export const BACKOFF_MS = [30000, 60000, 120000, 300000];
 
 /** Lo que viaja a la nube: el proyecto con referencias remotas; los binarios se suben antes a Storage. */
 export const stripForSync = file => { const f = clone(file); f.images = Object.fromEntries(Object.entries(f.images || {}).filter(([, v]) => /^https?:\/\//.test(v))); f.modifiedAt = null; return f; };
-export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; return contentHash(f); };
+export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; if(f.online)delete f.online.supabase; return contentHash(f); };
 
 /** Decide qué hacer según qué lado cambió desde la última sincronización. */
 export function decide({ localHash, last, remoteVersion }) {
@@ -136,6 +137,52 @@ export function createSync(deps) {
       } catch (e) { transfer?.fail(e); if (offline(e)) return { action: 'offline' }; set('error', e.message); throw e; } finally { if (state === 'al día') transfer?.finish(); else transfer?.fail(error || 'Sincronización pendiente.'); transfer = null; busy = false; }
     },
 
+    /** Copia SOLO promociones desde el proyecto remoto, respaldando y guardando el .sahten.
+     * No altera la versión base de sync: si hay ediciones independientes aparece conflicto,
+     * en lugar de sobrescribir ciegamente pedidos, catálogo u otros cambios remotos. */
+    async pullPromotionsFromCloud(){
+      if(busy)throw new SupabaseError('Ya se está sincronizando el proyecto.');
+      if(!deps.remoteId()||!['owner','admin'].includes(deps.role()))
+        throw new SupabaseError('Necesitás un proyecto vinculado y permisos de dueño o administrador.');
+      if(deps.hasLocalFile&&!deps.hasLocalFile())
+        throw new SupabaseError('Guardá primero una copia .sahten en este equipo para conservar los cambios.');
+      busy=true;transfer=deps.progress?.start('Actualizando promociones del proyecto');
+      const check=guard();
+      timer.clear(debounce);
+      try{
+        const original=deps.collect(),before=syncHash(original);
+        const remote=await deps.client.rpc('get_project_data',{pid:deps.remoteId()});
+        check();
+        if(!remote||!remote.data||!Number.isInteger(Number(remote.version)))
+          throw new SupabaseError('La nube no devolvió un proyecto válido.');
+        if(remote.data.project?.id&&original.project?.id&&remote.data.project.id!==original.project.id)
+          throw new SupabaseError('El proyecto local y el remoto no coinciden. No se aplicaron cambios.');
+        const merged=mergeCloudPromotions(original,remote.data);
+        if(syncHash(deps.collect())!==before)
+          throw new SupabaseError('El proyecto local cambió durante la descarga. Volvé a intentar.');
+        if(JSON.stringify(original.promotions||{})===JSON.stringify(merged.promotions))
+          return {action:'unchanged',version:remote.version};
+        if(!deps.backupBefore||!deps.saveLocal)
+          throw new SupabaseError('No hay respaldo o guardado local disponible.');
+        report({detail:'Respaldando proyecto antes de importar…'});
+        await deps.backupBefore();
+        check();
+        if(syncHash(deps.collect())!==before)
+          throw new SupabaseError('El proyecto local cambió al crear el respaldo. No se aplicaron cambios.');
+        report({detail:'Importando promociones sin reemplazar ventas ni catálogo…'});
+        await deps.apply(merged);
+        check();
+        if(await deps.saveLocal()===false)
+          throw new SupabaseError('No se pudo guardar el archivo .sahten. Revisá la ubicación del proyecto.');
+        check();
+        // Queda pendiente la sincronización integral: CAS/conflictos originales intactos.
+        pending=true;conflict=null;set('promociones locales actualizadas');
+        return {action:'promotions_pull',version:remote.version};
+      }catch(e){
+        transfer?.fail(e);set('error',e?.message||String(e));throw e;
+      }finally{transfer=null;busy=false;}
+    },
+
     /** Programar una sincronización (se llama en cada guardado local): espera 5 s y junta los cambios. */
     schedule() { if (!deps.remoteId() || writeScope(deps.role()) === 'none') return; pending = true; timer.clear(debounce); debounce = timer.set(() => api.sync().catch(() => {}), 5000); },
     cancel() { generation++; timer.clear(debounce); timer.clear(retry); },
@@ -160,8 +207,19 @@ export function createSync(deps) {
     let incoming = r.data; const local = deps.collect(), before = syncHash(local);
     incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images, report) : { ...incoming, images: local.images };
     check();
+    // Cada dispositivo conserva su conexión local; el primer proyecto remoto puede no tener
+    // projectId (se asigna tras la creación). No borrar el vínculo al descargar una versión.
+    incoming.online={...(incoming.online||{}),supabase:{
+      ...(incoming.online?.supabase||{}),...(local.online?.supabase||{}),projectId:deps.remoteId()
+    }};
     if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
     report({ detail: 'Aplicando datos en este equipo…' }); await deps.apply(incoming);
+    check();
+    if(deps.hasLocalFile?.()) {
+      report({detail:'Guardando la copia local .sahten…'});
+      if(await deps.saveLocal()===false)throw new SupabaseError('No se pudo guardar la copia local del proyecto.');
+      check();
+    }
     save({ version: r.version, hash: syncHash(incoming), at: r.updated_at }); conflict = null; pending = false; attempt = 0; lastAt = new Date(now()); set('al día');
     return { action: 'pull', version: r.version };
   }

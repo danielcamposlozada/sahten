@@ -57,7 +57,11 @@ export function createOnline({ w = window, project, events }) {
       client: cl, remoteId: () => conn().projectId || null, setRemoteId: id => { conn().projectId = id; project.markDirty(); }, role: () => role() || 'owner', projectId: () => session.id,
       collect: () => project.collect(), publicOf,
       prepareFile: (f, report) => controller.prepareFile(f, report), restoreFile: (f, images, report) => controller.restoreFile(f, images, report),
-      apply: async f => { await project.apply(f); session.markDirty(); }, store: config,
+      apply: async f => { await project.apply(f); session.markDirty(); w.SAHTEN.promotionsEditor?.render(); },
+      backupBefore:()=>session.backupBeforeStrategy(),
+      hasLocalFile:()=>session.info().hasFile,
+      saveLocal:()=>session.info().hasFile?session.saveNow({force:true}):false,
+      store: config,
     });
     sync.__client = cl; sync.onChange(() => ui.render && ui.render()); return sync;
   }
@@ -173,6 +177,7 @@ export function createOnline({ w = window, project, events }) {
       setRole('owner'); return id;
     },
     async syncNow() { need(); const result=await ensureSync().sync();await readStates();return result; },
+    async pullPromotionsFromCloud() { need(); const result=await ensureSync().pullPromotionsFromCloud(); w.SAHTEN.promotionsEditor?.render(); return result; },
     async resolve(choice) { return ensureSync().resolve(choice); },
 
     async listRemote() {

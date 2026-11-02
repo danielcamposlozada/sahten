@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+- **Centro de Promociones completo en borrador**: incorpora pestañas de complementos con descuento, sugerencias sin rebaja y mejoras; los programas de cupones muestran condiciones del proyecto en lugar de valores fijos. Nada se publica ni se habilita desde estas vistas.
+- **Vista general de promociones en grilla**: filtros Todas/Activas/No activas, estados verificados contra la web, tarjetas de campañas, complementos y cupones; calendario independiente. Las ofertas no se anuncian activas por el solo hecho de estar configuradas.
+- **Recuperación selectiva desde Supabase**: copia solo la sección de promociones al proyecto `.sahten` local, con permisos de dueño/admin, detección de cambios durante la descarga, respaldo previo y confirmación de guardado. No reemplaza ventas, stock, costos o productos y deja los conflictos generales para resolución explícita.
+
 ## 0.4.34
 
 - **Rentabilidad como sección independiente**: Resumen, Metas e historial, Productos y Mercadería, con acceso desde Dashboard.

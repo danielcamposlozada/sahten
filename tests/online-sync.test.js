@@ -79,6 +79,12 @@ describe('decisión', () => {
     expect(mergeOps(f, null)).toBe(f);
   });
   it('lo que viaja a la nube no lleva imágenes', () => { expect(stripForSync(withProducts(2)).images).toEqual({}); });
+  it('la huella del proyecto no cambia entre equipos por su vínculo Supabase', () => {
+    const a=withProducts(2),b=withProducts(2);
+    a.online.supabase={url:'https://sahten.supabase.co',projectId:'cloud-id',anonKey:'publica-a'};
+    b.online.supabase={url:'https://sahten.supabase.co',projectId:'cloud-id',anonKey:'publica-b'};
+    expect(syncHash(a)).toBe(syncHash(b));
+  });
 });
 
 describe('dueño: local primero, nube por detrás', () => {
@@ -101,6 +107,7 @@ describe('dueño: local primero, nube por detrás', () => {
     expect((await B.sync.sync()).action).toBe('conflict');             // nunca se había sincronizado y la nube ya tiene datos: no pisa a ciegas
     expect(await B.sync.resolve('theirs')).toMatchObject({ action: 'pull', version: 2 });
     expect(B.file.catalog.productos[0].name).toBe('Renombrado'); expect(B.file.images).toEqual({ p1: 'data:image/png;base64,BBBB' });
+    expect(B.file.online.supabase.projectId).toBe(rid); // la descarga no elimina el vínculo del equipo
     expect((await B.sync.sync()).action).toBe('noop');
   });
   it('cambia solo la nube → baja (pull) sin tocar lo local', async () => {
