@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.43
+
+- **Ticket del cliente por defecto:** al cobrar mostrador o aceptar pedido web con impresión automática configurada, se imprime el ticket de cliente; la comanda de cocina queda sólo en el botón de la tarjeta.
+- **Campañas verificadas en tickets:** lectura autenticada desde Supabase de los seis anuncios publicados; alterna un beneficio para la próxima compra online y excluye beneficios usados en la orden. No inventa cupones ni resalta de nuevo descuentos contables como anuncio.
+- **Campañas sin calendario:** las promociones comerciales publicadas sin fechas son ofertas permanentes, sin errores de cotización, conservando validación de costos y márgenes en el servicio de delivery v17.
+- **Seguridad:** el RPC de publicidad no expone costos privados ni permite acceso anónimo.
+
 ## 0.4.42
 
 - **Verificación de promociones con datos reales:** nuevo RPC autenticado solo lectura para complementos con descuento, mejoras y cupones: comprueba precio y producto publicado, disparadores, límite total de descuentos, costo base y margen estimado. Muestra margen y presupuesto máximo disponible antes de gastos extra, sin ofrecer falsa aprobación comercial.
