@@ -29,6 +29,11 @@ export function ticketCampaignDetails(campaign={}) {
   const schedule=campaign.schedule||null;
   const limit=Number(campaign.maxUnits);
   const terms=[];
+  if(schedule?.type==='weekly')terms.push('Días: '+(schedule.weekdays||[]).map(x=>({0:'dom',1:'lun',2:'mar',3:'mié',4:'jue',5:'vie',6:'sáb'}[x]||'')).filter(Boolean).join('/'));
+  else if(schedule?.type==='central_weekends')terms.push('2.º y 3.º viernes/sábado');
+  else if(schedule?.type==='dates')terms.push('Fechas elegidas');
+  else terms.push('Todos los días');
+  if(schedule?.startTime||schedule?.endTime)terms.push((schedule.startTime||'00:00')+'–'+(schedule.endTime||'23:59'));
   if(Number.isFinite(limit)&&limit>0) terms.push('Hasta '+limit+' unidad'+(limit===1?'':'es')+' participante'+(limit===1?'':'s'));
   if(Array.isArray(campaign.channels)&&campaign.channels.length===1&&campaign.channels[0]==='online')
     terms.push('Solo online');
@@ -36,5 +41,5 @@ export function ticketCampaignDetails(campaign={}) {
     terms.push('Efectivo o transferencia');
   const until=schedule?.until||null;
   return {terms,expiry:until?'Hasta '+until.slice(8,10)+'/'+until.slice(5,7)+'/'+until.slice(0,4):
-    !schedule||schedule.type==='always'?'Sin fecha de fin programada':null};
+    'Sin fecha de fin programada'};
 }
