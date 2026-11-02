@@ -91,7 +91,7 @@ jobs:
           fi
           data=$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
           current=$(echo "$data" | jq -er '.result.latest_deployment.id')
-          if [[ "$current" != "2947fd13-6ec7-46f7-b8c2-2e293fe673d3" ]]; then
+          if [[ "$current" != "2947fd13-6ec7-46f7-b8c2-2e293fe673d3" && "$current" != "877bd4e8-b602-478f-943b-831a50e533d6" ]]; then
             echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
             exit 1
           fi
@@ -113,7 +113,7 @@ jobs:
                 d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
                 Number(d.payments?.benefit?.percent)!==10||
                 d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | grep -q 'function couponSection()'; then
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()'))process.exit(1)})"; then
               echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
               exit 0
             fi
