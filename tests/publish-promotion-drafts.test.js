@@ -14,6 +14,8 @@ describe('Publicación de borradores compatibles',()=>{
   it('solo permite sugerencias a precio de lista en el carrito, no descuentos ni cupones',()=>{
     expect(publicationKind('crossSells',draft).ready).toBe(true);
     expect(publicationKind('crossSells',{...draft,extraPercent:10}).ready).toBe(false);
+    expect(publicationKind('crossSells',{...draft,discountPercent:5}).ready).toBe(false);
+    expect(publicationKind('crossSells',{...draft,discountTiers:[{totalDiscountPercent:15}]}).ready).toBe(false);
     expect(publicationKind('crossSells',{...draft,placement:['checkout']}).ready).toBe(false);
     expect(publicationKind('crossSells',{...draft,enabled:false}).ready).toBe(false);
     expect(publicationKind('upsells',draft).ready).toBe(false);
