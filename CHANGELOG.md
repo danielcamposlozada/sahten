@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.42
+
 - **Verificación de promociones con datos reales:** nuevo RPC autenticado solo lectura para complementos con descuento, mejoras y cupones: comprueba precio y producto publicado, disparadores, límite total de descuentos, costo base y margen estimado. Muestra margen y presupuesto máximo disponible antes de gastos extra, sin ofrecer falsa aprobación comercial.
 - **Centro de Promociones:** botón «Verificar con datos reales del servidor» por propuesta y «Verificar todos los borradores» en vista general; muestra hora, checks pendientes y tabla de rentabilidad, invalida resultados al editar o cambiar de tienda.
 - **Cupones:** selección de productos elegibles para verificar su rentabilidad por SKU. No se emiten ni canjean códigos ni se habilitan descuentos hasta completar el checkout transaccional.
