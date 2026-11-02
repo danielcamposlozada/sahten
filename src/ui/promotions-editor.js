@@ -226,12 +226,13 @@ export function installPromotionsEditor(w=window) {
     const operational=connected?merged.filter(item=>item.type==='campaigns'||
       item.type==='crossSells'&&!!publishedRecommendation(item.id)):merged;
     const visible=filterPromotionOverview(operational,overviewFilter);
+    const draftRows=connected?merged.filter(item=>!operational.includes(item)):[];
     const activeCount=operational.filter(x=>x.active).length;
     const pendingCount=operational.filter(x=>x.status==='pending'||x.status==='scheduled').length;
     const inactiveCount=operational.filter(x=>x.status==='inactive'||x.status==='draft').length;
-    const badges={active:'Activa ahora',inactive:'Pausada',scheduled:'Activa · fuera de calendario',pending:'Propuesta local',draft:'Borrador local'};
+    const badges={active:'Activa ahora',inactive:'Pausada',scheduled:'Activa · fuera de calendario',pending:'Pendiente de validación · no publicada',draft:'Borrador local'};
     const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
-    const cards=visible.map(item=>{
+    const renderCard=item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
         :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
       const published=publishedRecommendation(item.id);
@@ -245,7 +246,9 @@ export function installPromotionsEditor(w=window) {
         +(isPublished?'':draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item))
         +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,{...((item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item),id:item.id}):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">'+(isPublished?'Ver campaña':'Editar propuesta')+'</button></article>';
-    }).join('');
+    };
+    const cards=visible.map(renderCard).join('');
+    const draftCards=draftRows.map(renderCard).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
       +'<p>'+(connected?'Estado real del servidor. Pausá o activá desde aquí; las demás apps consultan el mismo estado.':'Conectá la tienda para consultar las campañas publicadas.')+'</p></div>'
       +'<div class="promo-row"><button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button>'
@@ -259,6 +262,7 @@ export function installPromotionsEditor(w=window) {
       +'</div>'
       +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
       +'<div class="promo-overview-grid">'+(cards||'<p class="promo-overview-empty">No hay promociones en este filtro.</p>')+'</div>'
+      +(connected&&draftCards?'<details class="promo-local-drafts"><summary>'+draftRows.length+' propuestas en preparación (no publicadas)</summary><p>Este apartado contiene únicamente borradores: las ofertas publicadas aparecen arriba y se controlan en vivo.</p><div class="promo-overview-grid">'+draftCards+'</div></details>':'')
       +'<div class="promo-row"><button type="button" data-promo-create>+ Crear campaña</button><button type="button" data-rec-open>Gestionar recomendaciones publicadas</button></div>'
       +(publishFeedback?'<p class="promo-note" role="status">'+esc(publishFeedback)+'</p>':'')
       +(verificationFeedback?'<p class="promo-note" role="status">'+esc(verificationFeedback)+'</p>':'')
