@@ -84,7 +84,7 @@ it('muestra las seis campañas publicadas aunque el archivo local sólo conozca 
    })
  }});
  try{
-   await vi.waitFor(()=>expect(w.document.querySelectorAll('.promo-overview-card')).toHaveLength(6));
+   await vi.waitFor(()=>expect(w.document.querySelectorAll('.promo-overview-grid:first-of-type .promo-overview-card')).toHaveLength(6));
    const root=w.document.getElementById('promotions-editor');
    expect(root.textContent).toContain('Baklava o torta · 12% total');
    expect(root.textContent).not.toContain('Pendiente de validación · no publicada');
