@@ -62,7 +62,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       enabled: menuConfig.enabled !== false, title: menuConfig.title || 'Nuestro Menú', subtitle: menuConfig.subtitle || '',
       showPrices, showImages, deliveryNote: menuConfig.deliveryNote || '',
       categories: cats, categoryImages,
-      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
+      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id && !item.upsellOnly)])),
     },
     products: items,
     // Las recomendaciones no son promociones de precio. Solo IDs publicados,
