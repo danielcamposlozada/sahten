@@ -2,6 +2,7 @@ import { kv } from '../project/kv.js';
 import { onPanelShow } from '../events.js';
 import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatches, expiryLabel } from '../core/promotions.js';
 import { promotionReport } from '../core/promotions-report.js';
+import { promotionOverview, filterPromotionOverview } from '../core/promotion-overview.js';
 import '../styles/promotions.css';
 
 const KEY='sahten_promotions';
@@ -41,7 +42,7 @@ function runPreview(state,w,method,productId) {
     +'<small>Simulación local. No habilita descuentos en la tienda ni en caja.</small></div>';
 }
 export function installPromotionsEditor(w=window) {
-  let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='campaigns', cursor=new Date();
+  let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', cursor=new Date();
   const get=()=>load();
   let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='';
   const liveApi=()=>w.SAHTEN?.online?.controller;
@@ -55,7 +56,7 @@ export function installPromotionsEditor(w=window) {
       const result=await liveApi()?.readPromotionCampaignStates?.();
       live=result&&Array.isArray(result.campaigns)?result:{published:false,campaigns:[]};
       liveLoaded=true;
-    }catch(err){liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);}
+    }catch(err){liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);liveLoaded=true;}
     finally{liveBusy=false;render();}
   }
   function liveEditor(){
@@ -77,20 +78,72 @@ export function installPromotionsEditor(w=window) {
       +(liveBusy?'Consultando…':'Actualizar estado desde la web')+'</button>'
       +(rows||'<p>No hay campañas publicadas para controlar.</p>')+'</section>';
   }
+  function overviewEditor(state){
+    const overview=promotionOverview(state,{now:new Date(),live:liveLoaded&&!liveError?live:null});
+    const visible=filterPromotionOverview(overview.items,overviewFilter);
+    const badges={active:'Activa ahora',inactive:'Inactiva',scheduled:'Programada',pending:'Sin confirmar en web'};
+    const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&!w.SAHTEN?.project?.session?.readOnly;
+    const cards=visible.map(item=>{
+      const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
+        :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
+      return '<button type="button" class="promo-overview-card" data-open-promo="'+esc(item.id)
+        +'" data-open-type="'+esc(next)+'">'
+        +'<span class="promo-overview-category">'+esc(item.label)+'</span>'
+        +'<span class="promo-overview-status is-'+esc(item.status)+'">'+esc(badges[item.status]||'Inactiva')+'</span>'
+        +'<strong>'+esc(item.name)+'</strong>'
+        +'<span class="promo-overview-detail">'+esc(item.detail)+'</span>'
+        +'<span class="promo-overview-foot">'+(item.localEnabled?'Marcada en borrador':'Borrador desactivado')+' · Ver configuración</span>'
+        +'</button>';
+    }).join('');
+    return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
+      +'<p>Estado comercial comprobado: no se considera activa ninguna oferta solo por estar guardada o marcada en el proyecto.</p></div>'
+      +'<button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button></div>'
+      +'<div class="promo-overview-summary"><span><strong>'+overview.items.length+'</strong> configuradas</span>'
+      +'<span><strong>'+overview.active+'</strong> activas verificadas</span>'
+      +'<span><strong>'+overview.pending+'</strong> pendientes/programadas</span>'
+      +'<span><strong>'+overview.inactive+'</strong> inactivas</span></div>'
+      +'<div class="promo-overview-toolbar" role="group" aria-label="Filtrar promociones">'
+      +[['all','Todas'],['active','Activas'],['inactive','No activas']].map(([id,label])=>'<button type="button" data-promo-filter="'+id+'" aria-pressed="'+(overviewFilter===id)+'">'+label+'</button>').join('')
+      +'</div>'
+      +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
+      +'<div class="promo-overview-grid">'+(cards||'<p class="promo-overview-empty">No hay promociones en este filtro.</p>')+'</div>'
+      +'<div class="promo-note">Activa = campaña confirmada por el servidor, motor habilitado y calendario vigente. Las sugerencias y los cupones sin validación de emisión no se anuncian como ofertas disponibles.</div>'
+      +'<div class="promo-row"><div><strong>Proyecto local y nube</strong>'
+      +'<p>Para traer las últimas promociones sin reemplazar pedidos, stock ni catálogo, usá la actualización selectiva. El archivo local conserva un respaldo previo.</p>'
+      +(syncFeedback?'<p role="status">'+esc(syncFeedback)+'</p>':'')+'</div>'
+      +'<button type="button" data-promo-sync '+(canSync?'':'disabled')+'>Actualizar promociones desde la nube</button></div>'
+      +'</section>';
+  }
   function render() {
     const root=w.document.getElementById('promotions-editor');if(!root)return;
     const state=get(), campaigns=state.campaigns||[], c=campaigns.find(x=>x.id===selected)||campaigns[0];
     if(c)selected=c.id;
     const canEdit=!w.document.body.classList.contains('role-no-costs');
-    const now=localDateParts(new Date()),active=campaigns.filter(x=>x.enabled&&scheduleMatches(x.schedule,new Date())).length;
+    const active=promotionOverview(state,{live:liveLoaded&&!liveError?live:null,now:new Date()}).active;
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
-      +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Activas verificadas</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();}));
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>refreshLive());
+    root.querySelectorAll('[data-promo-filter]').forEach(b=>b.addEventListener('click',()=>{overviewFilter=b.dataset.promoFilter;render();}));
+    root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.openType;
+      if(tab==='campaigns')selected=b.dataset.openPromo;render();}));
+    root.querySelector('[data-promo-sync]')?.addEventListener('click',async()=>{
+      if(!canOperate()||!w.SAHTEN?.online?.conn?.()?.projectId)return;
+      const yes=await w.sahtenConfirm?.('Se importarán SOLO las promociones del proyecto en la nube. Se conservarán los pedidos, los costos, el stock y el catálogo locales; se guardará un respaldo antes de cambiar los borradores. ¿Continuar?',
+        {title:'Actualizar promociones del proyecto',okLabel:'Actualizar promociones'});
+      if(yes!==true)return;
+      syncFeedback='Consultando promociones y preparando respaldo…';render();
+      try{
+        const result=await w.SAHTEN.online.pullPromotionsFromCloud();
+        syncFeedback=result.action==='unchanged'?'Las promociones locales ya coinciden con las de la nube.':
+          'Promociones copiadas y guardadas en el proyecto local. Revisá el estado de sincronización general en Nube y usuarios si hay conflictos.';
+      }catch(e){syncFeedback='No se pudo actualizar: '+String(e?.message||e).slice(0,220);}
+      render();refreshLive();
+    });
     root.querySelectorAll('[data-live-toggle]').forEach(button=>button.addEventListener('click',async()=>{
       if(!canOperate()||liveBusy||!live.published)return;
       const row=live.campaigns.find(x=>x.id===button.dataset.liveToggle);if(!row)return;
