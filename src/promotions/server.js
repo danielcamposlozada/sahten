@@ -18,6 +18,7 @@ export function couponIssuePolicy(promo,program,{paymentMethods=['efectivo','tra
  if(!promo||promo.enabled!==true)return {allowed:false,reason:'promotions_disabled'};
  const programConfig=promo.couponPrograms?.[program];
  if(!programConfig||programConfig.enabled!==true)return {allowed:false,reason:'program_disabled'};
+ if(programConfig.identityVerified!==true)return {allowed:false,reason:'identity_not_verified'};
  const review=promo.verifiedOrderCosts;
  if(review?.verified!==true||!review.reviewedAt||!review.reviewedBy||
   !Number.isFinite(review.additionalOrderCost)||review.additionalOrderCost<0||
@@ -78,6 +79,13 @@ export function createCouponHandler({url,serviceKey,anonKey,fetchImpl=fetch}) {
       const max=body.maxExtraAmount==null?null:Number(body.maxExtraAmount);
       if(!Number.isFinite(percent)||percent<=0||percent>10||!Number.isFinite(min)||min<0||max!=null&&(!Number.isFinite(max)||max<0))
         return reply({error:'invalid_benefit'},400);
+      if(percent!==Number(policy.config.extraPercent) ||
+         min<Number(policy.config.minEligibleSubtotal||0) ||
+         (policy.config.maxExtraAmount!=null && (max==null||max>Number(policy.config.maxExtraAmount))))
+        return reply({error:'benefit_exceeds_approved_program'},409);
+      // No inferir una compra pagada del estado "listo". La acreditación del
+      // pedido de origen requiere circuito específico y prueba E2E.
+      if(purpose==='second_online')return reply({error:'second_purchase_origin_not_verified'},409);
       const expiresAt=endOfDate(body.expiresOn);
       const products=Array.isArray(body.productIds)?body.productIds
         .filter(x=>typeof x==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(x)).slice(0,100):[];
