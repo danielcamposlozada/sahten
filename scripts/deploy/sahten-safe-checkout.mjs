@@ -6,7 +6,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createServer } from 'vite';
 
-const PINNED_URL='https://84a00719.sahten-menu.pages.dev';
+// Base inmutable: despliegue ACTUAL confirmado por Cloudflare el 01/11/2026.
+const SOURCE_DEPLOYMENT_ID='437a4503-7726-4482-a5e5-6b911fd7272c';
+const PINNED_URL='https://437a4503.sahten-menu.pages.dev';
 const PUBLISHED_FILES=[
   '/apple-touch-icon.png',
   '/brand/sahten-comida-arabe-og-1200x630.png',
@@ -44,9 +46,15 @@ async function download(rel){
 function check(menu,base){
   if(!base.supabase?.url || !base.supabase?.anonKey || !base.supabase?.storeId)
     throw new Error('Pinned menu missing Supabase public connection');
-  if(base.products?.length!==38)throw new Error('Pinned menu has changed: requires human review');
+  if(!Array.isArray(base.products)||base.products.length<38||base.products.length>54)
+    throw new Error('El despliegue base tiene un catálogo inesperado; no reemplazar producción');
   if(!base.site?.enabled || !base.site?.orderPage)throw new Error('Original site/page structure is not available');
-  if(menu.products?.length!==38)throw new Error('Public product count mismatch: expected 38');
+  // Snapshot de catálogo comprobado el 01/11: 54 SKU y 11 bebidas.
+  // Conserva TODOS los SKU del deploy base más reciente, no uno antiguo.
+  if(menu.products?.length!==54)throw new Error('Public product count mismatch: expected 54');
+  const photos=menu.products.filter(p=>typeof p.image==='string'&&p.image.startsWith('https://'));
+  if(photos.length<49)throw new Error('Las imágenes nuevas no están disponibles: abortar para no degradar el sitio');
+  if(menu.products.some(p=>p.image&&!/^https:\/\//.test(p.image)))throw new Error('Imagen local inesperada: requiere empaquetado específico');
   const drinks=menu.products.filter(p=>p.category==='Bebidas');
   if(drinks.length!==11)throw new Error('Expected eleven published drinks');
   const price={2500:0,2000:0,1400:0};
@@ -69,6 +77,31 @@ async function latestMenu(base){
   if(!first?.id||!row?.json?.products)throw new Error('Live catalog unavailable: refusing stale deploy');
   return row.json;
 }
+// Política editorial pública: jamás incluye costos, descuentos ni facturas.
+// Si la app publica un plan actualizado, prevalece su versión.
+async function safeRecommendations(menu){
+ const cats=JSON.parse(await fs.readFile('docs/sahten/cart-recommendations-2026.json','utf8'));
+ const drinks=JSON.parse(await fs.readFile('docs/sahten/beverage-recommendations-public-2026.json','utf8'));
+ const published=new Map(menu.products.map(p=>[p.id,p]));
+ const valid=id=>published.has(id)&&Number(published.get(id).price)>0 &&
+    published.get(id).salesAvailability?.paused!==true &&
+    published.get(id).salesAvailability?.retired!==true;
+ const only=ids=>[...new Set((ids||[]).filter(valid))];
+ return {enabled:true,
+  beverageContexts:drinks.beverageContexts.map(c=>({
+   id:c.id,name:c.name,priority:c.priority,
+   triggerProductIds:only(c.triggerProductIds),options:only(c.options).filter(id=>
+     published.get(id).category==='Bebidas'),
+   ...(c.minEligibleSubtotal!=null?{minEligibleSubtotal:c.minEligibleSubtotal}:{}),
+   ...(c.maxEligibleSubtotal!=null?{maxEligibleSubtotal:c.maxEligibleSubtotal}:{})
+  })).filter(c=>c.triggerProductIds.length&&c.options.length),
+  complements:cats.complements.filter(c=>c.enabled!==false).map(c=>({
+    id:c.id,name:c.name,priority:c.priority,productId:c.productId,
+    triggerProductIds:only(c.triggerProductIds),
+    suppressIfPresent:only(c.suppressIfPresent)
+  })).filter(c=>valid(c.productId)&&published.get(c.productId).category!=='Bebidas'&&c.triggerProductIds.length)
+ };
+}
 async function main(){
   const oldAssets=new Map();
   // Download all original assets FIRST; fail before touching any production resource.
@@ -84,6 +117,9 @@ async function main(){
     const menu=publishedMenuWithLiveCatalog(base,live);
     menu.supabase={...base.supabase,storeId:base.supabase.storeId};
     menu.promotions={enabled:false};
+    // Nuevo paquete seguro: sugerencias voluntarias, nunca descuentos.
+    // No reemplaza una política explícita ya publicada por la app.
+    if(menu.cartRecommendations == null)menu.cartRecommendations=await safeRecommendations(menu);
     // Rutas locales que no existen en el paquete original nunca inventan fotos.
     for(const p of menu.products){
       const existed=base.products.some(b=>b.id===p.id && b.image===p.image);
@@ -117,12 +153,14 @@ async function main(){
   await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(built.menu,null,1));
   const report={
     status:'ready-for-pages',
-    inheritedDeployment:'84a00719-0196-48ab-b31f-b321b979398e',
+    inheritedDeployment:SOURCE_DEPLOYMENT_ID,
     immutableFilesPreserved:PUBLISHED_FILES.filter(x=>!['/index.html','/pedir/index.html','/menu.json'].includes(x)),
     generated:['/index.html','/pedir/index.html','/menu.json'],
     products:built.menu.products.length,
+    remotePhotos:built.menu.products.filter(p=>p.image?.startsWith('https://')).length,
     beverages:built.menu.products.filter(p=>p.category==='Bebidas').length,
     promotionsEnabled:built.menu.promotions.enabled,
+    fullPriceRecommendations:built.menu.cartRecommendations?.enabled===true,
     originalBrandingPreserved:true,
     checkoutAvailabilityFix:true
   };
