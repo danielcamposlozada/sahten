@@ -40,7 +40,7 @@ BEGIN
    'tags','[]'::jsonb,'upsellOnly',true,'upgradeFrom','p1779467294622',
    'priceRevision','47cdeabe-b6d7-4b1d-9d7e-7109ff2ebc26'
   )),true);
- next_menu:=jsonb_set(next_menu,'{config,productVisibility,p1779570052552}','false'::jsonb,true);
+ next_menu:=jsonb_set(next_menu,'{config,productVisibility,p1779570052552}','true'::jsonb,true);
  UPDATE public.menus SET json=next_menu,updated_at=clock_timestamp() WHERE store_id=sid;
  next_project:=jsonb_set(project_data,'{promotions,productUpgrades}',(
   SELECT jsonb_agg(
