@@ -14,7 +14,7 @@ BEGIN
  SELECT json INTO menu_json FROM public.menus WHERE store_id=p_store_id;
  IF menu_json IS NULL THEN RAISE EXCEPTION 'store_menu_missing';END IF;
  SELECT coalesce(jsonb_agg(jsonb_build_object(
-  'id',c.item->>'id','name',c.item->>'name',
+  'id',c.item->>'id','name',c.item->>'name','kind','public',
   'enabled',coalesce(st.enabled,(c.item->>'enabled')::boolean,false),
   'channels',coalesce(c.item->'channels','[]'::jsonb),
   'schedule',c.item->'schedule',
