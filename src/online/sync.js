@@ -14,6 +14,13 @@ export const BACKOFF_MS = [30000, 60000, 120000, 300000];
 /** Lo que viaja a la nube: el proyecto con referencias remotas; los binarios se suben antes a Storage. */
 export const stripForSync = file => { const f = clone(file); f.images = Object.fromEntries(Object.entries(f.images || {}).filter(([, v]) => /^https?:\/\//.test(v))); f.modifiedAt = null; return f; };
 export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; if(f.online)delete f.online.supabase; return contentHash(f); };
+/** Detecta conflictos que afectan sólo a pedidos/clientes, sin decidir automáticamente
+ * por el usuario si los cambios de catálogo, fotos, precios o costos son distintos. */
+export const structuralHash = file => {
+  const f=clone(file);
+  if(f.sales){delete f.sales.orders;delete f.sales.customers;}
+  return syncHash(f);
+};
 
 /** Decide qué hacer según qué lado cambió desde la última sincronización. */
 export function decide({ localHash, last, remoteVersion }) {
@@ -114,7 +121,13 @@ export function createSync(deps) {
         if (act === 'noop') { await mergeStaffOps(check); lastAt = new Date(now()); attempt = 0; pending = false; set('al día'); return { action: 'noop' }; }
         if (act === 'push') return await push(f, lh, last() ? last().version : meta.version, check);
         if (act === 'pull') return await pull(check);
-        // conflicto: cambiaron los dos lados
+        // Si sólo difieren las operaciones, se reconcilian automáticamente:
+        // ni un clic ni la elección destructiva "mi versión / la nube".
+        const remote=await deps.client.rpc('get_project_data',{pid:deps.remoteId()});check();
+        if(remote?.data && structuralHash(remote.data)===structuralHash(f))
+          return await push(f,lh,remote.version,check);
+        // Cambios simultáneos de precios/catálogo/fotos requieren decisión;
+        // no se sacrifica seguridad por resolverlos silenciosamente.
         conflict = { remote: meta, local: { hash: lh } };
         const choice = resolve ? await resolve(conflict) : null;
         if (choice === 'theirs') return await pull(check);
