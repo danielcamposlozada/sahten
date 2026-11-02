@@ -28,12 +28,34 @@ describe('Claridad comercial en el ticket térmico compacto',()=>{
    expect(html).not.toContain('Se aplica según los días, productos y medios');
    expect(buildKitchenReceipt(order,{paper:receiptProfile(58)})).not.toContain('receipt-promo--B');
  });
- it('una campaña general recurrente muestra su próxima edición con fecha, sin vencer artificialmente',()=>{
+ it('una campaña general usada se puede volver a anunciar durante la misma semana',()=>{
    const weekly={...desserts,id:'weekly-meals',schedule:{type:'weekly',weekdays:[1,2,3]},
      advertising:{...desserts.advertising,message:'Hasta 15% en platos seleccionados'}};
    const ad=selectTicketAdvertisement({enabled:true,ticket:{enabled:true,advertise:true},campaigns:[weekly]},
     {now:new Date('2026-11-02T16:00:00Z'),channel:'online',excludedPromotionIds:['weekly-meals']});
-   expect(ad.startsOn).toBe('2026-11-09');
+   expect(ad.startsOn).toBeUndefined();
+   expect(ad.repeatPurchase).toBe(true);
    expect(ad.expiry).toBe('Sin fecha de fin programada');
+ });
+ it('el ticket muestra el ahorro YA APLICADO y vuelve a publicitar la misma oferta para el próximo pedido',()=>{
+   const now=new Date('2026-11-02T16:00:00Z');
+   const ad=selectTicketAdvertisement({
+     enabled:true,ticket:{enabled:true,advertise:true},campaigns:[desserts]},
+     {now,channel:'any',appliedPromotionIds:['postres-extra-online-nov26']});
+   expect(ad).toMatchObject({repeatPurchase:true,campaignId:'postres-extra-online-nov26'});
+   const receipt=buildReceipt({
+     num:99,source:'pickup',createdAt:now.toISOString(),discountAmount:1200,subtotal:10000,total:8800,
+     items:[{productId:'baklava',name:'Baklava',qty:1,lineTotal:10000}],
+     promotionSnapshot:{subtotal:10000,discount:1200,netSubtotal:8800,paymentPercent:10,
+       lines:[{productId:'baklava',qty:1,base:10000,paymentDiscount:1000,
+         promotionDiscount:200,discount:1200,net:8800,appliedPromotionType:'campaign'}]},
+     promotionTicketSnapshot:ad
+   },{paper:receiptProfile(58)});
+   expect(receipt).toContain('Beneficio por pago 10 %');
+   expect(receipt).toContain('Promo: Baklava');
+   expect(receipt).toContain('VOLVÉ A APROVECHAR');
+   expect(receipt).toContain('Solo online');
+   expect(receipt).toContain('sahten.online');
+   expect((receipt.match(/receipt-promo--B/g)||[]).toHaveLength(1);
  });
 });
