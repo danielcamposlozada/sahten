@@ -80,9 +80,13 @@ export function quotePromotions({
   const gross = details.reduce((n,l)=>n+l.qty*l.unitCents,0);
   const cash = ['efectivo','transferencia'].includes(method);
   const paymentPercent = cash ? Math.max(0,Math.min(100,Number(config.paymentPercent??10))) : 0;
-  const campaigns = activeCampaigns(config,now,channel);
+  // GATE DEL LANZAMIENTO: efectivo/transferencia primero. No afecta pagos
+  // anteriores, pero impide descuentos adicionales de métodos no autorizados.
+  const allowedMethods=config.activationPolicy?.allowedPromotionPaymentMethods;
+  const promotionMethodAllowed=!Array.isArray(allowedMethods)||allowedMethods.includes(method);
+  const campaigns = promotionMethodAllowed?activeCampaigns(config,now,channel):[];
   const strictUpsells = config.upsellGuardRequired === true || config.activationPolicy?.requireIncrementalAndBasketMarginCheck === true;
-  const couponValid = couponIsEligible(coupon,{now,channel,customerId});
+  const couponValid = promotionMethodAllowed&&couponIsEligible(coupon,{now,channel,customerId});
   const eligibleGross = details.reduce((n,l)=>n+(couponValid&&eligibleLine(coupon,l,details)?l.qty*l.unitCents:0),0);
   const canCoupon = couponValid && eligibleGross>=toCents(coupon.minEligibleSubtotal||0);
   const used = new Set();
@@ -90,7 +94,7 @@ export function quotePromotions({
   const breakdown=details.map(l=>{
     const base=l.unitCents*l.qty, isFour=l.productId===FOUR_FATAY_ID;
     const selections=[];
-    if(config.enabled && !isFour) {
+    if(config.enabled && promotionMethodAllowed && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
         id:c.id, name:c.name, extraPercent:Math.min(100,Number(c.extraPercent)||0), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits: c.maxUnits
@@ -132,7 +136,7 @@ export function quotePromotions({
   // En modo servidor estricto, primero calcular campañas/cupones. Después,
   // de manera independiente, como máximo UN upsell por pedido. No confiar en
   // marcas de "artículo añadido" provenientes del JSON del cliente.
-  if(config.enabled && strictUpsells && trustedUpsellSelection?.verified === true) {
+  if(config.enabled && promotionMethodAllowed && strictUpsells && trustedUpsellSelection?.verified === true) {
     const pending=[];
     for(const promotion of config.upsells || []) {
       if(!promotion?.enabled || promotion.kind !== 'upsell' || promotion.maxUnits !== 1)continue;
@@ -181,7 +185,7 @@ export function quotePromotions({
   const totalDiscount=breakdown.reduce((n,l)=>n+toCents(l.discount),0);
   const net=gross-totalDiscount;
   const fee=amount(net,commissionPercent);
-  return {version:PROMOTIONS_VERSION,enabled:config.enabled===true,channel,method,paymentPercent,
+  return {version:PROMOTIONS_VERSION,enabled:config.enabled===true&&promotionMethodAllowed,channel,method,paymentPercent,
     subtotal:fromCents(gross),discount:fromCents(totalDiscount),netSubtotal:fromCents(net),
     estimatedPaymentFee:fromCents(fee),lines:breakdown,appliedPromotionIds:[...used],
     couponId:canCoupon&&used.has(coupon.id)?coupon.id:null,
