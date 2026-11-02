@@ -46,6 +46,7 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', campaignFeedback='', cursor=new Date();
   const get=()=>load();
+  let draftEditing=null;
   const recEditor=createLiveRecommendationEditor(w,()=>render());
   let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='',liveContext='',lastLiveAt=0;
   const liveApi=()=>w.SAHTEN?.online?.controller;
@@ -208,6 +209,57 @@ export function installPromotionsEditor(w=window) {
       if(!item)return;
       item.enabled=!item.enabled;save(state);render();
     }));
+    root.querySelectorAll('[data-draft-create]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;
+      const key=b.dataset.draftCreate,id='borrador-'+Date.now().toString(36);
+      const item={id,name:'Nueva propuesta',enabled:false,extraPercent:key==='crossSells'?0:5,
+        kind:key==='upsells'?'upsell':key==='crossSells'?'recommendation':'replace_product',
+        priority:30,productId:'',productIds:[],triggerProductIds:[],
+        advertising:{enabled:false,placement:['cart'],message:''},
+        activationBlockers:['cost_and_checkout_verification_required']};
+      state[key]=Array.isArray(state[key])?state[key]:[];
+      state[key].push(item);draftEditing={key,id};save(state);render();
+    }));
+    root.querySelectorAll('[data-draft-edit]').forEach(b=>b.addEventListener('click',()=>{
+      draftEditing={key:b.dataset.draftGroup,id:b.dataset.draftEdit};render();
+    }));
+    root.querySelectorAll('[data-draft-duplicate]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;const key=b.dataset.draftGroup;
+      const original=(state[key]||[]).find(x=>x.id===b.dataset.draftDuplicate);if(!original)return;
+      const item=JSON.parse(JSON.stringify(original));item.id='borrador-'+Date.now().toString(36);
+      item.name='Copia de '+String(item.name||'Propuesta').slice(0,80);item.enabled=false;
+      state[key].push(item);draftEditing={key,id:item.id};save(state);render();
+    }));
+    root.querySelectorAll('[data-draft-delete]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!canEdit)return;const key=b.dataset.draftGroup,id=b.dataset.draftDelete;
+      const agreed=await w.sahtenConfirm?.('¿Eliminar este borrador del proyecto? No afecta promociones publicadas.',
+        {title:'Eliminar borrador',okLabel:'Eliminar'});
+      if(agreed!==true||!canEdit)return;
+      state[key]=(state[key]||[]).filter(x=>x.id!==id);
+      draftEditing=null;save(state);render();
+    }));
+    root.querySelector('[data-draft-cancel]')?.addEventListener('click',()=>{draftEditing=null;render();});
+    root.querySelector('[data-draft-save]')?.addEventListener('click',()=>{
+      if(!canEdit||!draftEditing)return;
+      const item=(state[draftEditing.key]||[]).find(x=>x.id===draftEditing.id);
+      if(!item)return;
+      const name=root.querySelector('#draft-name')?.value.trim();
+      const percent=Number(root.querySelector('#draft-extra')?.value||0);
+      const target=root.querySelector('[data-draft-target]')?.value;
+      const triggers=[...root.querySelectorAll('[data-draft-trigger]:checked')].map(x=>x.dataset.draftTrigger);
+      const placement=[...root.querySelectorAll('[data-draft-placement]:checked')].map(x=>x.dataset.draftPlacement);
+      if(!name||!target||!triggers.length||!Number.isFinite(percent)||percent<0||percent>20){
+        w.sahtenAlert?.('Completá nombre, producto, al menos un disparador y descuento válido.');return;
+      }
+      item.name=name.slice(0,100);item.extraPercent=percent;item.triggerProductIds=triggers;
+      if(draftEditing.key==='upsells')item.productIds=[target];
+      else if(draftEditing.key==='crossSells')item.productId=target;
+      else item.replacementProductId=target;
+      if(draftEditing.key==='productUpgrades')item.triggerProductId=triggers[0];
+      item.advertising={...(item.advertising||{}),placement,enabled:false};
+      if(draftEditing.key==='crossSells')item.placement=placement;
+      item.enabled=false;draftEditing=null;save(state);render();
+    }));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
       if(!canEdit)return;
@@ -361,12 +413,38 @@ export function installPromotionsEditor(w=window) {
           :key==='productUpgrades'?'<p class="promo-caution">Motivo: falta costo verificado y lógica de reemplazo para la venta.</p>'
           :'<p class="promo-note">Esta es una propuesta local. Las sugerencias reales se administran en «Recomendaciones web».</p>')
         +(products.length?'<small>SKU: '+products.map(esc).join(', ')+'</small>':'')
-        +'</div>'+draftSwitch(key,item)+'</article>';
+        +'</div><div class="rec-rule-controls">'+draftSwitch(key,item)
+        +'<button type="button" data-draft-edit="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Editar</button>'
+        +'<button type="button" data-draft-duplicate="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Duplicar</button>'
+        +'<button type="button" data-draft-delete="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Eliminar</button></div></article>';
     }).join('');
     return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
       +'<p>Estos son BORRADORES del proyecto, no las recomendaciones publicadas. El switch cambia solo la planificación, NO activa descuentos.</p>'
       +'<div class="promo-draft-list">'+(cards||'<p>No hay propuestas configuradas.</p>')+'</div>'
-      +'<div class="promo-note">Para ofrecer descuentos reales faltan aprobación de costos, cotización del servidor y activación individual. Mercado Pago queda excluido de esta etapa. Para editar lo que YA aparece en la web, entrá a «Recomendaciones web».</div><button type="button" data-rec-open>Gestionar recomendaciones publicadas</button></section>';
+      +'<div class="promo-row"><button type="button" data-draft-create="'+esc(key)+'">+ Crear borrador</button><button type="button" data-rec-open>Gestionar recomendaciones publicadas</button></div>'
+      +(draftEditing?.key===key?draftRuleEditor(state,key):'')
+      +'<div class="promo-note">Para ofrecer descuentos reales faltan aprobación de costos, cotización del servidor y activación individual. Mercado Pago queda excluido de esta etapa.</div></section>';
+  }
+  function draftRuleEditor(state,key){
+    const item=(state[key]||[]).find(x=>x.id===draftEditing?.id);
+    if(!item)return '';
+    const prod=catalog(w),target=key==='upsells'?item.productIds?.[0]:key==='crossSells'?item.productId:item.replacementProductId;
+    const triggers=Array.isArray(item.triggerProductIds)?item.triggerProductIds:(item.triggerProductId?[item.triggerProductId]:[]);
+    const loc=item.advertising?.placement||item.placement||['cart'];
+    return '<div class="promo-card rec-edit-form"><h4>Editar propuesta local · NO publicada</h4>'
+      +formField('draft-name','Nombre',item.name||'','text','maxlength="100"')
+      +formField('draft-extra','Puntos de descuento propuestos',item.extraPercent||0,'number','min="0" max="20" step="1"')
+      +'<label class="promo-field">Producto objetivo<select data-draft-target><option value="">Elegí producto</option>'
+      +prod.map(p=>'<option value="'+esc(p.id)+'"'+(p.id===target?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label>'
+      +'<fieldset class="rec-choices"><legend>Mostrar si el carrito contiene</legend>'
+      +prod.map(p=>'<label class="rec-product-check"><input type="checkbox" data-draft-trigger="'+esc(p.id)+'"'
+        +(triggers.includes(p.id)?' checked':'')+'>'+esc(p.name)+'</label>').join('')+'</fieldset>'
+      +'<fieldset class="rec-choices"><legend>Ubicaciones propuestas (solo planificación)</legend>'
+      +placements.map(([id,name])=>'<label class="rec-product-check"><input type="checkbox" data-draft-placement="'+esc(id)+'"'
+        +(loc.includes(id)?' checked':'')+'>'+esc(name)+'</label>').join('')+'</fieldset>'
+      +'<p>Guardar esta propuesta NO crea un descuento público. El checkout debe verificar costos, márgenes y límites antes de habilitarla.</p>'
+      +'<div class="promo-row"><button type="button" data-draft-save>Guardar borrador</button>'
+      +'<button type="button" data-draft-cancel>Cancelar</button></div></div>';
   }
   function couponEditor(state){
     const entries=Object.entries(state.couponPrograms||{});
