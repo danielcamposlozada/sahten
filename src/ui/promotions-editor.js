@@ -244,7 +244,7 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-status is-'+esc(item.status)+'">'+esc(badges[item.status]||'Inactiva')+'</span>'
         +'<strong>'+esc(item.name)+'</strong>'
         +'<span class="promo-overview-detail">'+esc(item.detail)+'</span>'
-        +'<span class="promo-overview-foot">'+(isPublished?'Sincronizada desde la web':item.type==='crossSells'&&published?'Confirmada con el servidor':'Planificación local')+'</span>'
+        +'<span class="promo-overview-foot">'+(isPublished?'Campaña publicada · sincronizada desde la web':item.type==='crossSells'&&published?'Confirmada con el servidor':'Planificación local')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +(isPublished?'':draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item))
         +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,{...((item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item),id:item.id}):'')
