@@ -63,3 +63,35 @@ describe('Controles aislados de campañas publicadas',()=>{
   }finally{dom.window.close();}
  });
 });
+
+
+it('muestra las seis campañas publicadas aunque el archivo local sólo conozca dos; cambia estado en servidor',async()=>{
+ const ids=['weekly-meals','central-tables','postres-extra-online-nov26','postres-mamul-extra-nov26','fatay-adicional-moderado-nov26','falafel-mix-moderado-nov26'];
+ const state={published:true,campaigns:ids.map(id=>({id,enabled:true,revision:id+'-revision'}))};
+ const server={source:'published_server',campaigns:ids.map((id,i)=>({
+   id,name:i===2?'Baklava o torta · 12% total':id,enabled:true,kind:'public',
+   channels:['online'],schedule:null,
+   advertising:{enabled:true,placement:['ticket'],message:'Descuento publicado'}
+ }))};
+ const {dom,w,api}=make({api:{
+   readPromotionCampaignStates:vi.fn(async()=>structuredClone(state)),
+   readPromotionTicketCampaigns:vi.fn(async()=>structuredClone(server)),
+   setPromotionCampaignState:vi.fn(async(id,enabled,revision)=>{
+     const record=state.campaigns.find(r=>r.id===id);
+     if(record.revision!==revision)throw Error('promotion_state_conflict');
+     record.enabled=enabled;record.revision=id+'-new';
+     return {...record};
+   })
+ }});
+ try{
+   await vi.waitFor(()=>expect(w.document.querySelectorAll('.promo-overview-card')).toHaveLength(6));
+   const root=w.document.getElementById('promotions-editor');
+   expect(root.textContent).toContain('Baklava o torta · 12% total');
+   expect(root.textContent).not.toContain('Pendiente de validación · no publicada');
+   const button=root.querySelector('[data-live-toggle="postres-extra-online-nov26"]');
+   expect(button).toBeTruthy();expect(button.getAttribute('aria-checked')).toBe('true');
+   button.click();
+   await vi.waitFor(()=>expect(api.setPromotionCampaignState).toHaveBeenCalledWith('postres-extra-online-nov26',false,'postres-extra-online-nov26-revision'));
+   await vi.waitFor(()=>expect(root.querySelector('[data-live-toggle="postres-extra-online-nov26"]').getAttribute('aria-checked')).toBe('false'));
+ }finally{dom.window.close();}
+});
