@@ -100,7 +100,13 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
    if(action==='order'||action==='validate-pos'){
     if(cents(input.total)!==cents(order.total))fail('Cambió el total. Revisá el pedido y volvé a confirmar.',409,'menu_changed');
     if(action==='validate-pos'){const id=String(input.localOrderId||'');if(!/^ord_[a-z0-9]{6,80}$/.test(id))fail('Identificador de venta local inválido.');return response({order,validationId:await repo.savePos(sid,id,order)});}
-    const result=await repo.run('order',{store_id:sid,request_id:uuid(b.requestId),payload:{...order,num:Math.floor(Math.random()*9000)+1000,createdAt:new Date(now()).toISOString(),status:'pendiente'}});
+    const requestId=uuid(b.requestId);
+    const payload={...order,num:Math.floor(Math.random()*9000)+1000,
+      createdAt:new Date(now()).toISOString(),status:'pendiente',
+      ...(couponDigest?{couponCodeDigest:couponDigest}:{})};
+    const result=couponDigest
+      ? await repo.confirmCouponOrder(sid,couponDigest,requestId,payload)
+      : await repo.run('order',{store_id:sid,request_id:requestId,payload});
     return response({...result,order:result.order||order});
    }
    const q=order.shippingQuote;delete order.shippingQuote;
