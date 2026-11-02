@@ -207,6 +207,11 @@ export function createSync(deps) {
     let incoming = r.data; const local = deps.collect(), before = syncHash(local);
     incoming = deps.restoreFile ? await deps.restoreFile(incoming, local.images, report) : { ...incoming, images: local.images };
     check();
+    // Cada dispositivo conserva su conexión local; el primer proyecto remoto puede no tener
+    // projectId (se asigna tras la creación). No borrar el vínculo al descargar una versión.
+    incoming.online={...(incoming.online||{}),supabase:{
+      ...(incoming.online?.supabase||{}),...(local.online?.supabase||{}),projectId:deps.remoteId()
+    }};
     if (syncHash(deps.collect()) !== before) throw new SupabaseError('Hubo cambios locales mientras se descargaban las fotos. Volvé a sincronizar para conservarlos.', { code: 'local_changed' });
     report({ detail: 'Aplicando datos en este equipo…' }); await deps.apply(incoming);
     check();
