@@ -6,6 +6,7 @@ on:
     paths:
       - src/delivery/**
       - src/payments/**
+      - src/online/**
       - src/core/upsell-*.js
       - tests/upsell-*.test.js
       - supabase/migrations/20261102013000_delivery_upsell_atomic_order.sql
