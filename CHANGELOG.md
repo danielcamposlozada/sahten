@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.41
+
 - **Gestión integral de borradores:** los programas de cupones ahora se pueden crear, editar, duplicar y eliminar sin emitir códigos ni modificar pedidos. Se validan descuento de hasta 10 puntos adicionales, compra mínima, tope, vigencia y canal; al guardar quedan desactivados.
 - **Checks de publicación:** complementos con descuento, mejoras de producto y cupones muestran requisitos pendientes y ubicaciones previstas, diferenciando la planificación local de un beneficio disponible para clientes.
 - **Editar desde la vista general:** abre exactamente el borrador seleccionado, tanto en complementos como en mejoras, recomendaciones y cupones.
