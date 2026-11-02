@@ -63,6 +63,16 @@ for(const scenario of ['APRO','OTHE']){
  try{
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:25000});
   await capture(page,scenario+'-01-open');
+  // Diagnóstico de estructura, JAMÁS leer valores de inputs o tarjetas.
+  const controls=await page.locator('input,button,a').evaluateAll(els=>els.slice(0,65).map(e=>({
+   tag:e.tagName.toLowerCase(),type:String(e.getAttribute('type')||'').slice(0,30),
+   name:String(e.getAttribute('name')||'').slice(0,50),
+   placeholder:String(e.getAttribute('placeholder')||'').slice(0,60),
+   label:String(e.getAttribute('aria-label')||'').slice(0,60),
+   text:e.tagName==='INPUT'?'':String(e.innerText||'').trim().slice(0,60)
+  })).filter(x=>x.tag==='input'||x.tag==='button'||x.text)).catch(()=>[]);
+  console.log('CHECKOUT_UI_STRUCTURE '+scenario+' '+JSON.stringify(controls));
+  console.log('CHECKOUT_UI_TITLE '+scenario+' '+(await page.title()).slice(0,110));
   for(let attempt=0;attempt<9;attempt++){
    if(/captcha|no soy un robot|verific(a|á) tu identidad/i.test(await page.locator('body').innerText().catch(()=>''))){
     reason='interactive_verification_required';break;
