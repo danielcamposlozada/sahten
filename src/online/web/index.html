@@ -533,7 +533,7 @@ function sheet(){
   if(payMethods().indexOf(pay)<0)pay=payMethods()[0]||'';
   recalcDelivery();
   if(step==='cart'){
-    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+cartAddonSuggestions()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
+    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+fatayUpgradePanel()+cartAddonSuggestions()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
   }
 
   var canSend=serviceAvailable(type)&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
