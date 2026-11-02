@@ -489,7 +489,7 @@ function cartBenefit(method){
   if(!MENU.promotions||MENU.promotions.enabled!==true)return legacy;
   var rule=paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit);
   var quote=quotePromotions({lines:lines().map(function(l){return {productId:l.id,unitPrice:l.unitPrice,qty:l.qty}}),
-    method:selected,channel:'online',config:Object.assign({},MENU.promotions,{
+    method:selected,channel:'online',clientPreview:true,config:Object.assign({},MENU.promotions,{
       paymentPercent:rule.enabled&&rule.channels.online?rule.percent:0
     })});
   return {amount:quote.discount,label:quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
