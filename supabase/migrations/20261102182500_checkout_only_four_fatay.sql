@@ -40,7 +40,7 @@ BEGIN
    'tags','[]'::jsonb,'upsellOnly',true,'upgradeFrom','p1779467294622',
    'priceRevision','47cdeabe-b6d7-4b1d-9d7e-7109ff2ebc26'
   )),true);
- next_menu:=jsonb_set(next_menu,'{config,productVisibility}',jsonb_build_object('p1779570052552',true),true);
+ next_menu:=jsonb_set(next_menu,'{config,productVisibility,p1779570052552}','true'::jsonb,true);
  UPDATE public.menus SET json=next_menu,updated_at=clock_timestamp() WHERE store_id=sid;
  next_project:=jsonb_set(project_data,'{promotions,productUpgrades}',(
   SELECT jsonb_agg(
@@ -59,6 +59,7 @@ BEGIN
        WHERE m.store_id=sid AND p->>'id'='p1779570052552'
        AND p->>'upsellOnly'='true' AND p->>'upgradeFrom'='p1779467294622'
        AND p->>'price'='18500')
+    OR (SELECT json#>'{config,productVisibility}' - 'p1779570052552' FROM public.menus WHERE store_id=sid) IS DISTINCT FROM (menu_json#>'{config,productVisibility}')
  THEN RAISE EXCEPTION 'verification_failed'; END IF;
 END;
 $publish$;
