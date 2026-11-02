@@ -271,7 +271,7 @@ var activeCat='all',catalogQuery='',disclosures={};
 function catalogText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().trim();}
 function renderCatalog(){
   var query=catalogText(catalogQuery),words=query.split(/\s+/).filter(Boolean);
-  var list=MENU.products.filter(function(p){var text=catalogText([p.name,p.category,p.description].join(' '));return !p.retired&&(activeCat==='all'||p.category===activeCat)&&words.every(function(word){return text.includes(word)});});
+  var list=MENU.products.filter(function(p){var text=catalogText([p.name,p.category,p.description].join(' '));return !p.retired&&!p.upsellOnly&&(activeCat==='all'||p.category===activeCat)&&words.every(function(word){return text.includes(word)});});
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(catalogQuery?'No encontramos productos con esa búsqueda. Probá otro nombre o categoría.':'Todavía no hay productos para mostrar.')+'</div>';
   $('catalog-results').textContent=list.length+(list.length===1?' producto':' productos')+(activeCat!=='all'?' · '+activeCat:'')+(catalogQuery?' · Resultados de tu búsqueda':'');
 }
@@ -402,6 +402,14 @@ function openCart(){step='cart';serviceSelectionManual=false;sheet();showSheet()
 function checkoutStep(next){if(sending||!['cart','details'].includes(next)||!lines().length)return;step=next;sheet();$('sheet').querySelector('.sheet-body').scrollTop=0;$('sheet').focus({preventScroll:true});}
 function checkoutSteps(){return '<ol class="checkout-steps" aria-label="Pasos del pedido"><li'+(step==='cart'?' aria-current="step"':'')+'><b aria-hidden="true">1</b>Pedido</li><li'+(step==='details'?' aria-current="step"':'')+'><b aria-hidden="true">2</b>Entrega y pago</li></ol>';}
 function cartItemsHtml(ls,prefix){prefix=prefix||'cart';return '<ul class="'+(prefix==='side'?'side-items':'cart-items')+'" aria-label="Productos de tu pedido">'+ls.map(function(l){return '<li class="cart-item"><div><div class="cart-item-name">'+esc(l.name)+(l.unavailable?' · No disponible':'')+'</div><div class="cart-item-unit">'+fmt(l.unitPrice)+' por unidad</div></div><div class="cart-item-price">'+fmt(l.lineTotal)+'</div><div class="cart-item-actions"><div class="cart-quantity"><button type="button" id="'+prefix+'-dec-'+esc(l.id)+'" data-dec="'+esc(l.id)+'" aria-label="Restar una unidad de '+esc(l.name)+'"'+(l.qty<=1?' disabled':'')+'>−</button><output aria-label="Cantidad de '+esc(l.name)+'" aria-live="polite">'+l.qty+'</output><button type="button" id="'+prefix+'-inc-'+esc(l.id)+'" data-inc="'+esc(l.id)+'" aria-label="Sumar una unidad de '+esc(l.name)+'"'+(l.qty>=999||l.unavailable?' disabled':'')+'>+</button></div><button type="button" class="cart-remove" id="'+prefix+'-remove-'+esc(l.id)+'" data-remove="'+esc(l.id)+'" aria-label="Quitar '+esc(l.name)+' del pedido">Quitar</button></div></li>';}).join('')+'</ul>';}
+function fatayUpgradePanel(){
+  var u=eligibleFatayUpgrade(MENU,cart);
+  if(!u)return '';
+  return '<section class="cart-addons" aria-label="Mejorar promoción de Fatay">'
+    +'<h3>¿Sumamos la cuarta Fatay?</h3>'
+    +'<p class="cart-addons-explain">Cambiá el combo de 3 por el de 4. Una cuarta Fatay por '+fmt(u.extraAtList)+' adicionales antes del beneficio por medio de pago. No se duplicará el combo anterior.</p>'
+    +'<button type="button" class="cta" data-upgrade-fatay>Cambiar por 4 Fatay</button></section>';
+}
 function cartAddonSuggestions(){
   var options=recommendCartAddons({products:MENU.products,cart:lines(),
     policy:MENU.cartRecommendations||{enabled:false},showPrices:MENU.config.showPrices!==false});
@@ -525,7 +533,7 @@ function sheet(){
   if(payMethods().indexOf(pay)<0)pay=payMethods()[0]||'';
   recalcDelivery();
   if(step==='cart'){
-    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+cartAddonSuggestions()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
+    setSheetContent(checkoutSteps()+cartItemsHtml(ls)+fatayUpgradePanel()+cartAddonSuggestions()+'<p class="cart-help">Podés sumar unidades o quitar productos. El envío y los descuentos se calculan en el siguiente paso.</p>', '<div class="row t"><span>Productos</span><span>'+fmt(subtotal())+'</span></div><button class="cta" id="cart-next" data-checkout-step="details">Continuar con entrega y pago</button><button class="checkout-back" data-close>Agregar más productos</button>');return;
   }
 
   var canSend=serviceAvailable(type)&&!unavailableItems()&&cashChangeQuote(total(),form.cashTendered,pay).valid&&!sending&&payMethods().indexOf(pay)>=0&&form.name.trim()&&form.phone.trim()&&(type==='pickup'||(geo&&ship&&ship.ok&&!deliveryLoading));
@@ -630,9 +638,14 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('click',function(e){document.querySelectorAll('.snav-menu[open]').forEach(function(el){if(!el.contains(e.target)||e.target.closest('a'))el.removeAttribute('open')});});
 document.addEventListener('input',function(e){if(e.target.id==='catalog-search'&&MENU&&MENU.config.enabled!==false){catalogQuery=e.target.value;renderCatalog();}});
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-start-checkout],[data-cat],[data-inc],[data-dec],[data-remove],[data-checkout-step],[data-type],[data-sug],[data-close],[data-delivery-search],[data-request-delivery],[data-refresh-delivery],#send');if(!t)return;
+  var t=e.target.closest('[data-upgrade-fatay],[data-start-checkout],[data-cat],[data-inc],[data-dec],[data-remove],[data-checkout-step],[data-type],[data-sug],[data-close],[data-delivery-search],[data-request-delivery],[data-refresh-delivery],#send');if(!t)return;
   if(t.hasAttribute('data-start-checkout')){if(!lines().length||unavailableItems())return;if(!$('ov').classList.contains('on'))serviceSelectionManual=false;step='details';sheet();showSheet();}
   else if(t.dataset.cat!==undefined){activeCat=t.dataset.cat;render();var selectedCategory=Array.from($('cats').querySelectorAll('[data-cat]')).find(function(b){return b.dataset.cat===activeCat});if(selectedCategory)selectedCategory.focus({preventScroll:true});if(document.body.classList.contains('view-order')){try{history.replaceState(null,'',location.pathname+location.search+'#pedido'+(activeCat==='all'?'':'/'+encodeURIComponent(activeCat)));}catch(err){/* vista previa */}}}
+  else if(t.hasAttribute('data-upgrade-fatay')){
+    var result=applyFatayUpgrade(MENU,cart);
+    if(!result.applied)return;
+    cart=result.cart;recalcDelivery();render();sheet();
+  }
   else if(t.dataset.inc!==undefined)change(t.dataset.inc,1);
   else if(t.dataset.dec!==undefined)change(t.dataset.dec,-1);
   else if(t.dataset.remove!==undefined)change(t.dataset.remove,-(cart[t.dataset.remove]||0));

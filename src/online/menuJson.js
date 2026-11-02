@@ -20,7 +20,8 @@ export function orderedCategories(products, config = {}) {
 /** Productos que se publican: no solo-receta, con nombre, no ocultos (ni ellos ni su categoría) y con precio. */
 export function publishableProducts(s, config = {}) {
   const hiddenP = config.hiddenProducts || [], hiddenC = config.hiddenCategories || [];
-  return s.products.filter(p => !p.recetaOnly && p.name && !hiddenP.includes(p.id) && !(p.category && hiddenC.includes(p.category)));
+  const upgradeOnly=new Set(config.upsellOnlyProducts||[]);
+  return s.products.filter(p=>!p.recetaOnly&&p.name&&(!hiddenP.includes(p.id)||upgradeOnly.has(p.id))&&(!(p.category&&hiddenC.includes(p.category))||upgradeOnly.has(p.id)));
 }
 
 /**
@@ -28,10 +29,13 @@ export function publishableProducts(s, config = {}) {
  * Las imágenes no van adentro: cada una se publica como archivo en img/<id>.jpg y acá solo se referencia.
  */
 export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, supabase = null, store = {}, quoteIds = {}, promotions = null, now = new Date() } = {}) {
-  const products = publishableProducts(s, menuConfig);
+  const hiddenFour='p1779570052552';
+  const activeUpgrade=promotions?.productUpgrades?.some(p=>p.id==='fatay-cuarta'&&p.enabled===true&&p.triggerProductId==='p1779467294622'&&p.replacementProductId===hiddenFour);
+  const products=publishableProducts(s,activeUpgrade?{...menuConfig,upsellOnlyProducts:[hiddenFour]}:menuConfig);
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
+    ...(activeUpgrade&&p.id===hiddenFour?{upsellOnly:true}:{}),
     ...(p.salesAvailability ? { salesAvailability: { paused: !!p.salesAvailability.paused, resumeAt: p.salesAvailability.resumeAt || null } } : {}),
     price: showPrices ? channelPriceWithDisc(s, p, 'mostrador') : 0,
     ...(quoteIds[p.id] ? { priceRevision: quoteIds[p.id] } : {}),
@@ -39,7 +43,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     tags: (p.tags || []).map(t => (typeof t === 'string' ? t : t.label || t.name || '')).filter(Boolean),
     description: txt(p.description, 220),
   })).filter(p => !showPrices || p.price > 0);
-  const cats = orderedCategories(items, menuConfig);
+  const cats = orderedCategories(items.filter(p=>!p.upsellOnly),menuConfig);
   const categoryImages = {};   // { categoría: 'img/cat_x.jpg' } — la foto de cada categoría, si la cargaron
   if (showImages) for (const c of cats) { const k = categoryPhotoKey(c); if (k && images[k]) categoryImages[c] = 'img/' + k + '.jpg'; }
   const sb = supabase && supabase.url && supabase.anonKey && supabase.storeId ? { url: supabase.url, anonKey: supabase.anonKey, storeId: supabase.storeId, slug: supabase.slug || '' } : null;
@@ -58,7 +62,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       enabled: menuConfig.enabled !== false, title: menuConfig.title || 'Nuestro Menú', subtitle: menuConfig.subtitle || '',
       showPrices, showImages, deliveryNote: menuConfig.deliveryNote || '',
       categories: cats, categoryImages,
-      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
+      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id && !item.upsellOnly)])),
     },
     products: items,
     // Las recomendaciones no son promociones de precio. Solo IDs publicados,
