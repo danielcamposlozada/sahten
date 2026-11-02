@@ -87,7 +87,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const cash = cashChangeQuote(total / 100, input.cashTendered, method);
   if (validateCustomer && !cash.valid) fail('El efectivo indicado no alcanza el total del pedido.');
   return { ...deliveryDetails(input, source), ...cashOrderFields(total / 100, input.cashTendered, method), source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
-    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), ...(promotion?{promotionSnapshot:promotion,promotionTicketSnapshot:selectTicketAdvertisement(menu.promotions,{now:new Date(now),channel:salesChannel})}:{}), total: total / 100, notes: text(input.notes, 1000),
+    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), ...(promotion?{promotionSnapshot:promotion,promotionTicketSnapshot:selectTicketAdvertisement(menu.promotions,{now:new Date(now),channel:salesChannel,excludedPromotionIds:promotion.appliedPromotionIds})}:{}), total: total / 100, notes: text(input.notes, 1000),
     ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
 
