@@ -20,7 +20,7 @@ describe('Todas las condiciones visibles de una campaña',()=>{
  it('semanales y tablas informan días exactos, horarios y vencimientos',()=>{
   const weekly={...base,schedule:{type:'weekly',weekdays:[1,2,3],from:'2026-11-01',until:'2026-11-30',startTime:'12:00',endTime:'16:00'}};
   const c=campaignContext(weekly,{now});
-  expect(c.scheduleText).toContain('lunes, martes, miércoles');
+  expect(c.scheduleText).toContain('Lunes, martes, miércoles');
   expect(c.hours).toBe('De 12:00 a 16:00');
   expect(c.until).toBe('30/11/2026');
   expect(ticketCampaignDetails(weekly).terms.join(' · ')).toContain('lun/mar/mié');
