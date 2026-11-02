@@ -170,6 +170,10 @@ export async function renderBackupPanel() {
         <div class="backup-row-desc">${b.daily ? 'Copia automática del ' + b.daily.date + ' (se hace al abrir el proyecto por primera vez en el día; se guarda en la misma carpeta que el proyecto y se conservan las de los últimos 14 días).' : 'Todavía no hay una copia diaria.'}</div></div>
         <button class="btn" ${b.daily ? '' : 'disabled'} onclick="SAHTEN.projectUi.restore('daily')">Restaurar respaldo de ayer</button></div>
       <div class="backup-divider"></div>
+      <div class="backup-row"><div><div class="backup-row-title">Respaldo automático por hora</div>
+        <div class="backup-row-desc">${b.hourly ? 'Copia horaria disponible. Se conserva el historial de las últimas 48 horas y se protege el proyecto antes de aplicar cambios remotos.' : 'Todavía no hay un respaldo horario.'}</div></div>
+        <button class="btn" ${b.hourly ? '' : 'disabled'} onclick="SAHTEN.projectUi.restore('hourly')">Restaurar último respaldo horario</button></div>
+      <div class="backup-divider"></div>
       <div class="backup-row"><div><div class="backup-row-title">Última estrategia</div>
         <div class="backup-row-desc">${b.preStrategy ? 'Hay una copia de cómo estaba el proyecto antes de aplicar la última estrategia o importar datos.' : 'No hay estrategias para deshacer.'}</div></div>
         <button class="btn" ${b.preStrategy ? '' : 'disabled'} onclick="SAHTEN.projectUi.restore('preStrategy')">Deshacer última estrategia</button></div>
@@ -191,7 +195,7 @@ export async function renderBackupPanel() {
     <div class="card"><div class="card-header"><div class="card-title">💬 ¿Algo no funciona?</div></div><div class="card-body"><div class="backup-row"><div><div class="backup-row-title">Contanos qué pasó</div><div class="backup-row-desc">Si encontrás un error o tenés una idea, dejala en GitHub (hace falta una cuenta gratis). Incluí qué estabas haciendo y la versión de la app.</div></div><a class="btn" href="https://github.com/danielcamposlozada/sahten/issues" target="_blank" rel="noopener">Reportar un problema</a></div></div></div>`;
 }
 
-const LABEL = { daily: 'Restaurar respaldo de ayer', preStrategy: 'Deshacer última estrategia', preRestore: 'Volver a lo anterior a la restauración' };
+const LABEL = { hourly: 'Restaurar último respaldo horario', daily: 'Restaurar respaldo de ayer', preStrategy: 'Deshacer última estrategia', preRestore: 'Volver a lo anterior a la restauración' };
 async function restore(kind) {
   try {
     const text = await session.readBackup(kind); if (!text) { w.alert('No hay respaldo para restaurar.'); return; }
