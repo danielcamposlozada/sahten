@@ -79,6 +79,12 @@ describe('decisión', () => {
     expect(mergeOps(f, null)).toBe(f);
   });
   it('lo que viaja a la nube no lleva imágenes', () => { expect(stripForSync(withProducts(2)).images).toEqual({}); });
+  it('la huella del proyecto no cambia entre equipos por su vínculo Supabase', () => {
+    const a=withProducts(2),b=withProducts(2);
+    a.online.supabase={url:'https://sahten.supabase.co',projectId:'cloud-id',anonKey:'publica-a'};
+    b.online.supabase={url:'https://sahten.supabase.co',projectId:'cloud-id',anonKey:'publica-b'};
+    expect(syncHash(a)).toBe(syncHash(b));
+  });
 });
 
 describe('dueño: local primero, nube por detrás', () => {
