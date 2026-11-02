@@ -1,0 +1,37 @@
+name: MP Checkout Pro sandbox — Chromium APRO/OTHE
+on:
+  push:
+    branches:
+      - feat/upsell-hmac-quote-preflight-20261101
+    paths:
+      - scripts/tests/mp-sandbox-browser-checkout.mjs
+      - .github/workflows/mp-sandbox-browser-checkout.yml
+permissions:
+  contents: read
+jobs:
+  sandbox-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      MP_SANDBOX_ACCESS_TOKEN: ${{ secrets.MP_SANDBOX_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Preparar navegador Chromium para pruebas de checkout ficticio
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Ejecutar compras de test sin eludir desafíos ni usar dinero real
+        run: node scripts/tests/mp-sandbox-browser-checkout.mjs
+      - name: Guardar capturas de prueba sin credenciales de producción
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp-checkout-pro-sandbox-browser
+          path: mp-checkout-e2e-artifacts/
+          if-no-files-found: ignore
+          retention-days: 2
