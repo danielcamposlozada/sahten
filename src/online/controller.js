@@ -167,6 +167,18 @@ export function createController(host) {
     async setPromotionCampaignState(id, enabled, expectedRevision = null) {
       return stateRpc('set_promotion_campaign_state',{p_campaign_id:id,p_enabled:enabled,p_expected_revision:expectedRevision});
     },
+    // Listado y edición en vivo de recomendaciones a precio completo.
+    // Nunca toca promociones porcentuales, precio de productos ni cobros.
+    async readCartRecommendations() {
+      if (!client || !host.conn.storeId) throw new SupabaseError('Conectá la tienda e iniciá sesión primero.',{code:'no_session'});
+      const ctx=context(),result=await ctx.client.rpc('get_store_cart_recommendations',{p_store_id:ctx.storeId});
+      check(ctx);return result;
+    },
+    async setCartRecommendations(rules,expectedRevision=null) {
+      return stateRpc('set_store_cart_recommendations',{
+        p_rules:rules,p_expected_revision:expectedRevision
+      });
+    },
     async readPromotionCampaignStates() {
       if (!client || !host.conn.storeId) return null;
       const ctx=context(),result=await ctx.client.rpc('get_promotion_campaign_states',{p_store_id:ctx.storeId});check(ctx);return result;
