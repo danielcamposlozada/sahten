@@ -4,7 +4,7 @@ import {auditProductPromotionEconomics} from '../src/core/promotion-economics-au
 const fixture=()=>{
  const products=[
   {id:'falafel',name:'Croquetas de Falafel',
-   pesoTotal:150,pesoUnit:'u',porcionCant:6,porcionUnit:'u',porciones:6,
+   pesoTotal:120,pesoUnit:'u',porcionCant:6,porcionUnit:'u',porciones:6,
    ingredients:[{ingId:'garbanzo',qty:3000,unit:'g'}],
    packaging:[{envId:'fritos',qty:1,unit:'u'}],
    combos:[{prodId:'tahini',qty:30,unit:'g',addPackaging:true}],
@@ -14,26 +14,26 @@ const fixture=()=>{
    packaging:[],combos:[]}
  ];
  return {products,ingredients:[
-   {id:'garbanzo',precioPkg:8762.5,grPaquete:3000,cantidad:3000,unit:'g'},
-   {id:'sesamo',precioPkg:3523.6,grPaquete:1000,cantidad:1000,unit:'g'}],
-  packs:[{id:'fritos',precioPkg:17041.7,cantidad:100}]};
+   {id:'garbanzo',precioPkg:9000,grPaquete:3000,cantidad:3000,unit:'g'},
+   {id:'sesamo',precioPkg:3000,grPaquete:1000,cantidad:1000,unit:'g'}],
+  packs:[{id:'fritos',precioPkg:16000,cantidad:100}]};
 };
 describe('Auditoría no autorizante de la ración de seis croquetas',()=>{
- it('separa ingredientes por 25 raciones pero usa tahini y envase una vez por venta',()=>{
+ it('separa ingredientes por 20 raciones pero usa tahini y envase una vez por venta',()=>{
   const result=auditFalafelRacion(fixture());
-  expect(result.batchCroquettes).toBe(150);
-  expect(result.batchRations).toBe(25);
-  expect(result.ingredientCostPerRation).toBe(350.5);
-  expect(result.fullTahiniCostPerSale).toBe(105.71);
-  expect(result.fullPackagingCostPerSale).toBe(170.42);
-  expect(result.correctedCostEstimate).toBe(626.63);
-  expect(result.legacyCostPerUnit).toBe(361.55);
-  expect(result.directCostUnderstatement).toBe(265.08);
+  expect(result.batchCroquettes).toBe(120);
+  expect(result.batchRations).toBe(20);
+  expect(result.ingredientCostPerRation).toBe(450);
+  expect(result.fullTahiniCostPerSale).toBe(90);
+  expect(result.fullPackagingCostPerSale).toBe(160);
+  expect(result.correctedCostEstimate).toBe(700);
+  expect(result.legacyCostPerUnit).toBe(462.5);
+  expect(result.directCostUnderstatement).toBe(237.5);
   expect(result.costReconstructionComplete).toBe(true);
   expect(result.verified).toBe(false);
   expect(result.discountApproved).toBe(false);
  });
- it('el auditor general marca como incompleto el cálculo tradicional que divide salsa y envase /25',()=>{
+ it('el auditor general marca como incompleto el cálculo tradicional que divide salsa y envase /20',()=>{
   const data=fixture();
   data.channels=[{id:'mostrador',name:'Mostrador',commission:0,enabled:true}];
   data.project={estUnitsMonth:100};
@@ -41,7 +41,7 @@ describe('Auditoría no autorizante de la ración de seis croquetas',()=>{
   const result=auditProductPromotionEconomics(data,'falafel');
   expect(result.sourceComplete).toBe(false);
   expect(result.issues).toContain('sale_tahini_and_packaging_diluted_in_batch_cost');
-  expect(result.sixCroquetteSaleCostEstimate).toBe(626.63);
+  expect(result.sixCroquetteSaleCostEstimate).toBe(700);
   expect(result.discountApproved).toBe(false);
  });
  it('si falta precio de envase no valida reconstrucción y no autoriza descuento',()=>{
