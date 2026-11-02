@@ -12,7 +12,12 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   if(!s)return false;if(s.owner===user.id)return true;
   return !!s.project_id&&await request('/rest/v1/rpc/has_project_role',{method:'POST',token:user.token,body:{pid:s.project_id,roles}})===true;
  }
- const repo={run,menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,
+ const repo={run,
+  lookupCoupon:(sid,digest)=>request('/rest/v1/rpc/sahten_coupon_backend',{method:'POST',
+    body:{action:'lookup',args:{store_id:sid,code_digest:digest}}}),
+  confirmCouponOrder:(sid,digest,requestId,payload)=>request('/rest/v1/rpc/sahten_coupon_confirm_order',{method:'POST',
+    body:{p_store_id:sid,p_digest:digest,p_request_id:requestId,p_payload:payload}}),
+  menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,
   promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
  repo.posRules=async sid=>{const store=(await request('/rest/v1/stores?select=project_id&id=eq.'+sid))?.[0];if(!store?.project_id)return {};const project=(await request('/rest/v1/projects?select=public&id=eq.'+store.project_id))?.[0];const pub=project?.public;const availability=await request('/rest/v1/rpc/get_product_sales_availability',{method:'POST',body:{p_store_id:sid}});const pauses=new Map((availability.sales||[]).map(p=>[p.id,p.salesAvailability]));return {...(pub?.sales||{}),catalog:pub?.products?.map(p=>({...p,salesAvailability:pauses.get(p.id)||p.salesAvailability})),project:pub?.project,tienda:pub?.online?.tiendaConfig};};
  repo.savePos=(sid,lid,p)=>request('/rest/v1/rpc/validate_delivery_pos_record',{method:'POST',body:{sid,lid,p}});
