@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {auditFalafelRacion} from '../src/core/upsell-falafel-racion-audit.js';
+import {auditProductPromotionEconomics} from '../src/core/promotion-economics-audit.js';
 const fixture=()=>{
  const products=[
   {id:'falafel',name:'Croquetas de Falafel',
@@ -30,6 +31,17 @@ describe('Auditoría no autorizante de la ración de seis croquetas',()=>{
   expect(result.directCostUnderstatement).toBe(265.08);
   expect(result.costReconstructionComplete).toBe(true);
   expect(result.verified).toBe(false);
+  expect(result.discountApproved).toBe(false);
+ });
+ it('el auditor general marca como incompleto el cálculo tradicional que divide salsa y envase /25',()=>{
+  const data=fixture();
+  data.channels=[{id:'mostrador',name:'Mostrador',commission:0,enabled:true}];
+  data.project={estUnitsMonth:100};
+  data.gastosOp=[];data.gastosS=[];
+  const result=auditProductPromotionEconomics(data,'falafel');
+  expect(result.sourceComplete).toBe(false);
+  expect(result.issues).toContain('sale_tahini_and_packaging_diluted_in_batch_cost');
+  expect(result.sixCroquetteSaleCostEstimate).toBe(626.63);
   expect(result.discountApproved).toBe(false);
  });
  it('si falta precio de envase no valida reconstrucción y no autoriza descuento',()=>{
