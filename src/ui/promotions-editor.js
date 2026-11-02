@@ -233,9 +233,14 @@ export function installPromotionsEditor(w=window) {
     const rows=(live.campaigns||[]).map(row=>{
       const record=liveCatalog().find(c=>c.id===row.id);
       const state=livePromotionStatus(row,record);
+      const context=record?campaignContext(record,{
+        paymentPercent:liveManagement?.paymentPercent||10,productNames:liveNames()
+      }):null;
       return '<div class="promo-row" data-live-campaign="'+esc(row.id)+'"><div><strong>'
         +esc(record?.name||row.id)+'</strong><p role="status">'+esc(state.label)
-        +'</p></div>'+liveSwitch(row.id)+'</div>';
+        +'</p>'+(context?'<small>'+esc(context.scheduleText+' · '+context.hours+' · '+context.dates)
+        +'</small><small>'+esc(context.discount+' · '+context.channelNames.join(' y '))
+        +'</small>':'')+'</div>'+liveSwitch(row.id)+'</div>';
     }).join('');
     return '<section class="promo-card"><h3>Campañas publicadas · control en vivo</h3>'
       +'<p>'+esc(banner)+'</p>'
@@ -296,10 +301,17 @@ export function installPromotionsEditor(w=window) {
         :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
       const published=publishedRecommendation(item.id);
       const isPublished=connected&&item.type==='campaigns'&&live.campaigns.some(r=>r.id===item.id);
+      const record=isPublished?liveCatalog().find(r=>r.id===item.id):null;
+      const ctx=record?campaignContext(record,{
+        paymentPercent:liveManagement?.paymentPercent||10,productNames:liveNames()
+      }):null;
+      const shortContext=ctx?ctx.scheduleText+' · '+ctx.channelNames.join(' / ')
+        +' · '+ctx.discount+' · '+ctx.expiryText:'';
       return '<article class="promo-overview-card"><span class="promo-overview-category">'+esc(item.label)+'</span>'
         +'<span class="promo-overview-status is-'+esc(item.status)+'">'+esc(badges[item.status]||'Inactiva')+'</span>'
         +'<strong>'+esc(item.name)+'</strong>'
-        +'<span class="promo-overview-detail">'+esc(item.detail)+'</span>'
+        +'<span class="promo-overview-detail">'+esc(ctx?shortContext:item.detail)+'</span>'
+        +(ctx?'<span class="promo-overview-foot">'+esc(ctx.cap+' · '+ctx.extraRequirement)+'</span>':'')
         +'<span class="promo-overview-foot">'+(isPublished?'Campaña publicada · sincronizada desde la web':item.type==='crossSells'&&published?'Confirmada con el servidor':'Planificación local')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +(isPublished?'':draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item))
@@ -516,6 +528,9 @@ export function installPromotionsEditor(w=window) {
         const p=el.querySelector('[role="status"]');if(p)p.textContent=liveSaveFeedback;
       }finally{liveSaveBusy=false;}
     });
+    root.querySelectorAll('[data-live-open]').forEach(button=>button.addEventListener('click',()=>{
+      selected=button.dataset.liveOpen;liveEditDirty=false;tab='campaigns';render();
+    }));
     root.querySelectorAll('[data-live-toggle]').forEach(button=>button.addEventListener('click',async()=>{
       if(!canOperate()||liveBusy||!live.published)return;
       const row=live.campaigns.find(x=>x.id===button.dataset.liveToggle);if(!row)return;
