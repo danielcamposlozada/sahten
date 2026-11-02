@@ -2,6 +2,11 @@
 
 ## Sin publicar
 
+- **Verificación de promociones con datos reales:** nuevo RPC autenticado solo lectura para complementos con descuento, mejoras y cupones: comprueba precio y producto publicado, disparadores, límite total de descuentos, costo base y margen estimado. Muestra margen y presupuesto máximo disponible antes de gastos extra, sin ofrecer falsa aprobación comercial.
+- **Centro de Promociones:** botón «Verificar con datos reales del servidor» por propuesta y «Verificar todos los borradores» en vista general; muestra hora, checks pendientes y tabla de rentabilidad, invalida resultados al editar o cambiar de tienda.
+- **Cupones:** selección de productos elegibles para verificar su rentabilidad por SKU. No se emiten ni canjean códigos ni se habilitan descuentos hasta completar el checkout transaccional.
+- **Seguridad:** el RPC valida owner/admin, no entrega costos a usuarios anónimos, nunca modifica el menú ni aplica promociones. El botón de publicación de descuento sigue bloqueado mientras falten aprobaciones.
+
 ## 0.4.41
 
 - **Gestión integral de borradores:** los programas de cupones ahora se pueden crear, editar, duplicar y eliminar sin emitir códigos ni modificar pedidos. Se validan descuento de hasta 10 puntos adicionales, compra mínima, tope, vigencia y canal; al guardar quedan desactivados.

@@ -168,6 +168,16 @@ export function createController(host) {
     async publishPromotionCampaignDraft(campaign) {
       return stateRpc('publish_promotion_campaign_draft', {p_campaign:campaign});
     },
+    // Verificación real y SOLO LECTURA. No publica, emite ni cambia ofertas.
+    async verifyPromotionDraft(type,draft) {
+      if(!client||!host.conn.storeId)throw new SupabaseError(
+        'Conectá la tienda e iniciá sesión para verificar costos reales.',{code:'no_session'});
+      const ctx=context();
+      const result=await ctx.client.rpc('verify_promotion_draft',{
+        p_store_id:ctx.storeId,p_type:type,p_draft:draft
+      });
+      check(ctx);return result;
+    },
     // Acciones autenticadas; el RPC verifica rol propietario/administrador y versión.
     async setPromotionCampaignState(id, enabled, expectedRevision = null) {
       return stateRpc('set_promotion_campaign_state',{p_campaign_id:id,p_enabled:enabled,p_expected_revision:expectedRevision});
