@@ -1,12 +1,22 @@
 import { deliveryAddressLines, cashChangeQuote } from '../core/order-details.js';
 const escapeReceipt = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Cuatro formatos aprobados: A (general), B (descuento), C (cupón), D (especial).
+// Solo usa snapshots de una campaña efectivamente publicada; jamás emite códigos.
 function promotionalFooter(snapshot,esc) {
   if(!snapshot||!['campaign','coupon'].includes(snapshot.kind))return '';
-  const headline=esc(snapshot.headline||'Beneficios SAHTEN');
-  const detail=snapshot.kind==='coupon'
-    ? '<p class="receipt-promocode">'+esc(snapshot.code||'')+'</p><p>'+esc(snapshot.label||'')+'</p>'
-    : snapshot.startsOn?'<p>Disponible desde '+esc(snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)+'/'+snapshot.startsOn.slice(0,4))+'</p>':'';
-  return '<section class="receipt-promo"><strong>'+headline+'</strong>'+detail+'<p>Consultá las condiciones en SAHTEN.</p></section>';
+  if(snapshot.kind==='coupon' && (!snapshot.code || !snapshot.expiresOn))return '';
+  const text=esc(snapshot.headline||'Conocé los beneficios SAHTEN');
+  const date=snapshot.startsOn?'Desde '+esc(snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)):'';
+  if(snapshot.kind==='coupon')return '<section class="receipt-promo receipt-promo--C" aria-label="Cupón de próxima compra">'
+    +'<div class="receipt-promo-head">PARA TU PRÓXIMA COMPRA</div>'
+    +'<p class="receipt-promo-label">'+text+'</p>'
+    +'<p class="receipt-promocode">'+esc(snapshot.code)+'</p>'
+    +'<p>'+esc(snapshot.label||'Válido hasta '+snapshot.expiresOn)+'</p>'
+    +'<small>Mostralo en caja o ingresalo online. Un solo uso.</small></section>';
+  const layout=snapshot.layout==='D'?'D':/\d{1,2}\s*%|OFF|descuento/i.test(snapshot.headline||'')?'B':'A';
+  if(layout==='D')return '<section class="receipt-promo receipt-promo--D"><div class="receipt-promo-head">◆ SAHTEN ◆</div><strong>UNA PROPUESTA ESPECIAL</strong><p>'+text+'</p>'+(date?'<small>'+date+'</small>':'')+'</section>';
+  if(layout==='B')return '<section class="receipt-promo receipt-promo--B"><div class="receipt-promo-head">PROMOCIÓN DE DESCUENTO</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'<small>Se aplica según los días, productos y medios de pago participantes.</small></section>';
+  return '<section class="receipt-promo receipt-promo--A"><div class="receipt-promo-head">NOVEDADES SAHTEN</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'</section>';
 }
 /** El motor imprime importes confirmados; no calcula ni otorga promociones.
  * Solo desglosa las cifras del snapshot cuando cuadran exactamente con el
@@ -66,7 +76,7 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 .receipt-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 4px;font-size:${compact?11:13}px;padding:2px 0}.receipt-row span{min-width:0}.receipt-row strong{flex:0 0 auto;max-width:100%;margin-left:auto;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.total-row{border-top:1px solid #000;margin-top:3px;padding-top:4px;font-size:${totalSize}px;font-weight:800}
 .payment,.notes{font-size:${compact?11:13}px;font-weight:600;border-top:1px dashed #000;margin-top:4px;padding-top:3px}.notes{white-space:pre-wrap}.footer{text-align:center;font-size:${metaSize}px;margin-top:4px}
 .receipt-review{text-align:center;border-top:1px dashed #000;margin-top:5px;padding-top:4px;break-inside:avoid;font-size:${compact?11:13}px;line-height:1.2;font-weight:400}.receipt-google-brand{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:3px;font-size:${compact?13:15}px;font-weight:700}.receipt-google-logo{width:${compact?4:5}mm;height:${compact?4:5}mm;filter:grayscale(1) brightness(0)}.receipt-review-qr{display:block;width:30mm;height:30mm;max-width:100%;margin:3px auto}.receipt-review-help{display:none}
-.receipt-promo{text-align:center;border-top:1px dashed #000;margin-top:5px;padding:5px 2px;break-inside:avoid;font-size:${compact?11:13}px}.receipt-promo strong{display:block;font-weight:800}.receipt-promo p{margin-top:3px}.receipt-promocode{font-size:${compact?14:17}px;font-weight:800;letter-spacing:.5px}
+.receipt-promo{text-align:center;border:1.4px solid #000;margin-top:5px;padding:2px;break-inside:avoid;font-size:${compact?10:12}px;line-height:1.2}.receipt-promo-head{background:#000;color:#fff;font-weight:800;font-size:${compact?9:11}px;letter-spacing:.3px;padding:3px 2px}.receipt-promo strong{display:block;font-size:${compact?13:16}px;font-weight:900;padding:4px 2px 2px}.receipt-promo p{margin-top:2px}.receipt-promo small{display:block;font-size:${compact?8.5:10}px;margin:3px 2px}.receipt-promo--B strong{font-size:${compact?15:20}px}.receipt-promo--C{border-style:dashed}.receipt-promo--C .receipt-promocode{font-size:${compact?15:19}px;font-weight:900;letter-spacing:.5px;border-block:1px dashed #000;padding:5px 0;margin-top:3px}.receipt-promo--D strong{font-size:${compact?11:14}px}
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
@@ -75,4 +85,26 @@ ${delivery?row('Envío',order.shipping?money(order.shipping):'Gratis'):''}${orde
 ${order.paymentName || order.paymentMethod?'<div class="payment">'+esc(order.paymentName || ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago'})[order.paymentMethod] || order.paymentMethod)+'</div>':''}
 ${cash.specified && cash.valid?row('Paga con',money(cash.tendered))+row('Vuelto',money(cash.change)):''}
 ${order.notes?'<div class="notes">Nota: '+esc(order.notes)+'</div>':''}<div class="footer">Gracias por tu compra</div>${reviewHtml}${promotionalFooter(order.promotionTicketSnapshot,esc)}</body></html>`;
+}
+
+/**
+ * Comanda estrictamente operativa: sin importes, medio de pago, QR, publicidad,
+ * descuentos ni datos financieros del cliente. Se conserva la dirección para delivery.
+ */
+export function buildKitchenReceipt(order, {paper, logoHtml=''}={}) {
+  const esc=escapeReceipt;
+  const number=esc(String(order.num||0).padStart(4,'0'));
+  const delivery=order.source==='delivery'||order.orderType==='delivery';
+  const address=delivery?deliveryAddressLines(order):[];
+  const date=new Date(order.createdAt);
+  const stamp=Number.isNaN(date.getTime())?'':esc(date.toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'}));
+  const items=(order.items||[]).map(i=>'<div class="k-item"><b>'+esc(i.qty)+' × '+esc(i.name)+'</b></div>').join('');
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comanda #'+number+'</title><style>'
+    +'@page{margin:0;size:'+esc(paper.pageSize||'auto')+'}'
+    +'*{box-sizing:border-box}body{width:'+Number(paper.contentMm)+'mm;margin:0;padding:1mm;color:#000;background:white;font-family:Arial,Helvetica,sans-serif;font-size:12px;overflow-wrap:anywhere;line-height:1.25}'
+    +'.logo-wrap{text-align:center}.logo-img,.logo-svg{max-width:100%;max-height:8mm}.brand{text-align:center;font-weight:bold}.k-head{text-align:center;font-size:16px;font-weight:900;padding:4px 0;border-block:2px solid #000}.k-type{font-weight:900;font-size:15px;text-align:center;margin:4px 0}.k-customer{font-weight:700;margin:5px 0}.k-item{padding:6px 1px;border-bottom:1px dashed #000;font-size:13px}.k-address{margin:5px 0;padding:4px 0;border-block:1px solid #000}.k-note{padding:6px 1px;border:1px solid #000;white-space:pre-wrap;margin-top:6px}</style></head><body>'
+    +logoHtml+'<div class="k-head">COMANDA #'+number+'</div><div class="k-type">'+(delivery?'DELIVERY':'RETIRO / MOSTRADOR')+'</div>'
+    +'<div style="text-align:center">'+stamp+'</div><div class="k-customer">'+esc(order.customerName||'Consumidor Final')+'</div>'
+    +(delivery?'<div class="k-address"><b>ENTREGAR EN</b>'+address.map(a=>'<div>'+esc(a)+'</div>').join('')+(order.customerPhone?'<div>Contacto: '+esc(order.customerPhone)+'</div>':'')+'</div>':'')
+    +'<div>'+items+'</div>'+(order.notes?'<div class="k-note"><b>INDICACIONES</b><div>'+esc(order.notes)+'</div></div>':'')+'</body></html>';
 }
