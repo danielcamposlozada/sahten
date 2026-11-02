@@ -1,0 +1,23 @@
+name: MP sandbox — cargos APRO/OTHE por API (NO Checkout Pro)
+on:
+  push:
+    branches:
+      - feat/upsell-hmac-quote-preflight-20261101
+    paths:
+      - scripts/tests/mp-sandbox-api-payments.mjs
+      - .github/workflows/mp-sandbox-api-payments.yml
+permissions:
+  contents: read
+jobs:
+  mp-test-payments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MP_SANDBOX_ACCESS_TOKEN: ${{ secrets.MP_SANDBOX_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Procesar solo tarjetas públicas de prueba en vendedor ficticio
+        run: node scripts/tests/mp-sandbox-api-payments.mjs
