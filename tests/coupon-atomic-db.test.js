@@ -22,6 +22,7 @@ beforeAll(async()=>{
  db=new PGlite();
  await db.exec(read('tests/fixtures/supabase-prelude.sql'));
  await db.exec(read('supabase/schema.sql'));
+ await db.exec('create schema if not exists sahten_private;create schema if not exists sahten_catalog_private;');
  await db.query("insert into auth.users(id,email) values($1,'test@invalid.test')",[owner]);
  storeId=(await db.query("insert into public.stores(slug,name,owner) values('coupon-test','Cupón test',$1) returning id",[owner])).rows[0].id;
  await db.exec(read('supabase/migrations/20261101000100_promotion_coupons.sql'));
