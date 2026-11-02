@@ -674,6 +674,12 @@ function orderSetStatus(orderId, status) {
   if (final.includes(status)) o.completedAt = o.updatedAt;
   else delete o.completedAt;
   _saveOrders();
+  // Al aceptar un pedido recibido de la web, imprimir el TICKET DE CLIENTE
+  // únicamente si está activada la impresión automática para pedidos online.
+  // La comanda de cocina queda reservada para el botón explícito de la tarjeta.
+  if (previous === 'pendiente' && status === 'en_preparacion' && SAHTEN.orderWorkflow?.isOnlineOrder(o)) {
+    SAHTEN.receipts.enqueue(o,{origin:'online'});
+  }
   if (mostradorTab === 'delivery' && typeof _renderDeliveryTab === 'function') _renderDeliveryTab();
   else if (mostradorTab === 'historial') _renderHistorialTab();
 }
