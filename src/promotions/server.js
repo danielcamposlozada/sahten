@@ -12,6 +12,23 @@ function randomCode(){
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=crypto.getRandomValues(new Uint8Array(20));
   return 'SHT-'+[...bytes].map(n=>chars[n%chars.length]).join('');
 }
+/** Este backend NO genera cupones mientras el programa y la economía no
+ * estén activos y aprobados. El cliente nunca controla este policy. */
+export function couponIssuePolicy(promo,program,{paymentMethods=['efectivo','transferencia']}={}){
+ if(!promo||promo.enabled!==true)return {allowed:false,reason:'promotions_disabled'};
+ const programConfig=promo.couponPrograms?.[program];
+ if(!programConfig||programConfig.enabled!==true)return {allowed:false,reason:'program_disabled'};
+ const review=promo.verifiedOrderCosts;
+ if(review?.verified!==true||!review.reviewedAt||!review.reviewedBy||
+  !Number.isFinite(review.additionalOrderCost)||review.additionalOrderCost<0||
+  !Number.isFinite(review.shippingSubsidy)||review.shippingSubsidy<0)
+  return {allowed:false,reason:'economic_review_missing'};
+ const methods=promo.activationPolicy?.allowedPromotionPaymentMethods;
+ if(!Array.isArray(methods)||!paymentMethods.every(x=>methods.includes(x))||
+   methods.some(x=>!['efectivo','transferencia'].includes(x)))
+  return {allowed:false,reason:'payment_channels_unapproved'};
+ return {allowed:true,reason:null,config:programConfig};
+}
 function endOfDate(date){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))throw new Error('Fecha límite inválida.');
   const d=new Date(date+'T23:59:59.999-03:00');
@@ -49,6 +66,14 @@ export function createCouponHandler({url,serviceKey,anonKey,fetchImpl=fetch}) {
       if(route!=='issue')return reply({error:'unknown_action'},404);
       const purpose=String(body.program||'');
       if(!['first_online','second_online','manual'].includes(purpose))return reply({error:'invalid_program'},400);
+      // Leer configuración PRIVADA con service_role; nunca aceptar estado de
+      // campañas o costos proveniente de body/cliente.
+      const store=await request('/rest/v1/stores?select=project_id&id=eq.'+storeId);
+      const projectId=store?.[0]?.project_id;
+      if(!validUuid(projectId))return reply({error:'store_not_found'},404);
+      const projects=await request('/rest/v1/projects?select=data&id=eq.'+projectId);
+      const policy=couponIssuePolicy(projects?.[0]?.data?.promotions,purpose);
+      if(!policy.allowed)return reply({error:'coupon_issue_disabled',reason:policy.reason},409);
       const percent=Number(body.extraPercent),min=Number(body.minEligibleSubtotal||0);
       const max=body.maxExtraAmount==null?null:Number(body.maxExtraAmount);
       if(!Number.isFinite(percent)||percent<=0||percent>10||!Number.isFinite(min)||min<0||max!=null&&(!Number.isFinite(max)||max<0))
