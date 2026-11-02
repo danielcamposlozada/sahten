@@ -86,8 +86,8 @@ export function installPromotionsEditor(w=window) {
     root.innerHTML='<div class="promo-heading"><div><h2>Centro de Promociones</h2><p>Campañas, calendario, cupones, tickets y rentabilidad · SAHTEN</p></div>'
       +'<span class="promo-pill">'+(state.enabled?'Motor local activado':'Modo preparación · sin publicar')+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Vigentes en calendario</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
-      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor():tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
+      +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['campaigns','Campañas'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
+      + (tab==='campaigns' ? campaignEditor(state,c,canEdit) : tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor(state):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor(state,canEdit):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">Borradores guardados dentro del proyecto .sahten. La publicación online y el canje definitivo requieren validación del servidor. No se ejecutan desde esta pantalla.</p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();}));
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>refreshLive());
@@ -190,9 +190,39 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-calendar">'+['L','M','X','J','V','S','D'].map(d=>'<b>'+d+'</b>').join('')+cells+'</div>'
       +'<p>La campaña de tablas se calcula automáticamente como el segundo y tercer viernes y sábado de cada mes. Los domingos permanecen excluidos.</p></section>';
   }
-  function couponEditor(){
-    return '<section class="promo-card"><h3>Cupones y recompensas</h3><p>Primera compra online: mínimo $30.000, 5 puntos adicionales. Segunda compra: mínimo $40.000, 10 puntos adicionales y máximo $4.000 extra.</p>'
-      +'<div class="promo-note"><strong>Emisión y canje:</strong> deben verificarse con el servidor y un cliente identificado. Una comanda reimpresa conserva el mismo cupón; la fecha se muestra como '+esc(expiryLabel('2026-11-14'))+'. Esta vista no crea cupones utilizables.</div></section>';
+  function draftItemsEditor(state,key,title){
+    const items=Array.isArray(state[key])?state[key]:[];
+    const cards=items.map(item=>{
+      const pct=Array.isArray(item.discountTiers)&&item.discountTiers.length
+        ? 'Descuento total según cesta: '+item.discountTiers.map(t=>esc(t.totalDiscountPercent)+'% desde '+fmt(t.minEligibleNetSubtotal)).join(' · ')
+        : Number(item.extraPercent)>0?'Adicional propuesto: '+esc(item.extraPercent)+' puntos porcentuales':'Sin descuento adicional';
+      const products=Array.isArray(item.productIds)?item.productIds:Array.isArray(item.productId)?item.productId:[item.productId].filter(Boolean);
+      return '<article class="promo-row promo-draft-item"><div><strong>'+esc(item.name||item.id)+'</strong>'
+        +'<p>'+esc(item.id)+' · '+(item.enabled?'Marcada en borrador':'Desactivada')+'</p>'
+        +'<p>'+pct+'</p>'
+        +(item.unitDefinition?.portionCroquettes?'<p>Ración: '+esc(item.unitDefinition.portionCroquettes)+' croquetas por unidad</p>':'')
+        +(products.length?'<small>SKU: '+products.map(esc).join(', ')+'</small>':'')
+        +'</div></article>';
+    }).join('');
+    return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
+      +'<p>Configuración guardada en el proyecto. Ninguna propuesta de este apartado se publica por abrir esta pantalla.</p>'
+      +'<div class="promo-draft-list">'+(cards||'<p>No hay propuestas configuradas.</p>')+'</div>'
+      +'<div class="promo-note">Para ofrecer descuentos reales faltan aprobación de costos, cotización del servidor y activación individual. Mercado Pago queda excluido de esta etapa.</div></section>';
+  }
+  function couponEditor(state){
+    const entries=Object.entries(state.couponPrograms||{});
+    const rows=entries.map(([id,program])=>'<article class="promo-row promo-draft-item"><div><strong>'+esc(program.name||id)+'</strong>'
+      +'<p>'+esc(id)+' · '+(program.enabled?'Marcado en borrador':'Desactivado')+'</p>'
+      +'<p>'+esc(program.extraPercent??0)+' puntos adicionales · Compra mínima '+fmt(program.minEligibleSubtotal)
+      +(program.maxExtraAmount!=null?' · Tope '+fmt(program.maxExtraAmount):'')
+      +' · Vigencia '+esc(program.validDays??'?')+' días</p>'
+      +'<small>Canal: '+esc(program.channel||'online')+(program.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
+      +'</div></article>').join('');
+    const methods=state.activationPolicy?.allowedPromotionPaymentMethods;
+    return '<section class="promo-card"><h3>Cupones y recompensas ('+entries.length+')</h3>'
+      +'<p>Métodos elegibles para promociones nuevas: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
+      +'<div class="promo-draft-list">'+(rows||'<p>No hay programas configurados.</p>')+'</div>'
+      +'<div class="promo-note"><strong>Emisión y canje:</strong> requieren servidor, cliente identificado, rentabilidad verificada y confirmación de la compra. Una reimpresión conserva el cupón original; nunca crea otro. Esta pantalla no emite códigos utilizables.</div></section>';
   }
   function ticketEditor(state,canEdit){
     return '<section class="promo-card"><h3>Publicidad en comanda única</h3><p>Siempre primero: datos de cocina, entrega, importes y método de pago. Después: QR Google Reviews y una publicidad seleccionada.</p>'
