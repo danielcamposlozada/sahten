@@ -3,7 +3,7 @@
 // No sabe nada del DOM ni de los módulos viejos: recibe `collect()` y `apply()` por inyección.
 // ═══════════════════════════════════════════════════════════
 import { migrate, serialize, contentHash, fileNameFor, mergeUnknown, emptyFile, APP_VERSION } from './schema.js';
-import { dailyBackup, hourlyBackup, preStrategyBackup, preRestoreBackup, listBackups, listDailies, dailyName } from './backups.js';
+import { dailyBackup, hourlyBackup, preSyncBackup, preStrategyBackup, preRestoreBackup, listBackups, listDailies, dailyName } from './backups.js';
 
 export const AUTOSAVE_MS = 2000;
 const uid = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -213,7 +213,13 @@ export function createSession(deps) {
     async backupBeforeSync() {
       if (!s.id || !deps.backupStore) throw new Error('No se puede respaldar el proyecto antes de sincronizar.');
       const { file } = buildFile();
-      return hourlyBackup(deps.backupStore, s.id, bname(), serialize(file), now());
+      return preSyncBackup(deps.backupStore, s.id, bname(), serialize(file), now());
+    },
+    /** Copia rotativa de la hora, sin reescribir la instantánea pre-sync. */
+    async backupHourly() {
+      if(!s.id||!deps.backupStore)return false;
+      const {file}=buildFile();
+      return hourlyBackup(deps.backupStore,s.id,bname(),serialize(file),now());
     },
     async backupBeforeStrategy() {
       const { file } = buildFile();
@@ -222,7 +228,7 @@ export function createSession(deps) {
     backups: () => listBackups(deps.backupStore, s.id, s.name, now()),
     async readBackup(kind) {
       const b = await listBackups(deps.backupStore, s.id, s.name, now());
-      const name = kind === 'daily' ? (b.daily && b.daily.name) : kind === 'hourly' ? b.hourly : kind === 'preStrategy' ? b.preStrategy : kind === 'preRestore' ? b.preRestore : null;
+      const name = kind === 'daily' ? (b.daily && b.daily.name) : kind === 'hourly' ? b.hourly : kind === 'preSync' ? b.preSync : kind === 'preStrategy' ? b.preStrategy : kind === 'preRestore' ? b.preRestore : null;
       return name ? deps.backupStore.get(s.id, name) : null;
     },
     /** Restaura un respaldo: guarda lo de hoy en «pre-restauración», escribe el respaldo tal cual y lo carga. */
