@@ -50,7 +50,14 @@ export function createController(host) {
     const o = toLocalOrder(row, host.orders.list());
     if (!o) return;
     host.orders.add(o, { initial:initial||!isActive });
-    if(isActive) host.notify({ sound: !initial, title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'), body: o.customerName + ' · 
+    if (isActive) {
+      host.notify({
+        sound: !initial,
+        title: 'Nuevo pedido online #' + String(o.num).padStart(4, '0'),
+        body: o.customerName + ' - ARS ' + Math.round(o.total).toLocaleString('es-AR') + (o.source === 'delivery' ? ' - delivery' : ' - retiro')
+      });
+    }
+    host.refresh();
   }
 
   async function startFeed() {
