@@ -33,12 +33,12 @@ describe('integración v1: orden y ticket',()=>{
       subtotal:16850,discountAmount:1685,total:15165,notes:'Para llevar',
       promotionTicketSnapshot:snapshot},{paper:receiptProfile(58),reviewHtml:'<div class="receipt-review">GOOGLE REVIEWS QR</div>'});
     expect(html).toContain('ORDEN #0055');expect(html).toContain('Para llevar');
-    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo">'));
+    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo"'));
     expect(html.match(/<body>/g)).toHaveLength(1);
   });
   it('reimprimir utiliza la misma instantánea de publicidad; no genera un cupón',()=>{
     const o={num:9,createdAt:at,items:[],source:'pickup',subtotal:100,total:100,
-      promotionTicketSnapshot:{kind:'coupon',code:'SHT-ABCDEF',label:'Válido hasta el 14/11/2026',headline:'Tu próxima compra'}};
+      promotionTicketSnapshot:{kind:'coupon',couponId:'new-issued-after-order',code:'SHT-ABCDEF',expiresOn:'2026-11-14',label:'Válido hasta el 14/11/2026',headline:'Tu próxima compra'}};
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
   });
