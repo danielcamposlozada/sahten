@@ -33,7 +33,7 @@ describe('integración v1: orden y ticket',()=>{
       subtotal:16850,discountAmount:1685,total:15165,notes:'Para llevar',
       promotionTicketSnapshot:snapshot},{paper:receiptProfile(58),reviewHtml:'<div class="receipt-review">GOOGLE REVIEWS QR</div>'});
     expect(html).toContain('ORDEN #0055');expect(html).toContain('Para llevar');
-    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo' ));
+    expect(html.indexOf('GOOGLE REVIEWS QR')).toBeLessThan(html.indexOf('<section class="receipt-promo'));
     expect(html.match(/<body>/g)).toHaveLength(1);
   });
   it('reimprimir utiliza la misma instantánea de publicidad; no genera un cupón',()=>{
@@ -42,7 +42,7 @@ describe('integración v1: orden y ticket',()=>{
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
     expect(buildReceipt(o,{paper:receiptProfile(58)})).toContain('SHT-ABCDEF');
   });
-  it('comanda no contiene importes, cupones, publicidad ni QR de reseñas',()=>{
+  it('comanda excluye precios, cupones, QR y publicidad',()=>{
     const order={num:15,createdAt:at,source:'delivery',address:'Calle 100',customerName:'María',
       customerPhone:'1100000000',notes:'Sin cebolla',subtotal:18000,discountAmount:2700,total:15300,
       items:[{productId:'p',name:'Falafel',qty:2,lineTotal:18000}],
@@ -51,15 +51,7 @@ describe('integración v1: orden y ticket',()=>{
     expect(k).toContain('2 × Falafel');
     expect(k).toContain('Sin cebolla');
     expect(k).not.toContain('SHT-TEST');
-    expect(k).not.toContain('
-    const valid={status:'entregado',promotionSnapshot:{version:1,subtotal:10000,discount:1500,netSubtotal:8500,
-      appliedPromotionIds:['campaign'],lines:[{appliedPromotionId:'campaign',qty:1,net:8500,promotionDiscount:500}]}};
-    const r=promotionReport([valid,{...valid,status:'cancelado'}]);
-    expect(r.orders).toBe(1);expect(r.promotedOrders).toBe(1);
-    expect(r.byPromotion.campaign.discount).toBe(500);
-  });
-});
-);
+    expect(k).not.toContain(String.fromCharCode(36));
     expect(k).not.toContain('receipt-review');
     expect(k).not.toContain('receipt-promo');
   });
