@@ -44,8 +44,8 @@ describe('HTML final del checkout - compilación segura de ofertas',()=>{
   const m=menu();m.store={name:'Sahten',currency:{symbol:'$',locale:'es-AR'}};
   m.config={enabled:true,showPrices:true};
   const html=buildIndexHtml(m,{storefront:true});
-  const script=[...html.matchAll(/<script(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
-   .map(x=>x[1]).find(x=>x.includes('function upsellPanel()'));
+  const script=html.split('<script>').slice(1).map(x=>x.split('</script>')[0])
+   .find(x=>x.includes('function upsellPanel()'));
   expect(script).toBeTruthy();
   expect(()=>new Function(script)).not.toThrow();
   expect(script).toContain("mpCall('offer'");
