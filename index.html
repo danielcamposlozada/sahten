@@ -919,14 +919,14 @@
     <p class="custom-hint" role="status" aria-live="polite">Consultá las impresoras instaladas en este equipo.</p>
   </div>
   <fieldset style="border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px"><legend style="font-weight:700;padding:0 5px">Mostrador</legend>
-    <label><input type="checkbox" id="receipt-auto-local" onchange="SAHTEN.directPrinting.save()"> Imprimir al confirmar desde Cobrar</label>
+    <label><input type="checkbox" id="receipt-auto-local" onchange="SAHTEN.directPrinting.save()"> Imprimir ticket del cliente al confirmar desde Cobrar</label>
     <label style="padding-left:20px"><input type="checkbox" id="receipt-direct-local" onchange="SAHTEN.directPrinting.save()"> Sin diálogo del sistema</label>
-    <p class="custom-hint">Se imprime una vez al crear el pedido. El estado del pago se administra por separado.</p>
+    <p class="custom-hint">Se imprime solo el ticket del cliente una vez al crear el pedido. La comanda de cocina se imprime manualmente desde el botón 🖨 de la tarjeta.</p>
   </fieldset>
   <fieldset style="border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px"><legend style="font-weight:700;padding:0 5px">Pedidos online</legend>
-    <label><input type="checkbox" id="receipt-auto-online" onchange="SAHTEN.directPrinting.save()"> Imprimir pedidos nuevos recibidos de la web</label>
+    <label><input type="checkbox" id="receipt-auto-online" onchange="SAHTEN.directPrinting.save()"> Imprimir ticket del cliente al aceptar un pedido online</label>
     <label style="padding-left:20px"><input type="checkbox" id="receipt-direct-online" onchange="SAHTEN.directPrinting.save()"> Sin diálogo del sistema</label>
-    <p class="custom-hint">Incluye retiro y delivery. No imprime el historial al conectar ni vuelve a imprimir cambios de estado o sincronizaciones.</p>
+    <p class="custom-hint">Incluye retiro y delivery: imprime el ticket del cliente una vez al pasar de Pendiente a En preparación. No imprime al sincronizar ni en cambios posteriores; la comanda es manual desde la tarjeta.</p>
   </fieldset>
   <p class="custom-hint">Elegí una impresora física: los destinos PDF pueden pedir guardar un archivo. Activá la impresión automática solo en la caja con impresora. Se conserva el papel y la calibración de arriba. Con «Sin diálogo» apagado se abre la ventana habitual. La app debe estar abierta para imprimir pedidos online. Si falla el envío, el pedido se conserva y aparece un aviso; no se reintenta automáticamente para evitar duplicados.</p>
 </section>              <!-- Logo B&W para impresión de comandas -->
