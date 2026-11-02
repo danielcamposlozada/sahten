@@ -80,6 +80,14 @@ export function installPromotionsEditor(w=window) {
     return '<button type="button" class="promo-live-switch" role="switch" aria-label="'+esc((checked?'Pausar':'Activar')+' campaña '+id)+'" aria-checked="'+checked+'" data-live-toggle="'+esc(id)+'"'
       +(usable?'':' disabled')+'><span class="promo-live-track"></span><span>'+esc(checked?'En vivo · Pausar':'Pausada · Activar')+'</span></button>';
   }
+  // Cada tipo tiene interruptor de planificación. SOLO el de campañas publicadas
+  // es un control en vivo del servidor; no se finge publicar un borrador.
+  function draftSwitch(key,item){
+    const editable=!w.SAHTEN?.project?.session?.readOnly && !w.document.body.classList.contains('role-no-costs');
+    return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Desactivar':'Activar')+' borrador '+(item.name||item.id))+'"'
+      +' aria-checked="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
+      +'<span class="promo-live-track"></span><span>'+(item.enabled?'Borrador activo':'Borrador pausado')+'</span></button>';
+  }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
       :!live.published?'El motor promocional no está publicado. No puede activarse desde este panel.'
@@ -111,7 +119,7 @@ export function installPromotionsEditor(w=window) {
         +'<strong>'+esc(item.name)+'</strong>'
         +'<span class="promo-overview-detail">'+esc(item.detail)+'</span>'
         +'<span class="promo-overview-foot">'+(item.localEnabled?'En planificación local':'Borrador desactivado')+'</span>'
-        +(item.type==='campaigns'?'<div class="promo-overview-actions">'+liveSwitch(item.id)+'</div>':'')
+        +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
@@ -187,6 +195,14 @@ export function installPromotionsEditor(w=window) {
       }catch(e){liveError=String(e?.message||'El cambio no se pudo confirmar.').slice(0,250);
         try{const refreshed=await liveApi().readPromotionCampaignStates();if(refreshed)live=refreshed;}catch{}}
       finally{liveBusy=false;render();}
+    }));
+    root.querySelectorAll('[data-draft-toggle]').forEach(button=>button.addEventListener('click',()=>{
+      if(w.SAHTEN?.project?.session?.readOnly||w.document.body.classList.contains('role-no-costs'))return;
+      const key=button.dataset.draftToggle,id=button.dataset.draftId;
+      const item=key==='couponPrograms'?state.couponPrograms?.[id]:
+        Array.isArray(state[key])?state[key].find(x=>x.id===id):null;
+      if(!item)return;
+      item.enabled=!item.enabled;save(state);render();
     }));
     root.querySelector('[data-promo-campaign]')?.addEventListener('change',e=>{selected=e.target.value;render()});
     root.querySelector('[data-promo-new]')?.addEventListener('click',()=>{
@@ -298,7 +314,7 @@ export function installPromotionsEditor(w=window) {
       +'</section><section class="promo-card"><h3>Estado de la campaña en la tienda</h3>'
       +'<p>El estado publicado se controla por separado del borrador para que no haya activaciones accidentales.</p>'
       +(liveError?'<p class="promo-caution" role="alert">'+esc(liveError)+'</p>':'')
-      +(ready?liveSwitch(c.id):'<p class="promo-note">No publicada en el servidor. El interruptor estará disponible después de aprobar y publicar el motor promocional seguro del checkout.</p>')
+      +(ready?liveSwitch(c.id):'<p class="promo-note">Esta campaña todavía es un borrador; su activación comercial no está publicada.</p>'+liveSwitch(c.id))
       +'<button type="button" data-live-refresh>Consultar estado web</button>'
       +'<h3>Mensaje y publicidad</h3>'
       +'<label class="promo-field">Mensaje publicitario<textarea data-field="message" rows="3" '+disabled+'>'+esc(c.advertising?.message||'')+'</textarea></label>'
@@ -334,7 +350,7 @@ export function installPromotionsEditor(w=window) {
         +'<p>'+pct+'</p>'
         +(item.unitDefinition?.portionCroquettes?'<p>Ración: '+esc(item.unitDefinition.portionCroquettes)+' croquetas por unidad</p>':'')
         +(products.length?'<small>SKU: '+products.map(esc).join(', ')+'</small>':'')
-        +'</div></article>';
+        +'</div>'+draftSwitch(key,item)+'</article>';
     }).join('');
     return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
       +'<p>Configuración guardada en el proyecto. Ninguna propuesta de este apartado se publica por abrir esta pantalla.</p>'
@@ -349,7 +365,7 @@ export function installPromotionsEditor(w=window) {
       +(program.maxExtraAmount!=null?' · Tope '+fmt(program.maxExtraAmount):'')
       +' · Vigencia '+esc(program.validDays??'?')+' días</p>'
       +'<small>Canal: '+esc(program.channel||'online')+(program.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
-      +'</div></article>').join('');
+      +'</div>'+draftSwitch('couponPrograms',{...program,id})+'</article>').join('');
     const methods=state.activationPolicy?.allowedPromotionPaymentMethods;
     return '<section class="promo-card"><h3>Cupones y recompensas ('+entries.length+')</h3>'
       +'<p>Métodos elegibles para promociones nuevas: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
@@ -357,10 +373,10 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-note"><strong>Emisión y canje:</strong> requieren servidor, cliente identificado, rentabilidad verificada y confirmación de la compra. Una reimpresión conserva el cupón original; nunca crea otro. Esta pantalla no emite códigos utilizables.</div></section>';
   }
   function ticketEditor(state,canEdit){
-    return '<section class="promo-card"><h3>Publicidad en comanda única</h3><p>Siempre primero: datos de cocina, entrega, importes y método de pago. Después: QR Google Reviews y una publicidad seleccionada.</p>'
-      +'<label class="promo-checkbox"><input data-field="ticketEnabled" type="checkbox" '+(state.ticket?.enabled?'checked':'')+' '+(canEdit?'':'disabled')+'> Preparar sección promocional</label>'
-      +'<label class="promo-checkbox"><input data-field="ticketAdvertise" type="checkbox" '+(state.ticket?.advertise?'checked':'')+' '+(canEdit?'':'disabled')+'> Mostrar publicidad si existe en el pedido</label>'
-      +'<div class="promo-note">La activación comercial queda bloqueada hasta verificar la cola de impresión, el ancho de papel y la emisión del lado del servidor.</div></section>';
+    return '<section class="promo-card"><h3>Publicidad en el ticket del cliente</h3><p>El ticket incluye importes, QR de reseñas y, cuando corresponda, una campaña A/B/D o cupón C. La comanda de cocina jamás incluye publicidad.</p>'
+      +'<label class="promo-checkbox"><input data-field="ticketEnabled" type="checkbox" '+(state.ticket?.enabled?'checked':'')+' '+(canEdit?'':'disabled')+'> Mostrar publicidad en el ticket del cliente</label>'
+      +'<label class="promo-checkbox"><input data-field="ticketAdvertise" type="checkbox" '+(state.ticket?.advertise?'checked':'')+' '+(canEdit?'':'disabled')+'> Anunciar campañas generales además de cupones</label>'
+      +'<div class="promo-note">Esta opción no crea promociones ni descuentos: solo permite imprimir beneficios válidos y publicados. Los cupones se emiten únicamente desde el servidor.</div></section>';
   }
   function simEditor(state,w) {
     return '<section class="promo-card"><h3>Simulador sin afectar ventas</h3>'
