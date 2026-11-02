@@ -5,6 +5,7 @@ import { promotionReport } from '../core/promotions-report.js';
 import { promotionOverview, filterPromotionOverview } from '../core/promotion-overview.js';
 import { createLiveRecommendationEditor } from './live-cart-recommendations.js';
 import { publicationKind } from '../core/promotion-publication.js';
+import { promotionDraftReview } from '../core/promotion-draft-review.js';
 import { WEEK_DAYS, campaignTemplate, validateCampaignDraft, describeSchedule } from '../core/campaign-builder.js';
 import '../styles/promotions.css';
 
@@ -47,7 +48,7 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', campaignFeedback='', cursor=new Date();
   const get=()=>load();
-  let draftEditing=null, publishFeedback='',publishBusy=false,recInitialized=false;
+  let draftEditing=null, couponEditing=null, publishFeedback='',publishBusy=false,recInitialized=false;
   const recEditor=createLiveRecommendationEditor(w,()=>render());
   let live={published:false,campaigns:[]},liveLoaded=false,liveBusy=false,liveError='',liveContext='',lastLiveAt=0;
   const liveApi=()=>w.SAHTEN?.online?.controller;
@@ -91,6 +92,17 @@ export function installPromotionsEditor(w=window) {
     return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Quitar':'Incluir')+' en planificación local '+(item.name||item.id))+'"'
       +' aria-checked="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
       +'<span class="promo-live-track"></span><span>'+(item.enabled?'En planificación':'Fuera de planificación')+'</span></button>';
+  }
+  function readinessChecklist(type,item){
+    const review=promotionDraftReview(type,item,catalog(w));
+    const missing=review.missing.length;
+    const places=review.placements.length?review.placements.map(id=>placements.find(([v])=>v===id)?.[1]||id).join(', '):'Sin ubicación configurada';
+    return '<details class="promo-note promo-draft-checklist"><summary>Revisar publicación · '+missing+' requisito'+(missing===1?'':'s')+' pendiente'+(missing===1?'':'s')+'</summary>'
+      +'<ul>'+review.checks.map(c=>'<li class="'+(c.ok?'is-ok':'is-pending')+'">'
+        +(c.ok?'✓ ':'○ ')+esc(c.label)+'</li>').join('')+'</ul>'
+      +(type==='couponPrograms'?'<small>Programa local, sin códigos emitidos. No se puede usar en checkout.</small>'
+        :'<small>Ubicaciones planificadas: '+esc(places)+'. No aparecen como descuentos activos hasta su publicación real.</small>')
+      +'</details>';
   }
   function liveEditor(){
     const banner=!liveLoaded?'Estado de promociones aún no consultado.'
@@ -146,7 +158,7 @@ export function installPromotionsEditor(w=window) {
     const activeCount=merged.filter(x=>x.active).length;
     const pendingCount=merged.filter(x=>x.status==='pending'||x.status==='scheduled').length;
     const inactiveCount=merged.filter(x=>x.status==='inactive'||x.status==='draft').length;
-    const badges={active:'Activa ahora',inactive:'Pausada en web',scheduled:'Programada · espera calendario',pending:'Borrador habilitado · sin publicar',draft:'Borrador sin publicar'};
+    const badges={active:'Activa ahora',inactive:'Pausada en web',scheduled:'Programada · espera calendario',pending:'Pendiente de validación · no publicada',draft:'Borrador sin publicar'};
     const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
     const cards=visible.map(item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
@@ -159,10 +171,11 @@ export function installPromotionsEditor(w=window) {
         +'<span class="promo-overview-foot">'+(item.type==='crossSells'&&published?'Confirmada con el servidor':item.type==='campaigns'&&live.campaigns?.some(r=>r.id===item.id)?'Estado del servidor · calendario independiente':item.localEnabled?'Planificación local · NO publicada':'Borrador · NO publicado')+'</span>'
         +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
         +draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item)
+        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,(item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">Editar propuesta</button></article>';
     }).join('');
     return '<section class="promo-card"><div class="promo-row"><div><h3>Vista general · Promociones</h3>'
-      +'<p>«Programada» significa que espera su día u horario. «Borrador» significa que todavía no está publicado. Los switches de borrador NO activan descuentos.</p></div>'
+      +'<p>«Programada» espera calendario. «Pendiente de validación» es una propuesta local, no una oferta publicada. Revisá los checks antes de intentar lanzar un beneficio.</p></div>'
       +'<button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button></div>'
       +'<div class="promo-overview-summary"><span><strong>'+overview.items.length+'</strong> propuestas locales</span>'
       +'<span><strong>'+activeCount+'</strong> activas verificadas</span>'
@@ -252,8 +265,16 @@ export function installPromotionsEditor(w=window) {
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>{refreshLive();recEditor.refresh();});
     root.querySelector('[data-promo-create]')?.addEventListener('click',()=>{tab='campaigns';render();root.querySelector('[data-promo-new]')?.focus();});
     root.querySelectorAll('[data-promo-filter]').forEach(b=>b.addEventListener('click',()=>{overviewFilter=b.dataset.promoFilter;render();}));
-    root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.openType;
-      if(tab==='campaigns')selected=b.dataset.openPromo;render();}));
+    root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{
+      tab=b.dataset.openType;
+      if(tab==='campaigns')selected=b.dataset.openPromo;
+      if(tab==='coupons')couponEditing=b.dataset.openPromo;
+      if(['extras','recommendations','upgrades'].includes(tab)){
+        draftEditing={key:{extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades'}[tab],
+          id:b.dataset.openPromo};
+      }
+      render();
+    }));
     root.querySelector('[data-promo-sync]')?.addEventListener('click',async()=>{
       if(!canOperate()||!w.SAHTEN?.online?.conn?.()?.projectId||!w.SAHTEN?.project?.session?.info?.()?.hasFile)return;
       const yes=await w.sahtenConfirm?.('Se importarán SOLO las promociones del proyecto en la nube. Se conservarán los pedidos, los costos, el stock y el catálogo locales; se guardará un respaldo antes de cambiar los borradores. ¿Continuar?',
@@ -285,6 +306,52 @@ export function installPromotionsEditor(w=window) {
         try{const refreshed=await liveApi().readPromotionCampaignStates();if(refreshed)live=refreshed;}catch{}}
       finally{liveBusy=false;render();}
     }));
+    root.querySelector('[data-coupon-create]')?.addEventListener('click',()=>{
+      if(!canEdit)return;
+      const programs=state.couponPrograms&&typeof state.couponPrograms==='object'?state.couponPrograms:{};
+      let id='cupon-'+Date.now().toString(36),i=1;
+      while(Object.hasOwn(programs,id))id='cupon-'+Date.now().toString(36)+'-'+i++;
+      state.couponPrograms=programs;
+      programs[id]={name:'Nuevo programa de cupón',enabled:false,extraPercent:5,minEligibleSubtotal:0,
+        maxExtraAmount:null,validDays:14,channel:'online',requiresConfirmedOrigin:false,
+        activationBlockers:['atomic_checkout_redemption_required']};
+      couponEditing=id;save(state);render();
+    });
+    root.querySelectorAll('[data-coupon-edit]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;couponEditing=b.dataset.couponEdit;render();
+    }));
+    root.querySelectorAll('[data-coupon-duplicate]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;
+      const source=state.couponPrograms?.[b.dataset.couponDuplicate];if(!source)return;
+      let id='cupon-'+Date.now().toString(36),i=1;
+      while(Object.hasOwn(state.couponPrograms,id))id='cupon-'+Date.now().toString(36)+'-'+i++;
+      state.couponPrograms[id]={...JSON.parse(JSON.stringify(source)),name:'Copia de '+String(source.name||'Cupón').slice(0,80),enabled:false};
+      couponEditing=id;save(state);render();
+    }));
+    root.querySelectorAll('[data-coupon-delete]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!canEdit)return;const id=b.dataset.couponDelete;
+      const accepted=await w.sahtenConfirm?.('¿Eliminar este borrador de cupón? No afecta códigos ni pedidos.',
+        {title:'Eliminar programa de cupón',okLabel:'Eliminar borrador'});
+      if(accepted!==true||!canEdit||!Object.hasOwn(state.couponPrograms||{},id))return;
+      delete state.couponPrograms[id];if(couponEditing===id)couponEditing=null;save(state);render();
+    }));
+    root.querySelector('[data-coupon-cancel]')?.addEventListener('click',()=>{couponEditing=null;render();});
+    root.querySelector('[data-coupon-save]')?.addEventListener('click',()=>{
+      if(!canEdit||!couponEditing)return;
+      const item=state.couponPrograms?.[couponEditing];if(!item)return;
+      const name=root.querySelector('#coupon-name')?.value.trim(),pct=Number(root.querySelector('#coupon-percent')?.value),
+        min=Number(root.querySelector('#coupon-minimum')?.value),capStr=root.querySelector('#coupon-cap')?.value.trim(),
+        cap=capStr===''?null:Number(capStr),days=Number(root.querySelector('#coupon-days')?.value),
+        channel=root.querySelector('#coupon-channel')?.value;
+      if(!name||name.length<4||name.length>100||!Number.isFinite(pct)||pct<=0||pct>10
+        ||!Number.isFinite(min)||min<0||(cap!==null&&(!Number.isFinite(cap)||cap<=0))
+        ||!Number.isInteger(days)||days<1||days>365||!['online','mostrador'].includes(channel)){
+        w.sahtenAlert?.('Revisá nombre, descuento hasta 10 puntos, mínimo, tope y vigencia de 1 a 365 días.');return;
+      }
+      Object.assign(item,{name,extraPercent:pct,minEligibleSubtotal:min,maxExtraAmount:cap,
+        validDays:days,channel,requiresConfirmedOrigin:root.querySelector('#coupon-origin')?.checked===true,enabled:false});
+      couponEditing=null;save(state);render();
+    });
     root.querySelectorAll('[data-draft-toggle]').forEach(button=>button.addEventListener('click',()=>{
       if(w.SAHTEN?.project?.session?.readOnly||w.document.body.classList.contains('role-no-costs'))return;
       const key=button.dataset.draftToggle,id=button.dataset.draftId;
@@ -351,6 +418,25 @@ export function installPromotionsEditor(w=window) {
       const preset=root.querySelector('[data-promo-preset]')?.value||'mon-wed';
       state.campaigns.push(campaignTemplate(preset,id));
       selected=id;campaignFeedback='Campaña creada como borrador. Elegí los productos y revisá el calendario antes de publicarla.';
+      save(state);render();
+    });
+    root.querySelector('[data-promo-duplicate]')?.addEventListener('click',()=>{
+      if(!canEdit||!c)return;
+      const id='custom-'+Date.now().toString(36);
+      if(state.campaigns.some(x=>x.id===id))return;
+      state.campaigns.push({...JSON.parse(JSON.stringify(c)),id,name:'Copia de '+String(c.name||'Campaña').slice(0,88),enabled:false});
+      selected=id;campaignFeedback='Nueva copia local, pausada y sin publicar. Revisá el calendario y el costo antes de activar.';
+      save(state);render();
+    });
+    root.querySelector('[data-promo-delete]')?.addEventListener('click',async()=>{
+      if(!canEdit||!c||!liveLoaded||liveError||liveBusy||live.campaigns.some(x=>x.id===c.id))return;
+      const target=c.id;
+      const yes=await w.sahtenConfirm?.('¿Eliminar el borrador local «'+c.name+'»? Sólo se permiten campañas sin publicar.',
+        {title:'Eliminar borrador',okLabel:'Eliminar'});
+      if(yes!==true||!canEdit||live.campaigns.some(x=>x.id===target))return;
+      state.campaigns=state.campaigns.filter(x=>x.id!==target);
+      selected=state.campaigns[0]?.id||'';
+      campaignFeedback='El borrador se eliminó del proyecto local. La web no cambió.';
       save(state);render();
     });
     root.querySelector('[data-promo-preview]')?.addEventListener('click',()=>{tab='sim';render()});
@@ -429,6 +515,8 @@ export function installPromotionsEditor(w=window) {
         .map(([id,name])=>'<option value="'+id+'">'+name+'</option>').join('')+'</select></label>'
       +'<button type="button" data-promo-new '+disabled+'>+ Crear borrador</button></div>'
       +'<label class="promo-field">Editando<select data-promo-campaign>'+state.campaigns.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===c.id?'selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'
+      +'<div class="promo-row"><button type="button" data-promo-duplicate '+disabled+'>Duplicar campaña como borrador</button>'
+      +'<button type="button" data-promo-delete '+(canEdit&&liveLoaded&&!liveError&&!liveBusy&&!remote?'':'disabled')+'>Eliminar borrador local</button></div>'
       +'<h3>2. Qué ofrecés</h3>'
       +'<div class="promo-grid">'+formField('promo-title','Nombre visible',c.name,'text','data-field="name" maxlength="100" '+disabled)
       +formField('promo-extra','Descuento adicional (puntos porcentuales)',c.extraPercent,'number','min="1" max="20" step="1" data-field="extraPercent" '+disabled)+'</div>'
@@ -502,7 +590,8 @@ export function installPromotionsEditor(w=window) {
         +'<button type="button" data-draft-edit="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Editar</button>'
         +'<button type="button" data-draft-duplicate="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Duplicar</button>'
         +'<button type="button" data-draft-delete="'+esc(item.id)+'" data-draft-group="'+esc(key)+'">Eliminar</button></div>'
-        +draftPublicationControl(key,item)+'</article>';
+        +draftPublicationControl(key,item)
+        +readinessChecklist(key,item)+'</article>';
     }).join('');
     return '<section class="promo-card"><h3>'+esc(title)+' ('+items.length+')</h3>'
       +'<p>Estos son BORRADORES del proyecto, no las recomendaciones publicadas. El switch cambia solo la planificación, NO activa descuentos.</p>'
@@ -535,18 +624,33 @@ export function installPromotionsEditor(w=window) {
   }
   function couponEditor(state){
     const entries=Object.entries(state.couponPrograms||{});
-    const rows=entries.map(([id,program])=>'<article class="promo-row promo-draft-item"><div><strong>'+esc(program.name||id)+'</strong>'
-      +'<p>'+esc(id)+' · '+(program.enabled?'Marcado en borrador':'Desactivado')+'</p>'
-      +'<p>'+esc(program.extraPercent??0)+' puntos adicionales · Compra mínima '+fmt(program.minEligibleSubtotal)
-      +(program.maxExtraAmount!=null?' · Tope '+fmt(program.maxExtraAmount):'')
-      +' · Vigencia '+esc(program.validDays??'?')+' días</p>'
-      +'<small>Canal: '+esc(program.channel||'online')+(program.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
-      +'</div>'+draftSwitch('couponPrograms',{...program,id})+'</article>').join('');
+    const canEdit=!w.SAHTEN?.project?.session?.readOnly&&!w.document.body.classList.contains('role-no-costs');
+    const rows=entries.map(([id,p])=>'<article class="promo-row promo-draft-item"><div><strong>'+esc(p.name||id)+'</strong>'
+      +'<p>'+esc(id)+' · '+(p.enabled?'En planificación local':'Fuera de planificación')+' · No publicado</p>'
+      +'<p>'+esc(p.extraPercent??0)+' puntos adicionales · Compra mínima '+fmt(p.minEligibleSubtotal)
+      +(p.maxExtraAmount!=null?' · Tope '+fmt(p.maxExtraAmount):'')+' · Vigencia '+esc(p.validDays??'?')+' días</p>'
+      +'<small>Canal previsto: '+esc(p.channel||'online')+(p.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
+      +'</div><div class="rec-rule-controls">'+draftSwitch('couponPrograms',{...p,id})
+      +['Editar','Duplicar','Eliminar'].map((label,i)=>'<button type="button" data-coupon-'+['edit','duplicate','delete'][i]+'="'+esc(id)+'"'+(canEdit?'':' disabled')+'>'+label+'</button>').join('')
+      +'</div>'+readinessChecklist('couponPrograms',{...p,id})+'</article>').join('');
     const methods=state.activationPolicy?.allowedPromotionPaymentMethods;
+    const editing=couponEditing?state.couponPrograms?.[couponEditing]:null;
+    const form=editing?'<div class="promo-card rec-edit-form"><h4>Editar programa de cupón · borrador local</h4><p>Identificador: '+esc(couponEditing)+'</p>'
+      +formField('coupon-name','Nombre',editing.name||'','text','maxlength="100"')
+      +formField('coupon-percent','Puntos adicionales (máximo 10)',editing.extraPercent??5,'number','min="0.01" max="10" step="0.01"')
+      +formField('coupon-minimum','Compra mínima elegible',editing.minEligibleSubtotal??0,'number','min="0" step="0.01"')
+      +formField('coupon-cap','Tope del beneficio en $ (opcional)',editing.maxExtraAmount??'','number','min="0.01" step="0.01"')
+      +formField('coupon-days','Vigencia en días',editing.validDays??14,'number','min="1" max="365" step="1"')
+      +'<label class="promo-field">Canal previsto<select id="coupon-channel">'
+      +[['online','Tienda online'],['mostrador','Mostrador']].map(([id,label])=>'<option value="'+id+'"'+((editing.channel||'online')===id?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'
+      +'<label class="promo-checkbox"><input id="coupon-origin" type="checkbox" '+(editing.requiresConfirmedOrigin?'checked':'')+'> Requiere compra anterior confirmada</label>'
+      +'<p>Guardar desactiva la planificación, no emite códigos ni modifica descuentos públicos.</p>'
+      +'<div class="promo-row"><button type="button" data-coupon-save>Guardar borrador</button><button type="button" data-coupon-cancel>Cancelar</button></div></div>':'';
     return '<section class="promo-card"><h3>Cupones y recompensas ('+entries.length+')</h3>'
-      +'<p>Métodos elegibles para promociones nuevas: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
+      +'<p>Métodos elegibles para nuevas promociones: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
       +'<div class="promo-draft-list">'+(rows||'<p>No hay programas configurados.</p>')+'</div>'
-      +'<div class="promo-note"><strong>Emisión y canje:</strong> requieren servidor, cliente identificado, rentabilidad verificada y confirmación de la compra. Una reimpresión conserva el cupón original; nunca crea otro. Esta pantalla no emite códigos utilizables.</div></section>';
+      +'<button type="button" data-coupon-create '+(canEdit?'':'disabled')+'>+ Crear programa de cupón</button>'+form
+      +'<div class="promo-note"><strong>Emisión y canje:</strong> bloqueados hasta completar canje único del checkout. Una reimpresión no emite otro cupón. El switch sólo cambia el borrador.</div></section>';
   }
   function ticketEditor(state,canEdit){
     return '<section class="promo-card"><h3>Publicidad en el ticket del cliente</h3><p>El ticket incluye importes, QR de reseñas y, cuando corresponda, una campaña A/B/D o cupón C. La comanda de cocina jamás incluye publicidad.</p>'
