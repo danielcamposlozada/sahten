@@ -14,10 +14,17 @@ function promotionalFooter(snapshot,esc) {
     +'<p>'+esc(snapshot.label||'Válido hasta '+snapshot.expiresOn)+'</p>'
     +'<small>Mostralo en caja o ingresalo online. Un solo uso.</small></section>';
   const layout=['A','B','D'].includes(snapshot.layout)?snapshot.layout:/\d{1,2}\s*%|OFF|descuento/i.test(snapshot.headline||'')?'B':'A';
-  const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · CAMPAÑA GENERAL':snapshot.audience==='general'?'CAMPAÑA GENERAL':null;
-  if(layout==='D')return '<section class="receipt-promo receipt-promo--D"><div class="receipt-promo-head">◆ SAHTEN ◆</div><strong>UNA PROPUESTA ESPECIAL</strong>'+(snapshot.repeatEdition?'<small>PRÓXIMA EDICIÓN · CAMPAÑA PARA TODOS</small>':'')+'<p>'+text+'</p>'+(date?'<small>'+date+'</small>':'')+'</section>';
-  if(layout==='B')return '<section class="receipt-promo receipt-promo--B"><div class="receipt-promo-head">'+esc(label||'PROMOCIÓN DE DESCUENTO')+'</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'<small>Se aplica según los días, productos y medios de pago participantes.</small></section>';
-  return '<section class="receipt-promo receipt-promo--A"><div class="receipt-promo-head">'+esc(label||'NOVEDADES SAHTEN')+'</div><strong>'+text+'</strong>'+(date?'<small>'+date+'</small>':'')+'</section>';
+  const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · CAMPAÑA GENERAL':
+    snapshot.audience==='general'?'CAMPAÑA GENERAL':null;
+  const terms=snapshot.terms?'<small class="receipt-promo-terms">'+esc(snapshot.terms)+'</small>':'';
+  const validity=date||snapshot.expiry?'<small class="receipt-promo-validity">'+
+    [date,snapshot.expiry?esc(snapshot.expiry):''].filter(Boolean).join(' · ')+'</small>':'';
+  const header=layout==='D'?'◆ SAHTEN · ESPECIAL ◆':esc(label||
+    (layout==='B'?'OFERTA ONLINE':'NOVEDADES SAHTEN'));
+  return '<section class="receipt-promo receipt-promo--'+layout+'">'
+    +'<div class="receipt-promo-head">'+header+'</div>'
+    +(layout==='D'&&snapshot.repeatEdition?'<small>PRÓXIMA EDICIÓN · CAMPAÑA PARA TODOS</small>':'')
+    +'<strong>'+text+'</strong>'+terms+validity+'</section>';
 }
 /** El motor imprime importes confirmados; no calcula ni otorga promociones.
  * Solo desglosa las cifras del snapshot cuando cuadran exactamente con el
@@ -78,7 +85,7 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 .payment,.notes{font-size:${compact?11:13}px;font-weight:600;border-top:1px dashed #000;margin-top:4px;padding-top:3px}.notes{white-space:pre-wrap}.footer{text-align:center;font-size:${metaSize}px;margin-top:4px}
 .receipt-review{text-align:center;border-top:1px dashed #000;margin-top:5px;padding-top:4px;break-inside:avoid;font-size:${compact?11:13}px;line-height:1.2;font-weight:400}.receipt-google-brand{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:3px;font-size:${compact?13:15}px;font-weight:700}.receipt-google-logo{width:${compact?4:5}mm;height:${compact?4:5}mm;filter:grayscale(1) brightness(0)}.receipt-review-qr{display:block;width:30mm;height:30mm;max-width:100%;margin:3px auto}.receipt-review-help{display:none}
 .receipt-online-invite{margin:4px auto 2px;padding:2px 5px;width:max-content;max-width:100%;text-align:center;border:1px solid #000;border-radius:999px;font-size:${compact?9:10}px;font-weight:600;line-height:1.3;break-inside:avoid}.receipt-online-invite strong{font-weight:900;letter-spacing:.2px}
-.receipt-promo{text-align:center;border:1.4px solid #000;margin-top:5px;padding:2px;break-inside:avoid;font-size:${compact?10:12}px;line-height:1.2}.receipt-promo-head{background:#000;color:#fff;font-weight:800;font-size:${compact?9:11}px;letter-spacing:.3px;padding:3px 2px}.receipt-promo strong{display:block;font-size:${compact?13:16}px;font-weight:900;padding:4px 2px 2px}.receipt-promo p{margin-top:2px}.receipt-promo small{display:block;font-size:${compact?8.5:10}px;margin:3px 2px}.receipt-promo--B strong{font-size:${compact?15:20}px}.receipt-promo--C{border-style:dashed}.receipt-promo--C .receipt-promocode{font-size:${compact?15:19}px;font-weight:900;letter-spacing:.5px;border-block:1px dashed #000;padding:5px 0;margin-top:3px}.receipt-promo--D strong{font-size:${compact?11:14}px}
+.receipt-promo{text-align:center;border:1px solid #000;margin-top:3px;padding:1px;break-inside:avoid;font-size:${compact?8.2:9.5}px;line-height:1.12}.receipt-promo-head{background:#000;color:#fff;font-weight:800;font-size:${compact?7.5:8.5}px;letter-spacing:0;padding:2px 1px}.receipt-promo strong{display:block;font-size:${compact?11:13}px;font-weight:850;padding:2px 1px 1px;line-height:1.1}.receipt-promo p{margin:1px 0}.receipt-promo small{display:block;font-size:${compact?8:9}px;line-height:1.12;margin:2px 1px}.receipt-promo--B strong{font-size:${compact?12:14}px}.receipt-promo--C{border-style:dashed}.receipt-promo--C .receipt-promocode{font-size:${compact?14:17}px;font-weight:900;letter-spacing:.3px;border-block:1px dashed #000;padding:2px 0;margin:1px 0}.receipt-promo--D strong{font-size:${compact?10.5:12}px}
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
