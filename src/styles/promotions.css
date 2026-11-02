@@ -102,3 +102,29 @@
 .promo-economics-table th{background:var(--bg);font-weight:700}
 .promo-draft-checklist button{margin-top:8px;margin-right:7px}
 .promo-draft-checklist button:disabled{cursor:not-allowed;opacity:.65}
+
+
+/* Panel operativo: tarjetas más compactas y legibles; no mezclar borradores con producción. */
+#promotions-editor .promo-heading{margin-bottom:9px}
+#promotions-editor .promo-heading h2{font-size:clamp(19px,2vw,24px)}
+#promotions-editor .promo-metrics{gap:8px;margin-bottom:10px}
+#promotions-editor .promo-metrics>div{padding:9px 11px;border-radius:10px}
+#promotions-editor .promo-metrics strong{font-size:21px}
+#promotions-editor .promo-tabs{gap:4px;padding-bottom:8px;margin-bottom:8px}
+#promotions-editor .promo-tabs button{white-space:nowrap;padding:6px 10px;font-size:12px}
+#promotions-editor .promo-card{padding:13px 15px;border-radius:12px}
+#promotions-editor .promo-overview-grid{grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:9px;margin-bottom:11px}
+#promotions-editor .promo-overview-card{min-height:142px;gap:5px;padding:11px 12px;border-radius:10px}
+#promotions-editor .promo-overview-card strong{font-size:14px}
+#promotions-editor .promo-overview-card .promo-overview-foot{font-size:10px}
+#promotions-editor .promo-overview-summary{gap:7px;margin:8px 0 11px}
+#promotions-editor .promo-overview-summary>span{padding:9px}
+#promotions-editor .promo-overview-summary strong{font-size:20px}
+#promotions-editor .promo-overview-actions{margin-top:2px}
+#promotions-editor .promo-live-switch{min-height:32px!important;padding:4px 8px!important;gap:7px!important}
+#promotions-editor .promo-live-track{width:34px;height:19px}
+#promotions-editor .promo-live-track:after{width:13px;height:13px}
+#promotions-editor .promo-live-switch[aria-checked="true"] .promo-live-track:after{transform:translateX(15px)}
+#promotions-editor .promo-card .promo-open{padding:6px 8px;font-size:11px}
+@media(max-width:620px){#promotions-editor .promo-overview-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:450px){#promotions-editor .promo-overview-grid{grid-template-columns:1fr}}
