@@ -34,8 +34,8 @@ describe('UX creación y activación de campañas',()=>{
   const {w,dom}=make();try{
    await vi.waitFor(()=>expect(w.document.querySelector('[data-live-refresh]')).not.toBeNull());
    w.document.querySelector('[data-tab="campaigns"]').click();
-   await vi.waitFor(()=>expect(w.document.querySelector('#promotions-editor').textContent).toContain('No publicada en el servidor'));
-   expect(w.document.querySelector('[data-live-toggle]')).toBeNull();
+   await vi.waitFor(()=>expect(w.document.querySelector('#promotions-editor').textContent).toContain('Esta campaña todavía es un borrador'));
+   expect(w.document.querySelector('[data-live-toggle]').disabled).toBe(true);
   }finally{dom.window.close();}
  });
  it('la preparación local no ejecuta el RPC de publicación en vivo',()=>{
