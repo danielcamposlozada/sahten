@@ -1,6 +1,6 @@
 // Auditoría de la ración de 6 croquetas de Falafel (USO INTERNO).
 // Esta función NO habilita promociones: diferencia materias primas por lote
-// de tahini/packaging usados una vez por venta, que el costo tradicional /25 diluye.
+// de tahini/packaging usados una vez por venta, que el costo tradicional diluye.
 import {calcIngCost,calcEnvCost,calcComboCost,actualCostPerUnit,getPorc} from './costs.js';
 const money=n=>Math.round(n*100)/100;
 const finite=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0;
@@ -44,9 +44,9 @@ export function auditFalafelRacion(state){
    Number(item.cantidad)<=0||!(Number(row.qty)>0))
    issues.push('packaging_cost_missing');
  }
- // La receta de 150 croquetas se reparte en 25 raciones de 6.
+ // El rendimiento del lote se divide en raciones comerciales de 6.
  // Sin embargo, el envase y la salsa de 30g se usan por VENTA:
- // deben contabilizarse completos por ración, no /25.
+ // deben contabilizarse completos por ración, no por lote.
  const recipeBatch=ingredientRows.reduce((n,r)=>n+calcIngCost(state,r),0);
  const packagingSale=packRows.reduce((n,r)=>n+calcEnvCost(state,r),0);
  const tahiniSale=sauceRows.reduce((n,r)=>n+calcComboCost(state,r),0);
