@@ -445,7 +445,7 @@ export function installPromotionsEditor(w=window) {
         : Number(item.extraPercent)>0?'Adicional propuesto: '+esc(item.extraPercent)+' puntos porcentuales':'Sin descuento adicional';
       const products=Array.isArray(item.productIds)?item.productIds:Array.isArray(item.productId)?item.productId:[item.productId].filter(Boolean);
       return '<article class="promo-row promo-draft-item"><div><strong>'+esc(item.name||item.id)+'</strong>'
-        +'<p>'+esc(item.id)+' · '+(item.enabled?'Marcada en borrador':'Desactivada')+'</p>'
+        +'<p>'+esc(item.id)+' · '+(key==='crossSells'&&publishedRecommendation(item.id)?'Publicada en web':item.enabled?'Marcada en borrador':'Desactivada')+'</p>'
         +'<p>'+pct+'</p>'
         +(item.unitDefinition?.portionCroquettes?'<p>Ración: '+esc(item.unitDefinition.portionCroquettes)+' croquetas por unidad</p>':'')
         +(key==='upsells'?'<p class="promo-caution">Motivo: '+esc((item.activationBlockers||[]).some(x=>/backend|server_basket|checkout/.test(x))
