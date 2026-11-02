@@ -35,6 +35,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
   const showPrices = menuConfig.showPrices !== false, showImages = menuConfig.showImages !== false;
   const items = products.map(p => ({
     id: p.id, name: p.name, category: p.category || '', star: !!p.star,
+    ...(activeUpgrade&&p.id===hiddenFour?{upsellOnly:true}:{}),
     ...(p.salesAvailability ? { salesAvailability: { paused: !!p.salesAvailability.paused, resumeAt: p.salesAvailability.resumeAt || null } } : {}),
     price: showPrices ? channelPriceWithDisc(s, p, 'mostrador') : 0,
     ...(quoteIds[p.id] ? { priceRevision: quoteIds[p.id] } : {}),
@@ -42,7 +43,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
     tags: (p.tags || []).map(t => (typeof t === 'string' ? t : t.label || t.name || '')).filter(Boolean),
     description: txt(p.description, 220),
   })).filter(p => !showPrices || p.price > 0);
-  const cats = orderedCategories(items, menuConfig);
+  const cats = orderedCategories(items.filter(p=>!p.upsellOnly),menuConfig);
   const categoryImages = {};   // { categoría: 'img/cat_x.jpg' } — la foto de cada categoría, si la cargaron
   if (showImages) for (const c of cats) { const k = categoryPhotoKey(c); if (k && images[k]) categoryImages[c] = 'img/' + k + '.jpg'; }
   const sb = supabase && supabase.url && supabase.anonKey && supabase.storeId ? { url: supabase.url, anonKey: supabase.anonKey, storeId: supabase.storeId, slug: supabase.slug || '' } : null;
