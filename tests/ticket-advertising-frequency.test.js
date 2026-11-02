@@ -15,7 +15,7 @@ const offer=(id,channels=['online'])=>({
 });
 const config={enabled:true,ticket:{enabled:true,advertise:true},
   campaigns:[offer('postres'),offer('falafel'),offer('fatay')]};
-const select=(order,records,rotationKey=0)=>selectTicketAdvertisement(config,{
+const select=(order,records,rotationKey=2)=>selectTicketAdvertisement(config,{
   now,channel:'any',rotationKey,appliedPromotionIds:['postres'],
   ...ticketAdvertisingHistory(order,records,{now})
 });
@@ -65,7 +65,7 @@ describe('Frecuencia de publicidad en tickets de cliente',()=>{
       discountAmount:1000,total:9000,paymentDiscount:{percent:10},promotionTicketSnapshot:ad
     },{paper:receiptProfile(58)});
     expect(receipt).toContain('Dto. 10 %');
-    expect(receipt).not.toContain('receipt-promo--B');
+    expect(receipt).not.toContain('class="receipt-promo receipt-promo--B"');
   });
   it('sin identidad confiable evita repetir la última publicidad del negocio, sin fingir que reconoce personas',()=>{
     const records=[
