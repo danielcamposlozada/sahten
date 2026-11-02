@@ -767,9 +767,12 @@ async function ensurePublishedCustomerTicketPromotion(order) {
     // La publicidad (incluso de la misma campaña) invita a volver a comprar,
     // en la web, mostrador o ambos, según los canales de cada promoción.
     const applied=order.promotionSnapshot?.appliedPromotionIds||[];
+    const now=new Date(order.createdAt||Date.now());
+    const frequency=SAHTEN.promotions.ticketAdvertisingHistory(order,SAHTEN_ORDERS,{now,cooldownDays:90});
     const snapshot=SAHTEN.promotions.selectTicketAdvertisement(config,{
-      channel:'any',now:new Date(order.createdAt||Date.now()),
-      appliedPromotionIds:applied,rotationKey:order.num||0
+      channel:'any',now,appliedPromotionIds:applied,rotationKey:order.num||0,
+      recentAdvertisements:frequency.recentAdvertisements,
+      avoidCampaignIds:frequency.avoidCampaignIds
     });
     if(snapshot){
       order.promotionTicketSnapshot=snapshot;
