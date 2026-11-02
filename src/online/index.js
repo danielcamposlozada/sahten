@@ -57,8 +57,11 @@ export function createOnline({ w = window, project, events }) {
       client: cl, remoteId: () => conn().projectId || null, setRemoteId: id => { conn().projectId = id; project.markDirty(); }, role: () => role() || 'owner', projectId: () => session.id,
       collect: () => project.collect(), publicOf,
       prepareFile: (f, report) => controller.prepareFile(f, report), restoreFile: (f, images, report) => controller.restoreFile(f, images, report),
-      apply: async f => { await project.apply(f); session.markDirty(); },
-      backupBefore:()=>session.backupBeforeStrategy(), saveLocal:()=>session.saveNow({force:true}), store: config,
+      apply: async f => { await project.apply(f); session.markDirty(); w.SAHTEN.promotionsEditor?.render(); },
+      backupBefore:()=>session.backupBeforeStrategy(),
+      hasLocalFile:()=>session.info().hasFile,
+      saveLocal:()=>session.info().hasFile?session.saveNow({force:true}):false,
+      store: config,
     });
     sync.__client = cl; sync.onChange(() => ui.render && ui.render()); return sync;
   }
