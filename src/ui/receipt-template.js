@@ -101,7 +101,7 @@ export function buildKitchenReceipt(order, {paper, logoHtml=''}={}) {
   const items=(order.items||[]).map(i=>'<div class="k-item"><b>'+esc(i.qty)+' × '+esc(i.name)+'</b></div>').join('');
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Comanda #'+number+'</title><style>'
     +'@page{margin:0;size:'+esc(paper.pageSize||'auto')+'}'
-    +'*{box-sizing:border-box}body{width:'+Number(paper.contentMm)+'mm;margin:0;padding:1mm;color:#000;background:white;font-family:Arial,Helvetica,sans-serif;font-size:12px;overflow-wrap:anywhere;line-height:1.25}'
+    +'*{box-sizing:border-box}body{width: '+Number(paper.contentMm)+'mm;margin:0;padding:1mm;color:#000;background:white;font-family:Arial,Helvetica,sans-serif;font-size:12px;overflow-wrap:anywhere;line-height:1.25}'
     +'.logo-wrap{text-align:center}.logo-img,.logo-svg{max-width:100%;max-height:8mm}.brand{text-align:center;font-weight:bold}.k-head{text-align:center;font-size:16px;font-weight:900;padding:4px 0;border-block:2px solid #000}.k-type{font-weight:900;font-size:15px;text-align:center;margin:4px 0}.k-customer{font-weight:700;margin:5px 0}.k-item{padding:6px 1px;border-bottom:1px dashed #000;font-size:13px}.k-address{margin:5px 0;padding:4px 0;border-block:1px solid #000}.k-note{padding:6px 1px;border:1px solid #000;white-space:pre-wrap;margin-top:6px}</style></head><body>'
     +logoHtml+'<div class="k-head">COMANDA #'+number+'</div><div class="k-type">'+(delivery?'DELIVERY':'RETIRO / MOSTRADOR')+'</div>'
     +'<div style="text-align:center">'+stamp+'</div><div class="k-customer">'+esc(order.customerName||'Consumidor Final')+'</div>'
