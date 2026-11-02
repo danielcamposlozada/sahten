@@ -598,7 +598,7 @@ export function installPromotionsEditor(w=window) {
   function campaignEditor(state,c,canEdit) {
     if(!c)return '<section class="promo-card"><h3>No hay campañas</h3><button type="button" data-promo-new>+ Nueva campaña</button></section>';
     const disabled=canEdit?'':'disabled';
-    const schedule=c.schedule||{type:'weekly',weekdays:[]};
+    const schedule=c.schedule??{type:'always'};
     const errors=validateCampaignDraft(c);
     const days=schedule.type==='weekly'?'<fieldset class="promo-weekdays"><legend>Elegí los días que se repite</legend>'
       +WEEK_DAYS.map(([name,id])=>'<label class="promo-day"><input type="checkbox" data-promo-weekday="'+id+'" '+(schedule.weekdays?.includes(id)?'checked':'')+' '+disabled+'><span>'+name+'</span></label>').join('')+'</fieldset>':'';
