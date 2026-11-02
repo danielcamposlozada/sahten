@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "enabled": true,
+  "mode": "full_price_only",
+  "showMaxCards": 2,
+  "beverageContexts": [
+    {
+      "id": "table",
+      "name": "Una bebida para compartir",
+      "priority": 95,
+      "triggerProductIds": [
+        "tabla_celebrar",
+        "p1779997171373",
+        "p1779997050112"
+      ],
+      "options": [
+        "cocacola_600ml",
+        "bebida_cocacola_zero_600ml",
+        "bebida_sprite_600ml",
+        "bebida_fanta_600ml",
+        "p1793032422487",
+        "bebida_agua_con_gas_600ml"
+      ]
+    },
+    {
+      "id": "sandwich-small",
+      "name": "Una lata con tu shawarma",
+      "priority": 80,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "p1779299917243"
+      ],
+      "maxEligibleSubtotal": 19999,
+      "options": [
+        "p1793049167225",
+        "bebida_sprite_220ml",
+        "bebida_cocacola_zero_220ml",
+        "bebida_sprite_zero_220ml",
+        "p1793167440976"
+      ]
+    },
+    {
+      "id": "sandwich-large",
+      "name": "Una bebida con tu pedido",
+      "priority": 75,
+      "triggerProductIds": [
+        "sandwich_falafel",
+        "shawarma_pollo",
+        "shawarma_mixto",
+        "p1779299917243"
+      ],
+      "minEligibleSubtotal": 20000,
+      "options": [
+        "cocacola_600ml",
+        "bebida_cocacola_zero_600ml",
+        "bebida_sprite_600ml",
+        "bebida_fanta_600ml",
+        "p1793032422487",
+        "bebida_agua_con_gas_600ml"
+      ]
+    },
+    {
+      "id": "plato",
+      "name": "Una bebida para acompañar",
+      "priority": 65,
+      "triggerProductIds": [
+        "arabe_clasico",
+        "falafel_mix",
+        "p1786210474707",
+        "yabra",
+        "prod_1787152786207"
+      ],
+      "options": [
+        "cocacola_600ml",
+        "bebida_cocacola_zero_600ml",
+        "bebida_sprite_600ml",
+        "bebida_fanta_600ml",
+        "p1793032422487",
+        "bebida_agua_con_gas_600ml"
+      ]
+    }
+  ],
+  "notes": "Sólo recomendaciones voluntarias a precio normal. No son descuentos. Verificaciones financieras adicionales se realizan en backend antes de aplicar cualquier futura promoción."
+}
