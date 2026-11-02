@@ -89,7 +89,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
       productId:String(b.productId||''),offerId:String(b.offerId||''),
       costs,quoteContext:{route:ctx.route,authorization:ctx.authorization},now:ctx.now}));
    }
-   let order;
+   let order,atomicUpsellResult=null;
    if(input.upsellToken){
     if(operator||b.pos===true)fail('La oferta web no se puede usar en caja.',409,'upsell_not_for_pos');
     if(ctx.menu.promotions?.enabled!==true)fail('La oferta ya no está vigente.',409,'promotions_off');
@@ -97,19 +97,36 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     const costs=await upsellCosts(sid);
     const secure=await upsellRequestContext({storeId:sid,menu:ctx.menu,order:input,
       proof:b.upsellProof,secret:upsellSecret});
-    const commit=action==='order';
-    order=await acceptPreflightUpsell({...secure,menu:ctx.menu,order:input,
-      token:input.upsellToken,requestId:commit?uuid(b.requestId):crypto.randomUUID(),
-      expectedTotal:input.total,costs,now:ctx.now,commit,
-      quoteContext:{route:ctx.route,authorization:ctx.authorization},
-      consumeNonce:({nonce,storeId,sessionId,requestId,expiresAt})=>
-        repo.consumeUpsellNonce({nonce,storeId,sessionId,requestId,expiresAt})});
+    const acceptance={...secure,menu:ctx.menu,order:input,token:input.upsellToken,
+      requestId:action==='order'?uuid(b.requestId):crypto.randomUUID(),
+      expectedTotal:input.total,costs,now:ctx.now,
+      quoteContext:{route:ctx.route,authorization:ctx.authorization}};
+    // Validación de firma, margen y total, SIN consumir el token.
+    order=await acceptPreflightUpsell({...acceptance,commit:false});
+    if(action==='order'){
+     if(cents(input.total)!==cents(order.total))
+      fail('Cambió el total. Revisá el pedido.',409,'menu_changed');
+     if(typeof repo.atomicUpsellOrder!=='function')
+      fail('La confirmación segura de ofertas no está configurada.',409,'upsell_atomic_order_missing');
+     // Sólo esta RPC guarda pedido y consume nonce EN UNA MISMA transacción PG.
+     // Si la inserción falla, el consumo del nonce se revierte automáticamente.
+     const payload={...order,num:Math.floor(Math.random()*9000)+1000,
+      createdAt:new Date(now()).toISOString(),status:'pendiente'};
+     await acceptPreflightUpsell({...acceptance,commit:true,
+      consumeNonce:async({nonce,storeId,sessionId,requestId,expiresAt})=>{
+       atomicUpsellResult=await repo.atomicUpsellOrder({
+        nonce,storeId,sessionId,requestId,expiresAt,payload
+       });
+       return !!(atomicUpsellResult?.id&&atomicUpsellResult?.order);
+      }});
+    }
    }else{
     if(action==='offer')fail('Oferta inválida.',409,'upsell_unavailable');
     order=quoteOrder(ctx.menu,input,{...ctx,trustedCosts,allowOtherPayments:true,
       validateCustomer:action==='order'||action==='validate-pos'});
    }
    if(action==='order'||action==='validate-pos'){
+    if(atomicUpsellResult)return response({...atomicUpsellResult,order:atomicUpsellResult.order||order});
     if(cents(input.total)!==cents(order.total))fail('Cambió el total. Revisá el pedido y volvé a confirmar.',409,'menu_changed');
     if(action==='validate-pos'){const id=String(input.localOrderId||'');if(!/^ord_[a-z0-9]{6,80}$/.test(id))fail('Identificador de venta local inválido.');return response({order,validationId:await repo.savePos(sid,id,order)});}
     const result=await repo.run('order',{store_id:sid,request_id:uuid(b.requestId),payload:{...order,num:Math.floor(Math.random()*9000)+1000,createdAt:new Date(now()).toISOString(),status:'pendiente'}});
