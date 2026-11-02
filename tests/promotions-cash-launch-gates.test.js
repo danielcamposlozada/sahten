@@ -3,7 +3,7 @@ import {couponIssuePolicy} from '../src/promotions/server.js';
 import {quotePromotions} from '../src/core/promotions.js';
 const base=()=>({enabled:true,paymentPercent:10,minMarginPct:40,requireVerifiedCosts:true,
  activationPolicy:{allowedPromotionPaymentMethods:['efectivo','transferencia']},
- couponPrograms:{first_online:{enabled:true,extraPercent:5,validDays:14}},
+ couponPrograms:{first_online:{enabled:true,extraPercent:5,validDays:14,identityVerified:true}},
  verifiedOrderCosts:{verified:true,reviewedAt:'2026-11-01T12:00:00Z',
   reviewedBy:'dueño',additionalOrderCost:0,shippingSubsidy:0},
  campaigns:[{id:'weekly-meals',kind:'public',enabled:true,priority:2,extraPercent:5,
@@ -32,7 +32,9 @@ describe('Lanzamiento sin promociones Mercado Pago',()=>{
   expect(couponIssuePolicy(p,'first_online').reason).toBe('promotions_disabled');
   p.enabled=true;p.couponPrograms.first_online.enabled=false;
   expect(couponIssuePolicy(p,'first_online').reason).toBe('program_disabled');
-  p.couponPrograms.first_online.enabled=true;p.verifiedOrderCosts.verified=false;
+  p.couponPrograms.first_online.enabled=true;p.couponPrograms.first_online.identityVerified=false;
+  expect(couponIssuePolicy(p,'first_online').reason).toBe('identity_not_verified');
+  p.couponPrograms.first_online.identityVerified=true;p.verifiedOrderCosts.verified=false;
   expect(couponIssuePolicy(p,'first_online').reason).toBe('economic_review_missing');
   p.verifiedOrderCosts.verified=true;
   p.activationPolicy.allowedPromotionPaymentMethods.push('mercadopago');
