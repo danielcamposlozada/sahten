@@ -12,7 +12,7 @@ export const BACKOFF_MS = [30000, 60000, 120000, 300000];
 
 /** Lo que viaja a la nube: el proyecto con referencias remotas; los binarios se suben antes a Storage. */
 export const stripForSync = file => { const f = clone(file); f.images = Object.fromEntries(Object.entries(f.images || {}).filter(([, v]) => /^https?:\/\//.test(v))); f.modifiedAt = null; return f; };
-export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; return contentHash(f); };
+export const syncHash = file => { const f = stripForSync(file); delete f.cloudImagesVersion; f.images = file.images || {}; if(f.online)delete f.online.supabase; return contentHash(f); };
 
 /** Decide qué hacer según qué lado cambió desde la última sincronización. */
 export function decide({ localHash, last, remoteVersion }) {
