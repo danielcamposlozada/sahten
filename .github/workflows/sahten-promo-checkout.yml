@@ -102,7 +102,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
           command: pages deploy sahten-promo-export --project-name sahten-menu --branch main
-      - name: Verificar producción: descuentos, productos y checkout
+      - name: "Verificar producción: descuentos, productos y checkout"
         run: |
           set -euo pipefail
           for i in {1..8}; do
