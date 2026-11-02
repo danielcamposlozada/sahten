@@ -221,7 +221,7 @@ export function installPromotionsEditor(w=window) {
       +[['','Automático'],['A','A · general'],['B','B · descuento'],['D','D · especial']].map(([v,t])=>'<option value="'+v+'"'+(adv.ticketFormat===v?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'
       +formField('live-advance','Días de anticipo en ticket',adv.advanceDays??4,'number','data-live-field="advanceDays" min="0" max="14" '+d)+'</div>'
       +'<p class="promo-note">Texto, vigencia y calendario se actualizan directamente. Cambiar descuento, productos o canales requiere comprobar costos y margen. Ningún cambio modifica pedidos anteriores.</p>'
-      +(liveSaveFeedback?'<p role="status">'+esc(liveSaveFeedback)+'</p>':'')
+      +'<p role="status">'+esc(liveSaveFeedback||'Guardá para sincronizar los cambios.')+'</p>'
       +'<button type="button" data-live-save '+(permitted&&!liveSaveBusy?'':'disabled')+'>'
       +(liveSaveBusy?'Validando…':'Guardar en la web y todos los equipos')+'</button>'
       +' <button type="button" data-live-reset>Descartar cambios</button></section>';
