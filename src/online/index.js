@@ -80,7 +80,7 @@ export function createOnline({ w = window, project, events }) {
     try {
       if(sync) await sync.sync();
       await controller.refreshOrders();
-      await session.backupBeforeSync();
+      await session.backupHourly();
     }catch(e){/* estado de sync y reconexión conservan el pedido local */}
     finally{syncTickBusy=false;}
   },30000);
