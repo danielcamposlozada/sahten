@@ -20,7 +20,8 @@ export function orderedCategories(products, config = {}) {
 /** Productos que se publican: no solo-receta, con nombre, no ocultos (ni ellos ni su categoría) y con precio. */
 export function publishableProducts(s, config = {}) {
   const hiddenP = config.hiddenProducts || [], hiddenC = config.hiddenCategories || [];
-  return s.products.filter(p => !p.recetaOnly && p.name && !hiddenP.includes(p.id) && !(p.category && hiddenC.includes(p.category)));
+  const upgradeOnly=new Set(config.upsellOnlyProducts||[]);
+  return s.products.filter(p=>!p.recetaOnly&&p.name&&(!hiddenP.includes(p.id)||upgradeOnly.has(p.id))&&(!(p.category&&hiddenC.includes(p.category))||upgradeOnly.has(p.id)));
 }
 
 /**
