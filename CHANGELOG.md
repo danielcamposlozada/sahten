@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Centro de Promociones completo en borrador**: incorpora pestañas de complementos con descuento, sugerencias sin rebaja y mejoras; los programas de cupones muestran condiciones del proyecto en lugar de valores fijos. Nada se publica ni se habilita desde estas vistas.
+
 ## 0.4.34
 
 - **Rentabilidad como sección independiente**: Resumen, Metas e historial, Productos y Mercadería, con acceso desde Dashboard.
