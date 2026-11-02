@@ -452,9 +452,13 @@ function _onlineBoardCard(o, recent = false) {
     '<div class="online-board-card-bottom"><div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
       (!recent ? ' <span class="online-board-age" data-order-age="' + id + '">' + _esc(workflow.orderAgeLabel(o)) + '</span>' : '') + '</div><strong class="online-board-total">$' + _fmtN(o.total) + '</strong></div>' +
     (SAHTEN.orderActions.label(o)?'<div class="online-board-estimate">'+_esc(SAHTEN.orderActions.label(o))+'</div>':'') +
-    '<div class="online-board-print-actions"><button type="button" class="online-board-detail" data-online-action="print-customer" data-id="'+id+'" aria-label="Imprimir ticket del cliente '+_esc(num)+'">▤ Ticket cliente</button></div>' +
+    
     (!recent?'<div class="online-board-contact-actions"><button type="button" class="online-board-detail" data-online-action="confirm" data-id="'+id+'">'+(online?'Confirmar por WhatsApp':'Tiempo y WhatsApp')+'</button><button type="button" class="online-board-detail online-board-cancel" data-online-action="cancel" data-id="'+id+'">Cancelar pedido</button></div>':'') +
-    (route ? '<div class="online-board-route-actions" role="group" aria-label="Reparto de la orden '+_esc(num)+'"><button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button>'+(!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'')+'</div>' : '') +
+    '<div class="online-board-quick-actions" role="group" aria-label="Impresiones y rutas">'
+    +'<button type="button" class="online-board-detail" data-online-action="print-customer" data-id="'+id+'" aria-label="Imprimir ticket del cliente '+_esc(num)+'">▤ Ticket cliente</button>'
+    +(route?'<button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button>':'')+'</div>'
+    +(route&&!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'') +
+
     (o.remoteStatusPending?'<div class="online-board-missing">Estado pendiente de sincronizar <button type="button" class="online-board-detail" data-online-action="sync-status" data-id="'+id+'">Reintentar</button></div>':'') +
     (warning ? '<div class="online-board-payment is-warning"><strong>' + _esc(payment) + '</strong></div>' : '') +
     '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
