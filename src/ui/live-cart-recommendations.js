@@ -215,5 +215,5 @@ export function createLiveRecommendationEditor(w,notify) {
     if(!saved)throw new Error(error||'No se pudo confirmar la publicación.');
     return true;
   }
-  return {render,bind,refresh,get:()=>remote,publishDraft};
+  return {render,bind,refresh,get:()=>remote,publishDraft,reset:()=>{remote=null;editing=null;previewId='';error='';message='';loading=false;busy=false;}};
 }
