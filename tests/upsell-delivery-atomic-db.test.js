@@ -52,6 +52,14 @@ describe('Delivery: nonce y pedido atómicos en PostgreSQL, sin publicar el RPC 
    await expect(as(role,()=>rpc())).rejects.toThrow(/permission denied/);
   expect(await consumed()).toBe(0);expect(await count()).toBe(0);
  });
+ it('rechaza pedidos sin método, de MP o con campos inválidos sin consumir nonce',async()=>{
+  for(const invalid of [
+   {paymentMethod:null},{paymentMethod:'mercadopago'},{source:null},
+   {source:'express'},{items:[]},{items:null},{total:null}
+  ])await expect(as('service_role',()=>rpc(rid2,nonce2,payload(invalid))))
+     .rejects.toThrow(/upsell_order_invalid/);
+  expect(await consumed()).toBe(0);expect(await count()).toBe(0);
+ });
  it('si falla insertar la orden, PostgreSQL también revierte el nonce; reintento funciona',async()=>{
   await expect(as('service_role',()=>rpc(rid1,nonce,payload({simulateFailure:true}))))
    .rejects.toThrow(/simulated_order_failure/);
