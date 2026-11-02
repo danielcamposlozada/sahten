@@ -402,6 +402,14 @@ function openCart(){step='cart';serviceSelectionManual=false;sheet();showSheet()
 function checkoutStep(next){if(sending||!['cart','details'].includes(next)||!lines().length)return;step=next;sheet();$('sheet').querySelector('.sheet-body').scrollTop=0;$('sheet').focus({preventScroll:true});}
 function checkoutSteps(){return '<ol class="checkout-steps" aria-label="Pasos del pedido"><li'+(step==='cart'?' aria-current="step"':'')+'><b aria-hidden="true">1</b>Pedido</li><li'+(step==='details'?' aria-current="step"':'')+'><b aria-hidden="true">2</b>Entrega y pago</li></ol>';}
 function cartItemsHtml(ls,prefix){prefix=prefix||'cart';return '<ul class="'+(prefix==='side'?'side-items':'cart-items')+'" aria-label="Productos de tu pedido">'+ls.map(function(l){return '<li class="cart-item"><div><div class="cart-item-name">'+esc(l.name)+(l.unavailable?' · No disponible':'')+'</div><div class="cart-item-unit">'+fmt(l.unitPrice)+' por unidad</div></div><div class="cart-item-price">'+fmt(l.lineTotal)+'</div><div class="cart-item-actions"><div class="cart-quantity"><button type="button" id="'+prefix+'-dec-'+esc(l.id)+'" data-dec="'+esc(l.id)+'" aria-label="Restar una unidad de '+esc(l.name)+'"'+(l.qty<=1?' disabled':'')+'>−</button><output aria-label="Cantidad de '+esc(l.name)+'" aria-live="polite">'+l.qty+'</output><button type="button" id="'+prefix+'-inc-'+esc(l.id)+'" data-inc="'+esc(l.id)+'" aria-label="Sumar una unidad de '+esc(l.name)+'"'+(l.qty>=999||l.unavailable?' disabled':'')+'>+</button></div><button type="button" class="cart-remove" id="'+prefix+'-remove-'+esc(l.id)+'" data-remove="'+esc(l.id)+'" aria-label="Quitar '+esc(l.name)+' del pedido">Quitar</button></div></li>';}).join('')+'</ul>';}
+function fatayUpgradePanel(){
+  var u=eligibleFatayUpgrade(MENU,cart);
+  if(!u)return '';
+  return '<section class="cart-addons" aria-label="Mejorar promoción de Fatay">'
+    +'<h3>¿Sumamos la cuarta Fatay?</h3>'
+    +'<p class="cart-addons-explain">Cambiá el combo de 3 por el de 4. Una cuarta Fatay por '+fmt(u.extraAtList)+' adicionales antes del beneficio por medio de pago. No se duplicará el combo anterior.</p>'
+    +'<button type="button" class="cta" data-upgrade-fatay>Cambiar por 4 Fatay</button></section>';
+}
 function cartAddonSuggestions(){
   var options=recommendCartAddons({products:MENU.products,cart:lines(),
     policy:MENU.cartRecommendations||{enabled:false},showPrices:MENU.config.showPrices!==false});
