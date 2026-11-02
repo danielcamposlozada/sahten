@@ -404,7 +404,8 @@ function upsellContext(){
   menuRevision:MENU&&MENU.generatedAt};
 }
 function selectedUpsell(){
- return acceptedCheckoutUpsell(upsellState,upsellContext())?upsellState:null;
+ return MENU?.promotions?.enabled===true&&MENU.promotions.upsellGuardRequired===true&&
+  acceptedCheckoutUpsell(upsellState,upsellContext())?upsellState:null;
 }
 function newUpsellProof(){
  var bytes=new Uint8Array(32);crypto.getRandomValues(bytes);
