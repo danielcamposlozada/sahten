@@ -184,6 +184,12 @@ function deliverySetup(){
    if(used.has(x.nonce))return used.get(x.nonce)===x.requestId;
    used.set(x.nonce,x.requestId);return true;
   }),
+  atomicUpsellOrder:vi.fn(async x=>{
+   // Simulador: la transacción SQL real se prueba con PGlite por separado.
+   const confirmed=await repo.consumeUpsellNonce(x);
+   if(!confirmed)throw Error('upsell_nonce_reused');
+   return repo.run('order',{store_id:x.storeId,request_id:x.requestId,payload:x.payload});
+  }),
   run:vi.fn(async(action,args)=>{
    if(action==='limit')return true;
    if(action==='submission')return null;
@@ -248,6 +254,19 @@ describe('Integración Edge de delivery y retiro (rutas simuladas)',()=>{
   expect(a.status).toBe(200);expect(b.status).toBe(200);
   expect(x.orders).toHaveLength(1);
   expect(x.repo.consumeUpsellNonce).toHaveBeenCalledTimes(1);
+ });
+ it('si la transacción atómica falla, el servicio NO crea pedido ni hace un canje alternativo',async()=>{
+  const x=deliverySetup();
+  const offer=await x.call('offer',{order:x.order,upsellProof:proof,
+   productId:'fatay',offerId:'fatay-individual-up'});
+  expect(offer.status).toBe(200);
+  x.repo.atomicUpsellOrder.mockRejectedValueOnce(Error('db timeout'));
+  const done=await x.call('order',{order:selected(x.order,offer.data),
+   upsellProof:proof,requestId:rid});
+  expect(done.status).toBeGreaterThanOrEqual(400);
+  expect(x.orders).toHaveLength(0);
+  expect(x.repo.atomicUpsellOrder).toHaveBeenCalledTimes(1);
+  expect(x.repo.consumeUpsellNonce).not.toHaveBeenCalled();
  });
  it('cambiar la dirección tras emitir la oferta la invalida antes de generar el pedido',async()=>{
   const x=deliverySetup(),offer=await x.call('offer',{order:x.order,upsellProof:proof,
