@@ -182,6 +182,7 @@ input,select,textarea{font-size:16px;min-height:44px}
 var ORDER_PAGE=document.body.hasAttribute('data-storefront'), PREVIEW=document.body.hasAttribute('data-preview');
 var deliveryServerOffset=0,addressGeneration=0,addressAbort=null,addressSuggest=createAddressSuggestions();
 var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null,deliveryUpdateNotice='';
+var couponCode='',couponQuote=null,couponMessage='',couponBusy=false;
 var MENU=null, cart={}, type='delivery', serviceSelectionManual=false, geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
@@ -484,6 +485,47 @@ function sendStatus(){
   return 'Revisá el total y enviá tu pedido.';
 }
 function payMethods(){var m=(MENU.payments&&MENU.payments.methods)||{efectivo:true};return Object.keys(m).filter(function(k){return m[k]&&(k!=='mercadopago'||mpAvailable)});}
+function couponFingerprint(method){
+  return JSON.stringify([lines().map(function(l){return [l.id,l.qty,l.unitPrice]}),type,method||pay,
+    geo&&geo.lat,geo&&geo.lng,form.address,deliveryQuoteId,
+    MENU?.promotions?.version,MENU?.generatedAt]);
+}
+function activeCoupon(method){
+  return couponQuote && couponQuote.key===couponFingerprint(method) &&
+    couponQuote.code===couponCode.trim().toUpperCase()?couponQuote:null;
+}
+function couponSection(){
+  if(!sb()||MENU.promotions?.enabled!==true)return '';
+  var allowed=pay==='efectivo'||pay==='transferencia',active=activeCoupon(pay);
+  return '<div class="promo-coupon-entry"><label for="coupon-code">¿Tenés un cupón de Sahten?</label>'
+    +'<div class="promo-coupon-controls"><input type="text" id="coupon-code" autocomplete="off" maxlength="40"'
+    +' placeholder="SHT-XXXXXXXX" value="'+esc(couponCode)+'"'
+    +(allowed?'':' disabled')+'>'
+    +'<button type="button" data-coupon-apply'+(allowed&&!couponBusy?'':' disabled')+'>'
+    +(couponBusy?'Verificando…':'Aplicar')+'</button></div>'
+    +(active?'<p class="note ok">Cupón validado · descuento incluido en el total</p>':'')
+    +(couponMessage?'<p role="status">'+esc(couponMessage)+'</p>':'')
+    +(!allowed?'<p class="cart-help">Los cupones se aplican con efectivo o transferencia.</p>':'')
+    +'</div>';
+}
+function applyCoupon(){
+  if(couponBusy||!['efectivo','transferencia'].includes(pay)||!sb())return;
+  var code=couponCode.trim().toUpperCase(),key=couponFingerprint(pay);
+  if(!/^SHT-[A-HJ-NP-Z2-9]{8,30}$/.test(code)){
+    couponQuote=null;couponMessage='Revisá el formato del cupón.';sheet();return;
+  }
+  couponBusy=true;couponQuote=null;couponMessage='Verificando el cupón con Sahten…';sheet();
+  deliveryApi('quote',{order:buildOrder(),couponCode:code}).then(function(v){
+    if(key!==couponFingerprint(pay)||code!==couponCode.trim().toUpperCase())return;
+    if(!v.order?.promotionSnapshot?.couponId||!Number.isFinite(Number(v.order.discount)))
+      throw new Error('El cupón no puede aplicarse a los productos del pedido.');
+    couponQuote={key:key,code:code,couponId:v.order.promotionSnapshot.couponId,
+      discount:Number(v.order.discount)};
+    couponMessage='Cupón verificado para este pedido.';
+  }).catch(function(e){
+    couponQuote=null;couponMessage=e.message||'No fue posible validar este cupón.';
+  }).finally(function(){couponBusy=false;recalcDelivery();sheet();});
+}
 function cartBenefit(method){
   var selected=method||pay, legacy=paymentDiscountQuote(subtotal(),selected,MENU.payments&&MENU.payments.benefit,'online');
   if(!MENU.promotions||MENU.promotions.enabled!==true)return legacy;
@@ -492,7 +534,8 @@ function cartBenefit(method){
     method:selected,channel:'online',config:Object.assign({},MENU.promotions,{
       paymentPercent:rule.enabled&&rule.channels.online?rule.percent:0
     })});
-  return {amount:quote.discount,label:quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
+  var accepted=activeCoupon(selected);
+  return {amount:accepted?accepted.discount:quote.discount,label:accepted?'Promociones y cupón':quote.appliedPromotionIds.length?'Promociones y beneficios':legacy.label,
     paymentDiscount:quote.appliedPromotionIds.length?null:legacy.paymentDiscount,
     promotionQuote:quote};
 }
