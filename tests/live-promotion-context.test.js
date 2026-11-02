@@ -25,7 +25,7 @@ describe('Todas las condiciones visibles de una campaña',()=>{
   expect(c.until).toBe('30/11/2026');
   expect(ticketCampaignDetails(weekly).terms.join(' · ')).toContain('lun/mar/mié');
   const central={...base,schedule:{type:'central_weekends'}};
-  expect(campaignContext(central,{now}).scheduleText).toContain('segundo y tercer viernes y sábado');
+  expect(campaignContext(central,{now}).scheduleText).toContain('Segundo y tercer viernes y sábado');
   expect(ticketCampaignDetails(central).terms.join(' ')).toContain('2.º y 3.º');
  });
 });
