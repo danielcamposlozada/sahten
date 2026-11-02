@@ -1169,3 +1169,14 @@
 
 .online-board,.most-tabs,.most-cats { --muted: #626970; }
 [data-theme="dark"] :is(.online-board,.most-tabs,.most-cats) { --muted: #b8c6bc; }
+
+/* Controles aprobados: comanda en cabecera; ticket cliente y ruta compactos. */
+.hist-card-top{gap:6px;flex-wrap:wrap}
+.hist-card-top .hist-status{margin-left:auto}
+.hist-print-kitchen{min-width:34px;min-height:34px;padding:5px 8px;font-size:16px}
+.hist-card-actions{align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.online-board-print-kitchen{padding:6px 9px;min-width:34px;min-height:34px;font-size:16px}
+.online-board-quick-actions{display:flex;align-items:stretch;gap:7px;min-width:0;flex-wrap:wrap}
+.online-board-quick-actions .online-board-detail{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:1 1 125px;min-height:36px}
+.online-board-quick-actions svg{flex:none}
+@media(max-width:420px){.online-board-quick-actions .online-board-detail{flex-basis:100px;padding-inline:6px;font-size:11px}}
