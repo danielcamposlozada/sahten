@@ -446,13 +446,19 @@ function _onlineBoardCard(o, recent = false) {
       '<button type="button" class="online-board-order-link" data-online-action="open" data-id="' + id + '" aria-label="Abrir detalles de la orden ' + _esc(num) + '">' + _esc(num) + '</button>' +
       '<span class="online-board-origin">' + (online ? 'Web' : 'Mostrador') + '</span>' +
       '<span class="online-board-status online-board-status--' + statusClass + '">' + _esc(status) + '</span>' +
+      '<button type="button" class="online-board-detail online-board-print-kitchen" data-online-action="print" data-id="'+id+'" title="Imprimir comanda" aria-label="Imprimir comanda '+_esc(num)+'">🖨</button>' +
     '</div>' +
     '<div class="online-board-name">' + _esc(o.customerName || 'Consumidor Final') + '</div>' +
     '<div class="online-board-card-bottom"><div class="online-board-quantity">' + count + ' ' + (count === 1 ? 'producto' : 'productos') +
       (!recent ? ' <span class="online-board-age" data-order-age="' + id + '">' + _esc(workflow.orderAgeLabel(o)) + '</span>' : '') + '</div><strong class="online-board-total">$' + _fmtN(o.total) + '</strong></div>' +
     (SAHTEN.orderActions.label(o)?'<div class="online-board-estimate">'+_esc(SAHTEN.orderActions.label(o))+'</div>':'') +
+    
     (!recent?'<div class="online-board-contact-actions"><button type="button" class="online-board-detail" data-online-action="confirm" data-id="'+id+'">'+(online?'Confirmar por WhatsApp':'Tiempo y WhatsApp')+'</button><button type="button" class="online-board-detail online-board-cancel" data-online-action="cancel" data-id="'+id+'">Cancelar pedido</button></div>':'') +
-    (route ? '<div class="online-board-route-actions" role="group" aria-label="Reparto de la orden '+_esc(num)+'"><button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button><a class="online-board-detail" href="'+_esc(route.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Abrir ruta de la orden '+_esc(num)+' en Google Maps">Abrir en Maps</a><button type="button" class="online-board-detail" data-online-action="route-share" data-id="'+id+'" aria-label="Compartir ruta de la orden '+_esc(num)+'">Compartir</button>'+(!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'')+'</div>' : '') +
+    '<div class="online-board-quick-actions" role="group" aria-label="Impresiones y rutas">'
+    +'<button type="button" class="online-board-detail" data-online-action="print-customer" data-id="'+id+'" aria-label="Imprimir ticket del cliente '+_esc(num)+'">▤ Ticket cliente</button>'
+    +(route?'<button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button>':'')+'</div>'
+    +(route&&!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'') +
+
     (o.remoteStatusPending?'<div class="online-board-missing">Estado pendiente de sincronizar <button type="button" class="online-board-detail" data-online-action="sync-status" data-id="'+id+'">Reintentar</button></div>':'') +
     (warning ? '<div class="online-board-payment is-warning"><strong>' + _esc(payment) + '</strong></div>' : '') +
     '<details class="online-board-disclosure" data-order-details="' + id + '"><summary><span class="details-closed">Ver detalles</span><span class="details-open">Ocultar detalles</span><span class="sr-only"> de la orden ' + _esc(num) + '</span></summary><div class="online-board-expanded">' +
@@ -468,7 +474,7 @@ function _onlineBoardCard(o, recent = false) {
     (o.deliverySnapshot ? '<div>'+_esc(o.deliverySnapshot.effectiveZone?.name||'Delivery')+' · '+Number(o.deliverySnapshot.routeKm).toFixed(2)+' km por calles · Ahorro en envío: $'+_fmtN(o.deliverySnapshot.discount)+(o.deliverySnapshot.authorization?.approved?' · Autorización registrada':'')+'</div>' : '') +
     '<div class="online-board-actions">' +
       '<button type="button" class="online-board-detail" data-online-action="open" data-id="' + id + '">Abrir pedido completo</button>' +
-      '<button type="button" class="online-board-detail" data-online-action="print" data-id="' + id + '" aria-label="Imprimir orden ' + _esc(num) + '">Imprimir</button></div></div></details>' +
+      '<button type="button" class="online-board-detail" data-online-action="print-customer" data-id="' + id + '" aria-label="Imprimir ticket del cliente ' + _esc(num) + '">▤ Ticket cliente</button></div></div></details>' +
       (next ? '<button type="button" class="online-board-next" data-online-action="next" data-id="' + id + '">' + _esc(next.label) + '</button>' : '') +
   '</article>';
 }
@@ -507,7 +513,8 @@ function _onlineBoardClick(event) {
   if (action === 'cancel') { SAHTEN.orderActions.cancel(order.id); return; }
   if (action === 'open') { openOrderDetail(order.id); return; }
   if (action === 'print') { printComanda(order.id); return; }
-  if (action === 'route-copy' || action === 'route-share') { button.disabled=true;const task=action==='route-copy'?SAHTEN.delivery.handoff.copy(order.id):SAHTEN.delivery.handoff.share(order.id);Promise.resolve(task).finally(()=>{button.disabled=false;});return; }
+   if (action === 'print-customer') { printTicketCliente(order.id); return; }
+  if (action === 'route-copy') { button.disabled=true;Promise.resolve(SAHTEN.delivery.handoff.copy(order.id)).finally(()=>{button.disabled=false;});return; }
   if (action === 'next') {
     const next = SAHTEN.orderWorkflow.nextOnlineStatus(order);
     if (next) {

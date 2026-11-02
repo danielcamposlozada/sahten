@@ -1,4 +1,4 @@
-import { buildReceipt } from './receipt-template.js';
+import { buildReceipt, buildKitchenReceipt } from './receipt-template.js';
 const KEY='sahten-receipt-options';
 export function receiptOptions(storage=globalThis.localStorage){try{const v=JSON.parse(storage.getItem(KEY)||'{}');return {autoLocal:v.autoLocal===true,autoOnline:v.autoOnline===true,directLocal:v.directLocal===true,directOnline:v.directOnline===true};}catch{return {autoLocal:false,autoOnline:false,directLocal:false,directOnline:false};}}
 export function saveReceiptOptions(options,storage=globalThis.localStorage){const v={...receiptOptions(storage),...options};const value={autoLocal:v.autoLocal===true,autoOnline:v.autoOnline===true,directLocal:v.directLocal===true,directOnline:v.directOnline===true};storage.setItem(KEY,JSON.stringify(value));return value;}
@@ -12,5 +12,5 @@ function waitForPrintDialog(w){const frame=w.document.getElementById('sahten-pri
 export function installReceipts(w){
  const context=()=>w.SAHTEN.project.session.id;
  const auto=createAutoPrinter({storage:w.localStorage,context,find:id=>w.sahtenOrders?.().find(o=>o.id===id),print:async (id,{origin})=>{const ctx=context();await waitForPrintDialog(w);if(ctx!==context())return false;const opts=receiptOptions(w.localStorage),direct=origin==='online'?opts.directOnline:opts.directLocal;const result=await w.printComanda(id,{automatic:true,direct});await waitForPrintDialog(w);return result;},notify:body=>w.pushNotification?.({type:'system',title:'Revisar impresión',body})});
- return {html:buildReceipt,options:()=>receiptOptions(w.localStorage),save:options=>saveReceiptOptions(options,w.localStorage),enqueue:auto.enqueue};
+ return {html:buildReceipt,kitchenHtml:buildKitchenReceipt,options:()=>receiptOptions(w.localStorage),save:options=>saveReceiptOptions(options,w.localStorage),enqueue:auto.enqueue};
 }

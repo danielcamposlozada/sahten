@@ -37,8 +37,8 @@ describe('catálogo del Mostrador', () => {
     w.SAHTEN.printDocument = async value => { html = value; };
     w.open = () => { throw new Error('No usar pop-ups'); };
     await w.printComanda(w.eval('SAHTEN_ORDERS[0].id'));
-    expect(html).toContain('ORDEN #0001');
-    expect(html).toContain('TOTAL');
+    expect(html).toContain('COMANDA #0001');
+    expect(html).not.toContain('TOTAL');
     expect(html).toContain(w.eval('SAHTEN_ORDERS[0].items[0].name'));
     w.close();
   });
@@ -48,7 +48,7 @@ describe('catálogo del Mostrador', () => {
     let html, options; w.SAHTEN.printDocument = async (h, o) => { html = h; options = o; };
     for (const [paper, width] of [[48,40],[58,48],[80,72]]) {
       w.localStorage.setItem('sahten-receipt-paper', String(paper));
-      await w.printComanda('ancho');
+      await w.printTicketCliente('ancho');
       expect(options.paperWidthMm).toBe(paper);
       expect(html).toContain('width: ' + width + 'mm');
       expect(html).toContain('$19.753.086');

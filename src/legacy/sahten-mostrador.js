@@ -642,6 +642,7 @@ function _renderHistorialTab() {
     );
 }
 
+function printTicketCliente(orderId,options={}){return printComanda(orderId,{...options,customer:true});}
 function _renderOrderCard(o) {
   const statusMap = { pendiente: {label:'Pendiente',cls:'pending',icon:'⏳'}, en_preparacion: {label:'En preparación',cls:'prep',icon:'🔥'}, listo: {label:'Listo',cls:'done',icon:'✅'}, enviado:{label:'En camino',cls:'prep',icon:'→'}, retirado:{label:'Retirado',cls:'done',icon:'✓'}, entregado:{label:'Entregado',cls:'done',icon:'✓'}, cancelado:{label:'Cancelado',cls:'pending',icon:'×'} };
   const s = statusMap[o.status] || statusMap.pendiente;
@@ -649,7 +650,7 @@ function _renderOrderCard(o) {
   const dateStr = date.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}) + ' ' + date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const itemsSummary = o.items.slice(0,3).map(it => it.qty + '× ' + it.name).join(', ') + (o.items.length > 3 ? ' +' + (o.items.length-3) + ' más' : '');
   return '<div class="hist-card" onclick="openOrderDetail(\''+o.id+'\')">' +
-    '<div class="hist-card-top"><div class="hist-card-num">#'+String(o.num).padStart(4,'0')+'</div>'+(o.source==='delivery'?'<span style="background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'<span class="hist-status hist-status-'+s.cls+'">'+s.icon+' '+s.label+'</span></div>' +
+    '<div class="hist-card-top"><div class="hist-card-num">#'+String(o.num).padStart(4,'0')+'</div>'+(o.source==='delivery'?'<span style="background:rgba(242,140,0,0.12);color:#F28C00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🛵 Delivery</span>':o.source==='pickup'?'<span style="background:rgba(35,83,40,0.1);color:var(--primary);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px">🏠 Tienda Online</span>':'')+'<span class="hist-status hist-status-'+s.cls+'">'+s.icon+' '+s.label+'</span><button type="button" class="hist-act-btn hist-print-kitchen" onclick="event.stopPropagation();printComanda(\''+o.id+'\')" title="Imprimir comanda" aria-label="Imprimir comanda">🖨</button></div>' +
     '<div class="hist-card-meta"><span>'+dateStr+'</span><span>'+_esc(o.customerName||'Consumidor Final')+'</span></div>' +
     '<div class="hist-card-items">'+_esc(itemsSummary)+'</div>' +
     (o.stockDeducted?'<div style="font-size:10px;color:var(--green);font-weight:600;margin-top:4px">📦 Stock descontado</div>':'') +
@@ -657,7 +658,7 @@ function _renderOrderCard(o) {
     '<div class="hist-card-actions">' +
     (o.status==='pendiente'?'<button class="hist-act-btn" onclick="event.stopPropagation();orderSetStatus(\''+o.id+'\',\'en_preparacion\')">🔥 Preparar</button>':'') +
     (o.status==='en_preparacion'?'<button class="hist-act-btn hist-act-done" onclick="event.stopPropagation();orderSetStatus(\''+o.id+'\',\'listo\')">✅ Listo</button>':'') +
-    '<button class="hist-act-btn" onclick="event.stopPropagation();printComanda(\''+o.id+'\')">🖨️</button>' +
+    '<button class="hist-act-btn" onclick="event.stopPropagation();printTicketCliente(\''+o.id+'\')" title="Imprimir ticket cliente" aria-label="Imprimir ticket cliente">▤ Ticket cliente</button>' +
     '</div></div></div>';
 }
 
@@ -715,7 +716,7 @@ function openOrderDetail(orderId) {
     SAHTEN.pricing.orderDetail(o) +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">' +
     (o.stockDeducted?'<button class="btn" onclick="orderRestoreStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Devuelve al stock lo descontado por esta orden">↩ Revertir stock</button>':'<button class="btn" onclick="orderDeductStock(\''+o.id+'\');openOrderDetail(\''+o.id+'\')" title="Descuenta ingredientes y envases según las recetas">📦 Descontar stock</button>') +
-    '<button class="btn btn-primary" onclick="printComanda(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir comanda</button>' +
+    '<button class="btn" onclick="printTicketCliente(\''+o.id+'\')" title="Imprimir ticket del cliente">▤ Ticket cliente</button><button class="btn btn-primary" onclick="printComanda(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir comanda</button>' +
     '<button class="btn" onclick="orderReopen(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar (reabrir)</button>' +
     '<button class="btn" style="color:var(--red);border-color:var(--red)" onclick="orderDelete(\''+o.id+'\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> Eliminar</button>' +
     '</div></div></div>';
@@ -797,9 +798,9 @@ function printComanda(orderId, options = {}) {
   }
 
   const paper = SAHTEN.receiptPaper.current();
-  const html = SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)});
+  const html = options.customer ? SAHTEN.receipts.html(o, {paper, logoHtml, reviewHtml:SAHTEN.receiptReviews.footer(_custData)}) : SAHTEN.receipts.kitchenHtml(o, {paper, logoHtml});
   const printing = options.direct ? SAHTEN.directPrinting.print(html, {paperWidthMm:paper.paperMm}) : SAHTEN.printDocument(html, {paperWidthMm:paper.paperMm});
-  return printing.then(()=>{if(options.direct){try{pushNotification({type:'system',title:'Comanda enviada a la impresora',body:'Orden #'+String(o.num).padStart(4,'0')+'. Revisá la impresora si no sale el ticket.'});}catch{/* El aviso no cambia el resultado del envío. */}}return true;}).catch(e=>{ if(options.automatic)throw e;alert('No se pudo imprimir la comanda. '+(e.message || 'Volvé a intentarlo.')); return false; });
+  return printing.then(()=>{if(options.direct){try{pushNotification({type:'system',title:(options.customer?'Ticket cliente':'Comanda')+' enviado a la impresora',body:'Orden #'+String(o.num).padStart(4,'0')+'. Revisá la impresora si no sale el ticket.'});}catch{/* El aviso no cambia el resultado del envío. */}}return true;}).catch(e=>{ if(options.automatic)throw e;alert('No se pudo imprimir '+(options.customer?'el ticket de cliente':'la comanda')+'. '+(e.message || 'Volvé a intentarlo.')); return false; });
 }
 
 // ═══════════════════════════════════════════════════════════
