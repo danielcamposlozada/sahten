@@ -298,6 +298,52 @@ export function installPromotionsEditor(w=window) {
         try{const refreshed=await liveApi().readPromotionCampaignStates();if(refreshed)live=refreshed;}catch{}}
       finally{liveBusy=false;render();}
     }));
+    root.querySelector('[data-coupon-create]')?.addEventListener('click',()=>{
+      if(!canEdit)return;
+      const programs=state.couponPrograms&&typeof state.couponPrograms==='object'?state.couponPrograms:{};
+      let id='cupon-'+Date.now().toString(36),i=1;
+      while(Object.hasOwn(programs,id))id='cupon-'+Date.now().toString(36)+'-'+i++;
+      state.couponPrograms=programs;
+      programs[id]={name:'Nuevo programa de cupón',enabled:false,extraPercent:5,minEligibleSubtotal:0,
+        maxExtraAmount:null,validDays:14,channel:'online',requiresConfirmedOrigin:false,
+        activationBlockers:['atomic_checkout_redemption_required']};
+      couponEditing=id;save(state);render();
+    });
+    root.querySelectorAll('[data-coupon-edit]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;couponEditing=b.dataset.couponEdit;render();
+    }));
+    root.querySelectorAll('[data-coupon-duplicate]').forEach(b=>b.addEventListener('click',()=>{
+      if(!canEdit)return;
+      const source=state.couponPrograms?.[b.dataset.couponDuplicate];if(!source)return;
+      let id='cupon-'+Date.now().toString(36),i=1;
+      while(Object.hasOwn(state.couponPrograms,id))id='cupon-'+Date.now().toString(36)+'-'+i++;
+      state.couponPrograms[id]={...JSON.parse(JSON.stringify(source)),name:'Copia de '+String(source.name||'Cupón').slice(0,80),enabled:false};
+      couponEditing=id;save(state);render();
+    }));
+    root.querySelectorAll('[data-coupon-delete]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!canEdit)return;const id=b.dataset.couponDelete;
+      const accepted=await w.sahtenConfirm?.('¿Eliminar este borrador de cupón? No afecta códigos ni pedidos.',
+        {title:'Eliminar programa de cupón',okLabel:'Eliminar borrador'});
+      if(accepted!==true||!canEdit||!Object.hasOwn(state.couponPrograms||{},id))return;
+      delete state.couponPrograms[id];if(couponEditing===id)couponEditing=null;save(state);render();
+    }));
+    root.querySelector('[data-coupon-cancel]')?.addEventListener('click',()=>{couponEditing=null;render();});
+    root.querySelector('[data-coupon-save]')?.addEventListener('click',()=>{
+      if(!canEdit||!couponEditing)return;
+      const item=state.couponPrograms?.[couponEditing];if(!item)return;
+      const name=root.querySelector('#coupon-name')?.value.trim(),pct=Number(root.querySelector('#coupon-percent')?.value),
+        min=Number(root.querySelector('#coupon-minimum')?.value),capStr=root.querySelector('#coupon-cap')?.value.trim(),
+        cap=capStr===''?null:Number(capStr),days=Number(root.querySelector('#coupon-days')?.value),
+        channel=root.querySelector('#coupon-channel')?.value;
+      if(!name||name.length<4||name.length>100||!Number.isFinite(pct)||pct<=0||pct>10
+        ||!Number.isFinite(min)||min<0||(cap!==null&&(!Number.isFinite(cap)||cap<=0))
+        ||!Number.isInteger(days)||days<1||days>365||!['online','mostrador'].includes(channel)){
+        w.sahtenAlert?.('Revisá nombre, descuento hasta 10 puntos, mínimo, tope y vigencia de 1 a 365 días.');return;
+      }
+      Object.assign(item,{name,extraPercent:pct,minEligibleSubtotal:min,maxExtraAmount:cap,
+        validDays:days,channel,requiresConfirmedOrigin:root.querySelector('#coupon-origin')?.checked===true,enabled:false});
+      couponEditing=null;save(state);render();
+    }));
     root.querySelectorAll('[data-draft-toggle]').forEach(button=>button.addEventListener('click',()=>{
       if(w.SAHTEN?.project?.session?.readOnly||w.document.body.classList.contains('role-no-costs'))return;
       const key=button.dataset.draftToggle,id=button.dataset.draftId;
@@ -549,18 +595,33 @@ export function installPromotionsEditor(w=window) {
   }
   function couponEditor(state){
     const entries=Object.entries(state.couponPrograms||{});
-    const rows=entries.map(([id,program])=>'<article class="promo-row promo-draft-item"><div><strong>'+esc(program.name||id)+'</strong>'
-      +'<p>'+esc(id)+' · '+(program.enabled?'Marcado en borrador':'Desactivado')+'</p>'
-      +'<p>'+esc(program.extraPercent??0)+' puntos adicionales · Compra mínima '+fmt(program.minEligibleSubtotal)
-      +(program.maxExtraAmount!=null?' · Tope '+fmt(program.maxExtraAmount):'')
-      +' · Vigencia '+esc(program.validDays??'?')+' días</p>'
-      +'<small>Canal: '+esc(program.channel||'online')+(program.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
-      +'</div>'+draftSwitch('couponPrograms',{...program,id})+'</article>').join('');
+    const canEdit=!w.SAHTEN?.project?.session?.readOnly&&!w.document.body.classList.contains('role-no-costs');
+    const rows=entries.map(([id,p])=>'<article class="promo-row promo-draft-item"><div><strong>'+esc(p.name||id)+'</strong>'
+      +'<p>'+esc(id)+' · '+(p.enabled?'En planificación local':'Fuera de planificación')+' · No publicado</p>'
+      +'<p>'+esc(p.extraPercent??0)+' puntos adicionales · Compra mínima '+fmt(p.minEligibleSubtotal)
+      +(p.maxExtraAmount!=null?' · Tope '+fmt(p.maxExtraAmount):'')+' · Vigencia '+esc(p.validDays??'?')+' días</p>'
+      +'<small>Canal previsto: '+esc(p.channel||'online')+(p.requiresConfirmedOrigin?' · Requiere compra anterior confirmada':'')+'</small>'
+      +'</div><div class="rec-rule-controls">'+draftSwitch('couponPrograms',{...p,id})
+      +['Editar','Duplicar','Eliminar'].map((label,i)=>'<button type="button" data-coupon-'+['edit','duplicate','delete'][i]+'="'+esc(id)+'"'+(canEdit?'':' disabled')+'>'+label+'</button>').join('')
+      +'</div>'+readinessChecklist('couponPrograms',{...p,id})+'</article>').join('');
     const methods=state.activationPolicy?.allowedPromotionPaymentMethods;
+    const editing=couponEditing?state.couponPrograms?.[couponEditing]:null;
+    const form=editing?'<div class="promo-card rec-edit-form"><h4>Editar programa de cupón · borrador local</h4><p>Identificador: '+esc(couponEditing)+'</p>'
+      +formField('coupon-name','Nombre',editing.name||'','text','maxlength="100"')
+      +formField('coupon-percent','Puntos adicionales (máximo 10)',editing.extraPercent??5,'number','min="0.01" max="10" step="0.01"')
+      +formField('coupon-minimum','Compra mínima elegible',editing.minEligibleSubtotal??0,'number','min="0" step="0.01"')
+      +formField('coupon-cap','Tope del beneficio en $ (opcional)',editing.maxExtraAmount??'','number','min="0.01" step="0.01"')
+      +formField('coupon-days','Vigencia en días',editing.validDays??14,'number','min="1" max="365" step="1"')
+      +'<label class="promo-field">Canal previsto<select id="coupon-channel">'
+      +[['online','Tienda online'],['mostrador','Mostrador']].map(([id,label])=>'<option value="'+id+'"'+((editing.channel||'online')===id?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'
+      +'<label class="promo-checkbox"><input id="coupon-origin" type="checkbox" '+(editing.requiresConfirmedOrigin?'checked':'')+'> Requiere compra anterior confirmada</label>'
+      +'<p>Guardar desactiva la planificación, no emite códigos ni modifica descuentos públicos.</p>'
+      +'<div class="promo-row"><button type="button" data-coupon-save>Guardar borrador</button><button type="button" data-coupon-cancel>Cancelar</button></div></div>':'';
     return '<section class="promo-card"><h3>Cupones y recompensas ('+entries.length+')</h3>'
-      +'<p>Métodos elegibles para promociones nuevas: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
+      +'<p>Métodos elegibles para nuevas promociones: '+esc(Array.isArray(methods)?methods.join(' y '):'sin autorización publicada')+'. El 10% habitual es independiente.</p>'
       +'<div class="promo-draft-list">'+(rows||'<p>No hay programas configurados.</p>')+'</div>'
-      +'<div class="promo-note"><strong>Emisión y canje:</strong> requieren servidor, cliente identificado, rentabilidad verificada y confirmación de la compra. Una reimpresión conserva el cupón original; nunca crea otro. Esta pantalla no emite códigos utilizables.</div></section>';
+      +'<button type="button" data-coupon-create '+(canEdit?'':'disabled')+'>+ Crear programa de cupón</button>'+form
+      +'<div class="promo-note"><strong>Emisión y canje:</strong> bloqueados hasta completar canje único del checkout. Una reimpresión no emite otro cupón. El switch sólo cambia el borrador.</div></section>';
   }
   function ticketEditor(state,canEdit){
     return '<section class="promo-card"><h3>Publicidad en el ticket del cliente</h3><p>El ticket incluye importes, QR de reseñas y, cuando corresponda, una campaña A/B/D o cupón C. La comanda de cocina jamás incluye publicidad.</p>'
