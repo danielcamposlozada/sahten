@@ -4,6 +4,7 @@ import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatche
 import { promotionReport } from '../core/promotions-report.js';
 import { promotionOverview, filterPromotionOverview } from '../core/promotion-overview.js';
 import { publishedPromotionCatalog, livePromotionStatus } from '../core/live-promotion-catalog.js';
+import { campaignContext } from '../core/promotion-context.js';
 import { createLiveRecommendationEditor } from './live-cart-recommendations.js';
 import { publicationKind } from '../core/promotion-publication.js';
 import { promotionDraftReview } from '../core/promotion-draft-review.js';
@@ -53,13 +54,16 @@ export function installPromotionsEditor(w=window) {
   const draftVerifications=new Map();
   let verificationFeedback='',verificationBusy=false;
   const recEditor=createLiveRecommendationEditor(w,()=>render());
-  let live={published:false,campaigns:[]},liveTicket=null,liveLoaded=false,liveBusy=false,liveError='',liveContext='',lastLiveAt=0;
-  const liveCatalog=()=>publishedPromotionCatalog(get().campaigns,liveLoaded&&!liveError?live:null,liveTicket);
+  let live={published:false,campaigns:[]},liveTicket=null,liveManagement=null,liveLoaded=false,
+    liveBusy=false,liveError='',liveContext='',lastLiveAt=0,liveEditDirty=false,liveSaveBusy=false,liveSaveFeedback='';
+  const liveCatalog=()=>publishedPromotionCatalog(get().campaigns,
+    liveLoaded&&!liveError?live:null,liveManagement||liveTicket);
+  const liveNames=()=>Object.fromEntries((liveManagement?.products||catalog(w)).map(p=>[p.id,p.name]));
   const liveApi=()=>w.SAHTEN?.online?.controller;
   const currentLiveContext=()=>[w.SAHTEN?.project?.session?.id||'',w.SAHTEN?.online?.conn?.()?.storeId||'',w.SAHTEN?.online?.conn?.()?.url||''].join('|');
   function ensureLiveContext(){
     const key=currentLiveContext();
-    if(liveContext!==key){liveContext=key;liveLoaded=false;liveError='';live={published:false,campaigns:[]};liveTicket=null;recInitialized=false;recEditor.reset();draftVerifications.clear();verificationFeedback='';}
+    if(liveContext!==key){liveContext=key;liveLoaded=false;liveError='';live={published:false,campaigns:[]};liveTicket=null;liveManagement=null;liveEditDirty=false;recInitialized=false;recEditor.reset();draftVerifications.clear();verificationFeedback='';}
   }
   const canOperate=()=>!w.SAHTEN?.project?.session?.readOnly
     && ['owner','admin'].includes(w.SAHTEN?.online?.role?.())
@@ -70,19 +74,21 @@ export function installPromotionsEditor(w=window) {
     const context=liveContext;
     liveBusy=true;liveError='';
     try{
-      const [result,ticketResult]=await Promise.all([
+      const [result,ticketResult,management]=await Promise.all([
         liveApi()?.readPromotionCampaignStates?.(),
-        liveApi()?.readPromotionTicketCampaigns?.().catch(()=>null)??Promise.resolve(null)
+        liveApi()?.readPromotionTicketCampaigns?.().catch(()=>null)??Promise.resolve(null),
+        liveApi()?.readPromotionCampaignDetails?.().catch(()=>null)??Promise.resolve(null)
       ]);
       if(context!==currentLiveContext())return;
       if(!result||!Array.isArray(result.campaigns))throw new Error('No se recibió el estado publicado de las campañas.');
       live=result;liveTicket=ticketResult?.source==='published_server'?ticketResult:null;
+      liveManagement=management?.source==='published_management'?management:null;
       liveLoaded=true;lastLiveAt=Date.now();
     }catch(err){
       if(context===currentLiveContext()){
         liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);liveLoaded=true;lastLiveAt=0;
       }
-    }finally{liveBusy=false;render();}
+    }finally{liveBusy=false;if(!liveEditDirty)render();}
   }
   // Un switch disponible únicamente cuando el checkout publicó la campaña.
   // No cambia flags locales de forma optimista.
