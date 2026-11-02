@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+## 0.4.36
+
 - **Centro de Promociones más simple**: plantillas de campañas semanales, lunes y miércoles, fines de semana centrales y fechas particulares, días como botones, rangos horarios, comprobación de campos y vista previa de planificación.
 - **Switches en vivo**: visibles en grilla, editor y control online; estado siempre confirmado con revisión del servidor y sincronización periódica de 10 segundos. No permiten activación comercial si el checkout promocional no está publicado y validado.
 - **Checkout web**: refresco de estados comerciales preparado por separado en PR #70; no se publica ni se habilita en esta versión hasta completar la validación de importes del servidor.
