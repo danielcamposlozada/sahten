@@ -80,9 +80,9 @@ export function quotePromotions({
   const gross = details.reduce((n,l)=>n+l.qty*l.unitCents,0);
   const cash = ['efectivo','transferencia'].includes(method);
   const paymentPercent = cash ? Math.max(0,Math.min(100,Number(config.paymentPercent??10))) : 0;
-  const campaigns = activeCampaigns(config,now,channel);
+  const campaigns = cash ? activeCampaigns(config,now,channel) : [];
   const strictUpsells = config.upsellGuardRequired === true || config.activationPolicy?.requireIncrementalAndBasketMarginCheck === true;
-  const couponValid = couponIsEligible(coupon,{now,channel,customerId});
+  const couponValid = cash && couponIsEligible(coupon,{now,channel,customerId});
   const eligibleGross = details.reduce((n,l)=>n+(couponValid&&eligibleLine(coupon,l,details)?l.qty*l.unitCents:0),0);
   const canCoupon = couponValid && eligibleGross>=toCents(coupon.minEligibleSubtotal||0);
   const used = new Set();
@@ -90,15 +90,15 @@ export function quotePromotions({
   const breakdown=details.map(l=>{
     const base=l.unitCents*l.qty, isFour=l.productId===FOUR_FATAY_ID;
     const selections=[];
-    if(config.enabled && !isFour) {
+    if(config.enabled && cash && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
-        id:c.id, name:c.name, extraPercent:Math.min(100,Number(c.extraPercent)||0), priority:Number(c.priority)||0,
+        id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits: c.maxUnits
       });
       for(const c of (config.upsells||[])) if(!strictUpsells && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
-        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Number(coupon.extraPercent)||0,priority:1000,kind:'coupon'
+        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(coupon.extraPercent)||0)),priority:1000,kind:'coupon'
       });
     }
     // Elegir la mayor rebaja REAL en esta línea (incluidos topes y márgenes).
@@ -132,7 +132,7 @@ export function quotePromotions({
   // En modo servidor estricto, primero calcular campañas/cupones. Después,
   // de manera independiente, como máximo UN upsell por pedido. No confiar en
   // marcas de "artículo añadido" provenientes del JSON del cliente.
-  if(config.enabled && strictUpsells && trustedUpsellSelection?.verified === true) {
+  if(config.enabled && cash && strictUpsells && trustedUpsellSelection?.verified === true) {
     const pending=[];
     for(const promotion of config.upsells || []) {
       if(!promotion?.enabled || promotion.kind !== 'upsell' || promotion.maxUnits !== 1)continue;
