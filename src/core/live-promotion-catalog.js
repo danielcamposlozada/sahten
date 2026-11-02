@@ -19,10 +19,10 @@ export function publishedPromotionCatalog(localCampaigns=[],live=null,ticketSnap
 
 export function livePromotionStatus(row,campaign,now=new Date()) {
   if(!row) return {status:'unknown',label:'Sin verificar'};
-  if(row.enabled!==true)return {status:'inactive',label:'Pausada'};
+  if(row.enabled!==true)return {status:'inactive',label:'Pausada en web'};
   if(campaign && !scheduleMatches(campaign.schedule,now))
-    return {status:'scheduled',label:'Activa · fuera de calendario'};
-  return {status:'active',label:'Activa ahora'};
+    return {status:'scheduled',label:'Activa en web · fuera de calendario'};
+  return {status:'active',label:'Activa en web · ahora'};
 }
 
 export function ticketCampaignDetails(campaign={}) {
