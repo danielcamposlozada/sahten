@@ -23,6 +23,13 @@ describe('grilla de promociones sin falso estado comercial',()=>{
   const o=promotionOverview(c,{now,live:{published:true,campaigns:[{id:'weekly-meals',enabled:true}]}});
   expect(o.active).toBe(0);expect(o.pending).toBe(1);expect(o.items[0].status).toBe('scheduled');
  });
+ it('una promoción permanente publicada, sin calendario, está activa todos los días',()=>{
+  const permanent={id:'postres-extra-online-nov26',name:'Baklava y torta',enabled:true,extraPercent:2,schedule:null};
+  const o=promotionOverview({...config,campaigns:[permanent]},{
+    now,live:{published:true,campaigns:[{id:permanent.id,enabled:true}]}});
+  expect(o.items[0].status).toBe('active');
+  expect(o.items[0].active).toBe(true);
+ });
  it('ningún cupón figura activo sin emisión real verificada',()=>{
   const c={...config,enabled:true,couponPrograms:{first_online:{...config.couponPrograms.first_online,enabled:true}}};
   expect(promotionOverview(c,{now}).items.at(-1).status).toBe('pending');
