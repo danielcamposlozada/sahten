@@ -353,6 +353,13 @@ export function installPromotionsEditor(w=window) {
         +'<p>'+esc(item.id)+' · '+(item.enabled?'Marcada en borrador':'Desactivada')+'</p>'
         +'<p>'+pct+'</p>'
         +(item.unitDefinition?.portionCroquettes?'<p>Ración: '+esc(item.unitDefinition.portionCroquettes)+' croquetas por unidad</p>':'')
+        +(key==='upsells'?'<p class="promo-caution">Motivo: '+esc((item.activationBlockers||[]).some(x=>/backend|server_basket|checkout/.test(x))
+            ?'Falta publicar y validar el cálculo del descuento en el checkout.'
+            :(item.activationBlockers||[]).some(x=>/cost|margin|packaging/.test(x))
+              ?'Falta verificar el costo y margen de este complemento.'
+              :'No hay una oferta de descuento publicada para este complemento.')+'</p>'
+          :key==='productUpgrades'?'<p class="promo-caution">Motivo: falta costo verificado y lógica de reemplazo para la venta.</p>'
+          :'<p class="promo-note">Esta es una propuesta local. Las sugerencias reales se administran en «Recomendaciones web».</p>')
         +(products.length?'<small>SKU: '+products.map(esc).join(', ')+'</small>':'')
         +'</div>'+draftSwitch(key,item)+'</article>';
     }).join('');
