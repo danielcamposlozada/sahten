@@ -13,9 +13,11 @@ export function promotionOverview(config={}, {live=null,now=new Date()}={}){
       const row=type==='campaigns'?liveRows.get(item.id):null;
       const inWindow=type!=='campaigns'||scheduleMatches(item.schedule||{},now);
       // Nunca interpretar un flag local como beneficio en vivo.
+      // La web prevalece sobre el borrador local: un proyecto puede estar desactualizado.
       const liveConfirmed=type==='campaigns'&&published&&row?.enabled===true;
-      const active=master&&item.enabled===true&&liveConfirmed&&inWindow;
-      const status=active?'active':type==='campaigns'&&master&&item.enabled===true&&liveConfirmed&&!inWindow?'scheduled'
+      const active=liveConfirmed&&inWindow;
+      const status=active?'active':liveConfirmed&&!inWindow?'scheduled'
+        :type==='campaigns'&&published&&row?'inactive'
         :item.enabled===true&&master?'pending':'inactive';
       const detail=type==='upsells'&&Array.isArray(item.discountTiers)&&item.discountTiers.length
         ?item.discountTiers.map(t=>Number(t.totalDiscountPercent)+'% total desde $'+Number(t.minEligibleNetSubtotal).toLocaleString('es-AR')).join(' · ')
