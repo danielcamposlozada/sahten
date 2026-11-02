@@ -2,6 +2,15 @@
 
 ## Sin publicar
 
+## 0.4.45
+
+- **Pedidos protegidos:** sincronización automática cada 30 segundos para proyectos conectados; antes de aplicar datos de la nube se guarda un respaldo y se conservan todos los pedidos locales y remotos por ID. Ya no se interpretan las ausencias en una copia parcial como borrados.
+- **Conflictos:** conciliación automática cuando únicamente cambian ventas/clientes y la estructura comercial coincide; los cambios simultáneos de precios, fotos y catálogo siguen requiriendo revisión para evitar pérdidas de datos.
+- **Historial completo:** reconexión con paginación de pedidos y recuperación de entregados, retirados y cancelados sin reimprimirlos ni alertar como pedidos nuevos. Persisten los estados pendientes de envío.
+- **Backups:** 48 copias horarias y 14 copias diarias locales, con respaldo obligatorio previo a aplicar una descarga de nube.
+- **Publicidad en ticket:** los formatos A (general), B (descuento) y D (especial) se seleccionan según el calendario publicado; el formato C sigue reservado a cupones realmente emitidos. Pastilla compacta de invitación a sahten.online encima de Google Reviews y fuera de la comanda de cocina.
+- **QA:** pruebas de conciliación de pedidos, respaldos y cuatro formatos de ticket.
+
 ## 0.4.44
 
 - **Campañas públicas en ticket de cliente:** las promociones semanales y los fines de semana centrales participan en la rotación aunque existan descuentos permanentes.
