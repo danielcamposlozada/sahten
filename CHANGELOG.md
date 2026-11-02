@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+## 0.4.48
+
+- **Ticket de cliente: doble función correcta.** El descuento aplicado se mantiene como importe real en el desglose de la venta y puede anunciarse esa misma campaña al pie para que el cliente vuelva a comprar; eso no concede un segundo descuento en la operación.
+- **Canales publicitarios precisos.** En tickets se pueden rotar promociones publicadas de web, mostrador o ambos, y el anuncio indica claramente el canal válido para la próxima compra.
+- **Campañas recurrentes y permanentes.** Haber usado la oferta ya no la excluye ni la difiere artificialmente a una próxima edición si sigue aplicable. Si todavía no se encuentra en sus días de aplicación, se muestra la próxima fecha elegible.
+- **Reglas de seguridad.** Se conserva un único anuncio en ticket, cupón C exclusivamente emitido por backend, cuatro formatos A/B/C/D y comanda de cocina sin publicidad. No se modifican importes cobrados ni promociones publicadas.
+
 ## 0.4.47
 
 - **Edición de campañas publicadas, directamente en vivo:** nombre, calendario, días/horarios, vigencia, canales, productos elegibles, porcentaje incremental, tope de unidades, prioridad, anuncios y formato A/B/D, con guardado directo en Supabase. El servidor valida permisos, revisiones y costos/márgenes cuando corresponde.
