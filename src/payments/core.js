@@ -38,9 +38,20 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
     quantities.set(id, (quantities.get(id) || 0) + qty);
     if (quantities.get(id) > 99) fail('Demasiadas unidades del mismo producto.');
   }
+  const sourceHasFourOnlyOne=counts=>counts.get('p1779570052552')===1;
   const items = [...quantities].map(([id, qty]) => {
     const p = menu.products.find(p => p.id === id);
-    if (!p || p.recetaOnly || salesPaused(p,now) || menu.config?.hiddenProducts?.includes(id) || menu.config?.hiddenCategories?.includes(p.category)) fail('Un producto ya no está disponible. Actualizá el menú.', 409, 'menu_changed');
+    // La cuarta Fatay no es un SKU de carta: solo se acepta cuando el cliente
+    // eligió explícitamente sustituir la Promo 3U por el producto 4U publicado
+    // como exclusivo de checkout. Se recotiza íntegramente en el servidor.
+    const acceptedFour=p?.id==='p1779570052552'&&p?.upsellOnly===true
+      &&p?.upgradeFrom==='p1779467294622'&&input.fatayUpgradeAccepted===true&&qty===1
+      &&sourceHasFourOnlyOne(quantities);
+    if (!p || p.recetaOnly || salesPaused(p,now) ||
+        (p.upsellOnly===true && !acceptedFour) ||
+        (menu.config?.hiddenProducts?.includes(id) && !acceptedFour) ||
+        (menu.config?.hiddenCategories?.includes(p.category) && !acceptedFour))
+      fail('Un producto ya no está disponible. Actualizá el menú.', 409, 'menu_changed');
     const price = cents(p.price); if (!price) fail('Un producto no tiene precio de venta.', 409);
     return { productId: id, name: text(p.name, 200), qty, unitPrice: price / 100, lineTotal: price * qty / 100, ...(p.priceRevision ? { priceRevision: text(p.priceRevision, 100) } : {}) };
   });
