@@ -2,6 +2,12 @@
 
 ## Sin publicar
 
+## 0.4.39
+
+- **Publicar sugerencias directamente:** botón «Publicar en web» en la tarjeta de un borrador sin descuento y con ubicación carrito. Pide confirmación, valida el producto y las condiciones contra el catálogo publicado, escribe en el servidor con revisión y confirma el resultado antes de mostrar «Publicada».
+- **Estados reales:** una sugerencia ya publicada se identifica como activa o pausada en web en lugar de seguir apareciendo como borrador.
+- **Controles de seguridad:** nunca publica por este botón descuentos, cupones ni mejoras que requieran validaciones de checkout. El precio de los productos, el 10% habitual y Mercado Pago no cambian.
+
 ## 0.4.38
 
 - **Estados comerciales sin confusión**: diferencia campañas activas, programadas por calendario, pausadas y propuestas no publicadas. El switch de un borrador se identifica como planificación, no como descuento vigente.
