@@ -82,7 +82,7 @@ export function installPromotionsEditor(w=window) {
     const overview=promotionOverview(state,{now:new Date(),live:liveLoaded&&!liveError?live:null});
     const visible=filterPromotionOverview(overview.items,overviewFilter);
     const badges={active:'Activa ahora',inactive:'Inactiva',scheduled:'Programada',pending:'Sin confirmar en web'};
-    const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&!w.SAHTEN?.project?.session?.readOnly;
+    const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
     const cards=visible.map(item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
         :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
@@ -132,7 +132,7 @@ export function installPromotionsEditor(w=window) {
     root.querySelectorAll('[data-open-promo]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.openType;
       if(tab==='campaigns')selected=b.dataset.openPromo;render();}));
     root.querySelector('[data-promo-sync]')?.addEventListener('click',async()=>{
-      if(!canOperate()||!w.SAHTEN?.online?.conn?.()?.projectId)return;
+      if(!canOperate()||!w.SAHTEN?.online?.conn?.()?.projectId||!w.SAHTEN?.project?.session?.info?.()?.hasFile)return;
       const yes=await w.sahtenConfirm?.('Se importarán SOLO las promociones del proyecto en la nube. Se conservarán los pedidos, los costos, el stock y el catálogo locales; se guardará un respaldo antes de cambiar los borradores. ¿Continuar?',
         {title:'Actualizar promociones del proyecto',okLabel:'Actualizar promociones'});
       if(yes!==true)return;
