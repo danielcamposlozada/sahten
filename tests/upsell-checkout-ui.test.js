@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {buildIndexHtml} from '../src/online/publish.js';
 import {availableCheckoutUpsell,checkoutUpsellFingerprint,acceptedCheckoutUpsell} from '../src/online/upsell-checkout.js';
 const menu=()=>({products:[
  {id:'shawarma',price:17000,category:'Shawarma'},
@@ -35,5 +36,23 @@ describe('Checkout de ofertas - cliente pregunta, servidor decide',()=>{
    {address:'Calle 5'},{items:[{productId:'shawarma',qty:3}]},{routeRevision:'r2'}])
    expect(acceptedCheckoutUpsell(accepted,{...current,...change},at)).toBe(false);
   expect(acceptedCheckoutUpsell(accepted,current,Date.parse('2030-01-02'))).toBe(false);
+ });
+});
+
+describe('HTML final del checkout - compilación segura de ofertas',()=>{
+ it('el script de Checkout compila y oculta descuentos hasta cotización Edge',()=>{
+  const m=menu();m.store={name:'Sahten',currency:{symbol:'$',locale:'es-AR'}};
+  m.config={enabled:true,showPrices:true};
+  const html=buildIndexHtml(m,{storefront:true});
+  const script=[...html.matchAll(/<script(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+   .map(x=>x[1]).find(x=>x.includes('function upsellPanel()'));
+  expect(script).toBeTruthy();
+  expect(()=>new Function(script)).not.toThrow();
+  expect(script).toContain("mpCall('offer'");
+  expect(script).toContain("deliveryApi('offer'");
+  expect(script).toContain('data-upsell-accept');
+  expect(script).toContain('selectedUpsell()?.proof');
+  expect(script).toContain('upsellToken:selectedUpsell().token');
+  expect(script).not.toContain('APP_USR-');
  });
 });
