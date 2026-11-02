@@ -55,7 +55,7 @@ describe('Recomendaciones en vivo editables',()=>{
       w.document.querySelector('[data-rec-preview="baklava-context"]').click();
       expect(w.document.querySelector('.rec-preview').textContent).toContain('Baklava');
       w.document.querySelector('[data-rec-edit="baklava-context"]').click();
-      expect(w.document.querySelector('.rec-choices').textContent).toContain('Mostrar si el carrito');
+      expect(w.document.querySelector('.rec-edit-form').textContent).toContain('Mostrar si el carrito');
       expect(w.document.querySelector('.rec-edit-form').textContent).toContain('Checkout, ficha de producto');
       w.document.getElementById('rec-edit-name').value='Dulce recomendado';
       w.document.querySelector('[data-rec-save]').click();
