@@ -10,6 +10,10 @@ on:
       - src/core/upsell-*.js
       - src/core/promotions.js
       - src/promotions/**
+      - src/core/ticket-advertising.js
+      - src/ui/receipt-template.js
+      - tests/ticket-*.test.js
+      - tests/receipt-*.test.js
       - tests/promotions-*.test.js
       - tests/upsell-*.test.js
       - supabase/migrations/20261102013000_delivery_upsell_atomic_order.sql
