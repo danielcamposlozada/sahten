@@ -10,8 +10,24 @@ describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
   });
   it('de lunes a miércoles 5% checkout/15% transferencia',()=>{
     const order={config:cfg(),lines:[line('p1779467294622',16850)],now:at('2026-11-02')};
-    expect(quotePromotions({...order,method:'mercadopago'}).netSubtotal).toBe(16007.5);
+    expect(quotePromotions({...order,method:'mercadopago'}).netSubtotal).toBe(16850);
+    expect(quotePromotions({...order,method:'mercadopago'}).appliedPromotionIds).toEqual([]);
     expect(quotePromotions({...order,method:'transferencia'}).netSubtotal).toBe(14322.5);
+  });
+  it('Mercado Pago y medios no habilitados nunca reciben campañas, cupones ni upsells',()=>{
+    const c=cfg(),reward={id:'coupon-private',status:'available',expiresOn:'2026-11-14',extraPercent:10,productIds:['p1779467294622']};
+    for(const method of ['mercadopago','tarjeta','']){
+      const q=quotePromotions({config:c,lines:[line('p1779467294622',16850),line('baklava',7350)],method,coupon:reward,now:at('2026-11-02')});
+      expect(q.netSubtotal).toBe(24200);
+      expect(q.appliedPromotionIds).toEqual([]);
+      expect(q.couponId).toBe(null);
+    }
+  });
+  it('ninguna campaña ni cupón supera 20% total con 10% habitual',()=>{
+    const c=cfg();c.campaigns[0].extraPercent=30;
+    const r=quotePromotions({config:c,lines:[line('p1779467294622',16850)],method:'transferencia',now:at('2026-11-02')});
+    expect(r.netSubtotal).toBe(13480);
+    expect(r.lines[0].promotionDiscount).toBe(1685);
   });
   it('los fines de semana centrales son 2° y 3° viernes y sábado, no domingo',()=>{
     for(const d of ['2026-11-13','2026-11-14','2026-11-20','2026-11-21'])
