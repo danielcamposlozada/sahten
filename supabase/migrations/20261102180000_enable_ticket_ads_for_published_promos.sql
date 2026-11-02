@@ -28,18 +28,19 @@ BEGIN
        ELSE 'En tu próxima compra online: Falafel Mix con 11% total en efectivo o transferencia.' END),true)
      ELSE c END ORDER BY ord) INTO campaigns
  FROM jsonb_array_elements(current_menu#>'{promotions,campaigns}') WITH ORDINALITY a(c,ord);
+ -- The menu has a BEFORE UPDATE trigger that restores published draft
+ -- campaigns from this ledger. Update the ledger FIRST, then the menu.
+ UPDATE sahten_catalog_private.promotion_draft_publications p SET
+ campaign=c.item
+ FROM jsonb_array_elements(campaigns) AS c(item)
+ WHERE p.store_id=sid AND p.campaign_id=c.item->>'id'
+   AND p.campaign_id=ANY(ids);
+ GET DIAGNOSTICS changed=ROW_COUNT;
+ IF changed<>4 THEN RAISE EXCEPTION 'ledger_not_updated:%',changed;END IF;
  UPDATE public.menus
  SET json=jsonb_set(current_menu,'{promotions,campaigns}',campaigns,true),
  updated_at=clock_timestamp()
  WHERE store_id=sid;
- -- Retain the same publicly authorized ad copy for future re-publication.
- UPDATE sahten_catalog_private.promotion_draft_publications p SET
- campaign=c.item
- FROM jsonb_array_elements(campaigns) AS c(item)
- WHERE p.store_id=sid AND p.campaign_id= c.item->>'id'
-   AND p.campaign_id=ANY(ids);
- GET DIAGNOSTICS changed=ROW_COUNT;
- IF changed<>4 THEN RAISE EXCEPTION 'ledger_not_updated:%',changed;END IF;
  SELECT json INTO after_menu FROM public.menus WHERE store_id=sid;
  IF jsonb_array_length(after_menu->'products')<>47
     OR jsonb_array_length(after_menu#>'{promotions,campaigns}')<>6
