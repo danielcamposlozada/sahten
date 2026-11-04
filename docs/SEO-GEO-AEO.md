@@ -689,3 +689,10 @@ El dueño autorizó expresamente la migración, `sahten-delivery` y la clave pri
 - Asesores: nuevos avisos informativos por tablas privadas cerradas con RLS sin políticas y avisos de los cuatro RPC autenticados SECURITY DEFINER intencionales. Sus permisos y control de negocio fueron revisados; no se amplió acceso anónimo. No se modificaron advertencias preexistentes de otros módulos.
 
 Este estado reemplaza únicamente los avisos históricos de despliegue pendiente/rechazado anteriores. **La app pública y el cliente web todavía no incluyen este lote**: falta su publicación, altas pausadas desde sesión dueña/admin y QA de compras/sincronización desplegadas. Las pruebas locales no certifican esos pasos. Los programas de cupones, mejora 4U y complementos en delivery/Mostrador siguen pendientes de integración específica.
+
+
+### Cliente 0.4.49 preparado · 4/11/2026
+
+PR #113: se prepara la publicación de app y checkout, conservando portada/mapa/fotos del despliegue de producción `91563746-1f00-4bba-8d58-16dbc96856d0`. El workflow histórico sin promociones exigía 54 productos y falló después de aprobar tests/build; se retira su ejecución automática y queda manual. El empaquetador vigente ya no obliga a habilitar las seis campañas ni fija un número histórico de productos: compara una huella íntegra de productos, precios, fotos, configuración, pagos, delivery, promociones y recomendaciones con el catálogo público actual. Consulta de nuevo al finalizar y antes de desplegar; cualquier edición concurrente detiene la publicación.
+
+Primer paquete revisado: 40 productos, 40 fotos remotas, 11 bebidas, seis campañas (dos habilitadas y cuatro pausadas), beneficio habitual del 10 %. Son una lectura puntual, no valores que el despliegue fuerce sobre futuras ediciones. Se preservan los 16 archivos de marca/páginas/fotos y el layout original de portada. No se crean/activan ofertas ni se publica una descripción nueva. Instaladores y hosting aún pendientes de publicación al escribir este apartado.

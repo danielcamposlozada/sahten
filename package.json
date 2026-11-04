@@ -1,10 +1,10 @@
 {
   "name": "sahten",
-  "version": "0.4.48",
+  "version": "0.4.49",
   "license": "AGPL-3.0-or-later",
   "private": true,
   "type": "module",
-  "description": "Sahten · gestión de costos para gastronomía",
+  "description": "Sahten \u00b7 gesti\u00f3n de costos para gastronom\u00eda",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

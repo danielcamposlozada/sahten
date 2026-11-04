@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+## 0.4.49
+
+- **Publicación web sin cifras históricas fijas:** el paquete conserva exactamente productos, precios, imágenes y estados comerciales vigentes. El flujo antiguo sin promociones pasa a manual; no desactiva campañas para actualizar el checkout.
+
 - **Alta de complementos desde la app:** consulta de precios/costos del servidor, publicación pausada, activación separada, revisiones con autor/fecha y protección frente a cambios desde otro equipo o un catálogo antiguo.
 - **Costos adicionales pendientes:** opción expresa para diferirlos y registrar supuestos provisionales de $0 adicionales. No se declaran comprobados. Las ventas y los reportes promocionales/mensuales conservan esa condición sin reescribir el histórico.
 - **Tienda:** consulta y aceptación explícita de una unidad con oferta, recotización y revisión del total al vencer o cambiar el pedido. Primer recorrido: retiro online y efectivo/transferencia; Falafel sigue pendiente por decisión del dueño.

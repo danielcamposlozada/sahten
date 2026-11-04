@@ -4,11 +4,13 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
+      - "scripts/deploy/catalog-integrity.mjs"
       - ".github/workflows/sahten-promo-checkout.yml"
   push:
     branches: [main]
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
+      - "scripts/deploy/catalog-integrity.mjs"
       - ".github/workflows/sahten-promo-checkout.yml"
   workflow_dispatch:
     inputs:
@@ -47,10 +49,13 @@ jobs:
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
           assert.equal(r.sourceDeploymentId,'91563746-1f00-4bba-8d58-16dbc96856d0');
-          assert.ok([47,48].includes(r.products));
-          assert.equal(r.remotePhotos>=47,true);
-          assert.equal(r.beverages,11);
-          assert.equal(r.campaigns.length,6);
+          assert.ok(r.products>0);
+          assert.equal(r.catalogPreserved,true);
+          assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
+          assert.equal(r.reviewedUpsellClient,true);
+          const menu=JSON.parse(fs.readFileSync('sahten-promo-export/menu.json','utf8'));
+          const {catalogFingerprint}=await import('./scripts/deploy/catalog-integrity.mjs');
+          assert.equal(catalogFingerprint(menu),r.commercialFingerprint);
           assert.equal(r.homepageLayoutPreserved,true);
           assert.equal(r.homepageCatalogGuarded,true);
           assert.equal(r.defaultCashBenefit,10);
@@ -63,7 +68,9 @@ jobs:
           assert.ok(html.includes("if(rule===null)rule={type:'always'}"),'Campañas sin calendario deben cotizar');
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
           assert.ok(home.includes("!p.upsellOnly"),'Homepage must hide checkout-only Fatay');
-          console.log('Safe checkout verified: '+r.products+' products, 6 campaigns');
+          assert.ok(html.includes('data-upsell-consult'));
+          assert.ok(html.includes('upsell-offer'));
+          console.log('Safe checkout verified: '+r.products+' products, live commercial state preserved');
           NODE
       - uses: actions/upload-artifact@v4
         with:
@@ -94,11 +101,32 @@ jobs:
             exit 1
           fi
           data=$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu")
-          current=$(echo "$data" | jq -er '.result.latest_deployment.id')
-          if [[ "$current" != "91563746-1f00-4bba-8d58-16dbc96856d0" && "$current" != "7def245e-e977-48ad-9a90-053d010c60a6" ]]; then
+          current=$(echo "$data" | jq -er '.result.canonical_deployment.id')
+          expected=$(node -p "require('./sahten-promo-export/_deployment-report.json').sourceDeploymentId")
+          if [[ "$current" != "$expected" ]]; then
             echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
             exit 1
           fi
+      - name: Rechazar un catálogo que cambió después de generar el paquete
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {createHash} from 'node:crypto';
+          const menu=JSON.parse(fs.readFileSync('sahten-promo-export/menu.json'));
+          const report=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json'));
+          const sb=menu.supabase;
+          const url=sb.url.replace(/\/$/,'')+'/rest/v1/stores?select=id,menus(json)&id=eq.'+encodeURIComponent(sb.storeId);
+          const res=await fetch(url,{headers:{apikey:sb.anonKey,Authorization:'Bearer '+sb.anonKey},signal:AbortSignal.timeout(20000)});
+          if(!res.ok)throw new Error('No se pudo verificar el catálogo vigente');
+          const rows=await res.json(),row=rows[0];
+          const live=(Array.isArray(row?.menus)?row.menus[0]:row?.menus)?.json;
+          if(row?.id!==sb.storeId||!live)throw new Error('No coincide la tienda');
+          const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+          const commercial=Object.fromEntries(['products','config','payments','promotions','delivery','cartRecommendations'].map(k=>[k,live[k]??null]));
+          const digest=createHash('sha256').update(JSON.stringify(canonical(commercial))).digest('hex');
+          if(digest!==report.commercialFingerprint)throw new Error('El catálogo cambió: generar un paquete actualizado antes de publicar');
+          console.log('Estado comercial vigente confirmado sin modificarlo');
+          NODE
       - name: Desplegar sólo el checkout y JSON actualizados, preservando otros recursos
         id: deploy_pages
         uses: cloudflare/wrangler-action@v3
@@ -113,12 +141,14 @@ jobs:
             if curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://sahten.online/menu.json?verify=$GITHUB_RUN_ID-$i" | node -e "
             let s='';process.stdin.on('data',x=>s+=x).on('end',()=>{
              const d=JSON.parse(s);
-             if(![47,48].includes(d.products?.length)||
-                d.promotions?.enabled!==true||d.promotions?.campaigns?.length!==6||
-                Number(d.payments?.benefit?.percent)!==10||
-                d.products.filter(p=>p.category==='Bebidas').length!==11)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('function couponSection()')||!s.includes('function fatayUpgradePanel()')||!s.includes("if(rule===null)rule={type:'always'}"))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
-              echo "Producción confirmada: 6 campañas, medios de pago preservados y cupón cotizado en servidor."
+             const fs=require('node:fs'),crypto=require('node:crypto');
+             const report=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json'));
+             const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+             const commercial=Object.fromEntries(['products','config','payments','promotions','delivery','cartRecommendations'].map(k=>[k,d[k]??null]));
+             const digest=crypto.createHash('sha256').update(JSON.stringify(canonical(commercial))).digest('hex');
+             if(digest!==report.commercialFingerprint)process.exit(1);
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-upsell-consult')||!s.includes('upsell-offer')||!s.includes('function couponSection()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
+              echo "Producción confirmada: catálogo comercial íntegro y cliente de complementos actualizado, sin activar ofertas."
               exit 0
             fi
             sleep 5
@@ -131,8 +161,9 @@ jobs:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || '897988dca067b1fdc6daf228fce49ab7' }}
         run: |
+          source=$(node -p "require('./sahten-promo-export/_deployment-report.json').sourceDeploymentId")
           curl --fail --silent --show-error -X POST \
             -H "Authorization: Bearer $CF_TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{}' \
-            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu/deployments/91563746-1f00-4bba-8d58-16dbc96856d0/rollback"
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/sahten-menu/deployments/$source/rollback"
