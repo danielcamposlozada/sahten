@@ -32,27 +32,24 @@ export function selectTicketAdvertisement(config, {
       label: expiryLabel(coupon.expiresOn) };
   }
   if (config.ticket?.advertise === false) return null;
-  // La compra ya realizada nunca excluye una campaña de su propia publicidad.
-  // Seguimos aceptando excludedPromotionIds como alias legado del historial aplicado.
+  // El beneficio utilizado sólo figura en el desglose contable del ticket.
+  // El anuncio puede recomendar OTRA campaña, nunca volver a destacar la aplicada.
   const applied = new Set(Array.isArray(appliedPromotionIds) ? appliedPromotionIds :
-    Array.isArray(excludedPromotionIds) ? excludedPromotionIds : []);
+    []);
+  for(const id of Array.isArray(excludedPromotionIds)?excludedPromotionIds:[])applied.add(id);
   const listed = Array.isArray(config.campaigns) ? config.campaigns.filter(c =>
     c?.kind === 'public' && c.enabled === true &&
     c.advertising?.enabled === true && c.advertising?.placement?.includes('ticket') &&
     (!c.channels || channel === 'any' || c.channels.includes(channel))) : [];
 
-  // Ticket de cliente = 2 espacios independientes:
-  // (1) desglose del descuento YA COBRADO en el comprobante;
-  // (2) anuncio de la misma campaña u otra para una compra POSTERIOR.
-  // Haberla aprovechado no la descalifica, incluso en campañas permanentes.
+  // Se conserva la rotación de otras campañas y la frecuencia de 90 días.
   const eligible = listed.map(c => {
     const active = scheduleMatches(c.schedule, now);
     const days = c.advertising.advanceDays == null ? 4 :
       Math.max(0, Math.min(14, Number(c.advertising.advanceDays) || 0));
     const next = active ? null : upcomingDate(c, now, days);
-    if ((!active && !next) || alreadyShownCampaigns.has(c.id) || avoid.has(c.id)) return null;
-    const wasApplied = applied.has(c.id);
-    return { c, next, repeatEdition: wasApplied && !!next, repeatPurchase: wasApplied };
+    if (applied.has(c.id) || (!active && !next) || alreadyShownCampaigns.has(c.id) || avoid.has(c.id)) return null;
+    return { c, next };
   }).filter(Boolean).sort((a, b) =>
     Number(!a.next) - Number(!b.next) ||
     (a.next || '').localeCompare(b.next || '') ||
@@ -79,7 +76,5 @@ export function selectTicketAdvertisement(config, {
     ...(details.terms.length?{terms:clean(details.terms.join(' · '),130)}:{}),
     ...(details.expiry?{expiry:details.expiry}:{}),
     ...(choice.next ? { startsOn: choice.next } : {}),
-    ...(choice.repeatEdition ? { repeatEdition: true } : {}),
-    ...(choice.repeatPurchase ? { repeatPurchase: true } : {}),
     selectedAt: new Date(now).toISOString() };
 }

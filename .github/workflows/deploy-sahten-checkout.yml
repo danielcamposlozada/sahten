@@ -1,17 +1,5 @@
-name: SAHTEN.online | Checkout seguro (sin promociones)
+name: SAHTEN.online | Archivo histórico sin promociones (manual)
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    paths:
-      - "scripts/deploy/sahten-safe-checkout.mjs"
-      - ".github/workflows/deploy-sahten-checkout.yml"
-      - "src/online/**"
-      - "src/core/checkout-service-choice.js"
-  push:
-    branches: [main]
-    paths:
-      - "scripts/deploy/sahten-safe-checkout.mjs"
-      - ".github/workflows/deploy-sahten-checkout.yml"
   workflow_dispatch:
     inputs:
       deploy:

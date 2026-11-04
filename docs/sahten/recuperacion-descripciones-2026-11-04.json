@@ -1,0 +1,471 @@
+{
+  "date": "2026-11-04",
+  "publicationsChanged": false,
+  "sources": [
+    "owner project, modified 2026-11-03, appVersion 0.4.46",
+    "published menu, read-only 2026-11-04",
+    "local reviewed drafts 2026-10-30"
+  ],
+  "products": [
+    {
+      "id": "shawarma_carne",
+      "name": "Shawarma de Carne",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Carne de res en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Carne de res en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "shawarma_pollo",
+      "name": "Shawarma de Pollo",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Pollo en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Pollo en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "shawarma_mixto",
+      "name": "Shawarma Mixto",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Carne de res y pollo en un mismo shawarma, con pan árabe, lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Carne de res y pollo en un mismo shawarma, con pan árabe, lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "sandwich_falafel",
+      "name": "Sandwich de Falafel",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Pan árabe con tres croquetas de garbanzos, lechuga, tomate y salsa de sésamo (tahini). Una forma de disfrutar nuestro falafel en sándwich.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Pan árabe con tres croquetas de garbanzos, lechuga, tomate y salsa de sésamo (tahini). Una forma de disfrutar nuestro falafel en sándwich.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "hummus",
+      "name": "Hummus",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Crema de garbanzos con tahini, elaborada a base de sésamo, y un toque de pimentón. Para sumar a tu mesa o acompañar con pan árabe.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Crema de garbanzos con tahini, elaborada a base de sésamo, y un toque de pimentón. Para sumar a tu mesa o acompañar con pan árabe.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "baba_ganoush",
+      "name": "Baba Ganoush",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Berenjenas asadas combinadas con tahini, nuestra salsa de sésamo. Una crema para compartir y acompañar con pan árabe.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Berenjenas asadas combinadas con tahini, nuestra salsa de sésamo. Una crema para compartir y acompañar con pan árabe.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "muhammara",
+      "name": "Muhammara",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Crema de morrones rojos y nueces, con pan rallado y un toque de comino. Una entrada de sabor intenso para sumar a la mesa.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Crema de morrones rojos y nueces, con pan rallado y un toque de comino. Una entrada de sabor intenso para sumar a la mesa.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "yabra",
+      "name": "Yabra (Hojas de Uva)",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Hojas de parra rellenas de arroz y carne de res, con limón y especias. Se acompañan con mini panes árabes.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Hojas de parra rellenas de arroz y carne de res, con limón y especias. Se acompañan con mini panes árabes.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "kibbe_peq",
+      "name": "Kibbe Pequeño",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "tabule_grd",
+      "name": "Tabulé ",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Ensalada de perejil, tomate, cebolla y trigo burgol, aliñada con limón. Fresca y llena de sabor para acompañar tus platos.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Ensalada de perejil, tomate, cebolla y trigo burgol, aliñada con limón. Fresca y llena de sabor para acompañar tus platos.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "benjameli_grd",
+      "name": "Benjameli ",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Berenjena con tomate, cebolla y morrón rojo. Una ensalada de nuestra cocina para disfrutar como entrada o acompañamiento.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Berenjena con tomate, cebolla y morrón rojo. Una ensalada de nuestra cocina para disfrutar como entrada o acompañamiento.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "pizza_peq",
+      "name": "Pizza Árabe Pequeña",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "pan_arabe",
+      "name": "Pan Árabe",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Porción de cinco panes árabes para llevar a la mesa y acompañar hummus, Baba Ganoush, Muhammara o el plato que elijas.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Porción de cinco panes árabes para llevar a la mesa y acompañar hummus, Baba Ganoush, Muhammara o el plato que elijas.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "baklava",
+      "name": "Baklava",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Dulce árabe de capas de masa fina, con nueces, un toque de canela y almíbar. Para darle un cierre dulce a la mesa.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Dulce árabe de capas de masa fina, con nueces, un toque de canela y almíbar. Para darle un cierre dulce a la mesa.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "mamul_nuez",
+      "name": "Mamul de Nuez",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Dos dulces árabes de sémola y manteca, rellenos de nueces y aromatizados con canela y cardamomo. Para disfrutar con tu café o té.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Dos dulces árabes de sémola y manteca, rellenos de nueces y aromatizados con canela y cardamomo. Para disfrutar con tu café o té.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "mamul_datil",
+      "name": "Mamul de Dátil",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Dos dulces árabes de sémola y manteca, rellenos de dátiles y aromatizados con canela y cardamomo. Una opción dulce para después de comer.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Dos dulces árabes de sémola y manteca, rellenos de dátiles y aromatizados con canela y cardamomo. Una opción dulce para después de comer.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "tabla_compartir",
+      "name": "Tabla para Compartir",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "tabla_celebrar",
+      "name": "Tabla para Celebrar",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Una tabla para compartir con seis falafel, cuatro fatay, hummus, ensalada de la casa y cinco mini panes árabes. Para el cierre dulce: baklava, Aristelos y torta de chocolate.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Una tabla para compartir con seis falafel, cuatro fatay, hummus, ensalada de la casa y cinco mini panes árabes. Para el cierre dulce: baklava, Aristelos y torta de chocolate.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1779299917243",
+      "name": "Shawarma SUPERMIX",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Nuestro Supermix combina carne de res, pollo y falafel en pan árabe, con lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Nuestro Supermix combina carne de res, pollo y falafel en pan árabe, con lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "falafel",
+      "name": "Croquetas de Falafel",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Seis croquetas de garbanzos con cilantro, verdeo y comino, acompañadas con salsa de sésamo (tahini). Para compartir o sumar a tu pedido.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Seis croquetas de garbanzos con cilantro, verdeo y comino, acompañadas con salsa de sésamo (tahini). Para compartir o sumar a tu pedido.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "torta_de_chocolate",
+      "name": "Torta de Chocolate",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Porción de nuestra torta de chocolate y nueces, con un toque de canela. Un cierre dulce para tu pedido.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Porción de nuestra torta de chocolate y nueces, con un toque de canela. Un cierre dulce para tu pedido.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "fatay",
+      "name": "Fatay",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Empanada árabe rellena de carne de res, tomate, cebolla y perejil, sazonada con comino y especias.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Empanada árabe rellena de carne de res, tomate, cebolla y perejil, sazonada con comino y especias.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "arabe_clasico",
+      "name": "Arabe Clásico",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Una selección de clásicos de nuestra cocina: hojas de parra rellenas de arroz y carne, kibbe de carne y trigo, hummus y mini panes árabes.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Una selección de clásicos de nuestra cocina: hojas de parra rellenas de arroz y carne, kibbe de carne y trigo, hummus y mini panes árabes.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "falafel_mix",
+      "name": "Falafel Mix",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Tres croquetas de garbanzos sobre una ensalada de lechuga, tomate, pepino y perejil, con salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Tres croquetas de garbanzos sobre una ensalada de lechuga, tomate, pepino y perejil, con salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1779467294622",
+      "name": "Promo Fatay (3U)",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Tres fatay rellenos de carne de res, tomate, cebolla y especias, acompañados con salsa de sésamo (tahini).",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Tres fatay rellenos de carne de res, tomate, cebolla y especias, acompañados con salsa de sésamo (tahini).",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1779997050112",
+      "name": "Promo Compartir para Dos",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Una combinación para compartir entre dos: croquetas de falafel, hummus y mini panes árabes. Garbanzos, sésamo y sabores de nuestra cocina en la misma mesa.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Una combinación para compartir entre dos: croquetas de falafel, hummus y mini panes árabes. Garbanzos, sésamo y sabores de nuestra cocina en la misma mesa.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1779997171373",
+      "name": "Promo Compartir Clásico",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Una selección para compartir: hojas de parra rellenas de arroz y carne, dos kibbes de carne y trigo, hummus y mini panes árabes.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Una selección para compartir: hojas de parra rellenas de arroz y carne, dos kibbes de carne y trigo, hummus y mini panes árabes.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1780324945477",
+      "name": "Aristilos (Porcion)",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Porción de Aristelos: dulce árabe de sémola, leche y almendras, aromatizado con canela. Una de las recetas dulces de nuestra cocina.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Porción de Aristelos: dulce árabe de sémola, leche y almendras, aromatizado con canela. Una de las recetas dulces de nuestra cocina.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1780338545548",
+      "name": "Crema tahini",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Nuestra salsa de sésamo (tahini), con ajo y un toque de comino. Sumala como extra para acompañar falafel, shawarma o pan árabe.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Nuestra salsa de sésamo (tahini), con ajo y un toque de comino. Sumala como extra para acompañar falafel, shawarma o pan árabe.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1780422088415",
+      "name": "12 Tequeños",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Doce tequeños de masa de trigo rellenos de queso, acompañados con guasacaca y salsa de sésamo (tahini). Para compartir y sumar a tu mesa.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Doce tequeños de masa de trigo rellenos de queso, acompañados con guasacaca y salsa de sésamo (tahini). Para compartir y sumar a tu mesa.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1785849682052",
+      "name": "Papas Fritas",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Porción individual de papas fritas. Para acompañar tu shawarma, compartir con la mesa o disfrutar por separado.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Porción individual de papas fritas. Para acompañar tu shawarma, compartir con la mesa o disfrutar por separado.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1786209582774",
+      "name": "Papa Frita natural",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "p1786210230058",
+      "name": "Shawarma de Carne al Plato",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Carne de res con especias árabes, acompañada de lechuga, tomate, cebolla, perejil y mini panes árabes.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Carne de res con especias árabes, acompañada de lechuga, tomate, cebolla, perejil y mini panes árabes.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1786210474707",
+      "name": "Shawarma de Pollo al Plato",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Pollo con especias árabes, acompañado de lechuga, tomate, cebolla, perejil y mini panes árabes.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Pollo con especias árabes, acompañado de lechuga, tomate, cebolla, perejil y mini panes árabes.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1789513991513",
+      "name": "Combo Fatay",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "cocacola_600ml",
+      "name": "Coca-Cola 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "Coca-Cola en botella de 600 ml. Sumala a tu pedido para acompañar la comida.",
+      "recoverySource": "reviewed_draft_2026-10-30",
+      "proposedDescription": "Coca-Cola en botella de 600 ml. Sumala a tu pedido para acompañar la comida.",
+      "status": "recovered_pending_publication_review"
+    },
+    {
+      "id": "p1793032422487",
+      "name": "Agua sin gas 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "p1793049167225",
+      "name": "Coca-Cola 220 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "p1793167440976",
+      "name": "Fanta 220 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_agua_con_gas_600ml",
+      "name": "Agua con gas 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_cocacola_zero_600ml",
+      "name": "Coca-Cola Zero 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_sprite_600ml",
+      "name": "Sprite 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_fanta_600ml",
+      "name": "Fanta 600 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_cocacola_zero_220ml",
+      "name": "Coca-Cola Zero 220 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_sprite_220ml",
+      "name": "Sprite 220 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    },
+    {
+      "id": "bebida_sprite_zero_220ml",
+      "name": "Sprite Zero 220 ml",
+      "publishedDescription": "",
+      "localDescription": "",
+      "previousReviewedDraft": "",
+      "recoverySource": null,
+      "proposedDescription": null,
+      "status": "missing_requires_confirmation"
+    }
+  ]
+}

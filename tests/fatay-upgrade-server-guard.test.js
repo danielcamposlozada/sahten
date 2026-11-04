@@ -31,6 +31,10 @@ describe('4U Fatay is exclusively a checkout replacement',()=>{
    expect(()=>quote([{productId:FATAY_FOUR_ID,qty:2}])).toThrow(/disponible/);
    expect(()=>quote([{productId:'other-secret',qty:1}])).toThrow(/disponible/);
  });
+ it('permite un combo 3U y otro 4U cuando se reemplazó uno de dos combos originales',()=>{
+   const result=quote([{productId:FATAY_THREE_ID,qty:1},{productId:FATAY_FOUR_ID,qty:1}]);
+   expect(result.items).toHaveLength(2);expect(result.total).toBe(31815);
+ });
  it('rejects a spoofed upgrade origin even with explicit acceptance',()=>{
    const changed={...menu,products:menu.products.map(p=>p.id===FATAY_FOUR_ID?
      {...p,upgradeFrom:'unpublished_combo'}:p)};

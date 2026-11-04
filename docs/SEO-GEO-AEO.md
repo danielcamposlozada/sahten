@@ -1,5 +1,11 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Auditoría de promociones y descripciones · 4/11/2026
+
+Consulta de solo lectura del menú publicado: 46 productos y 46 descripciones vacías. El archivo local guardado el 3/11 tampoco aporta descripciones para esos ID; se recuperaron 31 borradores cotejados del 30/10 y se identificaron 15 faltantes. Comparación y fuentes en `docs/sahten/recuperacion-descripciones-2026-11-04.json`. No se publicaron textos ni se modificaron catálogo, precios, pedidos o clientes.
+
+Auditoría técnica/comercial en `docs/sahten/AUDITORIA-PROMOCIONES-2026-11-04.md`: nueve propuestas marcadas localmente frente a seis campañas publicadas, dos habilitadas. Cambios de app/web preparados en rama; backend de altas de complementos desplegado el 4/11/2026, sin activar ofertas (detalle actualizado al pie). El mapa previamente aprobado se conserva; la mejora fotográfica tablet/celular queda pendiente tras backend. Este estado prevalece sobre las cifras editoriales históricas de 31 productos, sin convertir los borradores de diseño en contenido publicado.
+
 ## Confirmación de combinaciones de logo · 30/10/2026
 
 El dueño entregó una referencia de cuatro combinaciones de fondo/letras/árabe: verde/crema/naranja, naranja/verde/crema, crema/verde/naranja y verde/naranja/crema. Tabla y fuente original en `docs/brand/sahten/README.md`. Se corrigen únicamente las propuestas locales de home y menú para usar los once trazos sólidos originales del panel, completos y sin deformación. No se modifica la web publicada, el catálogo, Supabase ni la aplicación instalada. El generador del kit antiguo necesita una actualización separada: no dar sus exportaciones por conformes solo por el nombre del archivo.
@@ -656,3 +662,37 @@ La migración privada y `sahten-delivery` v9 están activos. Desde los controles
 Cloudflare Production **f68ab9a6-c165-422f-8cab-4ddc3b7a9cfc**, éxito 03:51:42 UTC. Diecinueve archivos idénticos por SHA-256, cuatro fotos 200, catálogo actual de 28 productos conservado. Productos hash `5b5fb2355bc4652924f52bbef12001fb` y pagos `42a51cb6b815a33c069e23c39894a399` coinciden con el inicio; restaurando solo mínimos/revisión anteriores y excluyendo horarios, el catálogo coincide con hash anterior `d9320ac1d910f6bdb6ecb53e3af49a50`. Se preservó el segundo negocio. No se crearon pedidos, pagos ni mensajes de WhatsApp. Evidencia en `entregables/publicacion-0.4.33/`.
 
 Esta publicación resuelve las condiciones de delivery sin subir archivos. **No publica el nuevo diseño.** El dueño eligió opción 3 también en carta y pidió un pulido: cuerpos anteriores de 11–12 px y crédito de 8 px resultaban insuficientes en escritorio. Revisión local `tipografia/tipo-3-home-pulida.html` y `tipo-3-carta-pulida.html`: títulos de sección 44/34 px, cuerpo principal 18/16 px, Cómo comprar con video y pasos de mayor tamaño y footer común. Se conservan fotos de carta 180/155 px; sin desbordes de documento en 320/390/640/1024/1440. Falta validar esta revisión y trasladarla al generador antes de publicar el rediseño.
+
+### Complementos incrementales · segundo lote local del 4/11/2026
+
+Coordinador de backend preparado para oferta/aceptación/recotización de una unidad adicional en retiro online con efectivo o transferencia. No está instanciado en el adaptador de producción ni conectado al cliente web: pendiente revisión económica privada, publicación y activación por tienda. No se anuncian beneficios nuevos ni se modifican productos, pedidos o datos del sitio. Ver `docs/sahten/INTEGRACION-COMPLEMENTOS.md`.
+
+### Alta y costos adicionales diferidos · 4/11/2026
+
+Preparados el esquema/RPC privados, alta/consulta/activación desde Complementos y aceptación en checkout de retiro online. El dueño autorizó diferir adicionales con marca provisional auditable y reportes identificados; no se declaran comprobados. Falafel queda pendiente y no se infiere costo de ración de seis desde rendimiento 25. Sin despliegues ni cambios de importes/activaciones/datos publicados. Ver `docs/sahten/INTEGRACION-COMPLEMENTOS.md`.
+
+### Despliegue rechazado por revisión automática · 4/11/2026
+
+La aplicación de la migración de altas de complementos fue rechazada por exigir aprobación específica del dueño para DDL/SECURITY DEFINER/trigger del catálogo en producción. No se cambió Supabase ni se reintentó indirectamente. Backend actual conservado: delivery v17 y payments v11. Código local validado con 981 pruebas; valores y ofertas públicas intactos. Alcance de aprobación documentado en INTEGRACION-COMPLEMENTOS.md.
+
+
+## Backend desplegado y verificado · 4/11/2026
+
+El dueño autorizó expresamente la migración, `sahten-delivery` y la clave privada de firma. Después de la interrupción se comprobó que seguían ausentes las tablas antes de aplicar cambios.
+
+- Migración `upsell_review_publication` aplicada y registrada en producción como **20261104182807** (archivo local `20261104131316_upsell_review_publication.sql`).
+- `SAHTEN_UPSELL_SIGNING_KEY` creada como secreto exclusivo del servidor; no se incorpora su valor al repositorio, al cliente ni a esta documentación.
+- `sahten-delivery` **v19 ACTIVE**, SHA-256 `7da3ba0b3f36cde4a838f6785e7f116a8916d015ae4a626725e4ddc050ed62f8`, con sus dependencias y autenticación propia conservadas (`verify_jwt=false`, como antes). `sahten-payments` continúa v11, sin cambios.
+- Tablas privadas con RLS y sin acceso directo de `anon` o `authenticated`. Los RPC administrativos requieren autenticación y validan dueño/admin por negocio; costos y confirmación quedan restringidos al servidor.
+- Comprobación HTTPS: cotización ordinaria de retiro responde **200** sin guardar pedido; oferta aún no publicada responde **409 / upsell_unavailable**; administración y costos privados rechazan acceso anónimo con **401 / 42501**.
+- Conteo de revisiones y reglas nuevas: **0**. No se registró ni activó ninguna oferta, ni se crearon compras para estas pruebas. Falafel sigue pendiente.
+- Asesores: nuevos avisos informativos por tablas privadas cerradas con RLS sin políticas y avisos de los cuatro RPC autenticados SECURITY DEFINER intencionales. Sus permisos y control de negocio fueron revisados; no se amplió acceso anónimo. No se modificaron advertencias preexistentes de otros módulos.
+
+Este estado reemplaza únicamente los avisos históricos de despliegue pendiente/rechazado anteriores. **La app pública y el cliente web todavía no incluyen este lote**: falta su publicación, altas pausadas desde sesión dueña/admin y QA de compras/sincronización desplegadas. Las pruebas locales no certifican esos pasos. Los programas de cupones, mejora 4U y complementos en delivery/Mostrador siguen pendientes de integración específica.
+
+
+### Cliente 0.4.49 preparado · 4/11/2026
+
+PR #113: se prepara la publicación de app y checkout, conservando portada/mapa/fotos del despliegue de producción `91563746-1f00-4bba-8d58-16dbc96856d0`. El workflow histórico sin promociones exigía 54 productos y falló después de aprobar tests/build; se retira su ejecución automática y queda manual. El empaquetador vigente ya no obliga a habilitar las seis campañas ni fija un número histórico de productos: compara una huella íntegra de productos, precios, fotos, configuración, pagos, delivery, promociones y recomendaciones con el catálogo público actual. Consulta de nuevo al finalizar y antes de desplegar; cualquier edición concurrente detiene la publicación.
+
+Primer paquete revisado: 40 productos, 40 fotos remotas, 11 bebidas, seis campañas (dos habilitadas y cuatro pausadas), beneficio habitual del 10 %. Son una lectura puntual, no valores que el despliegue fuerce sobre futuras ediciones. Se preservan los 16 archivos de marca/páginas/fotos y el layout original de portada. No se crean/activan ofertas ni se publica una descripción nueva. Instaladores y hosting aún pendientes de publicación al escribir este apartado.

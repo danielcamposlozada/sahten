@@ -188,6 +188,17 @@ export function createController(host) {
     async publishPromotionCampaignDraft(campaign) {
       return stateRpc('publish_promotion_campaign_draft', {p_campaign:campaign});
     },
+    async readUpsellManagement() { if(!client||!host.conn.storeId)return null;const ctx=context(),result=await ctx.client.rpc('get_store_upsell_management',{p_store_id:ctx.storeId});check(ctx);return result; },
+    async readUpsellReviewContext(definition) { if(!client||!host.conn.storeId)throw new SupabaseError('Conectá la tienda primero.');const ctx=context(),result=await ctx.client.rpc('get_store_upsell_review_context',{p_store_id:ctx.storeId,p_definition:definition});check(ctx);return result; },
+    async publishReviewedUpsell(definition,review) {
+      return stateRpc('review_and_publish_store_upsell',{p_definition:definition,
+        p_incremental_cost:review.incrementalCost,p_order_cost:review.orderCost,
+        p_review_note:review.note,p_source_fingerprint:review.sourceFingerprint,
+        p_expected_revision:review.expectedRevision??null,p_accept_exception:review.acceptException===true,p_defer_additional:review.deferAdditional===true});
+    },
+    async setUpsellState(id,enabled,revision) {
+      return stateRpc('set_store_upsell_state',{p_offer_id:id,p_enabled:enabled,p_expected_revision:revision});
+    },
     // Verificación real y SOLO LECTURA. No publica, emite ni cambia ofertas.
     async verifyPromotionDraft(type,draft) {
       if(!client||!host.conn.storeId)throw new SupabaseError(

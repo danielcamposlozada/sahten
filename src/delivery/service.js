@@ -1,3 +1,4 @@
+import { upsellAcceptanceDigest } from '../promotions/upsell-checkout.js';
 import { quoteOrder, PaymentError, fail, validUuid, cents } from '../payments/core.js';
 import { validateDeliveryPolicy } from './geometry.js';
 import { deliveryQuote, deliveryPolicyWithHours } from '../core/delivery.js';
@@ -12,7 +13,7 @@ export function authorizationFrom(record,policy,destination){
   return {approved:true,revision:policy.revision,destination,actor:record.authorized_by,reason:record.authorization_reason,at:record.authorized_at,tariffFloorException:!!record.tariff_exception};
 }
 /** Solo datos y acciones explícitas: el navegador no puede dar por validada su propia ruta. */
-export function createDeliveryService({repo,authenticate,resolveRoute,geocode,now=()=>Date.now(),originKey=async()=> 'unknown'}) {
+export function createDeliveryService({repo,authenticate,resolveRoute,geocode,now=()=>Date.now(),originKey=async()=> 'unknown',upsellCheckout=null}) {
  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,apikey,content-type','Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS'};
  const response=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
  async function access(req,sid,admin=false){const user=await authenticate(req);if(!user||!await (admin?repo.canManage:repo.canOperate)(sid,user))fail('Iniciá sesión con un rol autorizado para esta acción.',403);return user;}
@@ -60,6 +61,13 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
    }
    await limited(sid,req);
    if(action==='geocode'){const menu=await repo.menu(sid),query=String(b.query||'').trim();if(query.length<5||query.length>200)fail('Escribí calle, altura y localidad.');if(!menu?.delivery?.deliveryV2)fail('Falta configurar las zonas.',409);return response(await geocode(query,menu.delivery.deliveryV2.center,sid));}
+   if(action==='upsell-offer'){
+    if(!upsellCheckout)fail('Las ofertas incrementales todavía no están habilitadas.',409,'upsell_not_configured');
+    if(b.pos||b.couponCode)fail('La oferta no se puede combinar con esta selección.',409,'upsell_ineligible');
+    const ctx=await context(sid,b.order||{});
+    return response(await upsellCheckout.offer({storeId:sid,sessionId:b.upsellSessionId,
+      offerId:b.upsellOfferId,menu:ctx.menu,order:b.order||{}}));
+   }
    if(!['quote','request','order','validate-pos'].includes(action))fail('Acción no disponible.',404);
    const operator=action==='validate-pos'||b.pos===true?await access(req,sid):null;
    const input=b.order||{};
@@ -73,7 +81,9 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
      const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(couponCode));
      couponDigest=Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');
    }
-   if(action==='order'){const previous=await repo.run('submission',{store_id:sid,request_id:uuid(b.requestId)});if(previous?.order){if(intent(input)!==intent(previous.order)||(previous.order.couponCodeDigest||null)!==couponDigest)fail('Ese intento corresponde a otro pedido o cupón.',409,'order_conflict');return response(previous);}}
+   const acceptanceDigest=b.upsellToken?await upsellAcceptanceDigest({token:b.upsellToken,sessionId:b.upsellSessionId,offerId:b.upsellOfferId}):null;
+   if(b.upsellToken&&(action!=='order'||operator||couponCode))fail('La oferta requiere confirmar una compra online sin cupón adicional.',409,'upsell_ineligible');
+   if(action==='order'){const previous=await repo.run('submission',{store_id:sid,request_id:uuid(b.requestId)});if(previous?.order){if(intent(input)!==intent(previous.order)||(previous.order.couponCodeDigest||null)!==couponDigest||(previous.order.upsellAcceptanceDigest||null)!==acceptanceDigest)fail('Ese intento corresponde a otro pedido o cupón.',409,'order_conflict');return response(previous);}}
    const ctx=await context(sid,input);
    if(operator){ctx.salesChannel='mostrador';ctx.requireCustomer=false;const rules=await repo.posRules(sid);if(!ctx.menu.delivery?.configurationRevision&&rules.tienda?.deliveryV2&&rules.tienda.deliveryV2.revision!==ctx.policy.revision)fail('La configuración de delivery cambió. Actualizá las condiciones de envío antes de confirmar.',409,'menu_changed');if(Array.isArray(rules.catalog)){ctx.menu={...ctx.menu,config:{enabled:true,showPrices:true},products:rules.catalog.map(p=>({id:p.id,name:p.name,category:p.category,salesAvailability:p.salesAvailability,price:p.fixedPrices?.mostrador,priceRevision:p.quoteIds?.mostrador})),payments:{...ctx.menu.payments,benefit:rules.tienda?.paymentBenefit??ctx.menu.payments?.benefit}};}ctx.allowedMethods=(rules.payments||[]).map(p=>p.method||({efectivo:'efectivo',transferencia:'transferencia','mercado pago':'mercadopago',tarjeta:'tarjeta'})[String(p.name||'').toLowerCase()]||'other');if(input.manualDiscountId){ctx.commercialDiscount=rules.discounts?.find(d=>d.id===input.manualDiscountId);if(!ctx.commercialDiscount)fail('El descuento cambió. Sincronizá el proyecto y revisá el pedido.',409);}}
    if(action==='order'&&input.paymentMethod==='mercadopago')fail('Completá el pago mediante Checkout Pro.');
@@ -93,7 +103,13 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
      trustedCoupon={...record,kind:'coupon'};
    }
    const trustedCosts=ctx.menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-   const order=quoteOrder(ctx.menu,input,{...ctx,trustedCosts,trustedCoupon,allowOtherPayments:true,validateCustomer:action==='order'||action==='validate-pos'});
+   let acceptedUpsell=null;
+   if(b.upsellToken){
+    if(!upsellCheckout||typeof repo.confirmUpsellOrder!=='function')fail('Las ofertas incrementales todavía no están habilitadas.',409,'upsell_not_configured');
+    acceptedUpsell=await upsellCheckout.accept({storeId:sid,sessionId:b.upsellSessionId,
+      offerId:b.upsellOfferId,token:b.upsellToken,requestId:uuid(b.requestId),menu:ctx.menu,order:input});
+   }
+   const order=acceptedUpsell?.order||quoteOrder(ctx.menu,input,{...ctx,trustedCosts,trustedCoupon,allowOtherPayments:true,validateCustomer:action==='order'||action==='validate-pos'});
    if(couponDigest && (order.promotionSnapshot?.couponId!==trustedCoupon?.id ||
       !order.promotionSnapshot.appliedPromotionIds?.includes(trustedCoupon.id)))
      fail('El cupón no aplica a esta compra. Revisá los productos y el descuento.',409,'coupon_not_applicable');
@@ -103,8 +119,11 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     const requestId=uuid(b.requestId);
     const payload={...order,num:Math.floor(Math.random()*9000)+1000,
       createdAt:new Date(now()).toISOString(),status:'pendiente',
-      ...(couponDigest?{couponCodeDigest:couponDigest}:{})};
-    const result=couponDigest
+      ...(couponDigest?{couponCodeDigest:couponDigest}:{}),
+      ...(acceptedUpsell?{upsellAcceptanceDigest:acceptedUpsell.acceptanceDigest}:{})};
+    const result=acceptedUpsell
+      ? await repo.confirmUpsellOrder(sid,requestId,payload,acceptedUpsell.transaction)
+      : couponDigest
       ? await repo.confirmCouponOrder(sid,couponDigest,requestId,payload)
       : await repo.run('order',{store_id:sid,request_id:requestId,payload});
     return response({...result,order:result.order||order});
