@@ -1,3 +1,4 @@
+import {hasDeferredCostApproval} from './promotion-cost-review.js';
 // Revisión server-only: un upsell NO es una campaña pública.
 // El precio por producto debe provenir del menú oficial. La proveniencia de la
 // adición, costos y gastos incrementales deben ser VALIDADOS POR EL SERVIDOR.
@@ -11,7 +12,7 @@ export function assessIncrementalUpsell({
   lines = [], currentLines = [], upsell = {}, productId,
   proposedExtra = 0, methodCommissionPercent = 0,
   trustedEconomics = {}, trustedUpsellSelection = null,
-  trustedOrderCosts = null,
+  trustedOrderCosts = null, trustedCostException = null,
   minBasketMarginPct = 40, minIncrementalMarginPct = 40
 } = {}) {
   const deny = reason => ({ approved:false, reason });
@@ -32,12 +33,13 @@ export function assessIncrementalUpsell({
     return deny('not_single_eligible_upsell');
   if (!validMoney(proposedExtra) || proposedExtra <= 0)
     return deny('not_a_discount');
+  const deferred=hasDeferredCostApproval(trustedCostException);
   const c = trustedEconomics[productId];
-  if (!c || c.verified !== true || c.incrementalVerified !== true ||
+  if (!c || c.verified !== true || (c.incrementalVerified !== true && !(deferred&&c.additionalIncrementalCost===0)) ||
       !validMoney(c.directCost) || !validMoney(c.fixedCost) ||
       !validMoney(c.additionalIncrementalCost))
     return deny('incremental_costs_unverified');
-  if (!trustedOrderCosts || trustedOrderCosts.verified !== true ||
+  if (!trustedOrderCosts || (trustedOrderCosts.verified !== true && !(deferred&&trustedOrderCosts.additionalOrderCost===0&&trustedOrderCosts.shippingSubsidy===0)) ||
       !validMoney(trustedOrderCosts.additionalOrderCost) ||
       !validMoney(trustedOrderCosts.shippingSubsidy))
     return deny('order_costs_unverified');

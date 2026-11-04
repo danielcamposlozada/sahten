@@ -150,3 +150,14 @@
 .promo-local-drafts summary,.promo-local-import summary{cursor:pointer;font-weight:700;font-size:13px}
 @media(max-width:850px){.promo-live-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:500px){.promo-live-facts{grid-template-columns:1fr 1fr}.promo-ticket-option small{margin-left:0}}
+
+/* Evidencia real: no confundir un rechazo con una prueba todavía no ejecutada. */
+.promo-check{margin:8px 0;line-height:1.5}
+.promo-check small{display:block;color:var(--muted)}
+.promo-check.is-rejected{border-left:3px solid #b84332;padding-left:9px}
+.promo-check.is-pending,.promo-check.is-unverified{border-left:3px solid #a36b14;padding-left:9px}
+.promo-check.is-approved{border-left:3px solid #28794e;padding-left:9px}
+.promo-draft-plan{border-style:dashed!important;text-align:left}
+.promo-draft-plan[aria-pressed=true]{font-weight:700}
+
+.promo-overview-status.is-provisional{color:#995b0b;border-color:#ba821e}

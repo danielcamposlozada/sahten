@@ -1,3 +1,4 @@
+import {createReviewedUpsellEditor} from './reviewed-upsells.js';
 import { kv } from '../project/kv.js';
 import { onPanelShow } from '../events.js';
 import { initialPromotionConfig, quotePromotions, localDateParts, scheduleMatches, expiryLabel } from '../core/promotions.js';
@@ -8,6 +9,7 @@ import { campaignContext } from '../core/promotion-context.js';
 import { createLiveRecommendationEditor } from './live-cart-recommendations.js';
 import { publicationKind } from '../core/promotion-publication.js';
 import { promotionDraftReview } from '../core/promotion-draft-review.js';
+import { VERIFICATION_LABELS, serverVerificationChecks, summarizeVerification } from '../core/promotion-verification.js';
 import { WEEK_DAYS, campaignTemplate, validateCampaignDraft, describeSchedule } from '../core/campaign-builder.js';
 import '../styles/promotions.css';
 
@@ -50,10 +52,12 @@ function runPreview(state,w,method,productId) {
 export function installPromotionsEditor(w=window) {
   let selected='weekly-meals', simulationProduct='p1779467294622',simulationMethod='transferencia', tab='overview', overviewFilter='all', syncFeedback='', campaignFeedback='', cursor=new Date();
   const get=()=>load();
+  let localFormDirty=false;
   let draftEditing=null, couponEditing=null, publishFeedback='',publishBusy=false,recInitialized=false;
   const draftVerifications=new Map();
   let verificationFeedback='',verificationBusy=false;
-  const recEditor=createLiveRecommendationEditor(w,()=>render());
+  const upsellEditor=createReviewedUpsellEditor(w,()=>get().upsells,()=>{if(tab==='extras')render();});
+  const recEditor=createLiveRecommendationEditor(w,()=>{if(!localFormDirty)render();});
   let live={published:false,campaigns:[]},liveTicket=null,liveManagement=null,liveLoaded=false,
     liveBusy=false,liveError='',liveContext='',lastLiveAt=0,liveEditDirty=false,liveSaveBusy=false,liveSaveFeedback='';
   const liveCatalog=()=>publishedPromotionCatalog(get().campaigns,
@@ -63,32 +67,33 @@ export function installPromotionsEditor(w=window) {
   const currentLiveContext=()=>[w.SAHTEN?.project?.session?.id||'',w.SAHTEN?.online?.conn?.()?.storeId||'',w.SAHTEN?.online?.conn?.()?.url||''].join('|');
   function ensureLiveContext(){
     const key=currentLiveContext();
-    if(liveContext!==key){liveContext=key;liveLoaded=false;liveError='';live={published:false,campaigns:[]};liveTicket=null;liveManagement=null;liveEditDirty=false;recInitialized=false;recEditor.reset();draftVerifications.clear();verificationFeedback='';}
+    if(liveContext!==key){liveContext=key;liveLoaded=false;liveError='';live={published:false,campaigns:[]};liveTicket=null;liveManagement=null;liveEditDirty=false;localFormDirty=false;recInitialized=false;recEditor.reset();upsellEditor.reset();draftVerifications.clear();verificationFeedback='';}
   }
   const canOperate=()=>!w.SAHTEN?.project?.session?.readOnly
     && ['owner','admin'].includes(w.SAHTEN?.online?.role?.())
     && w.SAHTEN?.online?.controller?.info?.()?.signedIn===true;
   async function refreshLive(){
     ensureLiveContext();
-    if(liveBusy)return;
+    if(liveBusy||liveEditDirty||localFormDirty)return;
     const context=liveContext;
     liveBusy=true;liveError='';
     try{
-      const [result,ticketResult,management]=await Promise.all([
+      const [result,ticketResult,management,upsells]=await Promise.all([
         liveApi()?.readPromotionCampaignStates?.(),
         liveApi()?.readPromotionTicketCampaigns?.().catch(()=>null)??Promise.resolve(null),
-        liveApi()?.readPromotionCampaignDetails?.().catch(()=>null)??Promise.resolve(null)
+        liveApi()?.readPromotionCampaignDetails?.().catch(()=>null)??Promise.resolve(null),
+        canOperate()?(liveApi()?.readUpsellManagement?.().catch(()=>null)??Promise.resolve(null)):Promise.resolve(null)
       ]);
-      if(context!==currentLiveContext())return;
+      if(context!==currentLiveContext()||liveEditDirty||localFormDirty)return;
       if(!result||!Array.isArray(result.campaigns))throw new Error('No se recibió el estado publicado de las campañas.');
-      live=result;liveTicket=ticketResult?.source==='published_server'?ticketResult:null;
+      upsellEditor.ingest(upsells);live=result;liveTicket=ticketResult?.source==='published_server'?ticketResult:null;
       liveManagement=management?.source==='published_management'?management:null;
       liveLoaded=true;lastLiveAt=Date.now();
     }catch(err){
       if(context===currentLiveContext()){
         liveError=String(err?.message||'No se pudo leer el estado de la tienda.').slice(0,250);liveLoaded=true;lastLiveAt=0;
       }
-    }finally{liveBusy=false;if(!liveEditDirty)render();}
+    }finally{liveBusy=false;if(!liveEditDirty&&!localFormDirty)render();}
   }
   // Un switch disponible únicamente cuando el checkout publicó la campaña.
   // No cambia flags locales de forma optimista.
@@ -103,9 +108,9 @@ export function installPromotionsEditor(w=window) {
   // es un control en vivo del servidor; no se finge publicar un borrador.
   function draftSwitch(key,item){
     const editable=!w.SAHTEN?.project?.session?.readOnly && !w.document.body.classList.contains('role-no-costs');
-    return '<button type="button" class="promo-live-switch promo-draft-switch" role="switch" aria-label="'+esc((item.enabled?'Quitar':'Incluir')+' en planificación local '+(item.name||item.id))+'"'
-      +' aria-checked="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
-      +'<span class="promo-live-track"></span><span>'+(item.enabled?'En planificación':'Fuera de planificación')+'</span></button>';
+    return '<button type="button" class="promo-draft-plan" aria-label="'+esc((item.enabled?'Quitar':'Incluir')+' en planificación local '+(item.name||item.id))+'"'
+      +' aria-pressed="'+!!item.enabled+'" data-draft-toggle="'+esc(key)+'" data-draft-id="'+esc(item.id)+'"'+(editable?'':' disabled')+'>'
+      +'<span>'+(item.enabled?'✓ En planificación local · Quitar':'+ Incluir en planificación local')+'</span></button>';
   }
   const draftKey=(type,id)=>type+':'+id;
   function draftFromState(state,type,id){
@@ -121,35 +126,38 @@ export function installPromotionsEditor(w=window) {
     const draft=draftFromState(get(),type,id);
     if(!draft)return null;
     const ctx=currentLiveContext(),fingerprint=JSON.stringify(draft),key=draftKey(type,id);
-    const previous=draftVerifications.get(key);
-    draftVerifications.set(key,{fingerprint,pending:true});
+    const requestId=Symbol('verification');
+    draftVerifications.set(key,{fingerprint,pending:true,requestId});
     if(!quiet){verificationFeedback='Consultando precios, costos y requisitos en el servidor…';render();}
     try{
       const data=await liveApi().verifyPromotionDraft(type,draft);
-      if(ctx!==currentLiveContext()||JSON.stringify(draftFromState(get(),type,id))!==fingerprint)return null;
-      if(!data||data.source!=='server'||data.type!==type||data.id!==id||!Array.isArray(data.checks))
+      if(ctx!==currentLiveContext()||draftVerifications.get(key)?.requestId!==requestId||JSON.stringify(draftFromState(get(),type,id))!==fingerprint)return null;
+      if(!data||data.source!=='server'||data.type!==type||data.id!==id||!Array.isArray(data.checks)||!data.checks.length)
         throw new Error('El servidor no devolvió una verificación completa.');
-      draftVerifications.set(key,{fingerprint,data,pending:false});
+      draftVerifications.set(key,{fingerprint,data,pending:false,requestId});
       if(!quiet)verificationFeedback='Verificación del servidor completada para «'+draft.name+'».';
       return data;
     }catch(err){
-      if(ctx===currentLiveContext()&&JSON.stringify(draftFromState(get(),type,id))===fingerprint){
-        draftVerifications.set(key,{fingerprint,error:String(err?.message||err).slice(0,240),pending:false});
+      if(ctx===currentLiveContext()&&draftVerifications.get(key)?.requestId===requestId&&JSON.stringify(draftFromState(get(),type,id))===fingerprint){
+        draftVerifications.set(key,{fingerprint,error:String(err?.message||err).slice(0,240),pending:false,requestId});
         if(!quiet)verificationFeedback='No se pudo verificar «'+draft.name+'»: '+String(err?.message||err);
       }
       return null;
     }finally{
-      if(ctx===currentLiveContext()&&draftVerifications.get(key)?.pending)draftVerifications.delete(key);
+      if(ctx===currentLiveContext()&&draftVerifications.get(key)?.requestId===requestId&&draftVerifications.get(key)?.pending)draftVerifications.delete(key);
       if(!quiet)render();
     }
   }
   function readinessChecklist(type,item){
     const review=promotionDraftReview(type,item,catalog(w));
     const missing=review.missing.length;
+    const renderCheck=c=>'<li class="promo-check is-'+esc(c.status)+'"><strong>'+esc(VERIFICATION_LABELS[c.status])+'</strong> · '+esc(c.label||c.id)+(!c.ok&&c.action?'<small>Próximo paso: '+esc(({edit:'revisar la configuración',costs:'revisar costos y márgenes',checkout:'comprobar la integración de checkout',verify_server:'verificar con el servidor',exception_review:'revisar excepción comercial y margen; no activa el descuento'})[c.action]||c.action)+'</small>':'')+'</li>';
     const places=review.placements.length?review.placements.map(id=>placements.find(([v])=>v===id)?.[1]||id).join(', '):'Sin ubicación configurada';
     const record=draftVerifications.get(draftKey(type,item.id));
     const current=record?.fingerprint===JSON.stringify(item)?record:null;
     const data=current?.data;
+    const serverChecks=serverVerificationChecks(data,type);
+    const result=summarizeVerification(serverChecks);
     const permission=canOperate()&&typeof liveApi()?.verifyPromotionDraft==='function';
     const fiscal=data?'<div class="promo-server-evidence"><strong>Resultado del servidor · '+esc(data.checkedAt||'')+'</strong>'
       +'<p>Descuento total de prueba (efectivo/transferencia): '+esc(data.totalPercent)+'% · Margen objetivo: '+esc(data.minMarginPercent)+'%</p>'
@@ -160,20 +168,18 @@ export function installPromotionsEditor(w=window) {
          +'<td>'+ (p.estimatedMarginPct==null?'No calculable':esc(p.estimatedMarginPct)+'%')+'</td>'
          +'<td>'+ (p.headroomAt40Pct==null?'No calculable':fmt(p.headroomAt40Pct))+'</td></tr>').join('')
        +'</tbody></table></div>':'<p>Elegí productos elegibles para calcular el margen sobre un escenario concreto.</p>')
-      +'<ul>'+data.checks.map(c=>'<li class="'+(c.ok?'is-ok':'is-pending')+'">'
-         +(c.ok?'✓ ':'○ ')+esc(c.label||c.id)+'</li>').join('')+'</ul>'
-      +'<p class="promo-caution">No autoriza la publicación: faltan costos incrementales aprobados y/o integración de cobro y canje. El servidor no modifica descuentos al verificar.</p>'
+      +'<p>Resultado de comprobaciones: '+esc(result.label)+'.</p><ul>'+serverChecks.map(renderCheck).join('')+'</ul>'
+      +'<p class="promo-caution">Esta consulta no publica ni activa beneficios. Los permisos de publicación y activación se verifican por separado en el servidor.</p>'
       +'</div>':'';
     return '<details class="promo-note promo-draft-checklist"'+(data?' open':'')+'><summary>Revisar publicación · verificación '+(data?'del servidor': 'local')+' · '+missing+' requisito'+(missing===1?'':'s')+' local'+(missing===1?'':'es')+' pendiente'+(missing===1?'':'s')+'</summary>'
-      +'<ul>'+review.checks.map(c=>'<li class="'+(c.ok?'is-ok':'is-pending')+'">'
-        +(c.ok?'✓ ':'○ ')+esc(c.label)+'</li>').join('')+'</ul>'
+      +'<ul>'+review.checks.map(renderCheck).join('')+'</ul>'
       +'<p><small>Ubicaciones previstas: '+esc(places)+'. Planificación, no anuncio activo.</small></p>'
       +'<button type="button" data-verify-draft="'+esc(item.id)+'" data-verify-type="'+esc(type)+'"'
       +(permission&&!current?.pending?'':' disabled')+'>'+(current?.pending?'Verificando…':'Verificar con datos reales del servidor')+'</button>'
       +(!permission?'<p>Conectá la tienda como dueño o administrador para comprobar el costo publicado.</p>':'')
       +(current?.error?'<p class="promo-caution" role="alert">'+esc(current.error)+'</p>':'')
       +fiscal
-      +'<button type="button" disabled title="Se habilita solo tras checkout y canje verificados">Publicar descuento · pendiente de integración</button>'
+      +(type==='upsells'?'<button type="button" data-upsell-open>Revisar costos y dar de alta</button>':'<button type="button" disabled title="Se habilita solo tras checkout y canje verificados">Publicar descuento · pendiente de integración</button>')
       +'</details>';
   }
   function liveCampaignEditor(c){
@@ -279,27 +285,29 @@ export function installPromotionsEditor(w=window) {
     const source=connected?{...state,campaigns:[
       ...liveCatalog(),
       ...(state.campaigns||[]).filter(x=>!live.campaigns.some(r=>r.id===x.id))
-    ]}:state;
+    ],upsells:[...upsellEditor.entries().map(r=>r.definition),...(state.upsells||[]).filter(x=>!upsellEditor.entries().some(r=>r.id===x.id))]}:state;
     const overview=promotionOverview(source,{now:new Date(),live:connected?live:null});
     const merged=overview.items.map(item=>{
+      if(item.type==='upsells'){const row=upsellEditor.entries().find(r=>r.id===item.id);if(row)return {...item,status:row.requiresReview?'pending':row.enabled?(row.additionalDeferred?'provisional':'active'):'inactive',active:row.enabled&&!row.requiresReview};}
       if(item.type!=='crossSells')return item;
       const published=publishedRecommendation(item.id);
       if(!published)return item;
       return {...item,status:published.enabled===false?'inactive':'active',active:published.enabled!==false};
     });
     const operational=connected?merged.filter(item=>(item.type==='campaigns'&&live.campaigns.some(r=>r.id===item.id))||
-      item.type==='crossSells'&&!!publishedRecommendation(item.id)):merged;
+      item.type==='crossSells'&&!!publishedRecommendation(item.id)||item.type==='upsells'&&upsellEditor.entries().some(r=>r.id===item.id)):merged;
     const visible=filterPromotionOverview(operational,overviewFilter);
     const draftRows=connected?merged.filter(item=>!operational.includes(item)):[];
     const activeCount=operational.filter(x=>x.active).length;
     const pendingCount=operational.filter(x=>x.status==='pending'||x.status==='scheduled').length;
     const inactiveCount=operational.filter(x=>x.status==='inactive'||x.status==='draft').length;
-    const badges={active:'Activa ahora',inactive:'Pausada',scheduled:'Activa · fuera de calendario',pending:'Pendiente de validación · no publicada',draft:'Borrador local'};
+    const badges={provisional:'Habilitada · costos adicionales pendientes',active:'Activa ahora',inactive:'Pausada',scheduled:'Activa · fuera de calendario',pending:'Pendiente de validación · no publicada',draft:'Borrador local'};
     const canSync=canOperate()&&!!w.SAHTEN?.online?.conn?.()?.projectId&&w.SAHTEN?.project?.session?.info?.()?.hasFile===true;
     const renderCard=item=>{
       const next=item.type==='campaigns'?'campaigns':item.type==='upsells'?'extras'
         :item.type==='crossSells'?'recommendations':item.type==='productUpgrades'?'upgrades':'coupons';
       const published=publishedRecommendation(item.id);
+      const publishedUpsell=item.type==='upsells'&&upsellEditor.entries().find(r=>r.id===item.id);
       const isPublished=connected&&item.type==='campaigns'&&live.campaigns.some(r=>r.id===item.id);
       const record=isPublished?liveCatalog().find(r=>r.id===item.id):null;
       const ctx=record?campaignContext(record,{
@@ -312,10 +320,10 @@ export function installPromotionsEditor(w=window) {
         +'<strong>'+esc(item.name)+'</strong>'
         +'<span class="promo-overview-detail">'+esc(ctx?shortContext:item.detail)+'</span>'
         +(ctx?'<span class="promo-overview-foot">'+esc(ctx.cap+' · '+ctx.extraRequirement)+'</span>':'')
-        +'<span class="promo-overview-foot">'+(isPublished?'Campaña publicada · sincronizada desde la web':item.type==='crossSells'&&published?'Confirmada con el servidor':'Planificación local')+'</span>'
-        +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
-        +(isPublished?'':draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item))
-        +(['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,{...((item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item),id:item.id}):'')
+        +'<span class="promo-overview-foot">'+(isPublished?'Campaña publicada · sincronizada desde la web':publishedUpsell?'Complemento publicado · retiro online':item.type==='crossSells'&&published?'Confirmada con el servidor':'Planificación local')+'</span>'
+        +'<div class="promo-overview-actions">'+(item.type==='campaigns'?liveSwitch(item.id):publishedUpsell?'<button type="button" data-upsell-open>Gestionar publicación y costos</button>':item.type==='crossSells'&&published?'<button type="button" data-rec-open>Administrar en web</button>':draftSwitch(({upsells:'upsells',crossSells:'crossSells',productUpgrades:'productUpgrades',couponPrograms:'couponPrograms'})[item.type]||({extras:'upsells',recommendations:'crossSells',upgrades:'productUpgrades',coupons:'couponPrograms'})[item.type]||item.type,{id:item.id,name:item.name,enabled:item.localEnabled}))+'</div>'
+        +(isPublished||publishedUpsell?'':draftPublicationControl(item.type,Array.isArray(get()[item.type])?get()[item.type].find(x=>x.id===item.id)||item:item))
+        +(!publishedUpsell&&['upsells','productUpgrades','couponPrograms'].includes(item.type)?readinessChecklist(item.type,{...((item.type==='couponPrograms'?get().couponPrograms?.[item.id]:get()[item.type]?.find(x=>x.id===item.id))||item),id:item.id}):'')
         +'<button type="button" class="promo-open" data-open-promo="'+esc(item.id)+'" data-open-type="'+esc(next)+'">'+(isPublished?'Ver campaña':'Editar propuesta')+'</button></article>';
     };
     const cards=visible.map(renderCard).join('');
@@ -325,7 +333,7 @@ export function installPromotionsEditor(w=window) {
       +'<div class="promo-row"><button type="button" data-live-refresh '+(liveBusy?'disabled':'')+'>Actualizar estado web</button>'
       +'<button type="button" data-verify-all '+(canOperate()&&!verificationBusy?'':'disabled')+'>'+(verificationBusy?'Verificando propuestas…':'Verificar todos los borradores')+'</button></div></div>'
       +'<div class="promo-overview-summary"><span><strong>'+operational.length+'</strong> ofertas visibles</span>'
-      +'<span><strong>'+activeCount+'</strong> activas verificadas</span>'
+      +'<span><strong>'+activeCount+'</strong> habilitadas por servidor</span>'
       +'<span><strong>'+pendingCount+'</strong> programadas</span>'
       +'<span><strong>'+inactiveCount+'</strong> pausadas</span></div>'
       +'<div class="promo-overview-toolbar" role="group" aria-label="Filtrar promociones">'
@@ -347,6 +355,7 @@ export function installPromotionsEditor(w=window) {
   function render() {
     ensureLiveContext();
     const root=w.document?.getElementById?.('promotions-editor');if(!root)return;
+    localFormDirty=false;
     const state=get();
     const published=liveLoaded&&!liveError&&live.published?liveCatalog():[];
     const campaigns=published.length?[...published,...(state.campaigns||[]).filter(x=>!published.some(p=>p.id===x.id))]:(state.campaigns||[]);
@@ -363,9 +372,13 @@ export function installPromotionsEditor(w=window) {
       +'<span class="promo-pill" role="status">'+esc(publishedLabel)+'</span></div>'
       +'<div class="promo-metrics"><div><strong>'+campaigns.length+'</strong><small>Campañas configuradas</small></div><div><strong>'+active+'</strong><small>Activas verificadas</small></div><div><strong>'+(state.upsells||[]).length+'</strong><small>Complementos</small></div></div>'
       +'<nav class="promo-tabs" aria-label="Gestión de promociones">'+[['overview','Vista general'],['campaigns','Campañas'],['publishedRecs','Recomendaciones web'],['extras','Complementos'],['recommendations','Sugerencias'],['upgrades','Mejoras'],['live','En vivo'],['calendar','Calendario'],['coupons','Cupones'],['tickets','Tickets'],['sim','Simulador'],['report','Resultados']].map(([k,t])=>'<button type="button" data-tab="'+k+'" aria-pressed="'+(k===tab)+'">'+t+'</button>').join('')+'</nav>'
-      + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEditSelected) : tab==='publishedRecs'?recEditor.render():tab==='extras'?draftItemsEditor(state,'upsells','Complementos con descuento') : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor({...state,campaigns}):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor({...state,ticket:liveTicket?.ticket||state.ticket},canEdit&&!liveTicket):tab==='sim'?simEditor(state,w):reportEditor(w))
+      + (tab==='overview'?overviewEditor(state):tab==='campaigns' ? campaignEditor(state,c,canEditSelected) : tab==='publishedRecs'?recEditor.render():tab==='extras'?(upsellEditor.render()+draftItemsEditor(state,'upsells','Borradores de complementos')) : tab==='recommendations'?draftItemsEditor(state,'crossSells','Recomendaciones sin rebaja') : tab==='upgrades'?draftItemsEditor(state,'productUpgrades','Mejoras de producto') : tab==='live'?liveEditor() : tab==='calendar'?calendarEditor({...state,campaigns}):tab==='coupons'?couponEditor(state):tab==='tickets'?ticketEditor({...state,ticket:liveTicket?.ticket||state.ticket},canEdit&&!liveTicket):tab==='sim'?simEditor(state,w):reportEditor(w))
       + '<p class="promo-caution">El tablero consulta las campañas reales de la tienda. Los borradores que aún no cumplen requisitos no pueden aplicar descuentos ni emitir cupones.</p>';
-    recEditor.bind(root);
+    root.oninput=event=>{
+      if(event.target.matches('input,select,textarea')&&!event.target.matches('[data-live-search]'))localFormDirty=true;
+    };
+    recEditor.bind(root);upsellEditor.bind(root);
+    root.querySelectorAll('[data-upsell-open]').forEach(b=>b.addEventListener('click',()=>{tab='extras';render();upsellEditor.refresh();}));
     root.querySelectorAll('[data-rec-open]').forEach(btn=>btn.addEventListener('click',()=>{tab='publishedRecs';render();recEditor.refresh();}));
     root.querySelectorAll('[data-verify-draft]').forEach(b=>b.addEventListener('click',()=>{
       if(!canOperate()||verificationBusy)return;
@@ -378,9 +391,14 @@ export function installPromotionsEditor(w=window) {
       const tasks=[...['upsells','productUpgrades'].flatMap(type=>(state[type]||[]).map(x=>({type,id:x.id}))),
         ...Object.keys(state.couponPrograms||{}).map(id=>({type:'couponPrograms',id}))];
       let checked=0;try{
-        const results=await Promise.all(tasks.slice(0,40).map(t=>verifyDraft(t.type,t.id,{quiet:true})));
-        checked=results.filter(Boolean).length;
-        verificationFeedback='Verificación completada: '+checked+' de '+Math.min(tasks.length,40)+' propuestas consultadas en el servidor. Revisá los checks de cada tarjeta.';
+        const queue=[...tasks];
+        await Promise.all(Array.from({length:Math.min(4,queue.length)},async()=>{
+          while(queue.length){
+            const task=queue.shift();
+            if(await verifyDraft(task.type,task.id,{quiet:true}))checked++;
+          }
+        }));
+        verificationFeedback='Verificación completada: '+checked+' de '+tasks.length+' propuestas consultadas en el servidor. Revisá los checks de cada tarjeta.';
       }finally{verificationBusy=false;render();}
     });
     root.querySelectorAll('[data-publish-campaign]').forEach(btn=>btn.addEventListener('click',async()=>{
@@ -430,7 +448,7 @@ export function installPromotionsEditor(w=window) {
       }catch(err){publishFeedback='No se publicó: '+String(err?.message||err).slice(0,190);}
       finally{publishBusy=false;render();}
     }));
-    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();if(tab==='publishedRecs')recEditor.refresh();}));
+    root.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();if(tab==='live')refreshLive();if(tab==='publishedRecs')recEditor.refresh();if(tab==='extras')upsellEditor.refresh();}));
     root.querySelector('[data-live-refresh]')?.addEventListener('click',()=>{refreshLive();recEditor.refresh();});
     root.querySelector('[data-promo-create]')?.addEventListener('click',()=>{tab='campaigns';render();root.querySelector('[data-promo-new]')?.focus();});
     root.querySelectorAll('[data-promo-filter]').forEach(b=>b.addEventListener('click',()=>{overviewFilter=b.dataset.promoFilter;render();}));
@@ -933,7 +951,7 @@ export function installPromotionsEditor(w=window) {
   function reportEditor(w){
     const r=promotionReport(w.sahtenOrders?.()||[]);
     return '<section class="promo-card"><h3>Resultados registrados</h3><p>Las métricas aparecen cuando existan pedidos con snapshots del nuevo motor. No representan las campañas aún no publicadas.</p><div class="promo-sim-results">'+
-      [['Pedidos evaluados',r.orders],['Pedidos con promoción',r.promotedOrders],['Venta bruta evaluada',fmt(r.gross)],['Descuentos otorgados',fmt(r.discount)],['Venta neta de productos',fmt(r.netProducts)]].map(([k,v])=>'<div><span>'+k+'</span><strong>'+v+'</strong></div>').join('')+
+      [['Pedidos evaluados',r.orders],['Pedidos con promoción',r.promotedOrders],['Pedidos con costos adicionales pendientes',r.provisionalOrders],['Venta bruta evaluada',fmt(r.gross)],['Descuentos otorgados',fmt(r.discount)],['Venta neta de productos',fmt(r.netProducts)]].map(([k,v])=>'<div><span>'+k+'</span><strong>'+v+'</strong></div>').join('')+
       '</div><h4>Por campaña</h4>'+(Object.values(r.byPromotion).length?Object.values(r.byPromotion).map(v=>'<p>'+esc(v.id)+' · '+v.orders+' líneas · '+fmt(v.revenue)+' vendidos</p>').join(''):'<p>Sin operaciones promocionales registradas.</p>')+'</section>';
   }
   // Reconciliación en vivo: misma frecuencia que el menú publicado, sin necesidad de recargar.
@@ -946,6 +964,6 @@ export function installPromotionsEditor(w=window) {
     if(w.currentPanel==='promociones'&&liveApi()?.info?.()?.signedIn)refreshLive();
   });
   // Renderiza al abrir el panel. Los cambios afectan sólo los borradores de este proyecto.
-  return {render:()=>{render();if(!liveLoaded&&!liveBusy&&liveApi()?.info?.()?.signedIn===true)refreshLive();if(!recInitialized&&canOperate()){recInitialized=true;recEditor.refresh();}},get,save};
+  return {render:()=>{ensureLiveContext();if(localFormDirty||liveEditDirty)return;render();if(!liveLoaded&&!liveBusy&&liveApi()?.info?.()?.signedIn===true)refreshLive();if(!recInitialized&&canOperate()){recInitialized=true;recEditor.refresh();}},get,save};
 }
 export function register(){onPanelShow('promociones',()=>window.SAHTEN.promotionsEditor?.render());}

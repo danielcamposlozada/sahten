@@ -32,7 +32,7 @@ describe('Pedidos a prueba de sincronizaciones destructivas',()=>{
  it('crea backups horarios distintos de los 14 diarios y retiene 48 horas',async()=>{
    const data=new Map();
    const store={list:async key=>[...data.keys()],put:async(_key,n,text)=>data.set(n,text),remove:async(_key,n)=>data.delete(n)};
-   const initial=new Date('2026-11-01T00:10:00Z');
+   const initial=new Date(2026,10,1,0,10,0);
    for(let i=0;i<BACKUP_HOURS+4;i++){
      const current=new Date(initial.getTime()+i*3600000);
      await hourlyBackup(store,'project','SAHTEN','snapshot '+i,current);

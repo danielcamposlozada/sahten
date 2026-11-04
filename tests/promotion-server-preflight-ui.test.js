@@ -63,6 +63,44 @@ describe('Verificación de complementos, mejoras y cupones dentro de la app',()=
    expect(controller.publishPromotionCampaignDraft).not.toHaveBeenCalled();
   }finally{dom.window.close();}
  });
+ it('verifica más de 40 propuestas sin omisiones ni más de cuatro consultas simultáneas',async()=>{
+  const {w,dom,editor,controller}=setup();
+  try{
+   const state=editor.get();
+   state.upsells=Array.from({length:45},(_,i)=>({...state.upsells[0],id:'test-up-'+i}));
+   state.productUpgrades=[];state.couponPrograms={};
+   editor.save(state);editor.render();
+   const original=controller.verifyPromotionDraft.getMockImplementation();
+   let active=0,maxActive=0;
+   controller.verifyPromotionDraft.mockImplementation(async(...args)=>{
+    active++;maxActive=Math.max(maxActive,active);
+    await new Promise(resolve=>setTimeout(resolve,0));
+    active--;return original(...args);
+   });
+   w.document.querySelector('[data-verify-all]').click();
+   await vi.waitFor(()=>expect(w.document.body.textContent).toContain('45 de 45 propuestas'),{timeout:3000});
+   expect(controller.verifyPromotionDraft).toHaveBeenCalledTimes(45);
+   expect(maxActive).toBeLessThanOrEqual(4);
+  }finally{dom.window.close();}
+ });
+ it('una respuesta antigua no reemplaza la verificación iniciada después',async()=>{
+  const {w,dom,controller}=setup();
+  try{
+   const original=controller.verifyPromotionDraft.getMockImplementation();
+   let resolveOld;
+   controller.verifyPromotionDraft.mockImplementationOnce((...args)=>new Promise(resolve=>{
+    resolveOld=async()=>resolve({...await original(...args),products:[{name:'Evidencia obsoleta'}]});
+   }));
+   w.document.querySelector('[data-verify-draft="baklava-up"]').click();
+   await vi.waitFor(()=>expect(resolveOld).toBeTypeOf('function'));
+   w.document.querySelector('[data-verify-all]').click();
+   await vi.waitFor(()=>expect(w.document.body.textContent).toContain('3 de 3 propuestas'));
+   await resolveOld();
+   await new Promise(resolve=>setTimeout(resolve,0));
+   expect(w.document.body.textContent).not.toContain('Evidencia obsoleta');
+   expect(w.document.body.textContent).toContain('43.4%');
+  }finally{dom.window.close();}
+ });
  it('un borrador editado pierde su verificación anterior, para evitar datos obsoletos',async()=>{
   const {w,dom,editor}=setup();
   try{
@@ -80,6 +118,23 @@ describe('Verificación de complementos, mejoras y cupones dentro de la app',()=
    expect(w.document.querySelector('[data-verify-all]').disabled).toBe(true);
    expect(w.document.querySelector('[data-verify-draft="baklava-up"]').disabled).toBe(true);
    expect(controller.verifyPromotionDraft).not.toHaveBeenCalled();
+  }finally{dom.window.close();}
+ });
+ it('no sobrescribe un borrador al volver a la ventana ni renueva su base remota mientras se escribe',async()=>{
+  const {w,dom,controller}=setup();
+  try{
+   await vi.waitFor(()=>expect(controller.readPromotionCampaignStates).toHaveBeenCalledOnce());
+   await new Promise(resolve=>setTimeout(resolve,0));
+   w.document.querySelector('[data-open-promo="baklava-up"]').click();
+   const input=w.document.querySelector('#draft-name');
+   input.value='Nombre todavía sin guardar';
+   input.dispatchEvent(new w.Event('input',{bubbles:true}));
+   w.currentPanel='promociones';
+   w.dispatchEvent(new w.Event('focus'));
+   await new Promise(resolve=>setTimeout(resolve,0));
+   expect(controller.readPromotionCampaignStates).toHaveBeenCalledOnce();
+   expect(w.document.querySelector('#draft-name')).toBe(input);
+   expect(input.value).toBe('Nombre todavía sin guardar');
   }finally{dom.window.close();}
  });
  it('editor de cupón permite elegir SKU de costo verificable',()=>{

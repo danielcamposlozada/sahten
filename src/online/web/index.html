@@ -185,6 +185,13 @@ var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryG
 var fatayUpgradeAccepted=false;
 var couponCode='',couponQuote=null,couponMessage='',couponBusy=false;
 var MENU=null, cart={}, type='delivery', serviceSelectionManual=false, geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
+var storefrontUpsells=createStorefrontUpsells({
+ context:function(){return {menu:MENU,items:lines().map(function(l){return {productId:l.id,qty:l.qty}}),method:pay,source:type,coupon:couponCode.trim(),connected:!!sb()};},
+ uuid:function(){return crypto.randomUUID();},
+ request:function(v){return deliveryApi('upsell-offer',{order:buildOrder(),upsellOfferId:v.offerId,upsellSessionId:v.sessionId});},
+ add:function(id){cart[id]=1;},
+ onChange:function(){if(MENU){render();if($('ov').classList.contains('on'))sheet();}}
+});
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})};
 /* Caligrafía de la marca sola (vector incrustado al publicar; solo con kit de marca). Devuelve '' si no hay. */
@@ -495,6 +502,17 @@ function activeCoupon(method){
   return couponQuote && couponQuote.key===couponFingerprint(method) &&
     couponQuote.code===couponCode.trim().toUpperCase()?couponQuote:null;
 }
+function upsellSection(){
+ var view=storefrontUpsells.view();
+ if(!view.selected&&!view.candidates.length&&!view.message)return '';
+ return '<section class="cart-addons" aria-label="Complemento con oferta"><h3>Un extra para tu pedido</h3>'
+  +(view.message?'<p role="status">'+esc(view.message)+'</p>':'')
+  +(view.selected?'<p><strong>Oferta aceptada · '+fmt(view.selected.line.net)+'</strong> por una unidad. El descuento ya está incluido en el total.</p>':'')
+  +(view.needsReview||view.selected?'<button type="button" data-upsell-clear>Continuar sin la oferta (precio habitual)</button>':'')
+  +view.candidates.map(function(v){return '<div class="cart-addon"><div><strong>'+esc(v.rule.name)+'</strong>'
+   +(v.offer?'<p>Una unidad por '+fmt(v.offer.line.net)+'. Total de tu pedido: '+fmt(v.offer.total)+'.</p>':'<p>La oferta se verifica con tu pedido y medio de pago.</p>')+'</div>'
+   +'<button type="button" '+(v.offer?'data-upsell-accept="':'data-upsell-consult="')+esc(v.rule.id)+'"'+(view.busy?' disabled':'')+'>'+(v.offer?'Sumar y aceptar oferta':'Ver oferta')+'</button></div>';}).join('')+'</section>';
+}
 function couponSection(){
   if(!sb()||MENU.promotions?.enabled!==true)return '';
   var allowed=pay==='efectivo'||pay==='transferencia',active=activeCoupon(pay);
@@ -528,6 +546,7 @@ function applyCoupon(){
   }).finally(function(){couponBusy=false;recalcDelivery();sheet();});
 }
 function cartBenefit(method){
+  var offered=storefrontUpsells.benefit(method||pay);if(offered)return offered;
   var selected=method||pay, legacy=paymentDiscountQuote(subtotal(),selected,MENU.payments&&MENU.payments.benefit,'online');
   if(!MENU.promotions||MENU.promotions.enabled!==true)return legacy;
   var rule=paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit);
@@ -590,7 +609,7 @@ function sheet(){
    (type==='delivery'?'<label for="f-addr">Dirección de entrega</label><input id="f-addr" aria-required="true" autocomplete="street-address" placeholder="Calle y número, localidad" value="'+esc(form.address)+'"><button type="button" class="checkout-edit" data-delivery-search hidden style="display:none">Buscar de otra forma</button><div id="sugs"></div><details class="optional-fields" data-disclosure="address" '+(disclosures.address||form.addressFloor||form.addressApartment||form.deliveryReference?'open':'')+'><summary>Agregar piso, departamento o referencia</summary><div class="checkout-field-pair"><div><label for="f-floor">Piso (opcional)</label><input id="f-floor" maxlength="30" value="'+esc(form.addressFloor)+'"></div><div><label for="f-apartment">Departamento (opcional)</label><input id="f-apartment" maxlength="30" value="'+esc(form.addressApartment)+'"></div></div><label for="f-reference">Referencia para la entrega (opcional)</label><input id="f-reference" maxlength="200" placeholder="Timbre, entrada, entre calles…" value="'+esc(form.deliveryReference)+'"></details>':'')+'</section>'+
    '<section class="checkout-group" aria-labelledby="checkout-contact-heading"><h3 id="checkout-contact-heading">Tus datos</h3><label for="f-name">Nombre</label><input id="f-name" aria-required="true" autocomplete="name" value="'+esc(form.name)+'"><label for="f-phone">Teléfono</label><input id="f-phone" aria-required="true" type="tel" autocomplete="tel" value="'+esc(form.phone)+'"><p class="cart-help">Para coordinar tu pedido con el local.</p></section>'+
    '<section class="checkout-group" aria-label="Pago y notas">'+paymentChoiceHtml({methods:payMethods(),selected:pay,percent:paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).enabled&&paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit).channels.online?paymentBenefitPolicy(MENU.payments.benefit).percent:0,amounts:Object.fromEntries(payMethods().map(function(k){return [k,amountForMethod(k)]}))})+
-   couponSection()+
+   upsellSection()+couponSection()+
    (pay==='efectivo'?'<label for="f-cash">¿Con cuánto vas a pagar? (opcional)</label><input id="f-cash" type="number" inputmode="decimal" min="0" max="100000000" step="0.01" placeholder="Por ejemplo, 20000" value="'+esc(form.cashTendered)+'"><p id="cash-status" role="status"></p>':'')+
    '<details class="optional-fields" data-disclosure="notes" '+(disclosures.notes||form.notes?'open':'')+'><summary>Agregar una nota al pedido</summary><label for="f-notes">Notas (opcional)</label><textarea id="f-notes" rows="2">'+esc(form.notes)+'</textarea></details></section>';
   var footer='<h3 class="checkout-total-heading">Tu pedido</h3><div class="checkout-footer-products">'+productRows+'</div>'+orderTotalsHtml()+'<div id="send-status" class="sheet-status" role="status">'+sendStatus()+'</div><div id="err" role="alert"></div><button class="cta" id="send"'+(canSend?'':' disabled')+' aria-describedby="send-status">'+(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total())+'</button><button class="checkout-back" data-checkout-step="cart">Volver al pedido</button>';
@@ -631,6 +650,7 @@ function buildOrder(){
 }
 function waLink(o){return waUrl(MENU.store.whatsapp,o,cur());}
 function send(){
+  if(!storefrontUpsells.canSubmit()){sheet();return;}
   if(sending||step!=='details'||!lines().length||couponBusy||couponCode.trim()&&!activeCoupon(pay))return;if(unavailableItems()){step='cart';sheet();return;}if(syncServiceChoice(false)||!serviceAvailable(type)){sheet();return;}recalcDelivery();if(!selectedServiceStatus().open||!cashChangeQuote(total(),form.cashTendered,pay).valid){sheet();return;}if(type==='delivery'&&(MENU.delivery?.enabled===false||modernDelivery()&&(!ship?.ok||deliveryLoading))){sheet();return;} var o=buildOrder(); lastOrder=o; sending=true; refreshSend();
   if(!sb()){ sending=false; var w=window.open(waLink(o),'_blank'); finish(o,false); return; }
   if(MENU.promotions?.enabled===true&&!modernDelivery()&&pay!=='mercadopago'){
@@ -640,13 +660,13 @@ function send(){
   var s=sb();
   if(modernDelivery()||MENU.promotions?.enabled===true){
     var fingerprint=JSON.stringify([o.source,o.items.map(function(i){return [i.productId,i.qty]}),o.lat,o.lng,o.address,o.addressFloor,o.addressApartment,o.deliveryReference,o.cashTendered,o.customerName,o.customerPhone,o.paymentMethod,o.total,o.notes,couponCode.trim()]);if(!deliverySubmission||deliverySubmission.fingerprint!==fingerprint)deliverySubmission={fingerprint:fingerprint,id:crypto.randomUUID()};
-    deliveryApi('order',{order:o,requestId:deliverySubmission.id,...(activeCoupon(pay)?{couponCode:couponCode.trim().toUpperCase()}:{})}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='details';sheet();$('err').textContent=e.message;});return;
+    deliveryApi('order',{order:o,requestId:deliverySubmission.id,...storefrontUpsells.submission(),...(activeCoupon(pay)?{couponCode:couponCode.trim().toUpperCase()}:{})}).then(function(v){sending=false;lastOrder=v.order;finish(v.order,true);}).catch(function(e){sending=false;step='details';sheet();$('err').textContent=e.message;});return;
   }
   fetch(s.url+'/rest/v1/orders',{method:'POST',headers:sbHeaders({Prefer:'return=minimal'}),body:JSON.stringify({store_id:s.storeId,payload:o})})
    .then(function(r){if(!r.ok)return r.json().catch(function(){return {};}).then(function(data){var error=new Error('HTTP '+r.status);error.deliveryPaused=String(data.message||'').includes('delivery_service_paused');throw error;});sending=false;finish(o,true);})
    .catch(function(error){sending=false;step='details';if(error.deliveryPaused){MENU.delivery=Object.assign({},MENU.delivery,{enabled:false});render();sheet();return;}sheet();var e=$('err');if(e)e.innerHTML='<div class="note err"><b>No pudimos enviar tu pedido.</b> Revisá tu conexión y reintentá'+(MENU.store.whatsapp?', o pedilo por WhatsApp.':'.')+(MENU.store.whatsapp?'<br><a href="'+esc(waLink(o))+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>':'')+'</div>';});
 }
-function finish(o,sent){deliverySubmission=null;fatayUpgradeAccepted=false;cart={};couponCode='';couponQuote=null;couponMessage='';form.cashTendered='';step='done';render();sheet();showSheet();}
+function finish(o,sent){storefrontUpsells.clear(false);deliverySubmission=null;fatayUpgradeAccepted=false;cart={};couponCode='';couponQuote=null;couponMessage='';form.cashTendered='';step='done';render();sheet();showSheet();}
 function done(){
   var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
   var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';
@@ -686,6 +706,12 @@ document.addEventListener('keydown',function(e){
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 });
 document.addEventListener('click',function(e){document.querySelectorAll('.snav-menu[open]').forEach(function(el){if(!el.contains(e.target)||e.target.closest('a'))el.removeAttribute('open')});});
+document.addEventListener('click',function(e){
+ var b=e.target.closest('[data-upsell-consult],[data-upsell-accept],[data-upsell-clear]');if(!b)return;
+ if(b.hasAttribute('data-upsell-clear'))storefrontUpsells.clear();
+ else if(b.dataset.upsellAccept)storefrontUpsells.accept(b.dataset.upsellAccept);
+ else storefrontUpsells.consult(b.dataset.upsellConsult);
+});
 document.addEventListener('input',function(e){if(e.target.id==='catalog-search'&&MENU&&MENU.config.enabled!==false){catalogQuery=e.target.value;renderCatalog();}});
 document.addEventListener('click',function(e){
   var t=e.target.closest('[data-upgrade-fatay],[data-start-checkout],[data-cat],[data-inc],[data-dec],[data-remove],[data-checkout-step],[data-type],[data-sug],[data-close],[data-delivery-search],[data-request-delivery],[data-refresh-delivery],#send');if(!t)return;

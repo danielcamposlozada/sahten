@@ -51,11 +51,11 @@ export function installLocalProfitUi(w=window) {
       +'<div class="local-progress-axis"><span>0%</span><span>'+(month===current?'Mes transcurrido: '+dayPct+'%':'Resultado de '+esc(monthLabel(month)))+'</span><span>100% de la meta</span></div>'
       +'<div class="local-profit-breakdown"><span><b>'+money(data.revenue)+'</b> ventas netas</span><span><b>−'+money(data.variable)+'</b> costo variable</span><span><b>−'+money(data.fixed)+'</b> GF asignado</span><span><b>−'+money(data.commission)+'</b> comisión</span><span><b>'+rounded(data.marginPct)+'</b> margen</span></div>'
       +'<div class="local-profit-foot"><span>'+data.covered+' pedidos con costos históricos'+(data.missing?' · <strong>'+data.missing+' sin costo auditado</strong>':'')+'. '
-      +(data.missing?'Resultado parcial: faltan costos en algunos pedidos.':'Estimación después del GF asignado por pedido; no es un cierre contable.')+'</span>'
+      +(data.provisional?'Estimación provisional: '+data.provisional+' pedidos tienen gastos adicionales pendientes. ':data.missing?'Resultado parcial: faltan costos en algunos pedidos.':'Estimación después del GF asignado por pedido; no es un cierre contable.')+'</span>'
       +(canEdit()?'<button type="button" data-local-goal-edit>Configurar meta del mes</button>':'')+'</div>'
       +'<form data-local-goal-form hidden class="local-goal-form"><label>Meta para '+esc(monthLabel(month))+' ($)<input type="number" min="0" step="1000" data-local-goal-input value="'+(storedGoal??'')+'" required></label><button type="submit">Guardar meta de '+esc(month)+'</button><small data-local-goal-error role="alert"></small></form>'
       +(summary?'':'<details class="local-month-history" '+(historyOpen?'open':'')+'><summary>Historial de metas y ganancias mensuales</summary><div class="local-profit-table-wrap"><table><thead><tr><th>Mes</th><th>Meta</th><th>Ganancia registrada</th><th>Avance</th><th>Datos</th><th>Acción</th></tr></thead><tbody>'
-      +history.map(h=>'<tr><td><strong>'+esc(monthLabel(h.month))+'</strong></td><td>'+(h.goal!=null?money(h.goal):'Sin configurar')+'</td><td>'+money(h.profit)+'</td><td>'+(h.goal>0?rounded(h.progressPct):'—')+'</td><td>'+(h.missing?'<span title="Faltan costos de pedidos">Parcial ('+h.missing+')</span>':'Verificado ('+h.covered+')')+'</td><td><button type="button" data-local-month="'+h.month+'">Ver / editar</button></td></tr>').join('')+'</tbody></table></div>'
+      +history.map(h=>'<tr><td><strong>'+esc(monthLabel(h.month))+'</strong></td><td>'+(h.goal!=null?money(h.goal):'Sin configurar')+'</td><td>'+money(h.profit)+'</td><td>'+(h.goal>0?rounded(h.progressPct):'—')+'</td><td>'+(h.provisional?'<span>Provisional ('+h.provisional+')</span>':h.missing?'<span title="Faltan costos de pedidos">Parcial ('+h.missing+')</span>':'Verificado ('+h.covered+')')+'</td><td><button type="button" data-local-month="'+h.month+'">Ver / editar</button></td></tr>').join('')+'</tbody></table></div>'
       +(changes.length?'<details class="local-goal-audit"><summary>Registro de ediciones ('+changes.length+')</summary><ul>'+changes.slice(0,50).map(x=>'<li>'+esc(x.month)+' · '+(x.before==null?'Sin meta':money(x.before))+' → '+money(x.after)+' · '+esc(new Date(x.at).toLocaleString('es-AR'))+'</li>').join('')+'</ul></details>':'')
       +'</details>');
     root.querySelector('#local-profit-month')?.addEventListener('change',e=>{
@@ -128,7 +128,7 @@ export function installLocalProfitUi(w=window) {
       '<div class="local-profit-numbers"><strong>'+money(data.profit)+'</strong><div class="local-profit-secondary">'+
       (data.goal>0?'<span>'+percent+' de '+money(data.goal)+'</span><span>'+money(data.remaining)+' para llegar</span>':'<span>Sin meta mensual configurada</span>')+
       '</div></div><div class="local-profit-progress" role="progressbar" aria-label="Avance de ganancia mensual local" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(value)+'"><div style="width:'+value+'%"></div></div>'+
-      (data.missing?'<p class="local-profit-disclaimer">Resultado parcial · '+data.missing+' pedidos sin costo verificado.</p>':'');
+      (data.provisional?'<p class="local-profit-disclaimer">Estimación provisional · '+data.provisional+' pedidos con costos adicionales pendientes.</p>':data.missing?'<p class="local-profit-disclaimer">Resultado parcial · '+data.missing+' pedidos sin costo verificado.</p>':'');
     root.querySelector('[data-open-profit]')?.addEventListener('click',()=>{
       activeTab='metas';w.showPanel?.('rentabilidad');
     });

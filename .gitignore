@@ -7,3 +7,5 @@ uploads/
 .claude/
 Prompt Claude Code - Sahten.md
 src-tauri/target
+
+supabase/.temp/

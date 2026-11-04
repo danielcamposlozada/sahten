@@ -1,0 +1,115 @@
+{
+  "date": "2026-11-04",
+  "sourceAppVersion": "0.4.46",
+  "sourceModifiedAt": "2026-11-03T02:48:58.924Z",
+  "count": 9,
+  "proposals": [
+    {
+      "type": "upsells",
+      "id": "baklava-up",
+      "name": "Baklava · Complemento dulce",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 10,
+      "discountTiers": []
+    },
+    {
+      "type": "upsells",
+      "id": "fatay-individual-up",
+      "name": "Sumá una Fatay",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 10,
+      "discountTiers": [
+        {
+          "totalDiscountPercent": 20,
+          "minEligibleNetSubtotal": 20000
+        },
+        {
+          "totalDiscountPercent": 25,
+          "minEligibleNetSubtotal": 35000
+        },
+        {
+          "totalDiscountPercent": 30,
+          "minEligibleNetSubtotal": 50000
+        }
+      ]
+    },
+    {
+      "type": "upsells",
+      "id": "mamul-nuez-up",
+      "name": "Sumá un Mamul de Nuez",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 5,
+      "discountTiers": []
+    },
+    {
+      "type": "upsells",
+      "id": "mamul-datil-up",
+      "name": "Sumá un Mamul de Dátil",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 5,
+      "discountTiers": []
+    },
+    {
+      "type": "upsells",
+      "id": "torta-chocolate-up",
+      "name": "Sumá una Torta de Chocolate",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 5,
+      "discountTiers": []
+    },
+    {
+      "type": "upsells",
+      "id": "falafel-racion-up",
+      "name": "Sumá una ración de Croquetas de Falafel (6 unidades)",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 10,
+      "discountTiers": [
+        {
+          "totalDiscountPercent": 20,
+          "minEligibleNetSubtotal": 20000
+        },
+        {
+          "totalDiscountPercent": 25,
+          "minEligibleNetSubtotal": 35000
+        },
+        {
+          "totalDiscountPercent": 30,
+          "minEligibleNetSubtotal": 50000
+        }
+      ]
+    },
+    {
+      "type": "productUpgrades",
+      "id": "fatay-cuarta",
+      "name": "Fatay con la Cuarta (4U)",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 0,
+      "discountTiers": []
+    },
+    {
+      "type": "couponPrograms",
+      "id": "first_online",
+      "name": "Bienvenida web",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 5,
+      "discountTiers": []
+    },
+    {
+      "type": "couponPrograms",
+      "id": "second_online",
+      "name": "Segunda compra web",
+      "planned": true,
+      "publishedExactId": false,
+      "extraPercent": 10,
+      "discountTiers": []
+    }
+  ]
+}

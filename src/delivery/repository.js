@@ -1,10 +1,16 @@
+import {PaymentError} from '../payments/core.js';
+import {createUpsellCheckout,upsellDefinitionDigest,upsellMenuDigest} from '../promotions/upsell-checkout.js';
 import { createDeliveryService, authorizationFrom } from './service.js';
 import { roadRoute, geocodeAddress } from './routing.js';
 import { validDeliveryPoint, haversineKm } from '../core/delivery.js';
-export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch}){
+export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch,upsellSecret=null}){
  async function request(path,{method='GET',body,token=serviceKey}={}){
   const r=await fetchImpl(url+path,{method,headers:{apikey:token===serviceKey?serviceKey:anonKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
-  if(!r.ok)throw new Error('delivery_database_unavailable');return r.status===204?null:r.json();
+  if(!r.ok){let problem;try{problem=await r.json();}catch{}
+   if(['upsell_cost_source_changed','upsell_review_changed','upsell_acceptance_missing'].includes(problem?.message))
+    throw new PaymentError('Cambió la oferta o su revisión. Volvé a consultar el complemento antes de confirmar.',409,'upsell_changed');
+   throw new Error('delivery_database_unavailable');}
+  return r.status===204?null:r.json();
  }
  const run=(action,args)=>request('/rest/v1/rpc/sahten_delivery_backend',{method:'POST',body:{action,args}});
  async function role(sid,user,roles){
@@ -19,6 +25,9 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
     body:{p_store_id:sid,p_digest:digest,p_request_id:requestId,p_payload:payload}}),
   menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,
   promotionCosts:(sid,channel='mostrador')=>request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid,channel}}),canManage:(sid,u)=>role(sid,u,['owner','admin']),canOperate:(sid,u)=>role(sid,u,['owner','admin','encargado','cajero'])};
+ repo.confirmUpsellOrder=(sid,requestId,payload,proof)=>request('/rest/v1/rpc/confirm_reviewed_upsell_order',{method:'POST',body:{
+  p_store_id:sid,p_offer_id:proof.offerId,p_review_id:proof.reviewId,p_session_id:proof.sessionId,
+  p_request_id:requestId,p_nonce:proof.nonce,p_payload:payload}});
  repo.posRules=async sid=>{const store=(await request('/rest/v1/stores?select=project_id&id=eq.'+sid))?.[0];if(!store?.project_id)return {};const project=(await request('/rest/v1/projects?select=public&id=eq.'+store.project_id))?.[0];const pub=project?.public;const availability=await request('/rest/v1/rpc/get_product_sales_availability',{method:'POST',body:{p_store_id:sid}});const pauses=new Map((availability.sales||[]).map(p=>[p.id,p.salesAvailability]));return {...(pub?.sales||{}),catalog:pub?.products?.map(p=>({...p,salesAvailability:pauses.get(p.id)||p.salesAvailability})),project:pub?.project,tienda:pub?.online?.tiendaConfig};};
  repo.savePos=(sid,lid,p)=>request('/rest/v1/rpc/validate_delivery_pos_record',{method:'POST',body:{sid,lid,p}});
  async function authenticate(req){const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');if(!token||token===anonKey||token===serviceKey)return null;try{const u=await request('/auth/v1/user',{token});return u?.id?{id:u.id,token}:null;}catch{return null;}}
@@ -48,6 +57,19 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   return {route,authorization:authorizationFrom(record,p,destination)};
  }
  async function originKey(req){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(serviceKey),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(req.headers.get('x-forwarded-for')?.split(',')[0]||'unknown')))).map(b=>b.toString(16).padStart(2,'0')).join('');}
- return {repo,authenticate,resolveRoute,resolveDelivery,originKey,geocode};
+ const upsellCheckout=upsellSecret?createUpsellCheckout({secret:upsellSecret,
+  readEconomics:async({storeId,offerId,productIds,menu})=>{
+   const data=await request('/rest/v1/rpc/sahten_upsell_economics',{method:'POST',body:{p_store_id:storeId,p_offer_id:offerId,p_product_ids:productIds}});
+   const offer=menu.promotions?.upsells?.find(x=>x.id===offerId);
+   if(!data||!offer||await upsellMenuDigest(data.sourceMenu)!==await upsellMenuDigest(menu)
+     ||await upsellDefinitionDigest(data.definition)!==await upsellDefinitionDigest(offer))return null;
+   if(data.exceptionApproval?.verified===true)data.exceptionApproval.definitionDigest=await upsellDefinitionDigest(data.definition);
+   return data;
+  },
+  consumeNonce:claims=>request('/rest/v1/rpc/sahten_consume_upsell_nonce',{method:'POST',body:{
+   p_store_id:claims.storeId,p_nonce:claims.nonce,p_session_id:claims.sessionId,p_request_id:claims.requestId,
+   p_expires_at:new Date(claims.expiresAt).toISOString()}})
+ }):null;
+ return {repo,authenticate,resolveRoute,resolveDelivery,originKey,geocode,upsellCheckout};
 }
 export function deliveryHandler(options){return createDeliveryService(createDeliveryRepository(options));}

@@ -60,15 +60,15 @@ export function monthlyGoalHistory(s,{now=new Date(),count=12}={}){
     const m=date.getUTCFullYear()+'-'+String(date.getUTCMonth()+1).padStart(2,'0');
     const summary=localMonthlyProfit(s,{month:m,now});
     return {month:m,goal:monthlyGoal(s,m,now),profit:summary.profit,progressPct:summary.progressPct,
-      covered:summary.covered,missing:summary.missing,orders:summary.orders,complete:summary.complete};
+      covered:summary.covered,missing:summary.missing,provisional:summary.provisional,orders:summary.orders,complete:summary.complete};
   });
 }
 export function localMonthlyProfit(s,{month=currentLocalMonth(),now=new Date()}={}){
-  const result={month,orders:0,covered:0,missing:0,excluded:0,discountedSales:0,revenue:0,variable:0,fixed:0,commission:0,
+  const result={month,orders:0,covered:0,missing:0,provisional:0,excluded:0,discountedSales:0,revenue:0,variable:0,fixed:0,commission:0,
     profit:0,marginPct:null,goal:monthlyGoal(s,month,now)||0,goalConfigured:monthlyGoal(s,month,now)!==null,daysElapsed:0,daysInMonth:0};
   for(const o of s.orders||[]){
     if(!localOrigin(o)||!completed(o)||monthKey(o.createdAt||o.date)!==month){result.excluded++;continue;}
-    result.orders++;const entry=s.saleCosts?.[o.id];
+    result.orders++;if(o.promotionSnapshot?.costReview?.status==='provisional')result.provisional++;const entry=s.saleCosts?.[o.id];
     if(!entry||!['at-sale','published-quote'].includes(entry.basis)||entry.channel!=='mostrador'||
        !Array.isArray(entry.items)||!entry.items.length||entry.items.some(i=>i.missing||
        !['revenue','variable','fixed','commission'].every(k=>Number.isFinite(Number(i[k]))))){result.missing++;continue;}
@@ -88,7 +88,7 @@ export function localMonthlyProfit(s,{month=currentLocalMonth(),now=new Date()}=
   }
   result.progressPct=result.goal>0?Math.max(0,result.profit/result.goal*100):null;
   result.remaining=result.goal>0?Math.max(0,cents(result.goal-result.profit)):null;
-  result.complete=result.missing===0;
+  result.complete=result.missing===0&&result.provisional===0;
   return result;
 }
 export function localMonthlyProductProfits(s,{month=currentLocalMonth()}={}){

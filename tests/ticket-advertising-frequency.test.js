@@ -16,14 +16,14 @@ const offer=(id,channels=['online'])=>({
 const config={enabled:true,ticket:{enabled:true,advertise:true},
   campaigns:[offer('postres'),offer('falafel'),offer('fatay')]};
 const select=(order,records,rotationKey=2)=>selectTicketAdvertisement(config,{
-  now,channel:'any',rotationKey,appliedPromotionIds:['postres'],
+  now,channel:'any',rotationKey,
   ...ticketAdvertisingHistory(order,records,{now})
 });
 describe('Frecuencia de publicidad en tickets de cliente',()=>{
-  it('permite publicitar una oferta usada en la compra SI no se anunció antes',()=>{
+  it('permite publicitar una oferta que no se aplicó ni anunció antes',()=>{
     const order={id:'new',customerPhone:'1144445555'};
     const output=select(order,[]);
-    expect(output).toMatchObject({campaignId:'postres',repeatPurchase:true});
+    expect(output).toMatchObject({campaignId:'postres'});
   });
   it('si el mismo cliente recibió una promoción hace 89 días la excluye, pero conserva otras',()=>{
     const order={id:'new',customerPhone:'+54 9 11 4444-5555'};

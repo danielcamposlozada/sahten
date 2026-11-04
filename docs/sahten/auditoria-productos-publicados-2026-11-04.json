@@ -1,0 +1,282 @@
+{
+  "date": "2026-11-04",
+  "source": "public.menus, lectura sin modificaciones",
+  "products": [
+    {
+      "id": "shawarma_carne",
+      "name": "Shawarma de Carne",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "shawarma_pollo",
+      "name": "Shawarma de Pollo",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "shawarma_mixto",
+      "name": "Shawarma Mixto",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "sandwich_falafel",
+      "name": "Sandwich de Falafel",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "hummus",
+      "name": "Hummus",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "baba_ganoush",
+      "name": "Baba Ganoush",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "muhammara",
+      "name": "Muhammara",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "yabra",
+      "name": "Yabra (Hojas de Uva)",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "kibbe_peq",
+      "name": "Kibbe Pequeño",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "tabule_grd",
+      "name": "Tabulé ",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "benjameli_grd",
+      "name": "Benjameli ",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "pizza_peq",
+      "name": "Pizza Árabe Pequeña",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "pan_arabe",
+      "name": "Pan Árabe",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "baklava",
+      "name": "Baklava",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "mamul_nuez",
+      "name": "Mamul de Nuez",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "mamul_datil",
+      "name": "Mamul de Dátil",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "tabla_compartir",
+      "name": "Tabla para Compartir",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "tabla_celebrar",
+      "name": "Tabla para Celebrar",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1779299917243",
+      "name": "Shawarma SUPERMIX",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "falafel",
+      "name": "Croquetas de Falafel",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "torta_de_chocolate",
+      "name": "Torta de Chocolate",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "fatay",
+      "name": "Fatay",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "arabe_clasico",
+      "name": "Arabe Clásico",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "falafel_mix",
+      "name": "Falafel Mix",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1779467294622",
+      "name": "Promo Fatay (3U)",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1779997050112",
+      "name": "Promo Compartir para Dos",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1779997171373",
+      "name": "Promo Compartir Clásico",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1780324945477",
+      "name": "Aristilos (Porcion)",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1780338545548",
+      "name": "Crema tahini",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1780422088415",
+      "name": "12 Tequeños",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1785849682052",
+      "name": "Papas Fritas",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1786209582774",
+      "name": "Papa Frita natural",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1786210230058",
+      "name": "Shawarma de Carne al Plato",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1786210474707",
+      "name": "Shawarma de Pollo al Plato",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1789513991513",
+      "name": "Combo Fatay",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "cocacola_600ml",
+      "name": "Coca-Cola 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1793032422487",
+      "name": "Agua sin gas 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1793049167225",
+      "name": "Coca-Cola 220 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "p1793167440976",
+      "name": "Fanta 220 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_agua_con_gas_600ml",
+      "name": "Agua con gas 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_cocacola_zero_600ml",
+      "name": "Coca-Cola Zero 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_sprite_600ml",
+      "name": "Sprite 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_fanta_600ml",
+      "name": "Fanta 600 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_cocacola_zero_220ml",
+      "name": "Coca-Cola Zero 220 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_sprite_220ml",
+      "name": "Sprite 220 ml",
+      "hasImage": true,
+      "description": ""
+    },
+    {
+      "id": "bebida_sprite_zero_220ml",
+      "name": "Sprite Zero 220 ml",
+      "hasImage": true,
+      "description": ""
+    }
+  ]
+}

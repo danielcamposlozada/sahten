@@ -89,3 +89,11 @@ describe('historial de metas locales por mes',()=>{
    expect(()=>setMonthlyGoal(s,{month:'2026-11',amount:-1})).toThrow();
  });
 });
+
+it('una venta con adicionales pendientes permanece provisional aunque los costos base estén capturados',()=>{
+ const original={...order('pending','menu-online','retirado'),promotionSnapshot:{costReview:{status:'provisional',auditId:'historical-review'}}};
+ const s={project:{},orders:[original],saleCosts:{pending:cost(10000,3000,1000)}};
+ const result=localMonthlyProfit(s,{month:'2026-11'});
+ expect(result.provisional).toBe(1);expect(result.complete).toBe(false);expect(result.profit).toBe(6000);
+ expect(original.promotionSnapshot.costReview.auditId).toBe('historical-review');
+});

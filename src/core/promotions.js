@@ -1,5 +1,6 @@
 // SAHTEN: motor puro. Nunca confiar en precios/costos/cupones suministrados por el navegador.
 // Recalcular en el servidor antes de aceptar un pedido. Los importes usan centavos enteros.
+import {hasDeferredCostApproval} from './promotion-cost-review.js';
 import { assessIncrementalUpsell } from './upsell-economics.js';
 export const PROMOTIONS_VERSION = 1;
 export const PROMOTIONS_TZ = 'America/Argentina/Buenos_Aires';
@@ -73,7 +74,7 @@ export function quotePromotions({
   lines = [], method = '', channel = 'online', now = new Date(),
   config = {}, coupon = null, customerId = null,
   commissionPercent = 0, trustedCosts = {}, clientPreview = false,
-  trustedEconomics = {}, trustedUpsellSelection = null, trustedOrderCosts = null
+  trustedEconomics = {}, trustedUpsellSelection = null, trustedOrderCosts = null, trustedCostException = null
 } = {}) {
   const source = Array.isArray(lines)?lines:[];
   const details=source.filter(l=>Number(l.qty)>0 && Number(l.unitPrice)>=0).map(l=>({
@@ -167,7 +168,7 @@ export function quotePromotions({
       const verified=assessIncrementalUpsell({
         lines:details,currentLines:breakdown,upsell:promotion,productId:entry.productId,
         proposedExtra:extra,methodCommissionPercent:commissionPercent,
-        trustedEconomics,trustedUpsellSelection,trustedOrderCosts,
+        trustedEconomics,trustedUpsellSelection,trustedOrderCosts,trustedCostException,
         minBasketMarginPct:Number(config.activationPolicy?.basketContributionTargetPct||40),
         minIncrementalMarginPct:Number(config.activationPolicy?.minIncrementalContributionPct||40)
       });
@@ -192,6 +193,8 @@ export function quotePromotions({
     subtotal:fromCents(gross),discount:fromCents(totalDiscount),netSubtotal:fromCents(net),
     estimatedPaymentFee:fromCents(fee),lines:breakdown,appliedPromotionIds:[...used],
     couponId:canCoupon&&used.has(coupon.id)?coupon.id:null,
+    ...(hasDeferredCostApproval(trustedCostException)&&breakdown.some(l=>l.appliedPromotionType==='upsell')
+      ?{costReview:{status:'provisional',auditId:trustedCostException.auditId,missingComponents:['additionalIncrementalCost','additionalOrderCost'],assumedAdditionalCost:0}}:{}),
     snapshotAt:new Date(now).toISOString()};
 }
 export const INITIAL_CAMPAIGNS = [

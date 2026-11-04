@@ -2,6 +2,17 @@
 
 ## Sin publicar
 
+- **Alta de complementos desde la app:** consulta de precios/costos del servidor, publicación pausada, activación separada, revisiones con autor/fecha y protección frente a cambios desde otro equipo o un catálogo antiguo.
+- **Costos adicionales pendientes:** opción expresa para diferirlos y registrar supuestos provisionales de $0 adicionales. No se declaran comprobados. Las ventas y los reportes promocionales/mensuales conservan esa condición sin reescribir el histórico.
+- **Tienda:** consulta y aceptación explícita de una unidad con oferta, recotización y revisión del total al vencer o cambiar el pedido. Primer recorrido: retiro online y efectivo/transferencia; Falafel sigue pendiente por decisión del dueño.
+
+- **Complementos: primer recorrido de servidor preparado.** Ofertas firmadas de cinco minutos para retiro online con efectivo/transferencia, recotización al aceptar, una unidad adicional, costos privados obligatorios y control de reintentos. Integrado en `sahten-delivery` v19 con firma privada de servidor. No habilita beneficios sin revisión económica y publicación; el cliente web y la app preparados siguen pendientes de publicación.
+
+- **Promociones: evidencia clara.** Se diferencian aprobación, rechazo, pendiente, no aplicable y falta de comprobación; la planificación local deja de parecer una activación comercial. Verificar consulta todas las propuestas con concurrencia limitada, sin publicar beneficios.
+- **Edición protegida.** Las consultas automáticas no sustituyen campos sin guardar ni actualizan la revisión base mientras se edita; respuestas antiguas de verificación no reemplazan una más reciente.
+- **Tickets.** La campaña utilizada queda en el desglose del comprobante; el anuncio puede mostrar otra campaña, conservando rotación y frecuencia de 90 días.
+- **Diagnóstico Supabase.** Se prepara la retirada del cron sin configuración y un diagnóstico manual sin datos operativos ni claves administrativas en logs. Pendiente integrar y ejecutar en GitHub.
+
 ## 0.4.48
 
 - **Ticket de cliente: doble función correcta.** El descuento aplicado se mantiene como importe real en el desglose de la venta y puede anunciarse esa misma campaña al pie para que el cliente vuelva a comprar; eso no concede un segundo descuento en la operación.

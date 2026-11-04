@@ -28,7 +28,7 @@ describe('Ticket de cliente y campañas publicadas sin calendario',()=>{
       now:new Date('2026-11-02T16:30:00Z')});
     expect(unverified.discount).toBe(735);
   });
-  it('rota anuncios según número de pedido sin bloquear campañas ya aprovechadas',()=>{
+  it('rota anuncios sin repetir la campaña ya aplicada',()=>{
     const when=new Date('2026-11-02T16:30:00Z');
     const a=selectTicketAdvertisement(config,{channel:'online',now:when,rotationKey:0});
     const b=selectTicketAdvertisement(config,{channel:'online',now:when,rotationKey:1});
@@ -37,8 +37,8 @@ describe('Ticket de cliente y campañas publicadas sin calendario',()=>{
     expect(a.campaignId).not.toEqual(b.campaignId);
     const reused=selectTicketAdvertisement(config,{channel:'online',now:when,rotationKey:0,
       appliedPromotionIds:[a.campaignId]});
-    expect(reused.campaignId).toEqual(a.campaignId);
-    expect(reused.repeatPurchase).toBe(true);
+    expect(reused.campaignId).not.toEqual(a.campaignId);
+    expect(reused.repeatPurchase).toBeUndefined();
   });
   it('no muestra promoción si ticket deshabilitado, ni inventa cupones',()=>{
     expect(selectTicketAdvertisement({...config,ticket:{enabled:false}},{})).toBeNull();
