@@ -762,3 +762,18 @@ Indexación: Search Console accesible en la cuenta del dueño, sin propiedad Sah
 El paquete correctivo de caché también actualiza `lastmod` de home y menú al momento de reconstruirlos; conserva las fechas y archivos de las otras tres páginas. No se actualizan fechas indiscriminadamente para simular contenido nuevo.
 
 QA de caché: **996 pruebas / 135 archivos**, build y paquete correctos; Chrome en la misma sesión carga los CSS con versión y confirma `clip-path: inset(50%)` en el control no enfocado, sin botón superpuesto. 37 descripciones y huella comercial conservadas; pendiente deploy del ajuste final de entrega.
+
+
+## Publicación final y Google Search Console · 5/11/2026
+
+PR #116 integrado con merge normal **af6d7348f9539a2c43169f289c6e2b37bf6d0493**. Workflow **41943969383**, reintento 2: paquete y despliegue correctos. El primer intento se detuvo por la prueba preexistente `sync-progress.test.js` que espera 10 ms antes de usar una devolución asíncrona; el otro CI completo del mismo commit pasó y el reintento conservó todas las pruebas. No se alteró la aplicación para saltar ese control. **996 pruebas / 135 archivos**, build online y sin online correctos.
+
+Producción final **224be689-2a50-4ece-bb11-434a0724f54d**, https://224be689.sahten-menu.pages.dev, activa en sahten.online. Verificación final HTTPS y Chrome: **37 productos / 37 descripciones**, huella comercial conservada; CSS/JS versionados con `af6d734…`. El control del carrusel tiene `clip-path: inset(50%)` cuando no está enfocado y no se superpone a las fotos; ambas siguen alternando. El sitemap fecha home y menú en **2026-11-05T00:54:36.329Z**, conservando el 31/10 en las otras tres páginas. Este estado sustituye el aviso anterior de comprobación visual pendiente por límite temporal del navegador.
+
+El dueño autorizó expresamente el TXT. Registro **TXT sahten.online**, TTL automático, ID Cloudflare **0a25026546b4c049c08f20d9761e8537**, creado y verificado por Google como «Proveedor de nombres de dominio». La propiedad **sc-domain:sahten.online** está accesible en la cuenta del dueño. No eliminar este TXT mientras se use esa verificación. No se delegó a Google acceso general a Cloudflare ni se cambiaron registros de correo.
+
+Sitemap **https://sahten.online/sitemap.xml** enviado y leído el **5/11/2026**: Search Console muestra **Correcto, 5 páginas descubiertas**. Se inspeccionaron home y `/menu/`: ambas muestran **«La URL está en Google» / «La página está indexada»**. Esto acredita la indexación de las URLs, no que Google haya incorporado ya las descripciones recién publicadas.
+
+**Pendiente externo:** la solicitud manual de nuevo rastreo de la home falló dos veces, incluida una después de recargar, con «No se ha podido establecer conexión con el servicio reCAPTCHA» y error al enviar la solicitud de indexación. El dueño intentó manualmente la solicitud del menú y confirmó el mismo error; el aviso se observó en Chrome. No se resolvieron CAPTCHAs ni se intentó otro medio para eludirlos. **No se afirma que las solicitudes manuales hayan sido aceptadas.** El sitemap sí quedó aceptado para procesamiento periódico. No se creó una automatización de seguimiento.
+
+Evidencia local actualizada en `../entregables/web-editorial-2026-11-04/`: `google-propiedad-verificada.jpg`, `google-sitemap-correcto.jpg`, `google-home-indexada.jpg`, `google-menu-indexado.jpg`, `google-error-recaptcha.jpg`, `banner-sin-boton-publicado.jpg` y `menu-descripciones-publicadas.jpg`. No se realizaron compras, se activaron ofertas nuevas ni se escribió en `menus/projects/orders`.
