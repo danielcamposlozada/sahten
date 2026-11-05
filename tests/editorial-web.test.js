@@ -44,3 +44,16 @@ it('la carta toma el beneficio confirmado por su motor y no necesita exponer el 
  expect(dom.window.document.querySelector('.checkout-benefit-image')).toBeNull();
  dom.window.close();
 });
+
+it('el respaldo editorial completa el mismo producto sin alterar datos comerciales ni reemplazar textos nuevos',async()=>{
+ const {publicProductDescription,menuSchema,renderSearchContent}=await import('../src/online/seo.js');
+ const {buildSitePages}=await import('../src/online/pages.js');
+ const source=menu(),m=accurateEditorialMenu(source);m.site.enabled=true;m.site.seo.url='https://sahten.online/';
+ const description=publicProductDescription(m,m.products[0]);expect(description).toContain('Empanada árabe');
+ expect(m.products).toEqual(source.products);expect(source.site.productDescriptions).toBeUndefined();
+ expect(publicProductDescription(m,{id:'fatay',name:'Otro producto'})).toBe('');
+ expect(publicProductDescription(m,{id:'fatay',name:'Fatay',description:'Nueva receta del local'})).toBe('Nueva receta del local');
+ expect(menuSchema(m).hasMenuSection[0].hasMenuItem[0].description).toBe(description);
+ expect(renderSearchContent(m)).toContain(description);
+ expect(buildSitePages(m).find(p=>p.path==='menu/index.html').data).toContain(description);
+});

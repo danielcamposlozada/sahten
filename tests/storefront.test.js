@@ -145,3 +145,19 @@ it('respeta la sección contacto apagada y mantiene el pie simple sin inventar u
  const m=fixture(),dom=await render(m,{storefront:true},'https://local.example/tienda/pedir/');
  expect(dom.window.document.querySelector('.sfoot')).toBeNull();expect(dom.window.document.querySelector('#foot').textContent).toContain('Calle 123');dom.window.close();
 });
+
+it('restaura descripciones editoriales en la carta y búsqueda tras cargar el catálogo vivo',async()=>{
+ const base=fixture();base.products[0].description='';base.site.productDescriptions={p:{name:'Fatay',description:'Empanada con carne y sésamo.'}};
+ base.supabase={url:'https://db.example',anonKey:'public-test',storeId:'store',slug:'local'};
+ const live={...base,site:{enabled:false},products:[{...base.products[0],description:''}]};
+ const timers=[];
+ const dom=new JSDOM(buildIndexHtml(base,{storefront:true}),{url:'https://local.example/tienda/pedir/',runScripts:'dangerously',beforeParse(w){w.scrollTo=()=>{};w.setInterval=fn=>{timers.push(fn);return timers.length};w.fetch=async url=>String(url).includes('/stores?')?{ok:true,json:async()=>[{id:'store',menus:{json:live}}]}:String(url).includes('/menus?')?{ok:true,json:async()=>[{json:live}]}:{ok:false};}});
+ await new Promise(r=>setTimeout(r,50));const d=dom.window.document;
+ expect(d.querySelector('.desc').textContent).toBe('Empanada con carne y sésamo.');
+ const search=d.querySelector('#catalog-search');search.value='sesamo';search.dispatchEvent(new dom.window.Event('input',{bubbles:true}));expect(d.querySelectorAll('#grid .card')).toHaveLength(1);
+ live.products[0].description='Texto nuevo del negocio.';
+ timers.find(fn=>String(fn).includes('availabilityRefreshing'))();await new Promise(r=>setTimeout(r,30));
+ search.value='';search.dispatchEvent(new dom.window.Event('input',{bubbles:true}));
+ expect(d.querySelector('.desc').textContent).toBe('Texto nuevo del negocio.');
+ expect(dom.window.__menu().products[0].price).toBe(100);dom.window.close();
+});

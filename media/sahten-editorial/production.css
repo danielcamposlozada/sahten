@@ -36,3 +36,6 @@ body.route-c .reel-meta .reel-index{font-size:34px;line-height:1;margin-right:14
 body.route-c .reel-meta small{display:inline-block}
 body.route-c .reel-meta h3{margin:16px 0 8px}
 @media(max-width:760px){body.route-c .reel-grid{display:grid;grid-template-columns:1fr;gap:24px}body.route-c .reel{padding:20px}.reel-poster{max-width:280px}}
+
+/* El carrusel continúa sin un botón superpuesto; el control queda disponible al navegar con teclado. */
+.photo-rotation:not(:focus-visible){position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}

@@ -3,7 +3,7 @@
 // HTML estático (sin JavaScript) armado con el mismo contenido que el dueño edita en Menú Online › Sitio web.
 // Se publican junto a index.html cuando hay una dirección pública (SEO › Dirección pública de la web) y el sitio está encendido.
 // ═══════════════════════════════════════════════════════════
-import { buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags, seoServiceHoursText } from './seo.js';
+import { publicProductDescription, buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags, seoServiceHoursText } from './seo.js';
 
 import { serviceHoursPageScript } from './serviceHoursPage.js';
 import { storyPhotosHtml } from './story.js';
@@ -81,7 +81,7 @@ const builders = {
   menu(menu, page) {
     const s = menu.site || {}, name = menu.store?.name || '', where = s.seo?.locality ? ' en ' + s.seo.locality : '', showPrices = menu.config?.showPrices !== false;
     const names = (menu.products || []).slice(0, 4).map(p => p.name).join(', ');
-    const body = menuSections(menu).map(sec => `<section><h2>${esc(sec.name)}</h2><ul class="items">${sec.items.map(p => `<li><span class="n">${esc(p.name)}${p.description ? `<span class="d">${esc(p.description)}</span>` : ''}</span>${showPrices ? `<span class="p">${formatPrice(menu, p.price)}</span>` : ''}</li>`).join('')}</ul></section>`).join('');
+    const body = menuSections(menu).map(sec => `<section><h2>${esc(sec.name)}</h2><ul class="items">${sec.items.map(p => `<li><span class="n">${esc(p.name)}${publicProductDescription(menu,p) ? `<span class="d">${esc(publicProductDescription(menu,p))}</span>` : ''}</span>${showPrices ? `<span class="p">${formatPrice(menu, p.price)}</span>` : ''}</li>`).join('')}</ul></section>`).join('');
     return { title: clip(`Menú${showPrices ? ' y precios' : ''} | ${name}`, 70), description: clip(`Carta completa de ${name}${where}: ${names} y más.`, 160), h1: `${s.menuTitle || 'Nuestro menú'} de ${name}`,
       body: (menu.config?.subtitle ? `<p>${esc(menu.config.subtitle)}.</p>` : '') + body, extraLd: [menuSchema(menu)].filter(Boolean) };
   },

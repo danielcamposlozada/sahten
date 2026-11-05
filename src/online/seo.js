@@ -1,6 +1,15 @@
 const seoEscape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const seoText = (value, max) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 const seoList = value => String(value || '').split(',').map(x => x.trim()).filter(Boolean);
+/** Texto público: el dato actual del negocio tiene prioridad sobre la edición de respaldo. */
+export function publicProductDescription(menu, product) {
+  const current = typeof product.description === 'string' ? product.description.trim() : '';
+  if (current) return current;
+  const saved = menu.site?.productDescriptions?.[product.id];
+  const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!saved || normalize(saved.name) !== normalize(product.name)) return '';
+  return typeof saved.description === 'string' ? saved.description.trim() : '';
+}
 export function publicWebUrl(value) {
   try { const u = new URL(value); if (u.protocol !== 'https:' || u.username || u.password) return ''; u.hash = ''; u.search = ''; return u.href; } catch { return ''; }
 }
@@ -103,7 +112,7 @@ export function menuSchema(menu) {
   if (!canonical) return null;
   return { '@context': 'https://schema.org', '@type': 'Menu', name: 'Menú de ' + (menu.store?.name || 'la carta'), url: seoAsset(canonical, 'menu/'), inLanguage: 'es',
     hasMenuSection: menuSections(menu).map(sec => ({ '@type': 'MenuSection', name: sec.name,
-      hasMenuItem: sec.items.map(p => ({ '@type': 'MenuItem', name: p.name, ...(p.description ? { description: p.description } : {}),
+      hasMenuItem: sec.items.map(p => ({ '@type': 'MenuItem', name: p.name, ...(publicProductDescription(menu,p) ? { description: publicProductDescription(menu,p) } : {}),
         ...(showPrices && currency && Number.isFinite(Number(p.price)) ? { offers: { '@type': 'Offer', price: String(p.price), priceCurrency: currency } } : {}) })) })) };
 }
 const ldScript = (id, data) => `<script type="application/ld+json" id="${id}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
@@ -128,7 +137,7 @@ export function renderSeoHead(menu, { storefront = false } = {}) {
 export function renderSearchContent(menu) {
   if (menu.config?.enabled === false) return '';
   const s = menu.site || {}, e = seoEscape, openingText = seoServiceHoursText(menu), deliveryText = seoServiceHoursText(menu, 'delivery');
-  return `<section id="search-content" style="max-width:980px;margin:auto;padding:24px"><h2>${e(menu.store?.name || 'Menú')}</h2><p>${e(s.hero?.subtitle || menu.config?.subtitle || '')}</p><p>${e(menu.store?.address || '')}</p>${s.historia?.text ? `<h2>${e(s.historia.title || 'Nuestra historia')}</h2><p>${e(s.historia.text)}</p>` : ''}<h2>${e(s.menuTitle || 'Nuestro menú')}</h2><ul>${(menu.products || []).map(p => `<li>${e(p.name)}${p.description ? ' — ' + e(p.description) : ''}${menu.config?.showPrices !== false ? ' · ' + e(menu.store?.currency?.symbol || '$') + e(p.price) : ''}</li>`).join('')}</ul>${openingText ? `<h2>Horarios de apertura y retiro</h2><p>${e(openingText)}</p>` : ''}${deliveryText ? `<h2>Horario de delivery</h2><p>${e(deliveryText)}</p>` : ''}${s.delivery?.extra ? `<p>${e(s.delivery.extra)}</p>` : ''}${s.catering ? `<h2>${e(s.catering.title || 'Catering')}</h2><p>${e(s.catering.text)}</p>` : ''}${s.faq?.items?.length ? '<h2>Preguntas frecuentes</h2>' + s.faq.items.map(f => `<h3>${e(f.q)}</h3><p>${e(f.a)}</p>`).join('') : ''}${menu.store?.whatsapp ? `<p><a href="https://wa.me/${e(String(menu.store.whatsapp).replace(/\D/g, ''))}">Consultas por WhatsApp</a></p>` : ''}</section>`;
+  return `<section id="search-content" style="max-width:980px;margin:auto;padding:24px"><h2>${e(menu.store?.name || 'Menú')}</h2><p>${e(s.hero?.subtitle || menu.config?.subtitle || '')}</p><p>${e(menu.store?.address || '')}</p>${s.historia?.text ? `<h2>${e(s.historia.title || 'Nuestra historia')}</h2><p>${e(s.historia.text)}</p>` : ''}<h2>${e(s.menuTitle || 'Nuestro menú')}</h2><ul>${(menu.products || []).map(p => `<li>${e(p.name)}${publicProductDescription(menu,p) ? ' — ' + e(publicProductDescription(menu,p)) : ''}${menu.config?.showPrices !== false ? ' · ' + e(menu.store?.currency?.symbol || '$') + e(p.price) : ''}</li>`).join('')}</ul>${openingText ? `<h2>Horarios de apertura y retiro</h2><p>${e(openingText)}</p>` : ''}${deliveryText ? `<h2>Horario de delivery</h2><p>${e(deliveryText)}</p>` : ''}${s.delivery?.extra ? `<p>${e(s.delivery.extra)}</p>` : ''}${s.catering ? `<h2>${e(s.catering.title || 'Catering')}</h2><p>${e(s.catering.text)}</p>` : ''}${s.faq?.items?.length ? '<h2>Preguntas frecuentes</h2>' + s.faq.items.map(f => `<h3>${e(f.q)}</h3><p>${e(f.a)}</p>`).join('') : ''}${menu.store?.whatsapp ? `<p><a href="https://wa.me/${e(String(menu.store.whatsapp).replace(/\D/g, ''))}">Consultas por WhatsApp</a></p>` : ''}</section>`;
 }
 export function discoveryFiles(menu) {
   const canonical = buildSeo(menu).canonical;

@@ -1,0 +1,181 @@
+{
+  "sources": [
+    "Textos cotejados y confirmaciones del dueño del 30/10/2026",
+    "Recetas locales del 4/11/2026: Kibbe Pequeño y Tabla para Compartir; sin publicar rendimientos internos",
+    "Bebidas: marca y presentación del catálogo público"
+  ],
+  "products": {
+    "shawarma_carne": {
+      "name": "Shawarma de Carne",
+      "description": "Carne de res en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini)."
+    },
+    "shawarma_pollo": {
+      "name": "Shawarma de Pollo",
+      "description": "Pollo en pan árabe, con lechuga, tomate, cebolla, perejil y nuestra salsa de sésamo (tahini)."
+    },
+    "shawarma_mixto": {
+      "name": "Shawarma Mixto",
+      "description": "Carne de res y pollo en un mismo shawarma, con pan árabe, lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini)."
+    },
+    "sandwich_falafel": {
+      "name": "Sandwich de Falafel",
+      "description": "Pan árabe con tres croquetas de garbanzos, lechuga, tomate y salsa de sésamo (tahini). Una forma de disfrutar nuestro falafel en sándwich."
+    },
+    "hummus": {
+      "name": "Hummus",
+      "description": "Crema de garbanzos con tahini, elaborada a base de sésamo, y un toque de pimentón. Para sumar a tu mesa o acompañar con pan árabe."
+    },
+    "baba_ganoush": {
+      "name": "Baba Ganoush",
+      "description": "Berenjenas asadas combinadas con tahini, nuestra salsa de sésamo. Una crema para compartir y acompañar con pan árabe."
+    },
+    "muhammara": {
+      "name": "Muhammara",
+      "description": "Crema de morrones rojos y nueces, con pan rallado y un toque de comino. Una entrada de sabor intenso para sumar a la mesa."
+    },
+    "yabra": {
+      "name": "Yabra (Hojas de Uva)",
+      "description": "Hojas de parra rellenas de arroz y carne de res, con limón y especias. Se acompañan con mini panes árabes."
+    },
+    "tabule_grd": {
+      "name": "Tabulé",
+      "description": "Ensalada de perejil, tomate, cebolla y trigo burgol, aliñada con limón. Fresca y llena de sabor para acompañar tus platos."
+    },
+    "benjameli_grd": {
+      "name": "Benjameli",
+      "description": "Berenjena con tomate, cebolla y morrón rojo. Una ensalada de nuestra cocina para disfrutar como entrada o acompañamiento."
+    },
+    "pan_arabe": {
+      "name": "Pan Árabe",
+      "description": "Porción de cinco panes árabes para llevar a la mesa y acompañar hummus, Baba Ganoush, Muhammara o el plato que elijas."
+    },
+    "baklava": {
+      "name": "Baklava",
+      "description": "Dulce árabe de capas de masa fina, con nueces, un toque de canela y almíbar. Para darle un cierre dulce a la mesa."
+    },
+    "mamul_nuez": {
+      "name": "Mamul de Nuez",
+      "description": "Dos dulces árabes de sémola y manteca, rellenos de nueces y aromatizados con canela y cardamomo. Para disfrutar con tu café o té."
+    },
+    "mamul_datil": {
+      "name": "Mamul de Dátil",
+      "description": "Dos dulces árabes de sémola y manteca, rellenos de dátiles y aromatizados con canela y cardamomo. Una opción dulce para después de comer."
+    },
+    "tabla_celebrar": {
+      "name": "Tabla para Celebrar",
+      "description": "Una tabla para compartir con seis falafel, cuatro fatay, hummus, ensalada de la casa y cinco mini panes árabes. Para el cierre dulce: baklava, Aristelos y torta de chocolate."
+    },
+    "p1779299917243": {
+      "name": "Shawarma SUPERMIX",
+      "description": "Nuestro Supermix combina carne de res, pollo y falafel en pan árabe, con lechuga, tomate, cebolla, perejil y salsa de sésamo (tahini)."
+    },
+    "falafel": {
+      "name": "Croquetas de Falafel",
+      "description": "Seis croquetas de garbanzos con cilantro, verdeo y comino, acompañadas con salsa de sésamo (tahini). Para compartir o sumar a tu pedido."
+    },
+    "torta_de_chocolate": {
+      "name": "Torta de Chocolate",
+      "description": "Porción de nuestra torta de chocolate y nueces, con un toque de canela. Un cierre dulce para tu pedido."
+    },
+    "fatay": {
+      "name": "Fatay",
+      "description": "Empanada árabe rellena de carne de res, tomate, cebolla y perejil, sazonada con comino y especias."
+    },
+    "arabe_clasico": {
+      "name": "Arabe Clásico",
+      "description": "Una selección de clásicos de nuestra cocina: hojas de parra rellenas de arroz y carne, kibbe de carne y trigo, hummus y mini panes árabes."
+    },
+    "falafel_mix": {
+      "name": "Falafel Mix",
+      "description": "Tres croquetas de garbanzos sobre una ensalada de lechuga, tomate, pepino y perejil, con salsa de sésamo (tahini)."
+    },
+    "p1779467294622": {
+      "name": "Promo Fatay (3U)",
+      "description": "Tres fatay rellenos de carne de res, tomate, cebolla y especias, acompañados con salsa de sésamo (tahini)."
+    },
+    "p1779997050112": {
+      "name": "Promo Compartir para Dos",
+      "description": "Una combinación para compartir entre dos: croquetas de falafel, hummus y mini panes árabes. Garbanzos, sésamo y sabores de nuestra cocina en la misma mesa."
+    },
+    "p1779997171373": {
+      "name": "Promo Compartir Clásico",
+      "description": "Una selección para compartir: hojas de parra rellenas de arroz y carne, dos kibbes de carne y trigo, hummus y mini panes árabes."
+    },
+    "p1780324945477": {
+      "name": "Aristilos (Porcion)",
+      "description": "Porción de Aristelos: dulce árabe de sémola, leche y almendras, aromatizado con canela. Una de las recetas dulces de nuestra cocina."
+    },
+    "p1780338545548": {
+      "name": "Crema tahini",
+      "description": "Nuestra salsa de sésamo (tahini), con ajo y un toque de comino. Sumala como extra para acompañar falafel, shawarma o pan árabe."
+    },
+    "p1780422088415": {
+      "name": "12 Tequeños",
+      "description": "Doce tequeños de masa de trigo rellenos de queso, acompañados con guasacaca y salsa de sésamo (tahini). Para compartir y sumar a tu mesa."
+    },
+    "p1785849682052": {
+      "name": "Papas Fritas",
+      "description": "Porción individual de papas fritas. Para acompañar tu shawarma, compartir con la mesa o disfrutar por separado."
+    },
+    "p1786210230058": {
+      "name": "Shawarma de Carne al Plato",
+      "description": "Carne de res con especias árabes, acompañada de lechuga, tomate, cebolla, perejil y mini panes árabes."
+    },
+    "p1786210474707": {
+      "name": "Shawarma de Pollo al Plato",
+      "description": "Pollo con especias árabes, acompañado de lechuga, tomate, cebolla, perejil y mini panes árabes."
+    },
+    "cocacola_600ml": {
+      "name": "Coca-Cola 600 ml",
+      "description": "Coca-Cola en botella de 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "kibbe_peq": {
+      "name": "Kibbe Pequeño",
+      "description": "Kibbe de carne, trigo, cebolla y nueces, con especias. Una presentación pequeña para sumar a la mesa."
+    },
+    "tabla_compartir": {
+      "name": "Tabla para Compartir",
+      "description": "Yabra, kibbe, falafel, hummus, Baba Ganoush, Tabulé, Benjameli y mini pizzas árabes: una selección de nuestra cocina para compartir en la mesa."
+    },
+    "p1793032422487": {
+      "name": "Agua sin gas 600 ml",
+      "description": "Agua sin gas 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "p1793049167225": {
+      "name": "Coca-Cola 220 ml",
+      "description": "Coca-Cola 220 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "p1793167440976": {
+      "name": "Fanta 220 ml",
+      "description": "Fanta 220 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_agua_con_gas_600ml": {
+      "name": "Agua con gas 600 ml",
+      "description": "Agua con gas 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_cocacola_zero_600ml": {
+      "name": "Coca-Cola Zero 600 ml",
+      "description": "Coca-Cola Zero 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_sprite_600ml": {
+      "name": "Sprite 600 ml",
+      "description": "Sprite 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_fanta_600ml": {
+      "name": "Fanta 600 ml",
+      "description": "Fanta 600 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_cocacola_zero_220ml": {
+      "name": "Coca-Cola Zero 220 ml",
+      "description": "Coca-Cola Zero 220 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_sprite_220ml": {
+      "name": "Sprite 220 ml",
+      "description": "Sprite 220 ml. Sumala a tu pedido para acompañar la comida."
+    },
+    "bebida_sprite_zero_220ml": {
+      "name": "Sprite Zero 220 ml",
+      "description": "Sprite Zero 220 ml. Sumala a tu pedido para acompañar la comida."
+    }
+  }
+}

@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
 
+const descriptionRegistry=JSON.parse(await fs.readFile('media/sahten-editorial/product-descriptions.json','utf8')).products;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function accurateEditorialMenu(source){
  const menu=structuredClone(source);
+ menu.site.productDescriptions=descriptionRegistry;
  const faq=menu.site?.faq?.items||[];
  for(const item of faq){
   if(/zonas.*delivery/i.test(item.q))item.a='Validá tu dirección en la tienda para consultar la cobertura disponible. La entrega depende del recorrido y del horario vigente.';
