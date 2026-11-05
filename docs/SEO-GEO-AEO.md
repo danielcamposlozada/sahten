@@ -696,3 +696,34 @@ Este estado reemplaza únicamente los avisos históricos de despliegue pendiente
 PR #113: se prepara la publicación de app y checkout, conservando portada/mapa/fotos del despliegue de producción `91563746-1f00-4bba-8d58-16dbc96856d0`. El workflow histórico sin promociones exigía 54 productos y falló después de aprobar tests/build; se retira su ejecución automática y queda manual. El empaquetador vigente ya no obliga a habilitar las seis campañas ni fija un número histórico de productos: compara una huella íntegra de productos, precios, fotos, configuración, pagos, delivery, promociones y recomendaciones con el catálogo público actual. Consulta de nuevo al finalizar y antes de desplegar; cualquier edición concurrente detiene la publicación.
 
 Primer paquete revisado: 40 productos, 40 fotos remotas, 11 bebidas, seis campañas (dos habilitadas y cuatro pausadas), beneficio habitual del 10 %. Son una lectura puntual, no valores que el despliegue fuerce sobre futuras ediciones. Se preservan los 16 archivos de marca/páginas/fotos y el layout original de portada. No se crean/activan ofertas ni se publica una descripción nueva. Instaladores y hosting aún pendientes de publicación al escribir este apartado.
+
+
+## Publicación web 0.4.49 verificada · 4/11/2026
+
+PR #113 integrado con merge normal `064fc36ee94ee1de358bbe36011a83e3fe007354`. Los tres checks de PR terminaron correctamente: CI, paquete de promociones y pruebas nativas de impresión Windows/Mac. La suite local completa pasó **989 pruebas en 134 archivos**, con build online/offline, versiones y scripts clásicos correctos.
+
+Cloudflare Production **eedac5fc-a89a-4c4e-bf42-3147370bfb30**, éxito, workflow **41932214863**. HTTPS confirma el cliente `upsell-offer` / `data-upsell-consult` en `/pedir/`; los 16 recursos preservados coinciden por SHA-256 con el despliegue de origen `91563746-1f00-4bba-8d58-16dbc96856d0`. No se reemplazó el diseño aprobado del mapa, portada, fotos ni páginas informativas.
+
+El paquete conserva el catálogo vivo de la consulta: 40 productos, 40 fotos remotas, 11 bebidas, dos campañas habilitadas (`central-tables`, `weekly-meals`) y cuatro pausadas. Los recuentos anteriores de 46/47/54 son fotografías de otras consultas; no se fuerzan sobre el catálogo actual. No se registró ni activó ninguna oferta nueva: revisión posterior del backend confirma cero revisiones y cero reglas nuevas habilitadas. Falafel continúa pendiente.
+
+Se retiró la ejecución automática del workflow histórico que exigía 54 productos y apagaba promociones. El workflow vigente verifica la huella completa del catálogo, sin cambiar estados, y detiene la publicación ante cambios concurrentes. El cron keepalive sin configuración dejó de ejecutarse automáticamente; el diagnóstico nuevo devuelve **HTTP 200** usando clave pública y `limit=0`, sin recuperar registros. Esta prueba local no afirma que los secretos opcionales de GitHub estén configurados ni que se haya ejecutado manualmente ese workflow.
+
+Guía del flujo: [Complementos 0.4.49](sahten/GUIA-COMPLEMENTOS-049.md). Altas pausadas con dueño/admin, compras de prueba completas, sincronización entre equipos instalados y tickets físicos siguen pendientes. Los programas automáticos de cupones, mejora 4U y complementos en delivery/Mostrador no se presentan como operativos.
+
+
+**Instaladores 0.4.49 publicados y comprobados:** workflow `41932214779` completó Windows, Mac universal y publicación correctamente. Release público: https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.49 . El manifiesto `latest.json` debe anunciar 0.4.49 y las tres plataformas firmadas antes de dar por completada su verificación. Esta publicación no acredita una compra productiva, una impresora física ni sincronización entre dos equipos del dueño.
+
+
+## Integración de la web editorial aprobada · 4/11/2026
+
+El dueño pidió publicación inmediata de la nueva web y banners. Se retoma **la propia propuesta Codex C / tipografía 3 / home-combinada** y el mapa A ajustado, sin usar el rediseño Terra rechazado en issue #41. Fuentes locales preservadas en `media/sahten-editorial/`; el render de producción reemplaza enlaces, contenido y controles de la maqueta. Las fotografías de familia mantienen los originales publicados, sin modificar rostros.
+
+Home nueva: carta ligada al catálogo actual; historia en primera persona de Marcel; tres reels y tutorial con reproducción real, controles, `preload=none` y sin autoplay; mapa claro sin sombra con carga diferida, dirección y alternativa de Google Maps; Catering con su foto exclusiva; tres reseñas publicadas y las 11 FAQs existentes. Se corrigen únicamente tres respuestas de cobertura/mínimo/envío que anunciaban un mínimo/gratuidad universal incompatible con las zonas: la web dirige al cálculo por dirección y recorrido, sin inventar nuevos importes. Restaurant/FAQPage y cuatro VideoObject se publican con los datos visibles y recursos reales. Las otras páginas informativas conservan sus archivos de la publicación anterior.
+
+El banner del 10% usa exactamente dos fotos originales aprobadas (tortas/dulces y plato), exclusivamente para ese beneficio. En celular la foto ocupa todo el ancho del bloque, con altura de 200 px; en tablet conserva una columna de 240–280 px. El usuario puede pausar la rotación; movimiento reducido usa cambio manual. Se oculta si el 10% no está habilitado para el canal y un medio válido. Los anuncios de campañas vigentes leen el estado público y el mismo calendario del motor en Argentina. No se habilitan campañas pausadas ni se modifican precios o costos.
+
+La carta conserva buscador, cantidades, dos pasos, retiro/delivery, datos, vuelto, cupón, Mercado Pago y aceptación de complementos. Aplica el tratamiento gráfico aprobado con fotos de 180 px en escritorio / 155 px en celular; nunca las alturas grandes de la home. Los enlaces antiguos desde la carta mantienen sus anclas equivalentes en la nueva portada.
+
+QA de preparación: **993 pruebas / 135 archivos**, build correcto y manifiesto de catálogo idéntico al servidor. Chrome: home sin desbordes en 360, 390, 640 y 1024 px; mapa cargado; cuatro videos con H.264/AAC y reproducción comprobada. Movimiento de entrada 300 ms (210 en móvil), ease-out, sin ocultar contenido si falta JS y con alternativa reducida. Falta comprobación final del dominio después del deploy; no se envían pedidos de clientes como prueba.
+
+Esta integración es una publicación del sitio de Sahten desde el workflow, **no un CMS nuevo ni una publicación de instaladores**. El editor general white label y la futura edición automática de todas las secciones siguen siendo un trabajo separado. No escribir estos cambios directamente en `projects/menus/orders` para modificar la web.

@@ -5,12 +5,18 @@ on:
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
       - "scripts/deploy/catalog-integrity.mjs"
+      - "scripts/deploy/editorial-home.mjs"
+      - "src/online/editorial-state.js"
+      - "media/sahten-editorial/**"
       - ".github/workflows/sahten-promo-checkout.yml"
   push:
     branches: [main]
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
       - "scripts/deploy/catalog-integrity.mjs"
+      - "scripts/deploy/editorial-home.mjs"
+      - "src/online/editorial-state.js"
+      - "media/sahten-editorial/**"
       - ".github/workflows/sahten-promo-checkout.yml"
   workflow_dispatch:
     inputs:
@@ -48,7 +54,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'91563746-1f00-4bba-8d58-16dbc96856d0');
+          assert.equal(r.sourceDeploymentId,'eedac5fc-a89a-4c4e-bf42-3147370bfb30');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -56,7 +62,7 @@ jobs:
           const menu=JSON.parse(fs.readFileSync('sahten-promo-export/menu.json','utf8'));
           const {catalogFingerprint}=await import('./scripts/deploy/catalog-integrity.mjs');
           assert.equal(catalogFingerprint(menu),r.commercialFingerprint);
-          assert.equal(r.homepageLayoutPreserved,true);
+          assert.equal(r.approvedEditorialDesign,true);
           assert.equal(r.homepageCatalogGuarded,true);
           assert.equal(r.defaultCashBenefit,10);
           assert.equal(r.preserved.length,16);
@@ -67,7 +73,9 @@ jobs:
           assert.ok(html.includes('function fatayUpgradePanel()'));
           assert.ok(html.includes("if(rule===null)rule={type:'always'}"),'Campañas sin calendario deben cotizar');
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
-          assert.ok(home.includes("!p.upsellOnly"),'Homepage must hide checkout-only Fatay');
+          assert.ok(home.includes('data-editorial="sahten-c-3"'));
+          assert.ok(home.includes('Nos encontramos'));
+          assert.ok(!home.includes('noindex'));
           assert.ok(html.includes('data-upsell-consult'));
           assert.ok(html.includes('upsell-offer'));
           console.log('Safe checkout verified: '+r.products+' products, live commercial state preserved');
@@ -147,7 +155,7 @@ jobs:
              const commercial=Object.fromEntries(['products','config','payments','promotions','delivery','cartRecommendations'].map(k=>[k,d[k]??null]));
              const digest=crypto.createHash('sha256').update(JSON.stringify(canonical(commercial))).digest('hex');
              if(digest!==report.commercialFingerprint)process.exit(1);
-            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-upsell-consult')||!s.includes('upsell-offer')||!s.includes('function couponSection()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('!p.upsellOnly'))process.exit(1)})"; then
+            })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-upsell-consult')||!s.includes('upsell-offer')||!s.includes('function couponSection()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-editorial=\"sahten-c-3\"'))process.exit(1)})"; then
               echo "Producción confirmada: catálogo comercial íntegro y cliente de complementos actualizado, sin activar ofertas."
               exit 0
             fi

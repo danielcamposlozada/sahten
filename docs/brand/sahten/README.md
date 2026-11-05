@@ -65,3 +65,7 @@ El dueño entregó `source/caligrafia-completa.svg`, con los seis trazos y caja 
 El editor permite cargar un logo propio para la web. Tiene prioridad sobre la caligrafía del kit y puede usar el mismo color que el texto del hero. El nuevo wordmark completo entregado por el dueño se usa solamente en sahten.online, sin reemplazar la marca de la app.
 
 El dueño aclaró que el wordmark completo es para la **barra de navegación**. En el **hero** va únicamente `source/caligrafia-completa.svg`, con sus seis trazos originales y del mismo color que el texto. Ambos logos se guardan por separado.
+
+## Web editorial Codex · 4/11/2026
+
+El dueño autorizó integrar/publicar la propuesta C con tipografía 3 y el mapa aprobado. `media/sahten-editorial/` conserva logo original del panel, caligrafía completa, fuentes con licencias y dos fotos de banner + una exclusiva de Catering obtenidas de la rama de recursos aprobada. No se reutiliza el diseño Terra. La rotación de fotos corresponde solo al 10% comercialmente habilitado. No se regeneraron los favicons ni el kit anterior como efecto secundario.
