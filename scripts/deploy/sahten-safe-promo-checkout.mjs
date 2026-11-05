@@ -9,10 +9,10 @@ import {assertCatalogPreserved,catalogFingerprint} from './catalog-integrity.mjs
 import {buildEditorialHome,accurateEditorialMenu,editorialAssetVersion,editorialSitemap} from './editorial-home.mjs';
 import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
 import {salesPaused} from '../../src/core/sales-availability.js';
-import {editorialBenefitEnabled,editorialCampaignMarkup} from '../../src/online/editorial-state.js';
+import {editorialBenefitEnabled,editorialCampaignMarkup,editorialLoyaltyMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='006f0888-3968-4dec-b80b-7af98e69bc84';
-const PINNED_URL='https://006f0888.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='224be689-2a50-4ece-bb11-434a0724f54d';
+const PINNED_URL='https://224be689.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',

@@ -11,6 +11,7 @@ export function promotionReport(orders = []) {
     result.discount+=Number(snapshot.discount)||0;
     result.netProducts+=Number(snapshot.netSubtotal)||0;
     if((snapshot.appliedPromotionIds||[]).length)result.promotedOrders++;
+    const countedPromotions=new Set();
     for(const line of snapshot.lines||[]){
       const key=line.appliedPromotionId;
       if(!key)continue;
@@ -18,7 +19,7 @@ export function promotionReport(orders = []) {
       row.units+=Number(line.qty)||0;
       row.revenue+=Number(line.net)||0;
       row.discount+=Number(line.promotionDiscount)||0;
-      row.orders++;
+      if(!countedPromotions.has(key)){row.orders++;countedPromotions.add(key);}
       result.byPromotion[key]=row;
     }
   }

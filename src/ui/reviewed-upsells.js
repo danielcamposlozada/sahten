@@ -2,7 +2,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=n=>Number(n).toLocaleString('es-AR',{style:'currency',currency:'ARS'});
 const problems={upsell_revision_conflict:'Cambió la oferta en otro equipo. Volvé a consultar antes de guardar.',
  upsell_cost_source_changed:'Cambiaron precios o costos. Consultá los valores actuales y repetí la revisión.',
- upsell_discount_limit:'La oferta excede el límite permitido. La escala de hasta 30% corresponde exclusivamente a la Fatay adicional.',
+ upsell_discount_limit:'La oferta supera el máximo comercial configurado para ese producto. Revisá Reglas de rentabilidad; la excepción de Fatay conserva su autorización específica.',
  upsell_product_or_cost_unverified:'Falta publicar un producto o registrar sus costos en la app.',
  upsell_exception_acceptance_required:'Confirmá expresamente la escala excepcional antes de publicar.',
  upsell_review_incomplete:'Completá ambos costos y una explicación de al menos 20 caracteres.'};
@@ -54,7 +54,7 @@ export function createReviewedUpsellEditor(w,getDrafts,notify){
     +'<label class="promo-field">Qué costos revisaste y qué incluye cada importe<textarea data-upsell-field="note" minlength="20" maxlength="1000"'+d+'>'+esc(fields.note)+'</textarea></label>'
     +(special?'<label class="promo-checkbox"><input type="checkbox" data-upsell-field="acceptException"'+(fields.acceptException?' checked':'')+d+'>Acepto expresamente la escala excepcional de Fatay hasta '+Math.max(...totals)+'% total. No reduce el piso de margen ni evita la validación de cobro.</label>':'')
     +'<details><summary>Costos registrados de los productos participantes</summary>'+ids.map(id=>{const p=context.products.find(x=>x.id===id),c=context.costs[id];return '<p>'+esc(p?.name||id)+' · variable '+fmt(c.directCost)+' · fijo '+fmt(c.fixedCost)+'</p>';}).join('')+'</details>'
-    +'<p>Se conservará esta revisión con autor y fecha. Se publicará <strong>en pausa</strong>. El servidor seguirá comprobando 40% de margen estimado mínimo en el complemento y en el pedido completo.</p>'
+    +'<p>Se conservará esta revisión con autor y fecha. Se publicará <strong>en pausa</strong>. El servidor comprobará los márgenes vigentes en Reglas de rentabilidad para el complemento y el pedido completo.</p>'
     +'<button type="button" data-upsell-publish'+d+'>Guardar revisión y publicar en pausa</button></section>';
   }
   return '<section class="promo-card"><h3>Alta de complementos</h3><p>1. Revisar costos → 2. Publicar en pausa → 3. Activar. Son acciones distintas; no hace falta volver a subir la carpeta de la web para cambiar una oferta ya conectada.</p>'

@@ -3,16 +3,17 @@ const escapeReceipt = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&
 // Cuatro formatos aprobados: A (general), B (descuento), C (cupón), D (especial).
 // Solo usa snapshots de una campaña efectivamente publicada; jamás emite códigos.
 function promotionalFooter(snapshot,esc) {
-  if(!snapshot||!['campaign','coupon'].includes(snapshot.kind))return '';
+  if(!snapshot||snapshot.invalidated===true||!['campaign','coupon'].includes(snapshot.kind))return '';
   if(snapshot.kind==='coupon' && (!snapshot.code || !snapshot.expiresOn))return '';
   const text=esc(snapshot.headline||'Conocé los beneficios SAHTEN');
   const date=snapshot.startsOn?'Desde '+esc(snapshot.startsOn.slice(8,10)+'/'+snapshot.startsOn.slice(5,7)):'';
   if(snapshot.kind==='coupon')return '<section class="receipt-promo receipt-promo--C" aria-label="Cupón de próxima compra">'
     +'<div class="receipt-promo-head">PARA TU PRÓXIMA COMPRA</div>'
     +'<p class="receipt-promo-label">'+text+'</p>'
+    +'<p>Buscá tu beneficio con tu teléfono en la web.</p>'
     +'<p class="receipt-promocode">'+esc(snapshot.code)+'</p>'
     +'<p>'+esc(snapshot.label||'Válido hasta '+snapshot.expiresOn)+'</p>'
-    +'<small>Mostralo en caja o ingresalo online. Un solo uso.</small></section>';
+    +'<small class="receipt-promo-terms">'+esc(snapshot.terms||(snapshot.channel==='mostrador'?'Solo mostrador. Un solo uso.':'Solo tienda online. Un solo uso.'))+'</small></section>';
   const layout=['A','B','D'].includes(snapshot.layout)?snapshot.layout:/\d{1,2}\s*%|OFF|descuento/i.test(snapshot.headline||'')?'B':'A';
   const label=snapshot.repeatEdition?'PRÓXIMA EDICIÓN · VOLVÉ A APROVECHAR':
     snapshot.repeatPurchase?'VOLVÉ A APROVECHAR':
@@ -87,7 +88,7 @@ body{width: ${paper.contentMm}mm;max-width: ${paper.contentMm}mm;padding:1mm;mar
 .payment,.notes{font-size:${compact?11:13}px;font-weight:600;border-top:1px dashed #000;margin-top:4px;padding-top:3px}.notes{white-space:pre-wrap}.footer{text-align:center;font-size:${metaSize}px;margin-top:4px}
 .receipt-review{text-align:center;border-top:1px dashed #000;margin-top:5px;padding-top:4px;break-inside:avoid;font-size:${compact?11:13}px;line-height:1.2;font-weight:400}.receipt-google-brand{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:3px;font-size:${compact?13:15}px;font-weight:700}.receipt-google-logo{width:${compact?4:5}mm;height:${compact?4:5}mm;filter:grayscale(1) brightness(0)}.receipt-review-qr{display:block;width:30mm;height:30mm;max-width:100%;margin:3px auto}.receipt-review-help{display:none}
 .receipt-online-invite{margin:4px auto 2px;padding:2px 5px;width:max-content;max-width:100%;text-align:center;border:1px solid #000;border-radius:999px;font-size:${compact?9:10}px;font-weight:600;line-height:1.3;break-inside:avoid}.receipt-online-invite strong{font-weight:900;letter-spacing:.2px}
-.receipt-promo{text-align:center;border:1px solid #000;margin-top:3px;padding:1px;break-inside:avoid;font-size:${compact?8.2:9.5}px;line-height:1.12}.receipt-promo-head{background:#000;color:#fff;font-weight:800;font-size:${compact?7.5:8.5}px;letter-spacing:0;padding:2px 1px}.receipt-promo strong{display:block;font-size:${compact?11:13}px;font-weight:850;padding:2px 1px 1px;line-height:1.1}.receipt-promo p{margin:1px 0}.receipt-promo small{display:block;font-size:${compact?8:9}px;line-height:1.12;margin:2px 1px}.receipt-promo--B strong{font-size:${compact?12:14}px}.receipt-promo--C{border-style:dashed}.receipt-promo--C .receipt-promocode{font-size:${compact?14:17}px;font-weight:900;letter-spacing:.3px;border-block:1px dashed #000;padding:2px 0;margin:1px 0}.receipt-promo--D strong{font-size:${compact?10.5:12}px}
+.receipt-promo{text-align:center;border:1px solid #000;margin-top:3px;padding:1px;break-inside:avoid;font-size:${compact?8.2:9.5}px;line-height:1.12}.receipt-promo-head{background:#000;color:#fff;font-weight:800;font-size:${compact?7.5:8.5}px;letter-spacing:0;padding:2px 1px}.receipt-promo strong{display:block;font-size:${compact?11:13}px;font-weight:850;padding:2px 1px 1px;line-height:1.1}.receipt-promo p{margin:1px 0}.receipt-promo small{display:block;font-size:${compact?8:9}px;line-height:1.12;margin:2px 1px}.receipt-promo--B strong{font-size:${compact?12:14}px}.receipt-promo--C{border-style:dashed}.receipt-promo--C .receipt-promocode{font-family:monospace;font-size:${compact?11:14}px;font-weight:900;letter-spacing:0;border-block:1px dashed #000;padding:2px 0;margin:1px 0}.receipt-promo--D strong{font-size:${compact?10.5:12}px}
 </style></head><body>${logoHtml}<div class="order-num">ORDEN #${number}</div><div class="fulfilment">${delivery?'DELIVERY':'RETIRO'}</div><div class="meta">${esc(date.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}))} ${esc(date.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false}))}</div><div class="customer">${esc(order.customerName || 'Consumidor Final')}</div>
 ${delivery?'<section class="delivery-details"><h2>ENTREGAR EN</h2>'+address.map(a=>'<p>'+esc(a)+'</p>').join('')+(!address.length?'<p>Dirección sin registrar</p>':'')+(order.customerPhone?'<p class="phone">Tel. '+esc(order.customerPhone)+'</p>':'')+'</section>':''}
 <div class="receipt-items">${(order.items||[]).map(i=>'<div class="receipt-item"><div class="item-name">'+esc(i.qty)+'× '+esc(i.name)+'</div><div class="item-price">'+esc(money(i.lineTotal))+'</div></div>').join('')}</div>
@@ -95,7 +96,7 @@ ${Number(order.discountAmount ?? order.discount)>0?row('Subtotal',money(order.su
 ${delivery?row('Envío',order.shipping?money(order.shipping):'Gratis'):''}${order.deliverySnapshot?.discount>0?row('Ahorro envío',money(order.deliverySnapshot.discount)):''}${row('TOTAL',money(order.total),'total-row')}
 ${order.paymentName || order.paymentMethod?'<div class="payment">'+esc(order.paymentName || ({efectivo:'Efectivo',transferencia:'Transferencia',mercadopago:'Mercado Pago'})[order.paymentMethod] || order.paymentMethod)+'</div>':''}
 ${cash.specified && cash.valid?row('Paga con',money(cash.tendered))+row('Vuelto',money(cash.change)):''}
-${order.notes?'<div class="notes">Nota: '+esc(order.notes)+'</div>':''}<div class="footer">Gracias por tu compra</div><div class="receipt-online-invite">Hacé tu próximo pedido en <strong>sahten.online</strong></div>${reviewHtml}${promotionalFooter(order.promotionTicketSnapshot,esc)}</body></html>`;
+${order.notes?'<div class="notes">Nota: '+esc(order.notes)+'</div>':''}<div class="footer">Gracias por tu compra</div><div class="receipt-online-invite">Hacé tu próximo pedido en <strong>sahten.online</strong></div>${order.promotionTicketSnapshot?.kind==='coupon'?promotionalFooter(order.promotionTicketSnapshot,esc):''}${reviewHtml}${order.promotionTicketSnapshot?.kind!=='coupon'?promotionalFooter(order.promotionTicketSnapshot,esc):''}</body></html>`;
 }
 
 /**

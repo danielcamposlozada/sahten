@@ -51,6 +51,7 @@ it('quote verifies coupon on server, then submits and redeems with one atomic ca
  const s=setup();
  const quote=await s.call('quote');expect(quote.status,JSON.stringify(quote.data)).toBe(200);
  expect(quote.data.order.total).toBe(6468);
+ expect(s.repo.promotionCosts).toHaveBeenCalledWith(storeId,'online');
  expect(quote.data.order.promotionSnapshot.couponId).toBe(couponId);
  const result=await s.call('order');
  expect(result.status).toBe(200);

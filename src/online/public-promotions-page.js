@@ -1,0 +1,12 @@
+import editorialStateSource from './editorial-state.js?raw';
+import {editorialEscape,editorialCampaignMarkup,editorialLoyaltyMarkup} from './editorial-state.js';
+import {localDateParts,scheduleMatches,activeCampaigns} from '../core/promotions.js';
+import {salesPaused} from '../core/sales-availability.js';
+// Pages remain useful without JS; this narrow script adds current public benefit facts.
+export function publicPromotionsPageScript(menu,shopHref='../pedir/'){
+ if(!menu.supabase?.url||!menu.supabase?.storeId)return '';
+ const source={config:menu.config,promotions:menu.promotions,payments:{methods:menu.payments?.methods,benefit:menu.payments?.benefit},products:(menu.products||[]).map(({id,name,retired,upsellOnly,salesAvailability})=>({id,name,retired,upsellOnly,salesAvailability})),supabase:menu.supabase};
+ const safe=o=>JSON.stringify(o).replace(/</g,()=>String.fromCharCode(92)+'u003c');
+ const helpers="const PROMOTIONS_TZ='America/Argentina/Buenos_Aires';\n"+[localDateParts,scheduleMatches,activeCampaigns,salesPaused].map(fn=>fn.toString()).join('\n')+'\n'+editorialStateSource.replace(/^import[^\n]*\n/gm,'').replace(/^export\s+/gm,'');
+ return '<script>(function(){'+helpers+'\nvar menu='+safe(source)+',href='+safe(shopHref)+',programs=[],busy=false,host=document.getElementById("page-promotions");if(!host)return;function draw(){var html=editorialCampaignMarkup(menu,new Date(),href)+editorialLoyaltyMarkup(menu,programs,href);if(host.innerHTML!==html)host.innerHTML=html;host.hidden=!html;}async function refresh(){if(busy||document.visibilityState==="hidden"||!menu.supabase)return;busy=true;var s=menu.supabase,headers={apikey:s.anonKey,Authorization:"Bearer "+s.anonKey,"Content-Type":"application/json"};try{var result=await fetch(s.url+"/rest/v1/menus?select=json&store_id=eq."+encodeURIComponent(s.storeId),{headers:headers});if(result.ok){var rows=await result.json();if(rows[0]?.json){var live=rows[0].json;menu.products=live.products;menu.config=live.config;menu.payments=live.payments;menu.promotions=live.promotions;}}var rewards=await fetch(s.url+"/rest/v1/rpc/get_public_loyalty_programs",{method:"POST",headers:headers,body:JSON.stringify({p_store_id:s.storeId})});programs=rewards.ok?await rewards.json():[];}catch(e){programs=[];}finally{busy=false;draw();}}draw();refresh();setInterval(refresh,10000);window.addEventListener("focus",refresh);})();</script>';
+}

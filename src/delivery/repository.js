@@ -9,6 +9,7 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   if(!r.ok){let problem;try{problem=await r.json();}catch{}
    if(['upsell_cost_source_changed','upsell_review_changed','upsell_acceptance_missing'].includes(problem?.message))
     throw new PaymentError('Cambió la oferta o su revisión. Volvé a consultar el complemento antes de confirmar.',409,'upsell_changed');
+   if(/^coupon_|invalid_loyalty_phone/.test(String(problem?.message||'')))throw new PaymentError('Este cupón no está disponible para este teléfono o pedido. Revisá el número y los productos participantes.',409,'coupon_unavailable');
    throw new Error('delivery_database_unavailable');}
   return r.status===204?null:r.json();
  }
@@ -19,8 +20,8 @@ export function createDeliveryRepository({url,serviceKey,anonKey,fetchImpl=fetch
   return !!s.project_id&&await request('/rest/v1/rpc/has_project_role',{method:'POST',token:user.token,body:{pid:s.project_id,roles}})===true;
  }
  const repo={run,
-  lookupCoupon:(sid,digest)=>request('/rest/v1/rpc/sahten_coupon_backend',{method:'POST',
-    body:{action:'lookup',args:{store_id:sid,code_digest:digest}}}),
+  lookupCoupon:(sid,digest,phone,requestId=null)=>request('/rest/v1/rpc/sahten_customer_coupon_lookup',{method:'POST',body:{p_store_id:sid,p_digest:digest,p_phone:phone,p_request_id:requestId}}),
+  phoneBenefit:(sid,phone)=>request('/rest/v1/rpc/sahten_phone_benefit',{method:'POST',body:{p_store_id:sid,p_phone:phone}}),
   confirmCouponOrder:(sid,digest,requestId,payload)=>request('/rest/v1/rpc/sahten_coupon_confirm_order',{method:'POST',
     body:{p_store_id:sid,p_digest:digest,p_request_id:requestId,p_payload:payload}}),
   menu:async sid=>(await request('/rest/v1/menus?select=json&store_id=eq.'+sid))?.[0]?.json,

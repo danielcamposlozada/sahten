@@ -1,3 +1,4 @@
+import {promotionRule} from '../core/promotion-policy.js';
 import {hasDeferredCostApproval} from '../core/promotion-cost-review.js';
 // Coordinador exclusivo del backend. Las dependencias económicas y de consumo
 // provienen del repositorio privado, nunca del JSON de la compra.
@@ -61,9 +62,9 @@ export function createUpsellCheckout({secret,readEconomics,consumeNonce,now=()=>
       fail('Revisá los mínimos de la oferta.',409,'upsell_discount_limit');
     const totals=tiers.length?tiers.map(t=>Number(t.totalDiscountPercent))
       :[Number(menu.payments?.benefit?.percent??0)+Number(offer.extraPercent)];
-    if(totals.some(n=>!Number.isFinite(n)||n<=0||n>30))
+    if(totals.some(n=>!Number.isFinite(n)||n<=0||n>Math.max(30,promotionRule(menu.promotions,productId,offer).maxTotalPercent)))
       fail('La oferta excede los límites técnicos.',409,'upsell_discount_limit');
-    if(totals.some(n=>n>20)){
+    if(totals.some(n=>n>promotionRule(menu.promotions,productId,offer).maxTotalPercent)){
       const approval=economics.exceptionApproval;
       if(offer.id!=='fatay-individual-up'||productId!=='fatay'||!tiers.length
         ||approval?.verified!==true||!validUuid(approval.auditId)
@@ -84,8 +85,8 @@ export function createUpsellCheckout({secret,readEconomics,consumeNonce,now=()=>
     // jamás puede rebajar el piso del servidor sin un contrato auditado propio.
     const policy=menu.promotions.activationPolicy||{};
     const quoteMenu={...menu,promotions:{...menu.promotions,activationPolicy:{...policy,
-      basketContributionTargetPct:Math.max(40,Number(policy.basketContributionTargetPct||40)),
-      minIncrementalContributionPct:Math.max(40,Number(policy.minIncrementalContributionPct||40))}}};
+      basketContributionTargetPct:menu.promotions.commercialPolicy?Number(menu.promotions.commercialPolicy.minMarginPct??40):Math.max(40,Number(policy.basketContributionTargetPct||40)),
+      minIncrementalContributionPct:menu.promotions.commercialPolicy?promotionRule(menu.promotions,ctx.productId,ctx.offer).minMarginPct:Math.max(40,Number(policy.minIncrementalContributionPct||40))}}};
     const result=quoteOrder(quoteMenu,order,{allowOtherPayments:true,validateCustomer:true,
       requireCustomer,now:ctx.at,trustedCosts,
       trustedEconomics:ctx.economics.products,trustedOrderCosts:ctx.economics.orderCosts,trustedCostException:ctx.economics.costException,

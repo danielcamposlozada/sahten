@@ -43,6 +43,7 @@ export function ticketCampaignDetails(campaign={}) {
   else if(channels.includes('online'))terms.push('Solo online · sahten.online');
   else if(channels.includes('mostrador'))terms.push('Solo mostrador');
   if(Number(campaign.extraPercent)>0) terms.push('Efectivo o transferencia');
+  terms.push('Productos participantes','Envío excluido','No acumulable con otras promociones');
   const until=schedule?.until||null;
   return {terms,expiry:until?'Hasta '+until.slice(8,10)+'/'+until.slice(5,7)+'/'+until.slice(0,4):
     'Sin fecha de fin programada'};

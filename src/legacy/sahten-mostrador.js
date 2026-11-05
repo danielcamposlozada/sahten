@@ -703,6 +703,7 @@ function openOrderDetail(orderId) {
     (SAHTEN.orderActions.label(o)?'<p>'+_esc(SAHTEN.orderActions.label(o))+'</p>':'') +
     (o.cancellation?'<p>Cancelado'+(o.cancellation.reason?': '+_esc(o.cancellation.reason):'')+'</p>':'') +
     (['pendiente','en_preparacion','listo','enviado'].includes(o.status)?'<div class="order-detail-contact-actions"><button class="btn" data-order-command="confirm" data-id="'+_esc(o.id)+'">Tiempo y WhatsApp</button><button class="btn" data-order-command="cancel" data-id="'+_esc(o.id)+'">Cancelar pedido</button></div>':'') +
+    (o.remoteId&&o.status!=='cancelado'&&o.paymentStatus!=='paid'&&['efectivo','transferencia'].includes(o.paymentMethod)?'<button type="button" class="btn btn-primary" data-order-command="collect" data-id="'+_esc(o.id)+'">Confirmar cobro</button>':'') +
     '<table class="order-detail-table"><thead><tr><th>Producto</th><th>Cant.</th><th>Unit.</th><th>Total</th></tr></thead><tbody>' +
     o.items.map(it => '<tr><td>'+_esc(it.name)+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right;font-family:DM Mono,monospace">$'+_fmt(it.unitPrice)+'</td><td style="text-align:right;font-family:DM Mono,monospace;font-weight:600">$'+_fmt(it.lineTotal)+'</td></tr>').join('') +
     '</tbody></table>' +
@@ -757,12 +758,24 @@ async function orderDelete(orderId) {
 // COMANDA PRINTING
 // ═══════════════════════════════════════════════════════════
 async function ensurePublishedCustomerTicketPromotion(order) {
-  if(order.promotionTicketSnapshot)return;
+  if(order.promotionTicketSnapshot?.kind==='coupon')order.promotionTicketSnapshot.invalidated=true;
   const read=SAHTEN.online?.controller?.readPromotionTicketCampaigns;
   if(typeof read!=='function')return;
   try{
     const config=await read();
     if(config?.source!=='published_server'||config.enabled!==true)return;
+    if(order.remoteId&&typeof SAHTEN.online.controller.readOrderReward==='function'){
+      try{
+        const reward=await SAHTEN.online.controller.readOrderReward(order.remoteId);
+        if(reward){
+          const snapshot=SAHTEN.promotions.selectTicketAdvertisement(config,{coupon:reward,channel:'online'});
+          if(snapshot){order.promotionTicketSnapshot=snapshot;_saveOrders();SAHTEN.project.markDirty();return;}
+        }else if(order.promotionTicketSnapshot?.kind==='coupon'){order.promotionTicketSnapshot.invalidated=true;}
+      }catch(e){
+        if(order.promotionTicketSnapshot?.kind==='coupon')throw e;
+      }
+    }
+    if(order.promotionTicketSnapshot)return;
     // El descuento utilizado sigue en el desglose de la compra.
     // La publicidad (incluso de la misma campaña) invita a volver a comprar,
     // en la web, mostrador o ambos, según los canales de cada promoción.

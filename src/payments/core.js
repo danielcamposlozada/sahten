@@ -3,6 +3,7 @@ import { deliveryDetails, cashChangeQuote, cashOrderFields } from '../core/order
 import { shippingFor, deliverySnapshot } from '../core/delivery.js';
 import { paymentDiscountQuote } from '../core/payment-benefit.js';
 import { quotePromotions } from '../core/promotions.js';
+import { promotionPaymentFee } from '../core/promotion-policy.js';
 import { selectTicketAdvertisement } from '../core/ticket-advertising.js';
 import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 
@@ -68,12 +69,12 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const paymentAllowed=paymentPolicy.enabled===true && paymentPolicy.channels?.[salesChannel]!==false;
   const promotion=menu.promotions?.enabled===true ? quotePromotions({
     lines:items,method,channel:salesChannel,now:new Date(now),
-    config:{...menu.promotions,minMarginPct:40,requireVerifiedCosts:true,upsellGuardRequired:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
+    config:{...menu.promotions,minMarginPct:menu.promotions.commercialPolicy?.minMarginPct??40,requireVerifiedCosts:true,upsellGuardRequired:true,paymentPercent:paymentAllowed?paymentPolicy.percent:0},
     // Sólo se acepta una recompensa verificada por el servidor; se ignora input.coupon.
     coupon:trustedCoupon,customerId:verifiedCustomerId,trustedCosts,
     // Jamás leer estas pruebas de body.order: solo el backend puede inyectarlas.
     trustedEconomics,trustedUpsellSelection,trustedOrderCosts,trustedCostException,
-    commissionPercent:method==='mercadopago'?Math.max(0,Number(menu.promotions.checkoutProFeePercent)||10):0,
+    commissionPercent:method==='mercadopago'?promotionPaymentFee(menu.promotions).percent:0,
   }) : null;
   const oldBenefit=promotion?null:paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel,commercialDiscount);
   const hasPaymentBenefit=paymentAllowed&&['efectivo','transferencia'].includes(method);
@@ -98,7 +99,7 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
   const cash = cashChangeQuote(total / 100, input.cashTendered, method);
   if (validateCustomer && !cash.valid) fail('El efectivo indicado no alcanza el total del pedido.');
   return { ...deliveryDetails(input, source), ...cashOrderFields(total / 100, input.cashTendered, method), source, customerName: name, customerPhone: phone, customerEmail: text(input.customerEmail, 150), address, lat, lng, zoneName,
-    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), ...(promotion?{promotionSnapshot:promotion,promotionTicketSnapshot:selectTicketAdvertisement(menu.promotions,{now:new Date(now),channel:salesChannel,excludedPromotionIds:promotion.appliedPromotionIds})}:{}), total: total / 100, notes: text(input.notes, 1000),
+    paymentMethod: method, items, subtotal: sub / 100, shipping: shipping / 100, discount: benefit.amount, ...(benefit.amount?{discountAmount:benefit.amount,discountName:benefit.label,paymentDiscount:benefit.paymentDiscount}:{}), ...(promotion?{promotionSnapshot:{...promotion,...(method==='mercadopago'?{paymentFeeAssumption:promotionPaymentFee(menu.promotions)}:{})},promotionTicketSnapshot:selectTicketAdvertisement(menu.promotions,{now:new Date(now),channel:salesChannel,excludedPromotionIds:promotion.appliedPromotionIds})}:{}), total: total / 100, notes: text(input.notes, 1000),
     ...(shippingQuote?.version===2?{deliverySnapshot:deliverySnapshot(shippingQuote,route,authorization),...(validateCustomer?{}:{shippingQuote})}:{}) };
 }
 

@@ -3,6 +3,7 @@ import {JSDOM} from 'jsdom';
 import {createHash} from 'node:crypto';
 const versionHash=createHash('sha256');
 for(const file of ['design.css','production.css','checkout.css','home-runtime.js','checkout-runtime.js'])versionHash.update(await fs.readFile('media/sahten-editorial/'+file));
+versionHash.update(await fs.readFile('src/online/editorial-state.js'));
 export const editorialAssetVersion=process.env.GITHUB_SHA||versionHash.digest('hex').slice(0,16);
 
 const descriptionRegistry=JSON.parse(await fs.readFile('media/sahten-editorial/product-descriptions.json','utf8')).products;

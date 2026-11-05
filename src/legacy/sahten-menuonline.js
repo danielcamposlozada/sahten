@@ -455,6 +455,7 @@ function _onlineBoardCard(o, recent = false) {
     
     (!recent?'<div class="online-board-contact-actions"><button type="button" class="online-board-detail" data-online-action="confirm" data-id="'+id+'">'+(online?'Confirmar por WhatsApp':'Tiempo y WhatsApp')+'</button><button type="button" class="online-board-detail online-board-cancel" data-online-action="cancel" data-id="'+id+'">Cancelar pedido</button></div>':'') +
     '<div class="online-board-quick-actions" role="group" aria-label="Impresiones y rutas">'
+    +(online&&o.remoteId&&!paid&&o.status!=='cancelado'&&['efectivo','transferencia'].includes(o.paymentMethod)?'<button type="button" class="online-board-detail" data-online-action="collect" data-id="'+id+'">Confirmar cobro</button>':'')
     +'<button type="button" class="online-board-detail" data-online-action="print-customer" data-id="'+id+'" aria-label="Imprimir ticket del cliente '+_esc(num)+'">▤ Ticket cliente</button>'
     +(route?'<button type="button" class="online-board-detail" data-online-action="route-copy" data-id="'+id+'" aria-label="Copiar ruta de la orden '+_esc(num)+'"><svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>Copiar ruta</button>':'')+'</div>'
     +(route&&!route.exact?'<small>Destino por dirección: revisá la ubicación en Maps.</small>':'') +
@@ -513,6 +514,7 @@ function _onlineBoardClick(event) {
   if (action === 'cancel') { SAHTEN.orderActions.cancel(order.id); return; }
   if (action === 'open') { openOrderDetail(order.id); return; }
   if (action === 'print') { printComanda(order.id); return; }
+   if (action === 'collect') { SAHTEN.orderActions.collect(order.id); return; }
    if (action === 'print-customer') { printTicketCliente(order.id); return; }
   if (action === 'route-copy') { button.disabled=true;Promise.resolve(SAHTEN.delivery.handoff.copy(order.id)).finally(()=>{button.disabled=false;});return; }
   if (action === 'next') {

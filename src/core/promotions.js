@@ -1,5 +1,7 @@
+import {couponForMethod} from './coupon-terms.js';
 // SAHTEN: motor puro. Nunca confiar en precios/costos/cupones suministrados por el navegador.
 // Recalcular en el servidor antes de aceptar un pedido. Los importes usan centavos enteros.
+import { promotionRule } from './promotion-policy.js';
 import {hasDeferredCostApproval} from './promotion-cost-review.js';
 import { assessIncrementalUpsell } from './upsell-economics.js';
 export const PROMOTIONS_VERSION = 1;
@@ -76,6 +78,7 @@ export function quotePromotions({
   commissionPercent = 0, trustedCosts = {}, clientPreview = false,
   trustedEconomics = {}, trustedUpsellSelection = null, trustedOrderCosts = null, trustedCostException = null
 } = {}) {
+  coupon=couponForMethod(coupon,method);
   const source = Array.isArray(lines)?lines:[];
   const details=source.filter(l=>Number(l.qty)>0 && Number(l.unitPrice)>=0).map(l=>({
     productId:String(l.productId||l.id||''), qty:Math.floor(Number(l.qty)),
@@ -86,7 +89,7 @@ export function quotePromotions({
   const paymentPercent = cash ? Math.max(0,Math.min(100,Number(config.paymentPercent??10))) : 0;
   const campaigns = cash ? activeCampaigns(config,now,channel) : [];
   const strictUpsells = config.upsellGuardRequired === true || config.activationPolicy?.requireIncrementalAndBasketMarginCheck === true;
-  const couponValid = cash && couponIsEligible(coupon,{now,channel,customerId});
+  const couponValid = (cash||method==='mercadopago') && couponIsEligible(coupon,{now,channel,customerId});
   const eligibleGross = details.reduce((n,l)=>n+(couponValid&&eligibleLine(coupon,l,details)?l.qty*l.unitCents:0),0);
   const canCoupon = couponValid && eligibleGross>=toCents(coupon.minEligibleSubtotal||0);
   const used = new Set();
@@ -96,13 +99,13 @@ export function quotePromotions({
     const selections=[];
     if(config.enabled && !isFour) {
       for(const c of campaigns) if(eligibleLine(c,l,details))selections.push({
-        id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
+        id:c.id, name:c.name, extraPercent:Math.max(0,Math.min(promotionRule(config,l.productId,c).maxTotalPercent-paymentPercent,Number(c.extraPercent)||0)), priority:Number(c.priority)||0,
         kind:'campaign',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct,requiresVerifiedCosts:c.requiresVerifiedCosts===true
       });
       for(const c of (config.upsells||[])) if(!strictUpsells && cash && c.enabled && c.kind==='upsell' && eligibleLine(c,l,details))
         selections.push({id:c.id,name:c.name,extraPercent:Number(c.extraPercent)||0,priority:Number(c.priority)||0,kind:'upsell',maxUnits:c.maxUnits,minMarginPct:c.minMarginPct});
       if(canCoupon && eligibleLine(coupon,l,details))selections.push({
-        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Math.max(0,Math.min(20-paymentPercent,Number(coupon.extraPercent)||0)),priority:1000,kind:'coupon'
+        id:coupon.id,name:coupon.name||'Recompensa',extraPercent:Math.max(0,Math.min(promotionRule(config,l.productId,coupon).maxTotalPercent-paymentPercent,coupon.totalPercent!=null?Math.max(0,Number(coupon.totalPercent)-paymentPercent):Number(coupon.extraPercent)||0)),priority:1000,kind:'coupon'
       });
     }
     // Elegir la mayor rebaja REAL en esta línea (incluidos topes y márgenes).
@@ -113,9 +116,10 @@ export function quotePromotions({
       const part=candidate.maxUnits?Math.min(l.qty,candidate.maxUnits)*l.unitCents:base;
       const proposed=amount(part,candidate.extraPercent);
       const extra=candidate.kind==='coupon'?Math.min(proposed,remainingCoupon.cents):proposed;
+      if(candidate.kind==='coupon'&&extra<=0)return null;
       const discount=Math.min(base,payment+extra);
       const fee=amount(base-discount,commissionPercent);
-      const minMargin=Number(candidate.minMarginPct??config.minMarginPct);
+      const minMargin=promotionRule(config,l.productId,candidate).minMarginPct;
       // Una regla con piso de margen siempre exige un costo firmado por el servidor.
       // Evita aplicar descuentos ante la pérdida de un snapshot de costos.
       if((!clientPreview&&(config.requireVerifiedCosts||candidate.requiresVerifiedCosts||
@@ -123,7 +127,7 @@ export function quotePromotions({
             && Number(candidate.minMarginPct)>0)))&&!known)return null;
       // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
       const realized=base-discount-fee;
-      if(!clientPreview&&known&&Number.isFinite(minMargin)&&minMargin>0&&
+      if(!clientPreview&&known&&Number.isFinite(minMargin)&&minMargin>=0&&
         (realized<=0||(realized-toCents(cost)*l.qty)/realized*100<minMargin))return null;
       return {candidate,extra,discount};
     }).filter(Boolean).sort((a,b)=>b.discount-a.discount||b.candidate.priority-a.candidate.priority);
@@ -135,7 +139,7 @@ export function quotePromotions({
     return {productId:l.productId,qty:l.qty,base:fromCents(base),paymentDiscount:fromCents(payment),
       promotionDiscount:fromCents(extra),discount:fromCents(lineDiscount),
       net:fromCents(base-lineDiscount),appliedPromotionId:winner?.id||null,
-      appliedPromotionType:winner?.kind||null,costsVerified:known};
+      appliedPromotionType:winner?.kind||null,costsVerified:known,rule:promotionRule(config,l.productId,winner||{})};
   });
   // En modo servidor estricto, primero calcular campañas/cupones. Después,
   // de manera independiente, como máximo UN upsell por pedido. No confiar en
@@ -169,8 +173,8 @@ export function quotePromotions({
         lines:details,currentLines:breakdown,upsell:promotion,productId:entry.productId,
         proposedExtra:extra,methodCommissionPercent:commissionPercent,
         trustedEconomics,trustedUpsellSelection,trustedOrderCosts,trustedCostException,
-        minBasketMarginPct:Number(config.activationPolicy?.basketContributionTargetPct||40),
-        minIncrementalMarginPct:Number(config.activationPolicy?.minIncrementalContributionPct||40)
+        minBasketMarginPct:Number(config.commercialPolicy?.minMarginPct??config.activationPolicy?.basketContributionTargetPct??40),
+        minIncrementalMarginPct:Number(config.commercialPolicy?promotionRule(config,entry.productId,promotion).minMarginPct:config.activationPolicy?.minIncrementalContributionPct??40)
       });
       if(verified.approved)pending.push({promotion,entry,current,extra,verified});
     }

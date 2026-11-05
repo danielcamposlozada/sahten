@@ -6,8 +6,9 @@ export const STATUS_TO_REMOTE = { pendiente: 'pendiente', en_preparacion: 'prepa
 export const PAYMENT_LABELS = { paid: 'Pago acreditado', overpaid: 'Cobro excedente · revisar', in_mediation: 'Pago en disputa', pending: 'Pago pendiente', partial: 'Pago incompleto', rejected: 'Pago rechazado', refunded: 'Reembolsado', partially_refunded: 'Reembolso parcial', charged_back: 'Contracargo', unverified: 'Sin pago verificado' };
 export function paymentFields(row) {
   const verified = row.payment_provider === 'mercadopago' && row.payment_ref;
-  const status = verified && PAYMENT_LABELS[row.payment_status] ? row.payment_status : row.payload?.paymentMethod === 'mercadopago' ? 'unverified' : null;
-  return { paymentProvider: verified ? 'mercadopago' : null, paymentStatus: status, paymentStatusLabel: PAYMENT_LABELS[status] || '', paymentReference: verified ? row.payment_ref : null };
+  const manual=row.payment_provider==='manual'&&['efectivo','transferencia'].includes(row.payload?.paymentMethod);
+  const status = (verified||manual)&&PAYMENT_LABELS[row.payment_status] ? row.payment_status : row.payload?.paymentMethod === 'mercadopago' ? 'unverified' : null;
+  return { paymentProvider: verified ? 'mercadopago' : manual?'manual':null, paymentStatus: status, paymentStatusLabel: PAYMENT_LABELS[status] || '', paymentReference: verified ? row.payment_ref : null };
 }
 
 /**
