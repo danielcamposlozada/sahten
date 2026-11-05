@@ -6,13 +6,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createServer} from 'vite';
 import {assertCatalogPreserved,catalogFingerprint} from './catalog-integrity.mjs';
-import {buildEditorialHome,accurateEditorialMenu} from './editorial-home.mjs';
+import {buildEditorialHome,accurateEditorialMenu,editorialAssetVersion,editorialSitemap} from './editorial-home.mjs';
 import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {editorialBenefitEnabled,editorialCampaignMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='b1dbee0f-6f1f-441d-82e0-3d17dabad194';
-const PINNED_URL='https://b1dbee0f.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='006f0888-3968-4dec-b80b-7af98e69bc84';
+const PINNED_URL='https://006f0888.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -61,7 +61,7 @@ async function run(){
   menu=accurateEditorialMenu(publishedMenuWithLiveCatalog(base,live));
   menu.supabase={...base.supabase,storeId:base.supabase.storeId};
   check(menu,base,live);
-  storefront=buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css"></head>').replace('</body>','<script defer src="editorial/checkout-runtime.js"></script></body>');
+  storefront=buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css?v='+encodeURIComponent(editorialAssetVersion)+'"></head>').replace('</body>','<script defer src="editorial/checkout-runtime.js?v='+encodeURIComponent(editorialAssetVersion)+'"></script></body>');
   menuPage=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
   if(!menuPage)throw Error('Missing indexable menu');
   descriptions=menu.products.filter(p=>seo.publicProductDescription(menu,p)).length;
@@ -92,13 +92,14 @@ async function run(){
  const helpers="const PROMOTIONS_TZ='America/Argentina/Buenos_Aires';\n"+[localDateParts,scheduleMatches,activeCampaigns,salesPaused].map(f=>f.toString()).join('\n');
  await fs.writeFile(path.join(output,'editorial','home.js'),helpers+'\n'+state.replace(/^import[^\n]*\n/gm,'').replace(/^export\s+/gm,'')+'\n'+runtime);
  await fs.writeFile(path.join(output,'index.html'),homepage);
+ await fs.writeFile(path.join(output,'sitemap.xml'),editorialSitemap(assets.get('/sitemap.xml').toString('utf8'),menu.site.seo.url));
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
  await fs.writeFile(path.join(output,'menu/index.html'),menuPage);
  await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(menu,null,1));
  const report={
   status:'ready-for-safe-checkout-review',sourceDeploymentId:SOURCE_DEPLOYMENT_ID,
-  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json','/menu/index.html'].includes(f)),
-  generated:['/index.html','/pedir/index.html','/menu.json','/menu/index.html'],descriptions,
+  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json','/menu/index.html','/sitemap.xml'].includes(f)),
+  generated:['/index.html','/pedir/index.html','/menu.json','/menu/index.html','/sitemap.xml'],descriptions,
   products:menu.products.length,remotePhotos:menu.products.filter(p=>p.image?.startsWith('https://')).length,
   beverages:menu.products.filter(p=>p.category==='Bebidas').length,
   campaigns:(menu.promotions?.campaigns||[]).map(p=>({id:p.id,enabled:p.enabled===true})),

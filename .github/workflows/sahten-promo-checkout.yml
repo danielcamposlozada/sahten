@@ -54,7 +54,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'b1dbee0f-6f1f-441d-82e0-3d17dabad194');
+          assert.equal(r.sourceDeploymentId,'006f0888-3968-4dec-b80b-7af98e69bc84');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -65,7 +65,7 @@ jobs:
           assert.equal(r.approvedEditorialDesign,true);
           assert.equal(r.homepageCatalogGuarded,true);
           assert.equal(r.defaultCashBenefit,10);
-          assert.equal(r.preserved.length,15);
+          assert.equal(r.preserved.length,14);
           assert.equal(r.descriptions,r.products);
           for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg'])
             assert.ok(fs.statSync('sahten-promo-export/'+p).size>0);

@@ -1,5 +1,9 @@
 import fs from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
+import {createHash} from 'node:crypto';
+const versionHash=createHash('sha256');
+for(const file of ['design.css','production.css','checkout.css','home-runtime.js','checkout-runtime.js'])versionHash.update(await fs.readFile('media/sahten-editorial/'+file));
+export const editorialAssetVersion=process.env.GITHUB_SHA||versionHash.digest('hex').slice(0,16);
 
 const descriptionRegistry=JSON.parse(await fs.readFile('media/sahten-editorial/product-descriptions.json','utf8')).products;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -80,7 +84,21 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  for(const video of videos){
   const [id,name]=video,ld=d.createElement('script');ld.type='application/ld+json';ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':'VideoObject',name,description:id==='tutorial'?'Cómo elegir productos, revisar el pedido y continuar con entrega y pago en Sahten.':'Un vistazo a '+name+' en la cocina de Sahten.',thumbnailUrl:['https://sahten.online/editorial/'+id+'.jpg'],contentUrl:'https://sahten.online/editorial/'+id+'.mp4',uploadDate:now.toISOString()});d.head.appendChild(ld);
  }
+ for(const el of d.querySelectorAll('link[href^="editorial/"],script[src^="editorial/"]')){
+  const attr=el.tagName==='LINK'?'href':'src';el.setAttribute(attr,el.getAttribute(attr)+'?v='+encodeURIComponent(editorialAssetVersion));
+ }
  const result=dom.serialize();dom.window.close();
  if(result.includes('carta-combinada.html')||result.includes('../conceptos/')||result.includes('Vista conceptual')||result.includes('noindex'))throw new Error('Prototype reference remains in production home');
  return result;
+}
+
+/** Solo las dos páginas reconstruidas cambian su fecha; las demás conservan su historial. */
+export function editorialSitemap(xml, canonical, changedAt = new Date()) {
+ const base=canonical.endsWith('/')?canonical:canonical+'/';
+ const changed=new Set([canonical,new URL('menu/',base).href]);
+ return xml.replace(/<url>[\s\S]*?<\/url>/g,block=>{
+  const loc=/<loc>([^<]+)<\/loc>/.exec(block)?.[1];
+  if(!changed.has(loc))return block;
+  return block.replace(/<lastmod>[^<]*<\/lastmod>/g,'').replace('</url>','<lastmod>'+changedAt.toISOString()+'</lastmod></url>');
+ });
 }

@@ -57,3 +57,14 @@ it('el respaldo editorial completa el mismo producto sin alterar datos comercial
  expect(renderSearchContent(m)).toContain(description);
  expect(buildSitePages(m).find(p=>p.path==='menu/index.html').data).toContain(description);
 });
+
+it('las nuevas versiones cambian las URLs cacheadas y el sitemap solo fecha las páginas reconstruidas',async()=>{
+ const {editorialSitemap}=await import('../scripts/deploy/editorial-home.mjs');
+ const html=await buildEditorialHome(menu(),{seoHead:''});const d=new JSDOM(html).window.document;
+ expect(d.querySelector('link[href^="editorial/production.css"]').href).toMatch(/\?v=.+/);
+ expect(d.querySelector('script[src^="editorial/home.js"]').src).toMatch(/\?v=.+/);
+ const old='<urlset>'+['','menu/','catering/'].map(p=>'<url><loc>https://sahten.online/'+p+'</loc><lastmod>2026-10-31</lastmod></url>').join('')+'</urlset>';
+ const xml=editorialSitemap(old,'https://sahten.online/',new Date('2026-11-05T00:00:00Z'));
+ expect(xml.match(/2026-11-05T00:00:00.000Z/g)).toHaveLength(2);
+ expect(xml).toContain('<loc>https://sahten.online/catering/</loc><lastmod>2026-10-31</lastmod>');
+});
