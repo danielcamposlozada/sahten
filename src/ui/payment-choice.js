@@ -21,7 +21,7 @@ export function paymentChoiceHtml({ methods = [], selected = '', percent = 0, am
   }
   if (!compact) opts.filter(o=>!direct.includes(o)).forEach(o => { html += button(o, o.label, amounts[o.id] || (o.method==='mercadopago'?(compact?'Tarjetas y saldo':'Tarjetas y dinero en cuenta'):(compact?'':'Pago al negocio')), o.id===selected, o.method==='mercadopago'?PAYMENT_MP_LOGO.replace('<svg ', '<svg aria-hidden="true" '):icon); });
   html += '</div>';
-  if(!compact && directSelected && direct.length>1) html += '<div class="payment-choice-direct" role="group" aria-label="Elegí efectivo o transferencia">'+direct.map(o=>'<button type="button" data-payment-choice="'+paymentChoiceEsc(o.id)+'" aria-pressed="'+(o.id===selected)+'">'+paymentChoiceEsc(o.label)+'</button>').join('')+'</div>';
+  if(!compact && directSelected && direct.length>1) html += '<div class="payment-choice-direct" role="radiogroup" aria-label="Elegí efectivo o transferencia">'+direct.map(o=>'<label class="payment-direct-option"><input type="radio" name="direct-payment" aria-label="'+paymentChoiceEsc(o.label)+'" data-payment-choice="'+paymentChoiceEsc(o.id)+'" value="'+paymentChoiceEsc(o.id)+'"'+(o.id===selected?' checked':'')+'><span>'+paymentChoiceEsc(o.label)+'</span></label>').join('')+'</div>';
   if(percent>0 && direct.length) html += (compact?'<details class="payment-choice-conditions"><summary>Condiciones del beneficio</summary>':'')+'<p class="payment-choice-hint">'+paymentChoiceEsc(percent)+' % sobre los productos con efectivo o transferencia. El envío no tiene descuento. No acumulable con otros descuentos de la orden: se aplica el mayor.</p>'+(compact?'</details>':'');
   return html+'</fieldset>';
 }

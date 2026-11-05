@@ -13,8 +13,8 @@ export function campaignTemplate(preset='weekly',id='custom'){
 export function validateCampaignDraft(c){
   const issues=[];
   if(clean(c?.name).length<4||clean(c?.name).length>100)issues.push('Escribí un nombre de entre 4 y 100 caracteres.');
-  if(!Number.isFinite(Number(c?.extraPercent))||Number(c.extraPercent)<=0||Number(c.extraPercent)>20)
-    issues.push('Elegí un descuento adicional mayor que 0 y de hasta 20 puntos.');
+  if(!Number.isFinite(Number(c?.extraPercent))||Number(c.extraPercent)<=0||Number(c.extraPercent)>85)
+    issues.push('Elegí un descuento adicional mayor que 0 y de hasta 85 puntos; el máximo total se verifica con las reglas comerciales.');
   if(!Array.isArray(c?.productIds)||c.productIds.length===0)issues.push('Seleccioná al menos un producto.');
   if(!Array.isArray(c?.channels)||c.channels.length===0)issues.push('Seleccioná al menos un canal de venta.');
   const r=c?.schedule||{};

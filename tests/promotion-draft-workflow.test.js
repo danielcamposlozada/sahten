@@ -13,7 +13,7 @@ function setup({readOnly=false,confirmation=true}={}){
     maxUnits:1,activationBlockers:['cost_and_checkout_verification_required']}],
     productUpgrades:[{id:'fatay-fourth',name:'Cuarta Fatay',enabled:true,extraPercent:10,
       triggerProductId:'fatay',replacementProductId:'fatay'}],
-    couponPrograms:{first_online:{name:'Cupón primera compra',enabled:true,extraPercent:5,
+    couponPrograms:{manual_fixture:{name:'Cupón primera compra',enabled:true,extraPercent:5,
       minEligibleSubtotal:30000,validDays:14,channel:'online'}}};
   kv.set('sahten_promotions',JSON.stringify(state));
   const dom=new JSDOM('<!doctype html><body><div id="promotions-editor"></div></body>',{url:'https://sahten.local'});
@@ -66,17 +66,17 @@ describe('Administración segura de todos los borradores',()=>{
     const {w,dom,editor,controller}=setup();
     try{
       w.document.querySelector('[data-tab="coupons"]').click();
-      w.document.querySelector('[data-coupon-edit="first_online"]').click();
+      w.document.querySelector('[data-coupon-edit="manual_fixture"]').click();
       const title=w.document.querySelector('#coupon-name');title.value='Cupón especial para clientes';
-      w.document.querySelector('#coupon-percent').value='6';
+      w.document.querySelector('#coupon-percent').value='16';
       w.document.querySelector('#coupon-minimum').value='25000';
       w.document.querySelector('[data-coupon-save]').click();
-      expect(editor.get().couponPrograms.first_online).toMatchObject({name:'Cupón especial para clientes',extraPercent:6,
+      expect(editor.get().couponPrograms.manual_fixture).toMatchObject({name:'Cupón especial para clientes',extraPercent:6,
         minEligibleSubtotal:25000,enabled:false});
-      w.document.querySelector('[data-coupon-duplicate="first_online"]').click();
+      w.document.querySelector('[data-coupon-duplicate="manual_fixture"]').click();
       const entries=Object.keys(editor.get().couponPrograms);
       expect(entries).toHaveLength(2);
-      const copy=entries.find(x=>x!=='first_online');
+      const copy=entries.find(x=>x!=='manual_fixture');
       expect(editor.get().couponPrograms[copy].enabled).toBe(false);
       expect(w.document.querySelector('[data-coupon-save]')).not.toBeNull();
       w.document.querySelector('[data-coupon-delete="'+copy+'"]').click();
@@ -92,7 +92,7 @@ describe('Administración segura de todos los borradores',()=>{
     try{
       w.document.querySelector('[data-tab="coupons"]').click();
       expect(w.document.querySelector('[data-coupon-create]').disabled).toBe(true);
-      expect(w.document.querySelector('[data-coupon-edit="first_online"]').disabled).toBe(true);
+      expect(w.document.querySelector('[data-coupon-edit="manual_fixture"]').disabled).toBe(true);
       expect(Object.keys(editor.get().couponPrograms)).toHaveLength(1);
     }finally{dom.window.close();}
   });

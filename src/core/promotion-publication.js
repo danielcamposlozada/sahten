@@ -1,6 +1,7 @@
+import { promotionRule } from './promotion-policy.js';
 import { validateCampaignDraft } from './campaign-builder.js';
 // Gatekeeper: rules are checked again against the real catalog and costs by the server.
-export function publicationKind(type, proposal={}) {
+export function publicationKind(type, proposal={},config={}) {
   if(type==='campaigns'){
     if(proposal.enabled!==true)return {ready:false,reason:'Primero incluí la campaña en la planificación local.'};
     if(!/^[a-z0-9][a-z0-9_-]{2,50}$/.test(String(proposal.id||'')) || proposal.kind!=='public')
@@ -9,8 +10,8 @@ export function publicationKind(type, proposal={}) {
     if(issues.length)return {ready:false,reason:issues.join(' ')};
     if(!Array.isArray(proposal.channels)||proposal.channels.length!==1||proposal.channels[0]!=='online')
       return {ready:false,reason:'La primera publicación verificada admite solo el canal Tienda online. Mostrador requiere cotización específica.'};
-    if(Number(proposal.extraPercent)>10)
-      return {ready:false,reason:'El adicional no puede superar 10 puntos: 10% habitual + 10% adicional = 20% máximo.'};
+    if((proposal.productIds||[]).some(id=>Number(proposal.extraPercent)+Number(config.paymentPercent??10)>promotionRule(config,id,proposal).maxTotalPercent))
+      return {ready:false,reason:'El descuento supera el máximo total configurado ('+promotionRule(config).maxTotalPercent+'%). Revisá Reglas de rentabilidad.'};
     if(!Number.isInteger(Number(proposal.priority??10)) || Number(proposal.priority??10)>100)
       return {ready:false,reason:'Revisá la prioridad (0–100).'};
     return {ready:true,reason:'Lista para verificar costos y publicarse pausada. Después podrás activarla desde el switch en vivo.'};

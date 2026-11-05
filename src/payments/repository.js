@@ -1,3 +1,4 @@
+import {PaymentError} from './core.js';
 import { createPaymentService } from './service.js';
 import { createDeliveryRepository } from '../delivery/repository.js';
 
@@ -6,10 +7,13 @@ export function paymentHandler({ url, serviceKey, anonKey, fetchImpl = fetch }) 
   async function request(path, { method = 'GET', body, token = serviceKey } = {}) {
     const r = await fetchImpl(url + path, { method, headers: { apikey: token === serviceKey ? serviceKey : anonKey, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(8000) });
     let data; try { data = await r.json(); } catch { data = null; }
-    if (!r.ok) { const e = new Error('database_error'); e.code = ['checkout_conflict','checkout_expired','checkout_busy'].includes(data?.message) ? data.message : 'database_error'; throw e; }
+    if (!r.ok) { if(/^coupon_/.test(data?.message||''))throw new PaymentError('El cupón no está disponible o tiene un pago pendiente. Revisá el estado de la compra anterior.',409,data.message); const e = new Error('database_error'); e.code = ['checkout_conflict','checkout_expired','checkout_busy'].includes(data?.message) ? data.message : 'database_error'; throw e; }
     return data;
   }
   const repo = {
+    findCheckout:(sid,rid,hash)=>request('/rest/v1/rpc/sahten_mp_checkout_request',{method:'POST',body:{p_store_id:sid,p_request_id:rid,p_proof_hash:hash}}),
+    lookupCoupon:(sid,digest,phone,rid)=>request('/rest/v1/rpc/sahten_customer_coupon_lookup',{method:'POST',body:{p_store_id:sid,p_digest:digest,p_phone:phone,p_request_id:rid}}),
+    releaseCoupon:(id,hash)=>request('/rest/v1/rpc/sahten_mp_release_coupon',{method:'POST',body:{p_checkout_id:id,p_proof_hash:hash}}),
     run: (action, args) => request('/rest/v1/rpc/sahten_mp_backend', { method: 'POST', body: { action, args } }),
     async menu(storeId) { const rows = await request('/rest/v1/menus?select=json&store_id=eq.' + storeId); return rows?.[0]?.json; },
     async promotionCosts(storeId,channel='mostrador') { return await request('/rest/v1/rpc/sahten_promotion_costs',{method:'POST',body:{sid:storeId,channel}}); },

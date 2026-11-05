@@ -104,6 +104,7 @@ export function createController(host) {
       else if(name==='set_store_delivery_configuration'&&/invalid_delivery_configuration/.test(msg))e.message='Revisá los mínimos, tarifas, beneficios y límites de las zonas.';
       else if(name==='set_store_service_hours'&&(/service_hours_conflict/.test(msg)||e.code==='40001')){e.code='service_hours_conflict';e.status=409;e.message='Este horario cambió en otro equipo. Cargá el horario de la web y revisalo antes de guardar.';}
       else if(name==='set_store_service_hours'&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de guardar horarios en la web.';
+      else if(e.code==='PGRST202'&&/promotion|loyalty|collection/.test(name))e.message='Falta instalar la actualización del servidor de promociones y cobros. No se aplicó el cambio.';
       else if(e.code==='PGRST202')e.message='Falta actualizar el servidor de disponibilidad. El cambio queda pendiente; no se publicó el catálogo completo.';
       else if(name.startsWith('set_delivery_')&&/menu_not_published/.test(msg))e.message='Publicá el catálogo de esta tienda una vez antes de usar los controles de delivery en vivo.';
       else if(/zone_not_published/.test(msg))e.message='Esta zona todavía no está publicada. Guardá y publicá su configuración una vez antes de usar sus controles en vivo.';
@@ -200,6 +201,13 @@ export function createController(host) {
       return stateRpc('set_store_upsell_state',{p_offer_id:id,p_enabled:enabled,p_expected_revision:revision});
     },
     // Verificación real y SOLO LECTURA. No publica, emite ni cambia ofertas.
+    async issueManualCoupon(terms,phone){return stateRpc('issue_store_manual_coupon',{p_terms:terms,p_phone:phone});},
+    async readLoyaltyPrograms(){if(!client||!host.conn.storeId)return [];const ctx=context(),result=await ctx.client.rpc('get_store_loyalty_programs',{p_store_id:ctx.storeId});check(ctx);return result;},
+    async saveLoyaltyProgram(id,terms,enabled,revision=null){return stateRpc('set_store_loyalty_program',{p_program:id,p_terms:terms,p_enabled:enabled,p_expected_revision:revision});},
+    async readOrderReward(orderId){if(!client||!host.conn.storeId)return null;const ctx=context(),result=await ctx.client.rpc('get_order_promotion_reward',{p_store_id:ctx.storeId,p_order_id:orderId});check(ctx);return result;},
+    async confirmOrderCollection(orderId,total){return stateRpc('confirm_store_order_collection',{p_order_id:orderId,p_expected_total:total});},
+    async readPromotionPolicy(){if(!client||!host.conn.storeId)return null;const ctx=context(),result=await ctx.client.rpc('get_store_promotion_policy',{p_store_id:ctx.storeId});check(ctx);return result;},
+    async savePromotionPolicy(policy,revision=null){return stateRpc('set_store_promotion_policy',{p_policy:policy,p_expected_revision:revision});},
     async verifyPromotionDraft(type,draft) {
       if(!client||!host.conn.storeId)throw new SupabaseError(
         'Conectá la tienda e iniciá sesión para verificar costos reales.',{code:'no_session'});

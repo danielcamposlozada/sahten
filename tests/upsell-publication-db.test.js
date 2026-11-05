@@ -22,6 +22,10 @@ beforeAll(async()=>{
  await db.exec('create schema if not exists sahten_catalog_private');
  await db.exec(read('supabase/migrations/20261101190000_upsell_nonce_consumptions.sql'));
  await db.exec(read('supabase/migrations/20261104131316_upsell_review_publication.sql'));
+ await db.exec('create schema if not exists sahten_private;create table sahten_catalog_private.promotion_campaign_states(store_id uuid,campaign_id text,enabled boolean,revision uuid,updated_by uuid,updated_at timestamptz,primary key(store_id,campaign_id));');
+ await db.exec(read('supabase/migrations/20261101000100_promotion_coupons.sql'));
+ await db.exec(read('supabase/migrations/20261105010000_promotion_commercial_policy.sql'));
+ await db.exec(read('supabase/migrations/20261105030000_reviewed_upsell_commercial_policy.sql'));
  await db.exec("create table public.test_committed_upsells(payload jsonb);create function public.sahten_delivery_backend(action text,args jsonb) returns jsonb language plpgsql security definer as $$begin insert into public.test_committed_upsells values(args->'payload');return jsonb_build_object('id','test-order','order',args->'payload');end$$;");
 },60000);
 afterAll(async()=>db?.close());
@@ -99,4 +103,16 @@ describe('Alta de complementos con revisión privada y publicación pausada',()=
   const c=await as('authenticated',()=>ctx(definition));
   await expect(as('authenticated',()=>db.query('select public.review_and_publish_store_upsell($1,$2,NULL,300,$3,$4,$5,false)',[sid,definition,'Revisión sin costo adicional',c.sourceFingerprint,c.existing.revision]))).rejects.toThrow(/review_incomplete/);
  });
+});
+
+it('owner can explicitly configure 25% for a product; reviewed publication uses that policy and fingerprints it',async()=>{
+ const policy={minMarginPct:35,maxTotalPercent:20,products:{baklava:{maxTotalPercent:25,minMarginPct:30}}};
+ await as('authenticated',()=>db.query('select public.set_store_promotion_policy($1,$2,null)',[sid,policy]));
+ const offer={...definition,id:'policy-offer',extraPercent:15};
+ const c=await as('authenticated',()=>ctx(offer));
+ expect(c.requiresException).toBe(false);expect(c.rule).toMatchObject({maxTotalPercent:25,minMarginPct:30});
+ const published=await as('authenticated',()=>publish(offer,c));expect(published.published).toBe(true);
+ const current=(await db.query('select json from public.menus where store_id=$1',[sid])).rows[0].json;
+ await db.query('update public.menus set json=$2 where store_id=$1',[sid,{...current,promotions:{...current.promotions,commercialPolicy:null}}]);
+ expect((await db.query('select json from public.menus where store_id=$1',[sid])).rows[0].json.promotions.commercialPolicy.products.baklava.maxTotalPercent).toBe(25);
 });

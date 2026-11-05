@@ -141,10 +141,9 @@ describe('Verificación de complementos, mejoras y cupones dentro de la app',()=
   const {w,dom,editor}=setup();
   try{
    w.document.querySelector('[data-tab="coupons"]').click();
-   w.document.querySelector('[data-coupon-edit="first_online"]').click();
-   expect(w.document.querySelector('[data-coupon-product="baklava"]').checked).toBe(true);
-   w.document.querySelector('[data-coupon-product="fatay"]').click();
-   w.document.querySelector('[data-coupon-save]').click();
+   expect(w.document.querySelector('[data-loyalty-program="first_online"] [data-loyalty-product="baklava"]').checked).toBe(true);
+   w.document.querySelector('[data-loyalty-program="first_online"] [data-loyalty-product="fatay"]').click();
+   w.document.querySelector('[data-loyalty-program="first_online"] [data-loyalty-draft]').click();
    expect(editor.get().couponPrograms.first_online.eligibleProductIds).toEqual(['baklava','fatay']);
    expect(editor.get().couponPrograms.first_online.enabled).toBe(false);
   }finally{dom.window.close();}

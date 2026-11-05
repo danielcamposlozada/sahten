@@ -52,3 +52,13 @@ describe('Tickets con importes conciliados',()=>{
   expect(x).toContain('&lt;script&gt;');
  });
 });
+
+it('a real issued coupon appears before the review QR with full terms on 48 and 58 mm',()=>{
+ for(const contentMm of [40,48]){
+  const r=sale({promotionTicketSnapshot:{kind:'coupon',code:'SHT-ABCDEFGHJKLMNPQR',expiresOn:'2099-01-01',headline:'Tu segunda compra',terms:'Solo online. Mínimo $40.000. Tope adicional $4.000. Un uso por teléfono.'}});
+  const output=buildReceipt(r,{paper:{contentMm},reviewHtml:'<section>GOOGLE REVIEW</section>'});
+  expect(output.indexOf('SHT-ABCDEFGHJKLMNPQR')).toBeLessThan(output.indexOf('GOOGLE REVIEW'));
+  expect(output).toContain('Tope adicional $4.000');expect(output).toContain('width: '+contentMm+'mm');
+  r.promotionTicketSnapshot.invalidated=true;expect(buildReceipt(r,{paper:{contentMm}})).not.toContain('SHT-ABCDEFGHJKLMNPQR');
+ }
+});

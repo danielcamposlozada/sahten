@@ -1,10 +1,10 @@
 (function(){
  'use strict';
- var menu=JSON.parse(document.getElementById('editorial-menu').textContent),busy=false;
+ var menu=JSON.parse(document.getElementById('editorial-menu').textContent),busy=false,programs=[];
  var benefit=document.querySelector('[data-payment-benefit]'),ads=document.getElementById('live-public-promos');
  function update(){
   if(benefit)benefit.hidden=!editorialBenefitEnabled(menu);
-  if(ads){var html=editorialCampaignMarkup(menu,new Date());if(ads.innerHTML!==html)ads.innerHTML=html;ads.hidden=!html;}
+  if(ads){var html=editorialCampaignMarkup(menu,new Date())+editorialLoyaltyMarkup(menu,programs);if(ads.innerHTML!==html)ads.innerHTML=html;ads.hidden=!html;}
   document.querySelectorAll('[data-home-product]').forEach(function(a){
    var p=menu.products.find(function(p){return p.id===a.dataset.homeProduct&&!p.retired&&!p.upsellOnly});
    a.hidden=!p;if(!p)return;
@@ -19,6 +19,7 @@
   try{var s=menu.supabase,r=await fetch(s.url+'/rest/v1/menus?select=json&store_id=eq.'+encodeURIComponent(s.storeId),{headers:{apikey:s.anonKey,Authorization:'Bearer '+s.anonKey},signal:abort.signal});
    if(!r.ok)throw Error('catalog');var rows=await r.json(),live=rows?.[0]?.json;
    if(Array.isArray(live?.products)){menu.products=live.products;menu.payments=live.payments;menu.promotions=live.promotions;menu.config=live.config;update();}
+   try{var coupons=await fetch(s.url+'/rest/v1/rpc/get_public_loyalty_programs',{method:'POST',headers:{apikey:s.anonKey,Authorization:'Bearer '+s.anonKey,'Content-Type':'application/json'},body:JSON.stringify({p_store_id:s.storeId}),signal:abort.signal});programs=coupons.ok?await coupons.json():[];}catch(e){programs=[];}update();
   }catch(e){/* La copia publicada permanece disponible; el checkout valida al confirmar. */}
   finally{clearTimeout(timer);busy=false;}
  }

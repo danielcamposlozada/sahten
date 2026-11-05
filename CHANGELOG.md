@@ -1,6 +1,22 @@
 # Changelog
 
-## Sin publicar
+## 0.4.50
+
+- Efectivo/transferencia: selector grande de dos posiciones, accesible con teclado y con estado visible, separado de los botones de acción.
+- Cupones propios de Sahten con condiciones distintas al pagar con Mercado Pago; descuento antes del cobro, reserva del intento, canje tras acreditación verificada y liberación de reservas vencidas solo después de comprobar el estado del proveedor. No cambia credenciales ni ejecuta pagos o reembolsos reales.
+
+- Mercado Pago: comisión estimada editable, marcada como provisional y conservada en las cotizaciones nuevas; comparación de capacidad de descuento por medio de pago, sin registrar gastos contables ficticios.
+
+- En preparación: reglas comerciales de promociones visibles y editables, generales y por producto; meta propia de campaña, capacidad de descuento y enlaces a precio/costos. Las cotizaciones conservan la regla histórica aplicada.
+- Programas de primera y segunda compra reconocidos por teléfono sin código; segunda compra emitida al confirmar y cobrar, confirmación de cobro manual sin duplicar ventas, cupones de un uso y revocación del beneficio pendiente por cancelación/reembolso de la compra original. Incluye cupones manuales vinculados al teléfono.
+- Separación de vigencia del programa (puede ser permanente) y de cada cupón; propuestas automáticas de productos que cumplen las reglas, conservación de formularios ante errores y lectura de programas publicados en el tablero.
+- Checkout: fotos también en el resumen, desglose del beneficio por pago y descuento extra, precios promocionales consultados al servidor, verificación del total antes de confirmar y cupones con controles accesibles.
+- Ticket: beneficio de segunda compra antes del QR de reseñas, código compacto y condiciones completas; no se imprimen cupones invalidados. Pendiente prueba física con IT01.
+
+
+- En preparación: fotos en el carrito y complementos, recomendaciones también en el panel de escritorio, campo de cupón con estilos y pasos de compra conectados.
+- Promociones conserva los desplegables y el foco al actualizar sus datos en vivo. La cotización web consulta los costos del canal online; Mostrador conserva sus propios costos.
+
 
 - Web: versiones de recursos de diseño para que una publicación nueva reemplace el CSS/JavaScript guardado por el navegador, sin pedir borrar la caché.
 

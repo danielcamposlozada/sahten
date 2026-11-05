@@ -1,10 +1,11 @@
 import { serviceHoursStatus, serviceHoursMessage } from '../core/service-hours.js';
 import { PaymentError, fail, validUuid, siteUrl, quoteOrder, buildPreference, checkoutUrl, sha256, verifyWebhook, verifiedPayment, cents } from './core.js';
 
+const checkoutIntent=o=>JSON.stringify([o.source,(o.items||[]).map(i=>[String(i.productId||i.id),Number(i.qty)]).sort((a,b)=>a[0].localeCompare(b[0])),String(o.customerName||'').trim(),String(o.customerPhone||'').trim(),String(o.customerEmail||'').trim(),o.source==='delivery'?[o.address,Number(o.lat),Number(o.lng)]:null,o.addressFloor||'',o.addressApartment||'',o.deliveryReference||'',o.notes||'',Number(o.total),o.fatayUpgradeAccepted===true]);
 const uuid = value => { if (!validUuid(value)) fail('Identificador no válido.'); return value; };
 const proof = value => { if (!/^[a-f0-9]{64}$/.test(value || '')) fail('La sesión de compra no es válida.'); return value; };
 const publicAccount = a => a ? { connected: true, mode: a.mode, accountLabel: a.account_label, siteUrl: a.site_url } : { connected: false };
-const publicCheckout = c => ({ id: c.id, mode: c.mode, paymentStatus: c.payment_status, total: c.order.total, currency: 'ARS', checkoutUrl: ['pending','rejected'].includes(c.payment_status) ? c.checkout_url : null });
+const publicCheckout = (c,at=Date.now()) => ({ id: c.id, mode: c.mode, paymentStatus: c.payment_status, total: c.order.total, currency: 'ARS', hasCoupon:!!c.order?.couponCodeDigest,expiresAt:c.expires_at||null,checkoutUrl: ['pending','rejected'].includes(c.payment_status)&&(!c.expires_at||Date.parse(c.expires_at)>at)&&!c.coupon_released_at ? c.checkout_url : null });
 
 /** Inyectable para probar cuentas, importes, permisos y notificaciones sin hacer cobros. */
 export function createPaymentService({ repo, authenticate, fetchImpl = fetch, endpoint, now = () => Date.now(), originKey = async () => 'unknown', resolveDelivery = async () => ({}) }) {
@@ -75,15 +76,36 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
         const active = await repo.run('account', { store_id: sid }); if (!active) fail('Este negocio todavía no habilitó Mercado Pago.', 409, 'not_configured');
         checkOrigin(req, active);
         await limited('store:' + sid, 120); await limited('buyer:' + sid + ':' + await originKey(req), 20);
-        const menu=await repo.menu(sid);
-        if(body.order?.source==='delivery'&&menu.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
-        if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
-        const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
-        const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'mostrador'):null;
-        const order = quoteOrder(menu, body.order || {},{...delivery,trustedCosts,now:now()});
-        if (cents(body.order?.total) !== cents(order.total)) fail('El precio o el envío cambió. Actualizá el menú antes de pagar.', 409, 'menu_changed');
-        const c = await repo.run('reserve', { store_id: sid, account_id: active.id, request_id: requestId, proof_hash: hash, quote_hash: await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})), order });
-        if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c));
+        const code=String(body.couponCode||'').trim().toUpperCase();
+        if(code&&!/^SHT-[A-HJ-NP-Z2-9]{8,30}$/.test(code))fail('Revisá el cupón de Sahten.',409,'coupon_ineligible');
+        const couponDigest=code?await sha256(code):null;
+        const previous=await repo.findCheckout?.(sid,requestId,hash);
+        let order,c;
+        if(previous){
+          if(checkoutIntent(body.order||{})!==checkoutIntent(previous.order)||(previous.order.couponCodeDigest||null)!==couponDigest)fail('Cambió el pedido. Iniciá una compra nueva.',409,'checkout_conflict');
+          if(previous.coupon_released_at)fail('La reserva del cupón ya fue liberada. Iniciá una compra nueva.',409,'checkout_expired');
+          if(previous.payment_status==='paid'||previous.checkout_url)return response(publicCheckout(previous,now()));
+          if(Date.parse(previous.expires_at)<now())fail('Venció esta compra. Volvé al menú.',409,'checkout_expired');
+          order=previous.order;
+          c=await repo.run('reserve',{store_id:sid,account_id:previous.account_id,request_id:requestId,proof_hash:hash,quote_hash:previous.quote_hash,order});
+        }else{
+          const menu=await repo.menu(sid);
+          if(body.order?.source==='delivery'&&menu.delivery?.enabled===false)fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
+          if(['delivery','pickup'].includes(body.order?.source)){const h=serviceHoursStatus(menu,body.order.source,now());if(!h.open)fail(serviceHoursMessage(h),409,h.valid?(body.order.source==='delivery'?'closed':'pickup_closed'):(body.order.source==='delivery'?'hours_invalid':'opening_hours_invalid'));}
+          const delivery=menu.delivery?.deliveryV2?.active&&body.order?.source==='delivery'?await resolveDelivery(sid,menu,body.order):{};
+          const trustedCosts=menu.promotions?.enabled===true?await repo.promotionCosts(sid,'online'):null;
+          let trustedCoupon=null;
+          if(code){
+            trustedCoupon=await repo.lookupCoupon?.(sid,couponDigest,body.order?.customerPhone,requestId);
+            if(!trustedCoupon?.ok||trustedCoupon.status!=='available')fail('El cupón no está disponible para este teléfono.',409,'coupon_unavailable');
+          }
+          order=quoteOrder(menu,body.order||{},{...delivery,trustedCosts,trustedCoupon,now:now()});
+          if(code&&order.promotionSnapshot?.couponId!==trustedCoupon.id)fail('El cupón no aplica a estos productos o al mínimo de compra.',409,'coupon_not_applicable');
+          if(couponDigest)order.couponCodeDigest=couponDigest;
+          if(cents(body.order?.total)!==cents(order.total))fail('El precio o el envío cambió. Actualizá el menú antes de pagar.',409,'menu_changed');
+          c=await repo.run('reserve',{store_id:sid,account_id:active.id,request_id:requestId,proof_hash:hash,quote_hash:await sha256(JSON.stringify({...order,...(order.deliverySnapshot?{deliverySnapshot:{...order.deliverySnapshot,validatedAt:undefined,hours:order.deliverySnapshot.hours?{...order.deliverySnapshot.hours,checkedAt:undefined}:null}}:{})})),order});
+        }
+        if (c.checkout_url || c.payment_status === 'paid') return response(publicCheckout(c,now()));
         const a = await repo.run('secrets', { account_id: c.account_id });
         try {
           let preference = null;
@@ -95,11 +117,29 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
           if (!preference) preference = await mp('/checkout/preferences', a.credentials.accessToken, { method: 'POST', body: JSON.stringify(buildPreference(c, a, endpoint, now())) });
           const target = checkoutUrl(preference);
           await repo.run('preference', { id: c.id, preference_id: String(preference.id), checkout_url: target });
-          return response(publicCheckout({ ...c, checkout_url: target }));
+          return response(publicCheckout({ ...c, checkout_url: target },now()));
         } catch (e) {
           // Un timeout puede haber creado la preferencia: la siguiente reserva busca antes de crear otra.
           await repo.run('release', { id: c.id }); throw e;
         }
+      }
+      if(route==='release-coupon'&&req.method==='POST'){
+        const c=await ownedCheckout(body);await limited('coupon-release:'+c.id,10);
+        if(!c.order?.couponCodeDigest||Date.parse(c.expires_at)>now())fail('La reserva sigue vigente. Podés retomar el pago.',409,'coupon_payment_pending');
+        const a=await repo.run('secrets',{account_id:c.account_id});
+        // A timeout may have created a preference. Always search even if its ID was not saved.
+        const found=await mp('/checkout/preferences/search?external_reference='+c.id,a.credentials.accessToken);
+        const preferences=found.elements||found.results||[];
+        if(c.preference_id&&!preferences.some(p=>p.id===c.preference_id))preferences.push({id:c.preference_id});
+        for(const p of preferences){
+          if(!p.id)fail('No se pudo verificar la preferencia.',409,'coupon_payment_pending');
+          await mp('/checkout/preferences/'+encodeURIComponent(p.id),a.credentials.accessToken,{method:'PUT',body:JSON.stringify({expires:true,expiration_date_from:new Date(now()-3600000).toISOString(),expiration_date_to:new Date(now()-1000).toISOString()})});
+        }
+        const payments=await mp('/v1/payments/search?external_reference='+c.id+'&limit=100',a.credentials.accessToken);
+        if(!Array.isArray(payments.results)||Number(payments.paging?.total??payments.results.length)>payments.results.length)fail('La compra necesita revisión del local.',409,'coupon_payment_pending');
+        for(const p of payments.results){await reconcile(p.id,a,c);if(!['rejected','cancelled'].includes(p.status))fail('El pago sigue en proceso o ya se acreditó. Verificá su estado.',409,'coupon_payment_pending');}
+        await repo.releaseCoupon(c.id,c.proof_hash);
+        return response({released:true});
       }
       if (route === 'status' && req.method === 'POST') {
         let c = await ownedCheckout(body); await limited('status:' + c.id, 120);
@@ -108,7 +148,7 @@ export function createPaymentService({ repo, authenticate, fetchImpl = fetch, en
           await reconcile(body.paymentId, a, c);
           c = await repo.run('checkout', { id: c.id });
         }
-        return response(publicCheckout(c));
+        return response(publicCheckout(c,now()));
       }
       if (route === 'webhook' && req.method === 'POST') {
         const sid = uuid(url.searchParams.get('store_id')), id = url.searchParams.get('data.id');

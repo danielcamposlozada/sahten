@@ -94,6 +94,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       } : {enabled:false},
     // No se publican costos, identificadores de clientes ni cupones privados.
     promotions: promotions?.enabled === true ? {enabled:true,version:1,
+      ...(promotions.commercialPolicy?{commercialPolicy:JSON.parse(JSON.stringify(promotions.commercialPolicy))}:{}),
       // El backend nunca debe aplicar upsells solo por ver el ítem en el carrito.
       // Requiere token HMAC, canje de nonce y revisión de costos privados.
       upsellGuardRequired:true,
@@ -111,7 +112,7 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
             totalDiscountPercent:Number(t.totalDiscountPercent)
           }))}:{}),
       })),
-      // No se expone el umbral de rentabilidad: la validación de costos ocurre en la administración.
+      // Nunca se exponen costos privados. La política comercial se vuelve a comprobar en servidor.
     } : {enabled:false},
     site,
     delivery: {

@@ -5,6 +5,8 @@
 // ═══════════════════════════════════════════════════════════
 import { publicProductDescription, buildSeo, sitePageList, menuSections, menuSchema, brandHeadTags, seoServiceHoursText } from './seo.js';
 
+import {publicPromotionsPageScript} from './public-promotions-page.js';
+import {editorialCampaignMarkup} from './editorial-state.js';
 import { serviceHoursPageScript } from './serviceHoursPage.js';
 import { storyPhotosHtml } from './story.js';
 import storyCss from './web/story.css?raw';
@@ -54,17 +56,19 @@ footer{border-top:1px solid var(--border);padding:22px 16px;color:var(--muted);f
 ${storyCss}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
-</head>
+<style>#page-promotions{margin:32px 0}#page-promotions .public-promo{border-block:1px solid #d5dfd4;padding:20px 0;margin:12px 0}#page-promotions h2{font-size:24px}#page-promotions summary{cursor:pointer;min-height:44px;padding:10px 0;font-weight:700}#page-promotions .combo-cta{display:inline-block;padding:12px 18px;background:var(--primary);color:#fff;border-radius:8px;text-decoration:none}#page-promotions p{line-height:1.6}</style></head>
 <body>
 <header><div class="in"><a class="brand" href="../">${esc(name)}</a><nav aria-label="Secciones">${nav}</nav></div></header>
 <main>
 <p class="crumbs"><a href="../">Inicio</a> › ${esc(page.label)}</p>
 <h1>${esc(h1)}</h1>
 ${body}
+${page.slug==='menu'?'<section id="page-promotions" aria-label="Promociones vigentes">'+editorialCampaignMarkup(menu,new Date(),menu.site?.orderPage?'../pedir/':'../')+'</section>':''}
 <p><a class="cta" href="${menu.site?.orderPage ? '../pedir/' : '../#pedido'}">Pedir online</a>${wa ? `<a class="cta alt" href="${esc(wa)}">Consultar por WhatsApp</a>` : ''}</p>
 </main>
 <footer><div class="in"><div><h2>${esc(name)}</h2>${store.address ? `<p>${esc(store.address)}</p>` : ''}</div>${hours}${wa ? `<div><h2>Contacto</h2><p><a href="${esc(wa)}">WhatsApp ${esc(store.whatsapp)}</a></p></div>` : ''}</div></footer>
 ${serviceHoursPageScript(menu)}
+${page.slug==='menu'?publicPromotionsPageScript(menu,menu.site?.orderPage?'../pedir/':'../'):''}
 </body>
 </html>
 `;

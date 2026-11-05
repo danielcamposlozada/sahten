@@ -86,7 +86,22 @@ export function installOrderActions(w = window) {
       },
     });
   }
-  w.document.addEventListener('click', event => { const b = event.target.closest('[data-order-command]'); if (!b) return; if (b.dataset.orderCommand === 'confirm') confirm(b.dataset.id); else if (b.dataset.orderCommand === 'cancel') cancel(b.dataset.id); });
+  w.document.addEventListener('click', event => { const b = event.target.closest('[data-order-command]'); if (!b) return; if (b.dataset.orderCommand === 'confirm') confirm(b.dataset.id); else if (b.dataset.orderCommand === 'cancel') cancel(b.dataset.id); else if(b.dataset.orderCommand==='collect')collect(b.dataset.id); });
   w.document.addEventListener('change', event => { const select = event.target.closest('[data-order-status]'); if (!select) return; const o = find(select.dataset.orderStatus); if (!o || w.SAHTEN.project.session.readOnly) return; if (select.value === 'cancelado') { select.value = o.status; cancel(o.id); } else { w.orderSetStatus(o.id, select.value); w.openOrderDetail(o.id); } });
-  return { confirm, cancel, minutes: estimateMinutes, snapshot: estimateSnapshot, label: estimateLabel };
+  async function collect(id){
+    const order=find(id),project=w.SAHTEN.project.session.id;
+    if(!order?.remoteId||order.status==='cancelado'||w.SAHTEN.project.session.readOnly||!['efectivo','transferencia'].includes(order.paymentMethod))return;
+    const amount='$'+Number(order.total).toLocaleString('es-AR');
+    const accepted=await w.sahtenConfirm('¿Confirmás que recibiste el pago completo de '+amount+' por '+(order.paymentMethod==='efectivo'?'efectivo':'transferencia')+'?'+(order.paymentMethod==='transferencia'?' Verificá el ingreso en tu cuenta, no solo el comprobante.':'')+' Se registra el cobro del pedido existente, sin duplicar la venta. Si corresponde, se emite el beneficio de segunda compra.',{title:'Confirmar cobro '+number(order),okLabel:'Confirmar cobro'});
+    if(accepted!==true||!same(order,project))return;
+    try{
+      const result=await w.SAHTEN.online.controller.confirmOrderCollection(order.remoteId,order.total);
+      if(!same(order,project))return;
+      if(result?.paid!==true)throw Error('No se confirmó el cobro en el servidor.');
+      Object.assign(order,{paymentProvider:'manual',paymentStatus:'paid',paymentStatusLabel:'Pago acreditado',paymentConfirmedAt:result.confirmedAt});
+      save();refresh();if(w.document.getElementById('order-detail-overlay'))w.openOrderDetail(order.id);
+      w.sahtenToast(result.reward?'Cobro confirmado. El beneficio de segunda compra está listo para el ticket.':'Cobro confirmado, sin duplicar la venta.');
+    }catch(e){w.sahtenAlert(e.message||'No se confirmó el cobro. Revisá la conexión.');}
+  }
+  return { confirm, cancel, collect, minutes: estimateMinutes, snapshot: estimateSnapshot, label: estimateLabel };
 }

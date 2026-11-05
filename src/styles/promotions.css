@@ -161,3 +161,12 @@
 .promo-draft-plan[aria-pressed=true]{font-weight:700}
 
 .promo-overview-status.is-provisional{color:#995b0b;border-color:#ba821e}
+
+/* Clear actions and readable rule controls on small workstations. */
+#promotions-editor .promo-tabs button{min-height:44px;font-size:13px}
+#promotions-editor [data-requirement-action]{display:block;margin-top:8px;font-size:13px;min-height:44px;text-align:left;text-decoration:underline}
+#promotions-editor .promo-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+#promotions-editor [data-policy-margin],#promotions-editor [data-policy-max]{min-width:78px;width:100%;max-width:120px;min-height:44px}
+#promotions-editor [data-loyalty-program] fieldset{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:16px 0;padding:14px;border:1px solid var(--border)}
+#promotions-editor [data-loyalty-program] .promo-field input{min-height:44px}
+@media(max-width:700px){#promotions-editor .promo-form-grid{grid-template-columns:1fr}}

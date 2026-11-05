@@ -1,3 +1,4 @@
+import {couponTerms} from './coupon-terms.js';
 import { scheduleMatches, localDateParts, expiryLabel } from './promotions.js';
 import { ticketCampaignDetails } from './live-promotion-catalog.js';
 
@@ -29,7 +30,7 @@ export function selectTicketAdvertisement(config, {
   if (!alreadyShownCoupon && coupon?.code && coupon?.expiresOn && coupon?.status === 'available') {
     return { kind: 'coupon', couponId: clean(coupon.id, 90), code: clean(coupon.code, 64),
       expiresOn: coupon.expiresOn, headline: clean(coupon.headline || 'Tu próxima compra online'),
-      label: expiryLabel(coupon.expiresOn) };
+      label: expiryLabel(coupon.expiresOn),terms:couponTerms(coupon),channel:coupon.channel||'online' };
   }
   if (config.ticket?.advertise === false) return null;
   // El beneficio utilizado sólo figura en el desglose contable del ticket.
@@ -73,7 +74,7 @@ export function selectTicketAdvertisement(config, {
     campaignId: clean(choice.c.id, 90),
     headline: clean((choice.c.advertising?.message || choice.c.name)
       .replace(/^En tu próxima compra online:\s*/i,''),115),
-    ...(details.terms.length?{terms:clean(details.terms.join(' · '),130)}:{}),
+    ...(details.terms.length?{terms:clean(details.terms.join(' · '),1200)}:{}),
     ...(details.expiry?{expiry:details.expiry}:{}),
     ...(choice.next ? { startsOn: choice.next } : {}),
     selectedAt: new Date(now).toISOString() };
