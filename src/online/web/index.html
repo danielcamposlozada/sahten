@@ -288,7 +288,7 @@ function benefitNotice(){
   var policy=paymentBenefitPolicy(MENU.payments&&MENU.payments.benefit),methods=payMethods().filter(function(k){return k==='efectivo'||k==='transferencia'});
   if(!policy.enabled||!policy.channels.online||!policy.percent||!methods.length)return '';
   var names=methods.map(function(k){return k==='efectivo'?'efectivo':'transferencia'}).join(' o ');
-  return '<div class="catalog-benefit"><strong>'+policy.percent+' % de descuento en productos</strong>Con '+names+'. El envío se calcula aparte. No acumulable con otros descuentos.</div>';
+  return '<div class="catalog-benefit" data-benefit-percent="'+policy.percent+'"><strong>'+policy.percent+' % de descuento en productos</strong>Con '+names+'. El envío se calcula aparte. No acumulable con otros descuentos.</div>';
 }
 function renderOrderSummary(){
   var host=$('order-summary'),old=host.querySelector('.side-scroll'),scroll=old?old.scrollTop:0,ls=lines();

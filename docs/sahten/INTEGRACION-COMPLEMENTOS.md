@@ -145,3 +145,19 @@ PR #113: se prepara la publicación de app y checkout, conservando portada/mapa/
 Primer paquete revisado: 40 productos, 40 fotos remotas, 11 bebidas, seis campañas (dos habilitadas y cuatro pausadas), beneficio habitual del 10 %. Son una lectura puntual, no valores que el despliegue fuerce sobre futuras ediciones. Se preservan los 16 archivos de marca/páginas/fotos y el layout original de portada. No se crean/activan ofertas ni se publica una descripción nueva. Instaladores y hosting aún pendientes de publicación al escribir este apartado.
 
 QA de preparación 0.4.49: **989 pruebas / 134 archivos**, build online y offline, versiones y scripts clásicos correctos. Empaquetado real y validación del manifiesto correctos; el antiguo fallo de cantidad fija no debe eludirse reactivando campañas.
+
+
+## Publicación web 0.4.49 verificada · 4/11/2026
+
+PR #113 integrado con merge normal `064fc36ee94ee1de358bbe36011a83e3fe007354`. Los tres checks de PR terminaron correctamente: CI, paquete de promociones y pruebas nativas de impresión Windows/Mac. La suite local completa pasó **989 pruebas en 134 archivos**, con build online/offline, versiones y scripts clásicos correctos.
+
+Cloudflare Production **eedac5fc-a89a-4c4e-bf42-3147370bfb30**, éxito, workflow **41932214863**. HTTPS confirma el cliente `upsell-offer` / `data-upsell-consult` en `/pedir/`; los 16 recursos preservados coinciden por SHA-256 con el despliegue de origen `91563746-1f00-4bba-8d58-16dbc96856d0`. No se reemplazó el diseño aprobado del mapa, portada, fotos ni páginas informativas.
+
+El paquete conserva el catálogo vivo de la consulta: 40 productos, 40 fotos remotas, 11 bebidas, dos campañas habilitadas (`central-tables`, `weekly-meals`) y cuatro pausadas. Los recuentos anteriores de 46/47/54 son fotografías de otras consultas; no se fuerzan sobre el catálogo actual. No se registró ni activó ninguna oferta nueva: revisión posterior del backend confirma cero revisiones y cero reglas nuevas habilitadas. Falafel continúa pendiente.
+
+Se retiró la ejecución automática del workflow histórico que exigía 54 productos y apagaba promociones. El workflow vigente verifica la huella completa del catálogo, sin cambiar estados, y detiene la publicación ante cambios concurrentes. El cron keepalive sin configuración dejó de ejecutarse automáticamente; el diagnóstico nuevo devuelve **HTTP 200** usando clave pública y `limit=0`, sin recuperar registros. Esta prueba local no afirma que los secretos opcionales de GitHub estén configurados ni que se haya ejecutado manualmente ese workflow.
+
+Guía del flujo: [Complementos 0.4.49](GUIA-COMPLEMENTOS-049.md). Altas pausadas con dueño/admin, compras de prueba completas, sincronización entre equipos instalados y tickets físicos siguen pendientes. Los programas automáticos de cupones, mejora 4U y complementos en delivery/Mostrador no se presentan como operativos.
+
+
+**Instaladores 0.4.49 publicados y comprobados:** workflow `41932214779` completó Windows, Mac universal y publicación correctamente. Release público: https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.49 . El manifiesto `latest.json` debe anunciar 0.4.49 y las tres plataformas firmadas antes de dar por completada su verificación. Esta publicación no acredita una compra productiva, una impresora física ni sincronización entre dos equipos del dueño.

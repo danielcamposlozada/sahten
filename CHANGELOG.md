@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- **Web editorial de Sahten:** integración de la propuesta C con tipografía 3 y mapa aprobado. Home y carta comparten navegación y marca; banner visible del 10% condicionado al beneficio real, fotos aprobadas, videos reproducibles y FAQs completas. Conserva el motor de compra, precios y promociones. Publicación web independiente; no cambia los instaladores 0.4.49 ya publicados.
+
 ## 0.4.49
 
 - **Publicación web sin cifras históricas fijas:** el paquete conserva exactamente productos, precios, imágenes y estados comerciales vigentes. El flujo antiguo sin promociones pasa a manual; no desactiva campañas para actualizar el checkout.

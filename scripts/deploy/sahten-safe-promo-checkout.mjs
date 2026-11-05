@@ -6,9 +6,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createServer} from 'vite';
 import {assertCatalogPreserved,catalogFingerprint} from './catalog-integrity.mjs';
+import {buildEditorialHome,accurateEditorialMenu} from './editorial-home.mjs';
+import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
+import {salesPaused} from '../../src/core/sales-availability.js';
+import {editorialBenefitEnabled,editorialCampaignMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='91563746-1f00-4bba-8d58-16dbc96856d0';
-const PINNED_URL='https://91563746.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='eedac5fc-a89a-4c4e-bf42-3147370bfb30';
+const PINNED_URL='https://eedac5fc.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -47,16 +51,18 @@ async function run(){
  const base=JSON.parse(assets.get('/menu.json').toString('utf8'));
  const live=await liveMenu(base);
  const vite=await createServer({server:{middlewareMode:true},appType:'custom',logLevel:'error'});
- let storefront,menu;
+ let storefront,menu,homepage;
  try{
-  const [{buildIndexHtml},{publishedMenuWithLiveCatalog}]=await Promise.all([
+  const [{buildIndexHtml},{publishedMenuWithLiveCatalog},seo,{serviceHoursPageScript}]=await Promise.all([
    vite.ssrLoadModule('/src/online/publish.js'),
-   vite.ssrLoadModule('/src/online/storefront.js')
+   vite.ssrLoadModule('/src/online/storefront.js'),
+   vite.ssrLoadModule('/src/online/seo.js'),vite.ssrLoadModule('/src/online/serviceHoursPage.js')
   ]);
-  menu=publishedMenuWithLiveCatalog(base,live);
+  menu=accurateEditorialMenu(publishedMenuWithLiveCatalog(base,live));
   menu.supabase={...base.supabase,storeId:base.supabase.storeId};
   check(menu,base,live);
-  storefront=buildIndexHtml(menu,{storefront:true});
+  storefront=buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css"></head>').replace('</body>','<script defer src="editorial/checkout-runtime.js"></script></body>');
+  homepage=await buildEditorialHome(menu,{seoHead:seo.renderSeoHead(menu),hoursScript:serviceHoursPageScript(menu),openingHours:seo.seoServiceHoursText(menu,'opening')});
   for(const required of ['function fatayUpgradePanel()','function couponSection()',
       'function serviceAvailable(','function cartBenefit(','function applyCoupon()',
       'createStorefrontUpsells','data-upsell-consult','upsell-offer']){
@@ -73,17 +79,14 @@ async function run(){
   await fs.mkdir(path.dirname(target),{recursive:true});
   await fs.writeFile(target,content);
  }
- // Parche mínimo de comportamiento: el marketing y las fotos quedan iguales.
- // El landing histórico también consulta el menú vivo; debe excluir upsellOnly.
- let homepage=assets.get('/index.html').toString('utf8');
- const oldFilter="return !p.retired&&(activeCat==='all'||";
- const safeFilter="return !p.retired&&!p.upsellOnly&&(activeCat==='all'||";
- if(homepage.includes(oldFilter)){
-   if(homepage.split(oldFilter).length!==2)throw new Error('Ambiguous landing catalog filter');
-   homepage=homepage.replace(oldFilter,safeFilter);
- }else if(!homepage.includes(safeFilter)){
-   throw new Error('Cannot guarantee hidden Fatay in original homepage');
- }
+ // La portada aprobada reemplaza la maqueta y usa solo el catálogo vigente.
+ await fs.cp('media/sahten-editorial',path.join(output,'editorial'),{recursive:true});
+ await fs.rm(path.join(output,'editorial','home-approved.html'));
+ await fs.rm(path.join(output,'editorial','home-runtime.js'));
+ const state=await fs.readFile('src/online/editorial-state.js','utf8');
+ const runtime=await fs.readFile('media/sahten-editorial/home-runtime.js','utf8');
+ const helpers="const PROMOTIONS_TZ='America/Argentina/Buenos_Aires';\n"+[localDateParts,scheduleMatches,activeCampaigns,salesPaused].map(f=>f.toString()).join('\n');
+ await fs.writeFile(path.join(output,'editorial','home.js'),helpers+'\n'+state.replace(/^import[^\n]*\n/gm,'').replace(/^export\s+/gm,'')+'\n'+runtime);
  await fs.writeFile(path.join(output,'index.html'),homepage);
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
  await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(menu,null,1));
@@ -99,8 +102,8 @@ async function run(){
   hiddenFourIncluded:menu.products.some(p=>p.id==='p1779570052552'),
   fullPriceRecommendations:menu.cartRecommendations?.enabled===true,
   defaultCashBenefit:menu.payments.benefit.percent,
-  homepageLayoutPreserved:true,
-  homepageCatalogGuarded:homepage.includes('!p.upsellOnly')
+  homepageLayoutPreserved:false,approvedEditorialDesign:true,
+  homepageCatalogGuarded:true,editorialAssets:'editorial/',videos:4
  };
  await fs.writeFile(path.join(output,'_deployment-report.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report,null,2));
