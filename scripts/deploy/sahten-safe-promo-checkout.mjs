@@ -11,8 +11,8 @@ import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/pro
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {editorialBenefitEnabled,editorialCampaignMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='eedac5fc-a89a-4c4e-bf42-3147370bfb30';
-const PINNED_URL='https://eedac5fc.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='b1dbee0f-6f1f-441d-82e0-3d17dabad194';
+const PINNED_URL='https://b1dbee0f.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -51,17 +51,21 @@ async function run(){
  const base=JSON.parse(assets.get('/menu.json').toString('utf8'));
  const live=await liveMenu(base);
  const vite=await createServer({server:{middlewareMode:true},appType:'custom',logLevel:'error'});
- let storefront,menu,homepage;
+ let storefront,menu,homepage,menuPage,descriptions;
  try{
-  const [{buildIndexHtml},{publishedMenuWithLiveCatalog},seo,{serviceHoursPageScript}]=await Promise.all([
+  const [{buildIndexHtml},{publishedMenuWithLiveCatalog},seo,{serviceHoursPageScript},{buildSitePages}]=await Promise.all([
    vite.ssrLoadModule('/src/online/publish.js'),
    vite.ssrLoadModule('/src/online/storefront.js'),
-   vite.ssrLoadModule('/src/online/seo.js'),vite.ssrLoadModule('/src/online/serviceHoursPage.js')
+   vite.ssrLoadModule('/src/online/seo.js'),vite.ssrLoadModule('/src/online/serviceHoursPage.js'),vite.ssrLoadModule('/src/online/pages.js')
   ]);
   menu=accurateEditorialMenu(publishedMenuWithLiveCatalog(base,live));
   menu.supabase={...base.supabase,storeId:base.supabase.storeId};
   check(menu,base,live);
   storefront=buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css"></head>').replace('</body>','<script defer src="editorial/checkout-runtime.js"></script></body>');
+  menuPage=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
+  if(!menuPage)throw Error('Missing indexable menu');
+  descriptions=menu.products.filter(p=>seo.publicProductDescription(menu,p)).length;
+  if(descriptions!==menu.products.length)throw Error('A published product has no description');
   homepage=await buildEditorialHome(menu,{seoHead:seo.renderSeoHead(menu),hoursScript:serviceHoursPageScript(menu),openingHours:seo.seoServiceHoursText(menu,'opening')});
   for(const required of ['function fatayUpgradePanel()','function couponSection()',
       'function serviceAvailable(','function cartBenefit(','function applyCoupon()',
@@ -89,11 +93,12 @@ async function run(){
  await fs.writeFile(path.join(output,'editorial','home.js'),helpers+'\n'+state.replace(/^import[^\n]*\n/gm,'').replace(/^export\s+/gm,'')+'\n'+runtime);
  await fs.writeFile(path.join(output,'index.html'),homepage);
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
+ await fs.writeFile(path.join(output,'menu/index.html'),menuPage);
  await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(menu,null,1));
  const report={
   status:'ready-for-safe-checkout-review',sourceDeploymentId:SOURCE_DEPLOYMENT_ID,
-  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json'].includes(f)),
-  generated:['/index.html','/pedir/index.html','/menu.json'],
+  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json','/menu/index.html'].includes(f)),
+  generated:['/index.html','/pedir/index.html','/menu.json','/menu/index.html'],descriptions,
   products:menu.products.length,remotePhotos:menu.products.filter(p=>p.image?.startsWith('https://')).length,
   beverages:menu.products.filter(p=>p.category==='Bebidas').length,
   campaigns:(menu.promotions?.campaigns||[]).map(p=>({id:p.id,enabled:p.enabled===true})),

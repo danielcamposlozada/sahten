@@ -738,3 +738,14 @@ Comprobación final HTTPS: cuatro MP4 responden **206** con rangos; mapa, logo y
 Chrome sobre el dominio: mapa cargado con skin clara; 11 FAQ presentes; imágenes sin errores; tutorial reproduce con `readyState=4` y sin error; home y carta de celular sin desborde. Carrito en dos pasos comprobado: Hummus $9.900 muestra $8.910 con efectivo/transferencia, y vuelve a $9.900 con Mercado Pago. No se pulsó confirmar ni se creó un pedido/pago; carrito de comprobación vaciado. Alternativas de retiro/delivery y todos los videos se habían probado además en el paquete local. Se restableció el tamaño original de Chrome.
 
 Evidencias locales: `entregables/web-editorial-2026-11-04/` en la carpeta de trabajo exterior al repositorio (capturas de home, celular y mapa, más `verificacion-produccion.json`). La app continúa **0.4.49**; esta publicación no genera otra versión de instaladores. Ver la advertencia de exportación estándar y el flujo de mantenimiento en [PUBLICAR.md](PUBLICAR.md#sahten-home-editorial-y-carta-publicadas-desde-el-repositorio--4112026).
+
+
+### Corrección de descripciones y banner preparada · 4/11/2026
+
+El dueño detectó que la carta nueva no mostraba las descripciones de las propuestas. El catálogo público actual las trae vacías; el diseño no las oculta. Se recuperan los textos cotejados del 30/10 en un registro editorial por ID y nombre, exclusivo de la web de Sahten. Para Kibbe Pequeño se cotejan carne/trigo/cebolla/nueces/especias y para Tabla para Compartir los componentes de su receta local del 4/11, sin publicar cantidades de rendimiento ni datos de costo. Las bebidas se describen únicamente con marca/presentación del catálogo.
+
+La fuente actual del negocio tiene prioridad; el respaldo solo completa descripciones vacías del mismo ID y nombre. Se usa en tarjetas, buscador, contenido estático de `/menu/` y MenuItem estructurados, conservando sin alteración la huella comercial del catálogo. La consulta periódica incorpora cambios de descripción sin cambiar el precio del carrito. No se escriben tablas `menus/projects/orders`, ni se modifica el archivo del dueño. La integración para guardar textos desde la app sigue siendo un requisito separado.
+
+El botón de fotos deja de superponerse al banner: las dos fotos siguen alternando. Se mantiene un control disponible al enfocarlo con teclado y la alternativa del sistema de movimiento reducido. Pendiente: tests completos, QA y deploy correctivo; luego revisión de indexación en Google Search Console solicitada por el dueño.
+
+QA correctivo local: **995 pruebas / 135 archivos** y build correctos. Paquete con 37 productos / 37 descripciones, huella comercial intacta y 15 recursos originales preservados. Chrome muestra todos los textos en tarjetas, búsqueda por «tahini» con 11 resultados y carta de 390 px sin desbordes. El botón no se superpone al banner; movimiento reducido y control de teclado conservados.

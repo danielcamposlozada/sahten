@@ -2,6 +2,9 @@
 
 ## Sin publicar
 
+- Web de Sahten: restaura las descripciones revisadas en la carta, búsqueda y página indexable del menú; conserva los textos al consultar el catálogo vivo, con prioridad de futuras descripciones del negocio. El banner mantiene la rotación de fotos sin un botón superpuesto.
+
+
 - **Web editorial de Sahten:** integración de la propuesta C con tipografía 3 y mapa aprobado. Home y carta comparten navegación y marca; banner visible del 10% condicionado al beneficio real, fotos aprobadas, videos reproducibles y FAQs completas. Conserva el motor de compra, precios y promociones. Publicación web independiente; no cambia los instaladores 0.4.49 ya publicados.
 
 ## 0.4.49
