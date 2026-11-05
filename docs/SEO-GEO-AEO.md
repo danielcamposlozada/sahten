@@ -749,3 +749,16 @@ La fuente actual del negocio tiene prioridad; el respaldo solo completa descripc
 El botón de fotos deja de superponerse al banner: las dos fotos siguen alternando. Se mantiene un control disponible al enfocarlo con teclado y la alternativa del sistema de movimiento reducido. Pendiente: tests completos, QA y deploy correctivo; luego revisión de indexación en Google Search Console solicitada por el dueño.
 
 QA correctivo local: **995 pruebas / 135 archivos** y build correctos. Paquete con 37 productos / 37 descripciones, huella comercial intacta y 15 recursos originales preservados. Chrome muestra todos los textos en tarjetas, búsqueda por «tahini» con 11 resultados y carta de 390 px sin desbordes. El botón no se superpone al banner; movimiento reducido y control de teclado conservados.
+
+
+### Publicación correctiva de descripciones · 4/11/2026
+
+PR #115 integrado (`d301dc24eee4d31b939f684b6c0fe4ed78417ec3`), workflow **41942243279**. Producción **006f0888-3968-4dec-b80b-7af98e69bc84**, éxito. HTTPS y Chrome confirman **37 tarjetas / 37 descripciones**, también presentes en HTML y datos MenuItem de `/menu/`. La huella comercial coincide con el reporte.
+
+La comprobación visual detectó que Chrome reutilizaba el CSS anterior y todavía dibujaba el botón superpuesto aunque el archivo nuevo ya lo oculta. Se agrega versión a las URLs de CSS/JS de la home y la carta; es corrección de entrega/caché, sin cambiar importes o calendario. No declarar quitado el botón en todos los clientes hasta verificar con la misma sesión de Chrome.
+
+Indexación: Search Console accesible en la cuenta del dueño, sin propiedad Sahten existente. Google presenta verificación DNS TXT. El alta del TXT fue **rechazada por la revisión automática por faltar autorización específica de DNS**; no se creó el registro ni se intentó otro método para eludirlo. Autorización solicitada en el chat. Robots permite rastreo, sitemap enumera las cinco URLs públicas canónicas y `/menu/` no tiene noindex. Las fechas lastmod del sitemap preservado corresponden al 31/10; pendiente reconciliarlas con las modificaciones editoriales sin alterar las páginas no cambiadas. No se ha enviado sitemap a Search Console ni solicitado indexación todavía.
+
+El paquete correctivo de caché también actualiza `lastmod` de home y menú al momento de reconstruirlos; conserva las fechas y archivos de las otras tres páginas. No se actualizan fechas indiscriminadamente para simular contenido nuevo.
+
+QA de caché: **996 pruebas / 135 archivos**, build y paquete correctos; Chrome en la misma sesión carga los CSS con versión y confirma `clip-path: inset(50%)` en el control no enfocado, sin botón superpuesto. 37 descripciones y huella comercial conservadas; pendiente deploy del ajuste final de entrega.

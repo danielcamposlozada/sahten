@@ -2,6 +2,9 @@
 
 ## Sin publicar
 
+- Web: versiones de recursos de diseño para que una publicación nueva reemplace el CSS/JavaScript guardado por el navegador, sin pedir borrar la caché.
+
+
 - Web de Sahten: restaura las descripciones revisadas en la carta, búsqueda y página indexable del menú; conserva los textos al consultar el catálogo vivo, con prioridad de futuras descripciones del negocio. El banner mantiene la rotación de fotos sin un botón superpuesto.
 
 
