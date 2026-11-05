@@ -727,3 +727,14 @@ La carta conserva buscador, cantidades, dos pasos, retiro/delivery, datos, vuelt
 QA de preparación: **993 pruebas / 135 archivos**, build correcto y manifiesto de catálogo idéntico al servidor. Chrome: home sin desbordes en 360, 390, 640 y 1024 px; mapa cargado; cuatro videos con H.264/AAC y reproducción comprobada. Movimiento de entrada 300 ms (210 en móvil), ease-out, sin ocultar contenido si falta JS y con alternativa reducida. Falta comprobación final del dominio después del deploy; no se envían pedidos de clientes como prueba.
 
 Esta integración es una publicación del sitio de Sahten desde el workflow, **no un CMS nuevo ni una publicación de instaladores**. El editor general white label y la futura edición automática de todas las secciones siguen siendo un trabajo separado. No escribir estos cambios directamente en `projects/menus/orders` para modificar la web.
+
+
+### Web editorial publicada y verificada · 4/11/2026 (Argentina)
+
+PR **#114** integrado con merge normal `db868fd59e9fbe854b4adac6a3a3b2fe051c576a`. CI y paquete del PR correctos; workflow de producción **41939695284** terminó con éxito, incluida la comprobación posterior al despliegue. Cloudflare Production **b1dbee0f-6f1f-441d-82e0-3d17dabad194**, https://b1dbee0f.sahten-menu.pages.dev, activo en https://sahten.online. El origen conservado para reversión es `eedac5fc-a89a-4c4e-bf42-3147370bfb30`.
+
+Comprobación final HTTPS: cuatro MP4 responden **206** con rangos; mapa, logo y fuente responden **200**. El catálogo publicado contiene **37 productos** y su huella comercial coincide tanto con el reporte de despliegue como con la lectura pública vigente de Supabase. Se conservan las dos campañas habilitadas y las otras cuatro pausadas; solo la campaña cuyo calendario está vigente se anuncia en la home. No se crean ni activan ofertas nuevas.
+
+Chrome sobre el dominio: mapa cargado con skin clara; 11 FAQ presentes; imágenes sin errores; tutorial reproduce con `readyState=4` y sin error; home y carta de celular sin desborde. Carrito en dos pasos comprobado: Hummus $9.900 muestra $8.910 con efectivo/transferencia, y vuelve a $9.900 con Mercado Pago. No se pulsó confirmar ni se creó un pedido/pago; carrito de comprobación vaciado. Alternativas de retiro/delivery y todos los videos se habían probado además en el paquete local. Se restableció el tamaño original de Chrome.
+
+Evidencias locales: `entregables/web-editorial-2026-11-04/` en la carpeta de trabajo exterior al repositorio (capturas de home, celular y mapa, más `verificacion-produccion.json`). La app continúa **0.4.49**; esta publicación no genera otra versión de instaladores. Ver la advertencia de exportación estándar y el flujo de mantenimiento en [PUBLICAR.md](PUBLICAR.md#sahten-home-editorial-y-carta-publicadas-desde-el-repositorio--4112026).

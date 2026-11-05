@@ -169,3 +169,15 @@ Cloudflare sigue alojando los archivos de diseño; la tienda lee las condiciones
 
 
 Despliegue Production `f68ab9a6-c165-422f-8cab-4ddc3b7a9cfc`, correcto. Los 19 archivos coinciden por SHA-256, cuatro fotos públicas responden y se conservan los 28 productos vigentes. Desde la app se aplicaron solo los cambios confirmados: mínimos Z1/Z2 $15.000 y delivery hasta las 22:00. Los próximos ajustes se hacen con el botón del bloque correspondiente y su confirmación, sin generar/subir archivos. El rediseño visual elegido (opción 3) sigue en propuesta y no se publicó con esta actualización.
+
+
+## Sahten: home editorial y carta publicadas desde el repositorio · 4/11/2026
+
+La home elegida (Codex C, tipografía 3 y mapa aprobado) se arma con `scripts/deploy/editorial-home.mjs` y `media/sahten-editorial/`. El workflow `sahten-promo-checkout.yml` genera y comprueba la carpeta antes de subirla a Cloudflare. Es una integración específica de Sahten; la plantilla general de la app conserva su editor white label.
+
+- Productos, disponibilidad y promociones usan el catálogo público vigente; la home consulta cambios cada 10 segundos y al recuperar foco. Los banners no activan ofertas ni cambian sus condiciones.
+- Horarios y delivery siguen sus controles en vivo. Guardar/aplicar en web no requiere subir otra carpeta de diseño.
+- Para cambiar la composición, videos, fotos del banner o mapa de esta home se actualizan los recursos y se publica el sitio desde el workflow. La edición de todas estas secciones desde la app todavía no es un CMS integrado.
+- **No reemplazar a mano esta carpeta por una exportación estándar de la app:** esa exportación puede volver al diseño general anterior. Para cambios de catálogo usar las acciones de nube de la app; para diseño usar este empaquetador, reconciliando primero el despliegue de origen fijado en sus controles.
+
+La publicación toma una instantánea comercial actual y comprueba que no haya cambiado antes del deploy. Si otro equipo edita el catálogo mientras se arma el paquete, se detiene para regenerarlo; no fuerza importes o cantidades históricos.
