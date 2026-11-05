@@ -1,6 +1,6 @@
 # Promociones: circuito completo
 
-Estado: implementación en curso, sin cambios comerciales ni migraciones aplicadas en producción.
+Estado vigente: controles de 0.4.50 publicados en app, web y servidor el 5/11/2026; programas nuevos todavía sin configurar/activar. Las secciones de preparación inferiores son históricas; prevalece el estado de publicación al pie.
 
 ## Decisiones del dueño
 
@@ -87,3 +87,14 @@ Autorización del dueño: «Continua con la implementación, verifica y publica�
 Verificación final de código: 1032 pruebas en 144 archivos, compilación y scripts clásicos correctos. Selector de efectivo/transferencia como radio nativo grande, dos posiciones, estado visible y foco por teclado. Cotización con cupón de Sahten antes de enviar el total final a Mercado Pago; reserva atómica, pago pendiente sin consumo, acreditación idempotente, orden basada en la cotización histórica, recuperación de abandono sin liberar fondos en proceso. Reimpresión no ofrece recompensas ya inelegibles; confirmar cobro también es accesible desde el detalle histórico de pedidos web.
 
 Cloudflare de origen cotejado mediante su API: 224be689-2a50-4ece-bb11-434a0724f54d. Se actualiza el pin del empaquetador y de su guardia CI a esa versión, conservando la protección contra pisar una publicación concurrente. No usar la copia 006f0888 como origen nuevo.
+
+## Estado que prevalece · publicación del 5/11/2026
+
+- PR #117 integrado con merge normal: `270b1b513158d3a7d0e9279e37517ba1b9c5828f`. CI, paquete web y comprobaciones de impresión nativa aprobados antes del merge.
+- El dueño autorizó específicamente cinco migraciones y ambas funciones tras el bloqueo inicial de revisión. Aplicadas; delivery v20 y pagos v13 activos. La lectura de permisos confirma aislamiento de cupones privados y cero programas nuevos configurados. Un fallo temporal del revisor por límite de uso impidió una consulta; al retomar, esa consulta se ejecutó y verificó correctamente.
+- Web Production: `e3d16cbf-08b9-4480-a654-02a0241bd647`, 37 productos/fotos/descripciones y catálogo comercial intacto. Home, tienda, carta y sitemap 200. Chrome valida el selector real y campo de cupón con Mercado Pago. No se crearon pedidos/pagos para comprobarlo.
+- Guía de operación agregada en `docs/GUIA-PROMOCIONES-Y-CUPONES.md`. Activar programas nuevos sigue requiriendo participantes y condiciones revisadas en la app; no se declara que ya estén activos.
+- Presentación privada para socios preparada fuera del repositorio público: `../entregables/presentacion-socios-2026-11-05/presentacion-sahten.html`. Ocho secciones, ejemplos de cálculo, ticket y escenarios editables de 3/6 meses. Datos iniciales de simulación expresamente hipotéticos; no se calcula resultado tras costos cuando falta el costo. Verificada con DOM y Chrome, también a 390px. No publicada en internet.
+- Instaladores 0.4.50 todavía en compilación al registrar esta entrada. Actualizar al confirmar release, firmas y plataformas.
+
+- Instaladores confirmados: release v0.4.50 público, ejecución `42042436023` correcta, Windows x64 y Mac universal. El actualizador anuncia la versión y las tres plataformas con firmas presentes. Guía de alta de programas en `docs/GUIA-PROMOCIONES-Y-CUPONES.md`. No se activaron cupones sobre productos sin revisión.
