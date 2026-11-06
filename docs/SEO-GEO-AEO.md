@@ -802,3 +802,8 @@ API verificada sin compra: programas públicos 200 (vacíos porque aún no se ac
 **Instaladores 0.4.50 publicados y verificados:** la ejecución `42042436023` terminó correctamente para Windows x64 y macOS universal (Apple Silicon e Intel). Release público `https://github.com/danielcamposlozada/sahten/releases/tag/v0.4.50`. El manifiesto `latest.json` anuncia 0.4.50 con sus plataformas y firmas de actualización; no confundir estas firmas con notarización de Apple. La web y el servidor ya están actualizados. Programas nuevos continúan sin activación automática; guía de alta en Promociones y cupones.
 
 Comprobación adicional del actualizador Mac: descarga completa 200, 9.451.942 bytes; SHA-256 `d15f3b130b589a4b8be28d06c03434773ea3ddec54f85f5d7aa4c4f8759d8f1b`, coincidente con el asset del release. MSI de Windows: 200, 5.201.920 bytes. El primer HEAD de Mac devolvió 504 temporal; la descarga completa posterior respondió correctamente.
+
+
+### IndexNow: integración preparada · 5/11/2026
+
+El propietario solicitó completar la presencia en buscadores. El paquete editorial incluye el archivo público de verificación `c8df0a44121ddb43eaed162d5a0362e0.txt`, cuyo contenido es la misma clave pública. Tras un deploy de producción correctamente comprobado, el workflow avisa a IndexNow de las páginas regeneradas `/` y `/menu/`; el aviso no garantiza indexación. Si IndexNow falla, no revierte la tienda, y el log del workflow conserva el error. Las actualizaciones de catálogo dinámico sin deploy aún no envían aviso automático. Se conserva el catálogo público y se reconcilió el despliegue de origen e3d16cbf; no se modifican pedidos, precios, credenciales ni Supabase. Publicación y recepción pendientes de verificar.

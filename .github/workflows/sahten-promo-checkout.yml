@@ -5,6 +5,7 @@ on:
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
       - "scripts/deploy/catalog-integrity.mjs"
+      - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
       - "src/online/editorial-state.js"
       - "media/sahten-editorial/**"
@@ -14,6 +15,7 @@ on:
     paths:
       - "scripts/deploy/sahten-safe-promo-checkout.mjs"
       - "scripts/deploy/catalog-integrity.mjs"
+      - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
       - "src/online/editorial-state.js"
       - "media/sahten-editorial/**"
@@ -54,7 +56,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'224be689-2a50-4ece-bb11-434a0724f54d');
+          assert.equal(r.sourceDeploymentId,'e3d16cbf-08b9-4480-a654-02a0241bd647');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -73,6 +75,8 @@ jobs:
           assert.ok(html.includes('function couponSection()'));
           assert.ok(html.includes('function fatayUpgradePanel()'));
           assert.ok(html.includes("if(rule===null)rule={type:'always'}"),'Campañas sin calendario deben cotizar');
+          const {INDEXNOW_KEY}=await import('./scripts/deploy/indexnow.mjs');
+          assert.equal(fs.readFileSync('sahten-promo-export/'+INDEXNOW_KEY+'.txt','utf8'),INDEXNOW_KEY);
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
           assert.ok(home.includes('data-editorial="sahten-c-3"'));
           assert.ok(home.includes('Nos encontramos'));
@@ -94,6 +98,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.deploy == true && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: sahten-online-guarded-promo-checkout
@@ -164,6 +169,9 @@ jobs:
           done
           echo "::error::No se pudo confirmar el checkout publicado."
           exit 1
+      - name: Avisar a IndexNow después de verificar producción
+        continue-on-error: true
+        run: node scripts/deploy/indexnow.mjs
       - name: Rollback de emergencia al deploy confirmado si falla verificación posterior
         if: ${{ failure() && steps.deploy_pages.outcome == 'success' }}
         env:

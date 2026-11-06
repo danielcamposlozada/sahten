@@ -5,14 +5,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createServer} from 'vite';
+import {INDEXNOW_KEY} from './indexnow.mjs';
 import {assertCatalogPreserved,catalogFingerprint} from './catalog-integrity.mjs';
 import {buildEditorialHome,accurateEditorialMenu,editorialAssetVersion,editorialSitemap} from './editorial-home.mjs';
 import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {editorialBenefitEnabled,editorialCampaignMarkup,editorialLoyaltyMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='224be689-2a50-4ece-bb11-434a0724f54d';
-const PINNED_URL='https://224be689.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='e3d16cbf-08b9-4480-a654-02a0241bd647';
+const PINNED_URL='https://e3d16cbf.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -91,6 +92,7 @@ async function run(){
  const runtime=await fs.readFile('media/sahten-editorial/home-runtime.js','utf8');
  const helpers="const PROMOTIONS_TZ='America/Argentina/Buenos_Aires';\n"+[localDateParts,scheduleMatches,activeCampaigns,salesPaused].map(f=>f.toString()).join('\n');
  await fs.writeFile(path.join(output,'editorial','home.js'),helpers+'\n'+state.replace(/^import[^\n]*\n/gm,'').replace(/^export\s+/gm,'')+'\n'+runtime);
+ await fs.writeFile(path.join(output,INDEXNOW_KEY+'.txt'),INDEXNOW_KEY);
  await fs.writeFile(path.join(output,'index.html'),homepage);
  await fs.writeFile(path.join(output,'sitemap.xml'),editorialSitemap(assets.get('/sitemap.xml').toString('utf8'),menu.site.seo.url));
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
