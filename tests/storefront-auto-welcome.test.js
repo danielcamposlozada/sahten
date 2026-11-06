@@ -54,7 +54,9 @@ it('detecta teléfono argentino y aplica automáticamente el descuento validado 
   const ph=d.querySelector('#f-phone');ph.value='11 5555 1234';ph.dispatchEvent(new dom.window.Event('input',{bubbles:true}));
   await vi.waitFor(()=>expect(calls.some(x=>x.target.includes('/loyalty'))).toBe(true),{timeout:2500});
   await vi.waitFor(()=>expect(calls.some(x=>x.target.includes('/quote'))).toBe(true),{timeout:2500});
-  await vi.waitFor(()=>expect(d.querySelector('.checkout-totals')?.textContent).toContain('6.000'),{timeout:2500});
+  await vi.waitFor(()=>expect(d.querySelector('.checkout-totals')?.textContent).toContain('34.000'),{timeout:2500});
+  expect(d.querySelector('.checkout-totals')?.textContent).toContain('4.000');
+  expect(d.querySelector('.checkout-totals')?.textContent).toContain('2.000');
   expect(d.querySelector('#coupon-code')?.value).toBe(coupon);
   expect(d.querySelector('.checkout-totals')?.textContent).toContain('34.000');
  }finally{dom.window.close();}
@@ -65,7 +67,8 @@ it('si la oferta no es elegible, no deja el checkout bloqueado por un código au
   await reachPayment(d);
   const ph=d.querySelector('#f-phone');ph.value='11 5555 1234';ph.dispatchEvent(new dom.window.Event('input',{bubbles:true}));
   await vi.waitFor(()=>expect(calls.some(x=>x.target.includes('/quote'))).toBe(true),{timeout:2500});
-  await vi.waitFor(()=>expect(d.querySelector('#coupon-code')?.value).toBe(''),{timeout:2500});
-  expect(d.querySelector('#sheet')?.textContent).toContain('todavía no aplica');
+  await vi.waitFor(()=>expect(d.querySelector('#sheet')?.textContent).toContain('todavía no aplica'),{timeout:2500});
+  expect(d.querySelector('#coupon-code')?.value).toBe('');
+  await new Promise(resolve=>setTimeout(resolve,40));
  }finally{dom.window.close();}
 },12000);
