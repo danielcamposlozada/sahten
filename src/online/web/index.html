@@ -184,7 +184,7 @@ var deliveryServerOffset=0,addressGeneration=0,addressAbort=null,addressSuggest=
 var deliveryRoute=null,deliveryAuthorization=null,deliveryQuoteId=null,deliveryGeneration=0,deliveryLoading=false,deliveryError='',deliverySubmission=null,deliveryUpdateNotice='';
 var fatayUpgradeAccepted=false;
 var publicLoyaltyPrograms=[],publicProgramsBusy=false,publicProgramsAt=0,publicProgramsLoaded=false,publicBenefitsFingerprint='';
-var loyaltyOffer=null,loyaltyLookupPhone='',loyaltyBusy=false,catalogOffers={},catalogOffersKey='',catalogOffersBusy=false;
+var loyaltyOffer=null,loyaltyLookupPhone='',loyaltyBusy=false,loyaltyGeneration=0,loyaltyInputTimer=null,autoWelcomeCode='',autoWelcomePhone='',autoWelcomeAttempt='',catalogOffers={},catalogOffersKey='',catalogOffersBusy=false;
 var serverCartQuote=null,serverCartQuoteKey='',serverCartQuoteBusy=false,serverCartQuoteMessage='';
 var couponCode='',couponQuote=null,couponMessage='',couponBusy=false;
 var MENU=null, cart={}, type='delivery', serviceSelectionManual=false, geo=null, ship=null, pay='', form={name:'',phone:'',email:'',address:'',addressFloor:'',addressApartment:'',deliveryReference:'',cashTendered:'',notes:''}, step='cart', sending=false, lastOrder=null, sugTimer=null, sugs=[];
@@ -548,12 +548,51 @@ function upsellSection(){
 }
 function lookupPhoneBenefit(){
   var phone=normalizeLoyaltyPhone(form.phone);
-  if(!phone||!sb()||loyaltyBusy||phone===loyaltyLookupPhone)return;
+  if(!phone||!sb()||phone===loyaltyLookupPhone)return;
+  var generation=++loyaltyGeneration;
   loyaltyBusy=true;loyaltyLookupPhone=phone;
-  deliveryApi('loyalty',{phone:phone}).then(function(v){
-    if(phone!==normalizeLoyaltyPhone(form.phone))return;
+  return deliveryApi('loyalty',{phone:phone}).then(function(v){
+    if(generation!==loyaltyGeneration||phone!==normalizeLoyaltyPhone(form.phone))return;
     loyaltyOffer=v.benefit?{phone:phone,benefit:v.benefit}:null;
-  }).catch(function(){if(phone===normalizeLoyaltyPhone(form.phone)){loyaltyOffer=null;loyaltyLookupPhone='';}}).finally(function(){loyaltyBusy=false;if(step==='details')sheetKeepFocus();});
+  }).catch(function(){
+    if(generation===loyaltyGeneration&&phone===normalizeLoyaltyPhone(form.phone)){
+      loyaltyOffer=null;loyaltyLookupPhone='';
+    }
+  }).finally(function(){
+    if(generation!==loyaltyGeneration)return;
+    loyaltyBusy=false;if(step==='details')sheetKeepFocus();
+  });
+}
+function scheduleWelcomeLookup(){
+  clearTimeout(loyaltyInputTimer);
+  var phone=normalizeLoyaltyPhone(form.phone);
+  if(phone!==loyaltyLookupPhone){
+    loyaltyGeneration++;loyaltyBusy=false;loyaltyLookupPhone='';loyaltyOffer=null;
+  }
+  // A manually entered coupon belongs to the customer; only clear an automatically selected code.
+  if(autoWelcomeCode&&autoWelcomePhone!==phone){
+    if(couponCode.trim().toUpperCase()===autoWelcomeCode){
+      couponCode='';couponQuote=null;couponMessage='Revisaremos el beneficio para este teléfono.';
+    }
+    autoWelcomeCode='';autoWelcomePhone='';autoWelcomeAttempt='';
+    refreshTotals();refreshSend();
+  }
+  if(phone&&sb())loyaltyInputTimer=setTimeout(lookupPhoneBenefit,650);
+}
+function autoApplyWelcome(){
+  // A phone identifies the account, but the server must confirm actual eligibility,
+  // allowed payment method, cart threshold and one-time redemption.
+  if(step!=='details'||couponBusy||!loyaltyOffer
+    ||loyaltyOffer.phone!==normalizeLoyaltyPhone(form.phone)
+    ||!couponForMethod(loyaltyOffer.benefit,pay)
+    ||type==='delivery'&&(!geo||deliveryLoading))return;
+  var code=String(loyaltyOffer.benefit.code||'').trim().toUpperCase();
+  if(!/^SHT-[A-HJ-NP-Z2-9]{8,30}$/.test(code))return;
+  if(couponCode.trim()&&couponCode.trim().toUpperCase()!==autoWelcomeCode)return;
+  var key=JSON.stringify([couponFingerprint(pay),code]);
+  if(autoWelcomeAttempt===key)return;
+  autoWelcomeAttempt=key;couponCode=code;autoWelcomeCode=code;autoWelcomePhone=loyaltyOffer.phone;
+  applyCoupon();
 }
 function loyaltyBenefitHtml(){
   if(!loyaltyOffer||loyaltyOffer.phone!==normalizeLoyaltyPhone(form.phone)||!couponForMethod(loyaltyOffer.benefit,pay))return '';
@@ -597,6 +636,11 @@ function applyCoupon(){
     couponMessage='Cupón verificado para este pedido.';
   }).catch(function(e){
     couponQuote=null;couponMessage=e.message||'No fue posible validar este cupón.';
+    // A non-eligible automatic offer cannot block the customer from completing their order.
+    if(autoWelcomeCode===code&&couponCode.trim().toUpperCase()===code){
+      couponCode='';autoWelcomeCode='';autoWelcomePhone='';
+      couponMessage='El beneficio de bienvenida todavía no aplica: '+couponMessage;
+    }
   }).finally(function(){couponBusy=false;recalcDelivery();sheet();});
 }
 function promotionQuoteFingerprint(method){return couponFingerprint(method)+'|'+Math.floor(Date.now()/300000)+'|'+activeCampaigns(MENU.promotions||{},new Date(),'online').map(function(c){return c.id}).join(',');}
@@ -692,17 +736,23 @@ function sheet(){
   setSheetContent(body,footer);
   var bind=function(id,key){var el=$(id);if(el)el.addEventListener('input',function(){form[key]=el.value;refreshSend();});};
   if($('sheet').querySelector('[data-promotion-retry]'))$('sheet').querySelector('[data-promotion-retry]').onclick=function(){serverCartQuoteKey='';refreshCartQuote();};
-  if($('f-phone'))$('f-phone').addEventListener('blur',lookupPhoneBenefit);
   if($('sheet').querySelector('[data-loyalty-apply]'))$('sheet').querySelector('[data-loyalty-apply]').onclick=function(){couponCode=loyaltyOffer.benefit.code;applyCoupon();};
-  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');bind('f-floor','addressFloor'); 
+  bind('f-name','name');bind('f-phone','phone');bind('f-notes','notes');bind('f-floor','addressFloor');
+  if($('f-phone')){
+    $('f-phone').addEventListener('input',scheduleWelcomeLookup);
+    $('f-phone').addEventListener('blur',lookupPhoneBenefit);
+  } 
   if($('coupon-code'))$('coupon-code').addEventListener('input',function(){
-    couponCode=this.value.toUpperCase();couponQuote=null;couponMessage='';refreshTotals();refreshSend();
+    couponCode=this.value.toUpperCase();couponQuote=null;couponMessage='';
+    if(couponCode.trim().toUpperCase()!==autoWelcomeCode){autoWelcomeCode='';autoWelcomePhone='';autoWelcomeAttempt='';}
+    refreshTotals();refreshSend();
   });
   s.querySelector('[data-coupon-apply]')?.addEventListener('click',applyCoupon);bind('f-apartment','addressApartment');bind('f-reference','deliveryReference');
   if($('f-cash'))$('f-cash').addEventListener('input',function(){form.cashTendered=this.value;refreshCashStatus();refreshSend();});refreshCashStatus();
-  s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;couponQuote=null;couponMessage=couponCode.trim()?'Volvé a aplicar el cupón para verificar sus condiciones con este medio de pago.':'';sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
+  s.querySelectorAll('[data-payment-choice]').forEach(function(b){b.addEventListener('click',function(){pay=this.dataset.paymentChoice;if(autoWelcomeCode&&couponCode.trim().toUpperCase()===autoWelcomeCode){couponCode='';autoWelcomeCode='';autoWelcomePhone='';autoWelcomeAttempt='';}couponQuote=null;couponMessage=couponCode.trim()?'Volvé a aplicar el cupón para verificar sus condiciones con este medio de pago.':'';sheet();var next=s.querySelector('[data-payment-choice="'+pay+'"]');if(next)next.focus({preventScroll:true});});});
   if($('f-addr'))$('f-addr').addEventListener('input',function(){form.address=this.value;geo=null;ship=null;deliveryRoute=null;deliveryAuthorization=null;deliveryQuoteId=null;deliveryGeneration++;addressGeneration++;deliveryLoading=false;deliveryError='';recalcDelivery();var card=$('delivery-card');if(card)card.innerHTML=shipNote();document.querySelectorAll('[data-shipping-total]').forEach(function(el){el.remove()});refreshTotals();suggest(this.value,true);refreshSend();});
   renderSugs();
+  if(step==='details')Promise.resolve().then(autoApplyWelcome);
 }
 function refreshCashStatus(){var q=cashChangeQuote(total(),form.cashTendered,pay),el=$('cash-status');if(el)el.textContent=!q.specified?'Avisanos para preparar el vuelto.':q.valid?'Vuelto a preparar: '+fmt(q.change):q.shortfall?'El importe no alcanza. Faltan '+fmt(q.shortfall):'Revisá el importe.';if($('f-cash'))$('f-cash').setAttribute('aria-invalid',String(!q.valid));}
 function refreshTotals(){refreshCashStatus();document.querySelectorAll('.checkout-totals').forEach(function(el){el.outerHTML=orderTotalsHtml()});document.querySelectorAll('.payment-choice[data-payment-choice]').forEach(function(button){var amount=button.querySelector('.payment-choice-amount');if(amount)amount.textContent=amountForMethod(button.dataset.paymentChoice)});var b=$('send');if(b)b.textContent=(pay==='mercadopago'?'Ir a Mercado Pago':sb()?'Enviar pedido':'Pedir por WhatsApp')+' · '+fmt(total());}
@@ -745,7 +795,7 @@ function send(){
    .then(function(r){if(!r.ok)return r.json().catch(function(){return {};}).then(function(data){var error=new Error('HTTP '+r.status);error.deliveryPaused=String(data.message||'').includes('delivery_service_paused');throw error;});sending=false;finish(o,true);})
    .catch(function(error){sending=false;step='details';if(error.deliveryPaused){MENU.delivery=Object.assign({},MENU.delivery,{enabled:false});render();sheet();return;}sheet();var e=$('err');if(e)e.innerHTML='<div class="note err"><b>No pudimos enviar tu pedido.</b> Revisá tu conexión y reintentá'+(MENU.store.whatsapp?', o pedilo por WhatsApp.':'.')+(MENU.store.whatsapp?'<br><a href="'+esc(waLink(o))+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>':'')+'</div>';});
 }
-function finish(o,sent){serverCartQuote=null;serverCartQuoteKey='';loyaltyOffer=null;loyaltyLookupPhone='';storefrontUpsells.clear(false);deliverySubmission=null;fatayUpgradeAccepted=false;cart={};couponCode='';couponQuote=null;couponMessage='';form.cashTendered='';step='done';render();sheet();showSheet();}
+function finish(o,sent){serverCartQuote=null;serverCartQuoteKey='';loyaltyOffer=null;loyaltyLookupPhone='';loyaltyGeneration++;clearTimeout(loyaltyInputTimer);autoWelcomeCode='';autoWelcomePhone='';autoWelcomeAttempt='';storefrontUpsells.clear(false);deliverySubmission=null;fatayUpgradeAccepted=false;cart={};couponCode='';couponQuote=null;couponMessage='';form.cashTendered='';step='done';render();sheet();showSheet();}
 function done(){
   var o=lastOrder,bank=(MENU.payments&&MENU.payments.bank)||{},sent=!!sb();
   var bankHtml=o.paymentMethod==='transferencia'&&(bank.alias||bank.cbu||bank.bankName)?'<div class="note"><b>Datos para la transferencia</b><br>'+['bankName','accountHolder','cbu','alias'].filter(function(k){return bank[k]}).map(function(k){return esc(bank[k])}).join('<br>')+'</div>':'';
