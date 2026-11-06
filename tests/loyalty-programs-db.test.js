@@ -20,6 +20,7 @@ beforeAll(async()=>{
  await db.exec(read('supabase/migrations/20261105010000_promotion_commercial_policy.sql'));
  await db.exec(read('supabase/migrations/20261105020000_phone_loyalty_programs.sql'));
  await db.exec(read('supabase/migrations/20261105040000_public_promotion_programs.sql'));
+ await db.exec(read('supabase/migrations/20261106000100_online_loyalty_origin.sql'));
  await db.exec(`select set_config('request.jwt.claim.sub','${owner}',false);`);
 },60000);
 afterAll(async()=>db?.close());
@@ -97,4 +98,26 @@ it('does not reprint a second-purchase benefit after that phone completed anothe
  const insert=async()=>(await db.query("insert into public.orders(store_id,payload,payment_provider,payment_status,payment_ref) values($1,$2,'mercadopago','paid',gen_random_uuid()) returning id",[sid,{source:'pickup',customerPhone:'1155555555',paymentMethod:'mercadopago',total:10000}])).rows[0].id;
  const first=await insert();expect((await rpc('get_order_promotion_reward',[sid,first])).code).toBeTruthy();
  await insert();expect(await rpc('get_order_promotion_reward',[sid,first])).toBeNull();
+});
+
+it('counts only paid online purchases for welcome and returning customer benefits',async()=>{
+ await rpc('set_store_loyalty_program',[sid,'first_online',{...terms,name:'Primera compra prueba'},true,null]);
+ const phone='1161616161';
+ const insert=async(source,p=phone)=>(await db.query("insert into public.orders(store_id,payload,payment_provider,payment_status,payment_ref) values($1,$2,'mercadopago','paid',gen_random_uuid()) returning id",[sid,{source,customerPhone:p,paymentMethod:'mercadopago',total:10000}])).rows[0].id;
+ const counter=await insert('mostrador');
+ const first=await rpc('sahten_phone_benefit',[sid,phone]);expect(first.program).toBe('first_online');
+ const digest=async id=>(await db.query('select code_digest from sahten_private.promotion_coupons where id=$1',[id])).rows[0].code_digest;
+ expect((await rpc('sahten_customer_coupon_lookup',[sid,await digest(first.id),phone])).ok).toBe(true);
+ const online=await insert('pickup');
+ const second=await rpc('sahten_phone_benefit',[sid,phone]);expect(second.program).toBe('second_online');
+ expect((await db.query('select origin_order_id from sahten_private.promotion_coupons where id=$1',[second.id])).rows[0].origin_order_id).toBe(online);
+ expect((await rpc('sahten_customer_coupon_lookup',[sid,await digest(second.id),phone])).ok).toBe(true);
+ // A wrongly linked counter order must never serve as the origin of a web benefit.
+ await db.query('update sahten_private.promotion_coupons set origin_order_id=$1 where id=$2',[counter,second.id]);
+ await expect(rpc('sahten_customer_coupon_lookup',[sid,await digest(second.id),phone])).rejects.toThrow(/coupon_origin_unpaid/);
+ const otherCustomer=await insert('pickup','1162626262');
+ await db.query('update sahten_private.promotion_coupons set origin_order_id=$1 where id=$2',[otherCustomer,second.id]);
+ await expect(rpc('sahten_customer_coupon_lookup',[sid,await digest(second.id),phone])).rejects.toThrow(/coupon_origin_unpaid/);
+ await db.query('update sahten_private.promotion_coupons set origin_order_id=$1 where id=$2',[online,second.id]);
+ await insert('delivery');expect(await rpc('sahten_phone_benefit',[sid,phone])).toBeNull();
 });
