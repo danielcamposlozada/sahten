@@ -8,6 +8,8 @@ on:
       - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
       - "src/online/editorial-state.js"
+      - "src/online/web/**"
+      - "src/online/publish.js"
       - "media/sahten-editorial/**"
       - ".github/workflows/sahten-promo-checkout.yml"
   push:
@@ -18,6 +20,8 @@ on:
       - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
       - "src/online/editorial-state.js"
+      - "src/online/web/**"
+      - "src/online/publish.js"
       - "media/sahten-editorial/**"
       - ".github/workflows/sahten-promo-checkout.yml"
   workflow_dispatch:
