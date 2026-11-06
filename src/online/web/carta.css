@@ -167,6 +167,24 @@
 .promo-coupon-controls button{flex:none;border:0;border-radius:10px;background:var(--primary);color:var(--on-primary);min-height:48px;padding:10px 18px;font:inherit;font-weight:700;cursor:pointer}
 .promo-coupon-controls button:disabled{opacity:.55;cursor:not-allowed}
 .promo-coupon-controls button:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+/* En el checkout, la consulta automática y el cupón manual son dos acciones distintas. */
+.sheet .promo-coupon-entry{background:var(--card);border:2px solid var(--primary);padding:18px;border-radius:12px}
+.sheet .promo-coupon-entry label{font-size:17px;line-height:1.3;color:var(--ink);margin-bottom:10px}
+.sheet .promo-coupon-controls input{border:1px solid var(--primary);background:var(--card);border-radius:8px;padding:10px 12px}
+.sheet .promo-coupon-controls button{background:var(--primary);color:var(--on-primary);min-width:88px}
+.sheet .catalog-benefit{border:1px solid var(--primary);border-left:5px solid var(--primary);border-radius:10px;padding:16px;margin:16px 0;line-height:1.5}
+.sheet .catalog-benefit strong{display:block;font-size:17px;line-height:1.3}
+.sheet .catalog-benefit p{margin:8px 0}
+.sheet .catalog-benefit summary{cursor:pointer;font-weight:700;padding:8px 0}
+.sheet .loyalty-benefit{background:#eef6e9;color:#173b20;border-color:#588b56}
+.sheet .loyalty-heading{display:flex;align-items:flex-start;gap:12px}
+.sheet .loyalty-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;color:#235328;background:#d5eacc;border-radius:10px}
+.sheet .loyalty-icon svg{width:30px;height:30px}
+.sheet .loyalty-status{font-weight:700;color:#235328}
+.sheet .loyalty-saving{background:#d9edce;border-radius:7px;padding:9px 11px;font-weight:700}
+.sheet .loyalty-saving strong{display:inline;font-size:inherit}
+.sheet .loyalty-terms{font-size:14px}
+@media(max-width:360px){.sheet .promo-coupon-controls{flex-wrap:wrap}.sheet .promo-coupon-controls input{flex-basis:100%}.sheet .promo-coupon-controls button{width:100%}}
 .checkout-steps li:first-child:after{content:'';height:3px;flex:1;min-width:20px;background:var(--border);border-radius:2px;margin-left:6px}
 .sheet[data-step="details"] .checkout-steps li:first-child:after{background:var(--primary)}
 .sheet[data-step="details"] .checkout-steps li:first-child b{background:var(--primary);color:var(--on-primary)}

@@ -1,5 +1,11 @@
 # Changelog
 
+## Sin publicar
+
+- Tienda: los beneficios elegibles de primera y segunda compra se consultan con el teléfono y se aplican automáticamente; los errores y el reintento se muestran sin impedir continuar la compra.
+- Checkout: se distingue mejor el beneficio automático del campo para ingresar un cupón manual.
+- Fidelización: la emisión y validación consideran solamente pedidos online cobrados y comprueban que el pedido de origen de la segunda compra corresponde al mismo teléfono.
+
 ## 0.4.50
 
 - Efectivo/transferencia: selector grande de dos posiciones, accesible con teclado y con estado visible, separado de los botones de acción.
