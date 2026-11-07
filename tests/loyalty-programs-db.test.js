@@ -138,3 +138,16 @@ it('honors an existing welcome-only review for unchanged terms, and rejects clie
  await db.query("update public.menus set json=jsonb_set(json,'{products,0,price}','11000'::jsonb) where store_id=$1",[sid]);
  await expect(rpc('set_store_loyalty_program',[sid,'first_online',original,true,saved.revision])).rejects.toThrow(/promotion_cost_review_changed/);
 });
+
+it('passes the allowed rates to checkout without returning costs or margins, and rechecks the product price',async()=>{
+ await db.exec(read('supabase/migrations/20261107171247_loyalty_checkout_reviewed_coverage.sql'));
+ await db.query("update public.menus set json=jsonb_set(json,'{products,0,price}','10000'::jsonb) where store_id=$1",[sid]);
+ const phone='1198765432';
+ const issue=await rpc('sahten_phone_benefit',[sid,phone]);
+ expect(issue).not.toHaveProperty('coverageApproval');
+ const {code_digest:digest}=(await db.query('select code_digest from sahten_private.promotion_coupons where id=$1',[issue.id])).rows[0];
+ const lookup=()=>rpc('sahten_customer_coupon_lookup',[sid,digest,phone,null]);
+ expect((await lookup()).coverageApproval).toEqual({baklava:{price:10000,cashPercent:20,mpFeePercent:10}});
+ await db.query("update public.menus set json=jsonb_set(json,'{products,0,price}','11000'::jsonb) where store_id=$1",[sid]);
+ expect((await lookup()).coverageApproval).toEqual({});
+});

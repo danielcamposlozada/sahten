@@ -72,6 +72,17 @@ function eligibleLine(candidate,line,lines) {
   }
   return true;
 }
+
+function verifiedLoyaltyLine(coupon,line,method,totalPercent,commissionPercent) {
+  const review=coupon.coverageApproval?.[line.productId];
+  if (!review || !['first_online','second_online'].includes(coupon.program)
+      || !Number.isFinite(review.price) || toCents(review.price)!==line.unitCents) return false;
+  const mp=method==='mercadopago';
+  const limit=mp?review.mpPercent:review.cashPercent;
+  const feeLimit=mp?review.mpFeePercent:0;
+  return Number.isFinite(limit)&&limit>0&&totalPercent<=limit
+    &&Number.isFinite(feeLimit)&&commissionPercent<=feeLimit;
+}
 export function quotePromotions({
   lines = [], method = '', channel = 'online', now = new Date(),
   config = {}, coupon = null, customerId = null,
@@ -110,9 +121,12 @@ export function quotePromotions({
     }
     // Elegir la mayor rebaja REAL en esta línea (incluidos topes y márgenes).
     const payment=amount(base,paymentPercent);
-    const cost=trustedCosts[l.productId];
-    const known=cost!=null && Number.isFinite(Number(cost)) && Number(cost)>=0;
+    const baseCost=trustedCosts?.[l.productId];
+    const baseKnown=baseCost!=null && Number.isFinite(Number(baseCost)) && Number(baseCost)>=0;
     const candidates=selections.map(candidate=>{
+      const reviewed=!clientPreview&&channel==='online'&&candidate.kind==='coupon'
+        &&verifiedLoyaltyLine(coupon,l,method,paymentPercent+candidate.extraPercent,commissionPercent);
+      const known=baseKnown||reviewed;
       const part=candidate.maxUnits?Math.min(l.qty,candidate.maxUnits)*l.unitCents:base;
       const proposed=amount(part,candidate.extraPercent);
       const extra=candidate.kind==='coupon'?Math.min(proposed,remainingCoupon.cents):proposed;
@@ -127,9 +141,9 @@ export function quotePromotions({
             && Number(candidate.minMarginPct)>0)))&&!known)return null;
       // Un ingreso cero o negativo nunca supera el piso de margen, aunque el costo también sea cero.
       const realized=base-discount-fee;
-      if(!clientPreview&&known&&Number.isFinite(minMargin)&&minMargin>=0&&
-        (realized<=0||(realized-toCents(cost)*l.qty)/realized*100<minMargin))return null;
-      return {candidate,extra,discount};
+      if(!clientPreview&&(realized<=0&&known||!reviewed&&baseKnown&&Number.isFinite(minMargin)&&minMargin>=0&&
+        (realized-toCents(baseCost)*l.qty)/realized*100<minMargin))return null;
+      return {candidate,extra,discount,known};
     }).filter(Boolean).sort((a,b)=>b.discount-a.discount||b.candidate.priority-a.candidate.priority);
     const chosen=candidates[0]||null, winner=chosen?.candidate||null;
     const extra=chosen?.extra||0;
@@ -139,7 +153,7 @@ export function quotePromotions({
     return {productId:l.productId,qty:l.qty,base:fromCents(base),paymentDiscount:fromCents(payment),
       promotionDiscount:fromCents(extra),discount:fromCents(lineDiscount),
       net:fromCents(base-lineDiscount),appliedPromotionId:winner?.id||null,
-      appliedPromotionType:winner?.kind||null,costsVerified:known,rule:promotionRule(config,l.productId,winner||{})};
+      appliedPromotionType:winner?.kind||null,costsVerified:chosen?.known??baseKnown,rule:promotionRule(config,l.productId,winner||{})};
   });
   // En modo servidor estricto, primero calcular campañas/cupones. Después,
   // de manera independiente, como máximo UN upsell por pedido. No confiar en
