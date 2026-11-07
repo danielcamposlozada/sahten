@@ -1,6 +1,7 @@
 import {activeCampaigns} from '../core/promotions.js';
 import {salesPaused} from '../core/sales-availability.js';
 export const editorialEscape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const promoIcon='<span class="promo-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 8h22v5a3 3 0 0 0 0 6v5H5v-5a3 3 0 0 0 0-6V8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M19 10v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3"/><path d="m10 19 5-6m-4.5.5h.02m3.96 5h.02" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>';
 export function editorialBenefitEnabled(menu){
  const b=menu.payments?.benefit,m=menu.payments?.methods||{};
  return menu.config?.enabled!==false&&b?.enabled===true&&Number(b.percent)===10&&b.channels?.online!==false&&!!(m.efectivo||m.transferencia);
@@ -14,7 +15,7 @@ export function editorialCampaignMarkup(menu,now=new Date(),shopHref='pedir/'){
   const products=(menu.products||[]).filter(p=>c.productIds?.includes(p.id)&&!p.retired&&!p.upsellOnly&&!salesPaused(p,Number(now)));
   if(!products.length||!(Number(c.extraPercent)>0))return '';
   const total=base+Number(c.extraPercent||0),names=products.map(p=>p.name),validity=c.schedule?.until?'Hasta '+c.schedule.until:'Sin fecha final programada';
-  return '<article class="public-promo" data-public-promotion="'+editorialEscape(c.id)+'"><div><p class="combo-kicker">PROMOCIÓN VIGENTE</p><h2>'+editorialEscape(c.name)+'</h2>'
+  return '<article class="public-promo" data-public-promotion="'+editorialEscape(c.id)+'"><div>'+promoIcon+'<p class="combo-kicker">PROMOCIÓN VIGENTE</p><h2>'+editorialEscape(c.name)+'</h2>'
    +'<p><strong>Hasta '+total+'% total</strong> con '+methods.join(' o ')+'. Incluye el beneficio por medio de pago.</p>'
    +'<p class="promo-conditions">'+(c.maxUnits?'Hasta '+editorialEscape(c.maxUnits)+' unidad'+(Number(c.maxUnits)===1?'':'es')+' participante'+(Number(c.maxUnits)===1?'':'s')+' por pedido. ':'')+editorialEscape(validity)+'. Envío excluido. No acumulable con otras promociones.</p>'
    +'<details><summary>Ver '+names.length+' plato'+(names.length===1?'':'s')+' participante'+(names.length===1?'':'s')+'</summary><ul>'+names.map(n=>'<li>'+editorialEscape(n)+'</li>').join('')+'</ul></details></div><a class="combo-cta" href="'+editorialEscape(shopHref)+'?beneficio='+encodeURIComponent(c.id)+'#pedido">Elegir estos platos ↗</a></article>';
@@ -28,7 +29,7 @@ export function editorialLoyaltyMarkup(menu,programs=[],shopHref='pedir/'){
   if(!products.length)return '';
   const total=Number(p.totalPercent??Number(p.extraPercent)+Number(p.paymentPercent||0));
   if(!Number.isFinite(total)||total<=0)return '';
-  return '<article class="public-promo" data-public-promotion="'+editorialEscape(p.id)+'"><div><p class="combo-kicker">'+(p.id==='first_online'?'TU PRIMER PEDIDO WEB':'VOLVÉ A ELEGIRNOS')+'</p><h2>'+editorialEscape(p.name)+'</h2>'
+  return '<article class="public-promo" data-public-promotion="'+editorialEscape(p.id)+'"><div>'+promoIcon+'<p class="combo-kicker">'+(p.id==='first_online'?'TU PRIMER PEDIDO WEB':'VOLVÉ A ELEGIRNOS')+'</p><h2>'+editorialEscape(p.name)+'</h2>'
    +'<p><strong>Hasta '+total+'% total</strong> con efectivo o transferencia, en productos participantes.</p>'
    +(p.mercadopago?.enabled===true?'<p><strong>'+Number(p.mercadopago.totalPercent)+'% pagando con Mercado Pago</strong>'+ (Number(p.mercadopago.minEligibleSubtotal)>0?' desde '+money(p.mercadopago.minEligibleSubtotal)+' en productos participantes':' en productos participantes')+(p.mercadopago.maxExtraAmount==null?', sin tope de descuento.':', tope '+money(p.mercadopago.maxExtraAmount)+'.')+' Envío aparte.</p>':'')
    +'<p class="promo-conditions">'+(Number(p.minEligibleSubtotal)>0?'Desde '+money(p.minEligibleSubtotal)+' en productos participantes.':'Productos participantes.')+'</p><details><summary>Condiciones y productos</summary><p>'+ (Number(p.minEligibleSubtotal)>0?'Mínimo en productos participantes '+money(p.minEligibleSubtotal)+'. ':'')+(p.maxExtraAmount!=null?'Tope del descuento adicional '+money(p.maxExtraAmount)+'. ':'')+'Incluye el beneficio por pago. Envío excluido. Un uso por teléfono. No acumulable con otras promociones. '+(p.endsOn?'Programa hasta '+editorialEscape(p.endsOn)+'. ':'Programa sin fecha final programada. ')+'Cada cupón vence '+Number(p.validDays)+' días después de su emisión.</p>'

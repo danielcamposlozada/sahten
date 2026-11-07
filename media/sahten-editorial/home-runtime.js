@@ -1,10 +1,21 @@
 (function(){
  'use strict';
  var menu=JSON.parse(document.getElementById('editorial-menu').textContent),busy=false,programs=[];
- var benefit=document.querySelector('[data-payment-benefit]'),ads=document.getElementById('live-public-promos');
+ var benefit=document.querySelector('[data-payment-benefit]'),ads=document.getElementById('live-public-promos'),promoContent='';
  function update(){
   if(benefit)benefit.hidden=!editorialBenefitEnabled(menu);
-  if(ads){var html=editorialCampaignMarkup(menu,new Date())+editorialLoyaltyMarkup(menu,programs);if(ads.innerHTML!==html)ads.innerHTML=html;ads.hidden=!html;}
+  if(ads){
+   var html=editorialCampaignMarkup(menu,new Date())+editorialLoyaltyMarkup(menu,programs);
+   if(promoContent!==html){
+    var list=ads.querySelector('.home-promos-list'),scroll=list?list.scrollLeft:0;
+    var open=[...ads.querySelectorAll('[data-public-promotion]')].filter(function(el){return el.querySelector('details[open]')}).map(function(el){return el.dataset.publicPromotion});
+    ads.innerHTML=html?'<div class="home-promos-heading"><div><p class="combo-kicker">PARA DISFRUTAR MÁS</p><h2>Beneficios para vos</h2><p>Conocé las opciones disponibles para tu pedido.</p></div><span>Deslizá para ver más →</span></div><div class="home-promos-list" tabindex="0" aria-label="Beneficios disponibles; desplazate para ver más">'+html+'</div>':'';
+    list=ads.querySelector('.home-promos-list');if(list)list.scrollLeft=scroll;
+    ads.querySelectorAll('[data-public-promotion]').forEach(function(el){if(open.includes(el.dataset.publicPromotion)&&el.querySelector('details'))el.querySelector('details').open=true;});
+    promoContent=html;
+   }
+   ads.hidden=!html;
+  }
   document.querySelectorAll('[data-home-product]').forEach(function(a){
    var p=menu.products.find(function(p){return p.id===a.dataset.homeProduct&&!p.retired&&!p.upsellOnly});
    a.hidden=!p;if(!p)return;

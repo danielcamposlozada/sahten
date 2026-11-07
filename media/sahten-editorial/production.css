@@ -39,3 +39,23 @@ body.route-c .reel-meta h3{margin:16px 0 8px}
 
 /* El carrusel continúa sin un botón superpuesto; el control queda disponible al navegar con teclado. */
 .photo-rotation:not(:focus-visible){position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+
+/* Beneficios vivos debajo del banner: lectura rápida y condiciones desplegables. */
+.public-promos{margin-block:24px 64px}
+.home-promos-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:20px}
+.home-promos-heading h2{font:700 clamp(28px,3vw,40px)/1.15 DM,sans-serif;color:#235328;margin:6px 0 10px}
+.home-promos-heading p{margin:0;line-height:1.5}
+.home-promos-heading>span{font:600 13px/1.4 DM,sans-serif;color:#365c39;white-space:nowrap}
+.home-promos-list{display:flex;align-items:flex-start;gap:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-color:#235328 transparent;padding:2px 2px 14px}
+.home-promos-list .public-promo{display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;flex:0 0 min(360px,85vw);scroll-snap-align:start;min-height:0;gap:10px;padding:20px;border:1px solid #bccbb4;border-left:4px solid #235328;border-radius:8px 28px 8px 8px;background:#fffaf0;color:#173d21}
+.home-promos-list .promo-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:9px;background:#e3f1dd;color:#235328;margin-bottom:10px}
+.home-promos-list .promo-icon svg{width:30px;height:30px}
+.home-promos-list .public-promo h2{font:700 21px/1.25 DM,sans-serif;margin:8px 0 12px}
+.home-promos-list .public-promo p{font-size:15px;line-height:1.5;margin:8px 0}
+.home-promos-list .public-promo p>strong{font-size:17px;line-height:1.4}
+.home-promos-list .public-promo .promo-conditions{font-size:13px;color:#405b45}
+.home-promos-list .public-promo summary{min-height:44px;cursor:pointer;font-weight:700;padding:10px 0;color:#235328;text-decoration:underline;text-underline-offset:3px}
+.home-promos-list .public-promo ul{font-size:14px;line-height:1.5;padding-left:20px}
+.home-promos-list .public-promo .combo-cta{align-self:start;white-space:normal;max-width:none;margin:0}
+.home-promos-list:focus-visible,.home-promos-list summary:focus-visible{outline:3px solid #235328;outline-offset:3px}
+@media(max-width:700px){.public-promos{margin:24px 20px 48px}.home-promos-heading{display:block}.home-promos-heading>span{display:block;margin-top:10px}.home-promos-list .public-promo{flex-basis:min(320px,85vw);padding:18px}}
