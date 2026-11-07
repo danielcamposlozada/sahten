@@ -11,9 +11,10 @@ import {buildEditorialHome,accurateEditorialMenu,editorialAssetVersion,editorial
 import {applyEditorialShell} from './editorial-shell.mjs';
 import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
 import {salesPaused} from '../../src/core/sales-availability.js';
+import {parseStorefrontCart,storefrontCartKey,storefrontCartLabel} from '../../src/online/storefront.js';
 
-const SOURCE_DEPLOYMENT_ID='9bef8cb4-d5e5-4d33-8257-e1f851a85876';
-const PINNED_URL='https://9bef8cb4.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='b65056b3-aa4d-4fc6-a106-f69c7644a53b';
+const PINNED_URL='https://b65056b3.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -70,7 +71,9 @@ async function run(){
   homepage=await buildEditorialHome(menu,{seoHead:seo.renderSeoHead(menu),hoursScript,openingHours:seo.seoServiceHoursText(menu,'opening'),videoDates});
   const homeFooter=homepage.match(/<footer\b[\s\S]*?<\/footer>/)?.[0];
   if(!homeFooter)throw Error('Missing editorial footer');
-  const shell={homeFooter,version:editorialAssetVersion};
+  const canonical=seo.buildSeo(menu).canonical;
+  const siteBase=canonical.endsWith('/')?canonical:canonical+'/';
+  const shell={homeFooter,version:editorialAssetVersion,cartStorageKey:storefrontCartKey(menu,siteBase)};
   homepage=applyEditorialShell(homepage,{...shell,page:'home'});
   storefront=applyEditorialShell(buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css?v='+encodeURIComponent(editorialAssetVersion)+'"></head>'),{...shell,page:'pedir',hoursScript});
   const indexableMenu=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
@@ -101,6 +104,9 @@ async function run(){
  await fs.cp('media/sahten-editorial',path.join(output,'editorial'),{recursive:true});
  await fs.rm(path.join(output,'editorial','home-approved.html'));
  await fs.rm(path.join(output,'editorial','home-runtime.js'));
+ const shellRuntime=await fs.readFile('media/sahten-editorial/editorial-shell.js','utf8');
+ const cartHelpers=[parseStorefrontCart,storefrontCartLabel].map(fn=>fn.toString()).join('\n');
+ await fs.writeFile(path.join(output,'editorial','editorial-shell.js'),cartHelpers+'\n'+shellRuntime);
  const state=await fs.readFile('src/online/editorial-state.js','utf8');
  const runtime=await fs.readFile('media/sahten-editorial/home-runtime.js','utf8');
  const helpers="const PROMOTIONS_TZ='America/Argentina/Buenos_Aires';\n"+[localDateParts,scheduleMatches,activeCampaigns,salesPaused].map(f=>f.toString()).join('\n');

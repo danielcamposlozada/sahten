@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { buildPublishFiles, buildIndexHtml } from '../src/online/publish.js';
-import { storefrontHref, publishedMenuWithLiveCatalog } from '../src/online/storefront.js';
+import { parseStorefrontCart, storefrontHref, publishedMenuWithLiveCatalog } from '../src/online/storefront.js';
 import { normalizeSite, buildSite, exportSiteContent, parseSiteContent, applySiteContent } from '../src/online/site.js';
 
 const fixture = () => ({
@@ -114,9 +114,18 @@ it('conserva cantidades al volver de otra sección, usa precios actuales y no co
  dom.window.document.querySelector('#grid [data-inc]').click();
  const key=dom.window.sessionStorage.key(0),storage={[key]:dom.window.sessionStorage.getItem(key)};dom.window.close();
  expect(JSON.stringify(storage)).not.toMatch(/customerName|unitPrice|phone/);
+ expect(JSON.parse(storage[key]).count).toBe(1);
  m.products[0].price=200;const back=await render(m,{storefront:true},'https://local.example/tienda/pedir/',storage);
  expect(back.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (1)');expect(back.window.document.querySelector('#bar-t').textContent).toBe('$200');back.window.close();
  const other=await render(m,{storefront:true},'https://local.example/otro/pedir/',storage);expect(other.window.document.querySelector('#snav .pedido').textContent).toBe('Mi pedido (0)');other.window.close();
+});
+it('recupera el contador guardado y conserva carritos de sesiones anteriores',()=>{
+ const now=Date.now();
+ const read=cart=>parseStorefrontCart(JSON.stringify(cart),now);
+ expect(read({at:now,items:{p:2,removed:1},count:2})).toMatchObject({count:2});
+ expect(read({at:now,items:{p:2,q:1,invalid:-3}})).toMatchObject({count:3});
+ expect(read({at:now,items:{p:2},count:0})).toMatchObject({count:0});
+ expect(read({at:now-86400001,items:{p:2},count:2})).toBeNull();
 });
 it('descarta carrito vencido o cantidades inválidas',async()=>{
  const key='sahten-cart:/tienda/:Local de prueba';

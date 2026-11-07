@@ -9,6 +9,7 @@ on:
       - "scripts/deploy/editorial-home.mjs"
       - "scripts/deploy/editorial-shell.mjs"
       - "src/online/editorial-state.js"
+      - "src/online/storefront.js"
       - "src/online/web/**"
       - "src/online/publish.js"
       - "media/sahten-editorial/**"
@@ -22,6 +23,7 @@ on:
       - "scripts/deploy/editorial-home.mjs"
       - "scripts/deploy/editorial-shell.mjs"
       - "src/online/editorial-state.js"
+      - "src/online/storefront.js"
       - "src/online/web/**"
       - "src/online/publish.js"
       - "media/sahten-editorial/**"
@@ -62,7 +64,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'9bef8cb4-d5e5-4d33-8257-e1f851a85876');
+          assert.equal(r.sourceDeploymentId,'b65056b3-aa4d-4fc6-a106-f69c7644a53b');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -87,11 +89,13 @@ jobs:
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
           assert.ok(home.includes('data-editorial="sahten-c-3"'));
           assert.ok(home.includes('Nos encontramos'));
+          assert.ok(home.includes('href="pedir/#catalog-title">Ver menú completo'), 'El enlace de la portada debe abrir el menú de pedidos');
           for(const page of ['home','menu','pedir','delivery-y-retiro','catering','nuestra-historia']){
             const file=page==='home'?'index.html':page+'/index.html';
             const rendered=fs.readFileSync('sahten-promo-export/'+file,'utf8');
             assert.ok(rendered.includes('data-editorial-shell="'+page+'"'),file);
             assert.ok(rendered.includes('data-editorial-menu'),file);
+            assert.ok(rendered.includes(page==='pedir'?'data-editorial-cart-count':'data-editorial-cart-storage'),file);
           }
           assert.ok(!home.includes('noindex'));
           assert.ok(html.includes('data-upsell-consult'));
@@ -182,7 +186,7 @@ jobs:
             url.searchParams.set('verify',process.env.GITHUB_RUN_ID);
             const response=await fetch(url,{signal:AbortSignal.timeout(10000)});
             const html=await response.text();
-            if(!response.ok||!html.includes('data-editorial-shell="'+page+'"')||!html.includes('data-editorial-menu'))throw new Error('No se verificó '+url.pathname);
+            if(!response.ok||!html.includes('data-editorial-shell="'+page+'"')||!html.includes('data-editorial-menu')||!html.includes(page==='pedir'?'function parseStorefrontCart':'data-editorial-cart-storage'))throw new Error('No se verificó '+url.pathname);
           }));
           NODE
               then
