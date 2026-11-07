@@ -1,26 +1,32 @@
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
 
-const sections=[['menu/','Carta'],['nuestra-historia/','Nuestra historia'],['catering/','Catering'],['#local','Encontranos']];
+const sections=[
+  ['#historia','Nuestra historia','nuestra-historia/'],
+  ['#cocina','Videos'],
+  ['#s-catering','Catering','catering/'],
+  ['#local','Encontranos'],
+];
 const categoryOrder=['sandwich','platos principales','picadas','entradas','ensaladas','promos','postres','bebidas'];
 
-function linkMarkup(root,page) {
-  return sections.map(([path,label])=>{
-    const current=path===page+'/'||(page==='pedir'&&path==='menu/');
-    return '<a href="'+root+path+'"'+(current?' aria-current="'+(page==='pedir'?'location':'page')+'"':'')+'>'+label+'</a>';
+function linkMarkup(root,page,{footer=false}={}) {
+  return sections.map(([anchor,label,infoPage])=>{
+    const path=footer&&infoPage?infoPage:anchor;
+    return '<a href="'+root+path+'"'+(path===page+'/'?' aria-current="page"':'')+'>'+label+'</a>';
   }).join('');
 }
 
 function headerMarkup(root,page) {
   const links=linkMarkup(root,page);
-  const action=page==='pedir'
-    ? '<button type="button" class="sahten-shell-action pedido" data-editorial-cart>Mi pedido (0)</button>'
-    : '<a class="sahten-shell-action" href="'+root+'pedir/">Pedir online <span aria-hidden="true">↗</span></a>';
+  const cartLabel='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg><span class="sahten-shell-cart-label">Mi pedido</span>';
+  const cart=page==='pedir'
+    ? '<button type="button" class="sahten-shell-action sahten-shell-cart pedido" data-editorial-cart aria-label="Mi pedido" disabled>'+cartLabel+'<span class="sahten-shell-count" data-editorial-cart-count aria-hidden="true" hidden></span></button>'
+    : '<a class="sahten-shell-action sahten-shell-cart" href="'+root+'pedir/?carrito=1" aria-label="Mi pedido">'+cartLabel+'</a>';
   return '<header id="snav" class="sahten-shell"><div class="sahten-shell-inner">'
     +'<a href="'+root+'" class="sahten-shell-logo" aria-label="Sahten · Inicio"><img src="'+root+'editorial/logo-verde-crema-naranja.svg" width="128" height="61" alt=""></a>'
     +'<nav class="sahten-shell-links" aria-label="Navegación principal">'+links+'</nav>'
-    +'<details class="sahten-shell-menu"><summary>Secciones</summary><nav aria-label="Navegación principal">'+links+'</nav></details>'
-    +action+'</div></header>';
+    +'<div class="sahten-shell-actions"><a class="sahten-shell-action" data-editorial-menu href="'+root+'pedir/#catalog-title">Ver menú <span aria-hidden="true">↗</span></a>'+cart+'</div>'
+    +'<details class="sahten-shell-menu"><summary aria-label="Secciones del sitio"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary><nav aria-label="Secciones del sitio">'+links+'</nav></details></div></header>';
 }
 
 function seoSignature(d) {
@@ -81,6 +87,7 @@ export function applyEditorialShell(html,{page,homeFooter,version,hoursScript=''
   const dom=new JSDOM(html),d=dom.window.document;
   try{
     const before=seoSignature(d),order=page==='pedir',home=page==='home',root=home||order?'./':'../';
+    const alreadyRefined=d.body.dataset.editorialShell===page;
     d.body.dataset.editorialShell=page;
     const header=order?d.getElementById('s-nav'):d.querySelector('body > header');
     assert.ok(header,'Falta el espacio de cabecera para '+page);
@@ -97,7 +104,7 @@ export function applyEditorialShell(html,{page,homeFooter,version,hoursScript=''
       }
     });
     const footerLinks=commonFooter.querySelector('.footer-main nav');
-    if(footerLinks)footerLinks.innerHTML=linkMarkup(root,page)+'<a href="'+root+'#ayuda">Cómo comprar</a><a href="'+root+'delivery-y-retiro/">Delivery y retiro</a>';
+    if(footerLinks)footerLinks.innerHTML='<a href="'+root+'menu/"'+(page==='menu'?' aria-current="page"':'')+'>Carta</a>'+linkMarkup(root,page,{footer:true})+'<a href="'+root+'#ayuda">Cómo comprar</a><a href="'+root+'delivery-y-retiro/">Delivery y retiro</a>';
     if(order){
       const rest=d.getElementById('s-rest');rest.append(commonFooter);
       d.getElementById('foot').hidden=true;
@@ -107,8 +114,9 @@ export function applyEditorialShell(html,{page,homeFooter,version,hoursScript=''
       d.body.insertAdjacentHTML('beforeend',hoursScript);
     }else if(!home){
       d.querySelector('footer').replaceWith(commonFooter);
-      refineInformationalPage(d,page,root);
+      if(!alreadyRefined)refineInformationalPage(d,page,root);
     }
+    d.querySelectorAll('link[href*="/editorial/editorial-shell.css"],link[href*="/editorial/editorial-pages.css"],script[src*="/editorial/editorial-shell.js"]').forEach(el=>el.remove());
     const asset=root+'editorial/';
     const file=path=>asset+path+'?v='+encodeURIComponent(version);
     if(!home&&!order)d.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="'+file('editorial-pages.css')+'">');

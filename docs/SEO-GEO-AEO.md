@@ -1,5 +1,9 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Navegación hacia las secciones de inicio · 7/11/2026
+
+La versión A concentra la navegación móvil en una fila. «Ver menú» abre la tienda y «Mi pedido» abre el carrito. Historia, Videos, Catering y Encontranos enlazan a secciones de la portada. Carta, Delivery y retiro, Catering y Nuestra historia conservan sus URLs informativas en el pie y el sitemap. Se cotejaron los metadatos, canonical y datos estructurados de las seis páginas y se probó el recorrido en celular y escritorio.
+
 ## Continuidad visual · 7/11/2026
 
 Paquete web autorizado para Cloudflare Pages. Cabecera y pie comunes para portada, carta, tienda y páginas informativas. La tienda adelanta búsqueda, categorías y platos. La tarjeta del checkout indica «En todo el menú disponible» cuando el cupón cubre la carta y conserva el detalle si es parcial. Se verificaron siete tamaños de pantalla y se cotejaron los 37 productos, sus descripciones, el sitemap, los canonical, los títulos, las reglas de indexación y los datos estructurados de las seis páginas.

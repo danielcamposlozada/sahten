@@ -62,7 +62,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'3ed34e75-ed46-4793-9dc9-0c7d1bb0da8a');
+          assert.equal(r.sourceDeploymentId,'9bef8cb4-d5e5-4d33-8257-e1f851a85876');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -91,6 +91,7 @@ jobs:
             const file=page==='home'?'index.html':page+'/index.html';
             const rendered=fs.readFileSync('sahten-promo-export/'+file,'utf8');
             assert.ok(rendered.includes('data-editorial-shell="'+page+'"'),file);
+            assert.ok(rendered.includes('data-editorial-menu'),file);
           }
           assert.ok(!home.includes('noindex'));
           assert.ok(html.includes('data-upsell-consult'));
@@ -180,7 +181,8 @@ jobs:
             const url=new URL(page==='home'?'/':'/'+page+'/','https://sahten.online');
             url.searchParams.set('verify',process.env.GITHUB_RUN_ID);
             const response=await fetch(url,{signal:AbortSignal.timeout(10000)});
-            if(!response.ok||!(await response.text()).includes('data-editorial-shell="'+page+'"'))throw new Error('No se verificó '+url.pathname);
+            const html=await response.text();
+            if(!response.ok||!html.includes('data-editorial-shell="'+page+'"')||!html.includes('data-editorial-menu'))throw new Error('No se verificó '+url.pathname);
           }));
           NODE
               then

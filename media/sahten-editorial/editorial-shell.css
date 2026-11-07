@@ -13,7 +13,11 @@ body[data-editorial-shell] .sahten-shell{display:block;position:sticky;top:0;z-i
 .sahten-shell :is(.sahten-shell-links,.sahten-shell-menu) a{display:flex;align-items:center;min-height:44px;padding:0 4px;color:var(--shell-cream);text-decoration:none;font-weight:600}
 .sahten-shell [aria-current]{text-decoration:underline!important;text-underline-offset:5px}
 .sahten-shell .sahten-shell-action{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:8px 16px;border:0;border-radius:4px;background:var(--shell-cream);color:var(--shell-green);font:700 14px DM,Arial,sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer}
+.sahten-shell-actions{display:flex;gap:8px}
+.sahten-shell .sahten-shell-cart{position:relative;border:1px solid var(--shell-cream);background:transparent;color:var(--shell-cream)}
+.sahten-shell-count:not([hidden]){display:grid;place-items:center;min-width:17px;height:17px;padding-inline:3px;border-radius:9px;background:var(--shell-cream);color:var(--shell-green);font-size:10px;line-height:1}
 .sahten-shell .sahten-shell-menu{display:none}
+body[data-editorial-shell="pedir"] #catalog-title{scroll-margin-top:90px}
 .sahten-shell :focus-visible,.sahten-footer :focus-visible{outline:2px solid var(--shell-cream);outline-offset:4px}
 body[data-editorial-shell] footer.sahten-footer{padding:44px 0 24px;border:0;font-size:16px}
 .sahten-footer .footer-main{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:36px}
@@ -28,18 +32,28 @@ body[data-editorial-shell] footer.sahten-footer{padding:44px 0 24px;border:0;fon
 body[data-editorial-shell="pedir"] #foot[hidden],
 body[data-editorial-shell="pedir"] .oback[hidden]{display:none}
 @media(max-width:900px){
- .sahten-shell-inner{grid-template-columns:minmax(0,1fr) auto auto;gap:12px;min-height:74px}
- .sahten-shell-logo img{width:100px;height:48px}
+ .sahten-shell-inner{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;min-height:64px}
+ .sahten-shell-logo{justify-self:start}
+ .sahten-shell-logo img{width:88px;height:44px}
  .sahten-shell .sahten-shell-links{display:none}
+ .sahten-shell-actions{gap:4px}
+ .sahten-shell .sahten-shell-action{padding-inline:12px;font-size:13px}
+ .sahten-shell .sahten-shell-cart{width:44px;padding:0;border:0}
+ .sahten-shell-cart-label{display:none}
+ .sahten-shell-count{position:absolute;top:1px;right:1px}
  .sahten-shell .sahten-shell-menu{display:block}
- .sahten-shell-menu summary{min-height:44px;display:flex;align-items:center;cursor:pointer;list-style:none;border:1px solid #fff4d688;border-radius:4px;padding:0 8px;font-size:13px;font-weight:700}
+ .sahten-shell-menu summary{width:44px;min-height:44px;display:grid;place-items:center;cursor:pointer;list-style:none;border-radius:4px}
  .sahten-shell-menu summary::-webkit-details-marker{display:none}
- .sahten-shell-menu nav{position:absolute;inset:100% 16px auto auto;display:grid;width:min(320px,calc(100% - 32px));padding:12px;background:#235328;border:1px solid #fff4d688;border-radius:0 0 6px 6px}
+ .sahten-shell-menu nav{position:absolute;inset:100% 16px auto auto;display:grid;width:min(280px,calc(100% - 32px));padding:8px 12px;background:var(--shell-green);border:1px solid #fff4d65c;border-radius:0 0 6px 6px}
+ .sahten-shell-menu nav a{justify-content:flex-start}
+ body[data-editorial-shell="pedir"] #catalog-title{scroll-margin-top:80px}
  .sahten-footer .footer-main{gap:24px}
 }
 @media(max-width:620px){
  .sahten-shell-inner,.sahten-footer .footer-main,.sahten-footer .credit{width:calc(100% - 32px)}
- .sahten-shell-inner{gap:8px}.sahten-shell .sahten-shell-action{padding-inline:10px;font-size:13px}
+ .sahten-shell-inner{gap:4px}
+ .sahten-shell-logo img{width:clamp(76px,23vw,88px)}
+ html:has(body[data-editorial-shell="home"]){scroll-padding-top:80px}
  .sahten-footer .footer-main{grid-template-columns:1fr;gap:24px}
  body[data-editorial-shell="pedir"] footer.sahten-footer{padding-bottom:92px}
 }
