@@ -88,4 +88,24 @@ describe('SAHTEN motor promociones (TZ Buenos Aires)',()=>{
   it('expone fecha límite clara al cliente',()=>{
     expect(expiryLabel('2026-11-14')).toBe('Válido hasta el 14/11/2026');
   });
+  it('usa la revisión del servidor solo en cupones web y para el precio que se revisó',()=>{
+    const input={config:{enabled:true,requireVerifiedCosts:true,minMarginPct:40,paymentPercent:10},
+      lines:[line('verified',10000,2),line('quoted',10000,2)],
+      trustedCosts:{verified:5600},method:'transferencia',now:at('2026-11-07')};
+    const coupon={id:'first',program:'first_online',channel:'online',status:'available',expiresOn:'2026-11-30',
+      productIds:['verified','quoted'],totalPercent:15,minEligibleSubtotal:30000,
+      mercadopago:{enabled:true,totalPercent:5,minEligibleSubtotal:0},
+      coverageApproval:{verified:{price:10000,cashPercent:15,mpPercent:5,mpFeePercent:10},
+        quoted:{price:10000,cashPercent:15,mpPercent:5,mpFeePercent:10}}};
+    const quote=quotePromotions({...input,coupon});
+    expect(quote.lines.map(l=>l.discount)).toEqual([3000,3000]);
+    expect(quotePromotions({...input,method:'mercadopago',commissionPercent:10,coupon}).lines.map(l=>l.discount)).toEqual([1000,1000]);
+    expect(quotePromotions({...input,method:'mercadopago',commissionPercent:11,coupon}).couponId).toBeNull();
+    expect(quotePromotions({...input,coupon:{...coupon,program:'manual'}}).couponId).toBeNull();
+    expect(quotePromotions({...input,coupon,lines:[line('verified',9900,4)]}).couponId).toBeNull();
+    expect(quotePromotions({...input,coupon,lines:[line('quoted',10000,2)]}).couponId).toBeNull();
+    const second={...coupon,program:'second_online',totalPercent:20,minEligibleSubtotal:40000,maxExtraAmount:4000,
+      coverageApproval:Object.fromEntries(Object.entries(coupon.coverageApproval).map(([id,row])=>[id,{...row,cashPercent:20}]))};
+    expect(quotePromotions({...input,coupon:second}).discount).toBe(8000);
+  });
 });
