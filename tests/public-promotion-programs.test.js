@@ -14,7 +14,7 @@ it('indexable menu script executes independently, loads only public terms and es
  const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://test.shop/menu/',beforeParse(w){w.fetch=async url=>Response.json(String(url).includes('/rpc/')?programs:[{json:hostile}]);}});
  try{await vi.waitFor(()=>expect(dom.window.document.querySelector('#page-promotions').textContent).toContain('Bienvenida de prueba'));
   expect(dom.window.hacked).toBeUndefined();expect(dom.window.document.querySelector('img')).toBeNull();
-  expect(dom.window.document.querySelector('a').getAttribute('href')).toContain('../pedir/?beneficio=first_online#pedido');
+  expect(dom.window.document.querySelector('a').getAttribute('href')).toBe('../pedir/#pedido');
   expect(dom.window.document.body.textContent).toContain('30.000');
  }finally{dom.window.close();}
 });
@@ -39,6 +39,7 @@ it('dice todo el menú disponible solo cuando todos los productos disponibles pa
  const all=new JSDOM(editorialLoyaltyMarkup(menu,programs)),partial=new JSDOM(editorialLoyaltyMarkup({...menu,products:[product,{id:'other',name:'Otro plato'}]},programs));
  try{expect(all.window.document.body.textContent).toContain('todo el menú disponible');expect(all.window.document.querySelector('details summary').textContent).toBe('Condiciones del beneficio');expect(all.window.document.querySelector('details ul')).toBeNull();
   expect(partial.window.document.body.textContent).not.toContain('todo el menú disponible');expect(partial.window.document.querySelector('details ul').textContent).toContain('Plato de prueba');
+  expect(partial.window.document.querySelector('.combo-cta').getAttribute('href')).toBe('pedir/?beneficio=first_online#pedido');
  }finally{all.window.close();partial.window.close();}
 });
 it('conserva abiertas las condiciones al actualizar los beneficios de la home',async()=>{

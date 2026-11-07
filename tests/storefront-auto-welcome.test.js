@@ -13,9 +13,10 @@ const menu={
  delivery:{enabled:false},supabase:{url:'https://backend.invalid',anonKey:'example-anon',storeId:sid,slug:'sahten'}
 };
 const coupon='SHT-ABCDEFGH';
-function setup({valid=true,programName='Primera compra',failCouponQuotes=0,failLookup=0,delayCoupon=false}={}){
+function setup({valid=true,programName='Primera compra',failCouponQuotes=0,failLookup=0,delayCoupon=false,partial=false}={}){
+ const catalog=partial?{...menu,products:[...menu.products,{id:'hummus',name:'Hummus',category:'Entradas',price:9500}]}:menu;
  const calls=[];let rejectPending;const rejectQuote=()=>rejectPending(new Error('Falla anterior'));
- const dom=new JSDOM(buildIndexHtml(menu,{storefront:true}),{
+ const dom=new JSDOM(buildIndexHtml(catalog,{storefront:true}),{
   runScripts:'dangerously',url:'https://sahten.example/pedir/',
   beforeParse(w){w.scrollTo=()=>{};w.fetch=async (url,opts)=>{
     const target=String(url);calls.push({target,opts});
@@ -32,7 +33,7 @@ function setup({valid=true,programName='Primera compra',failCouponQuotes=0,failL
         appliedPromotionIds:['coupon-1'],lines:[{paymentDiscount:4000,promotionDiscount:2000,net:34000}]
       }}})};
     }
-    if(target.includes('menu.json'))return {ok:true,json:async()=>menu};
+    if(target.includes('menu.json'))return {ok:true,json:async()=>catalog};
     if(target.includes('/get_public_loyalty_programs'))return {ok:true,json:async()=>([])};
     if(target.includes('/menus'))return {ok:true,json:async()=>([])};
     return {ok:false,json:async()=>({})};
@@ -61,6 +62,22 @@ it('detecta teléfono argentino y aplica automáticamente el descuento validado 
   expect(d.querySelector('.checkout-totals')?.textContent).toContain('2.000');
   expect(d.querySelector('#coupon-code')?.value).toBe(coupon);
   expect(d.querySelector('.checkout-totals')?.textContent).toContain('34.000');
+  const card=d.querySelector('.loyalty-benefit');
+  expect(card.textContent).toContain('En todo el menú disponible.');
+  expect(card.textContent).toContain('Vence 31/12/2099');
+  expect(card.querySelector('details')).toBeNull();
+ }finally{dom.window.close();}
+},12000);
+it('conserva la lista para un cupón anterior con cobertura parcial',async()=>{
+ const {dom}=setup({partial:true});const d=dom.window.document;
+ try{
+  await reachPayment(d);
+  const phone=d.querySelector('#f-phone');phone.value='11 5555 1234';phone.dispatchEvent(new dom.window.Event('input',{bubbles:true}));
+  await vi.waitFor(()=>expect(d.querySelector('.loyalty-benefit details')).not.toBeNull(),{timeout:2500});
+  const card=d.querySelector('.loyalty-benefit');
+  expect(card.querySelector('summary').textContent).toBe('Ver productos participantes');
+  expect(card.querySelector('li').textContent).toBe('Fatay');
+  expect(card.textContent).not.toContain('todo el menú');
  }finally{dom.window.close();}
 },12000);
 it('si la oferta no es elegible, no deja el checkout bloqueado por un código automático',async()=>{

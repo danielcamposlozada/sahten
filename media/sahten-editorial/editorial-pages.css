@@ -1,0 +1,13 @@
+body[data-editorial-shell]{font-family:DM,Arial,sans-serif}
+body[data-editorial-shell] main{padding-top:24px}
+.sahten-menu-intro{margin:0 0 24px}
+.sahten-menu-intro .cta{margin:0 0 12px;background:#235328;color:#fff4d6;border-radius:4px}
+.sahten-category-jumps{display:flex;flex-wrap:wrap;gap:8px}
+.sahten-category-jumps a{display:flex;align-items:center;min-height:44px;padding:8px 12px;border:1px solid #d6d8c9;border-radius:4px;color:#235328;text-decoration:none}
+main section[id^="carta-categoria-"]{scroll-margin-top:100px}
+.sahten-calendars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:24px 0}
+.sahten-calendars>[data-service-hours-block]{background:#f1f6eb;border:1px solid #d6d8c9;border-radius:6px;padding:18px;overflow-wrap:anywhere}
+.sahten-calendars h2{margin-top:0}
+.sahten-catering-photo{width:100%;height:clamp(210px,42vw,390px);object-fit:cover;object-position:50% 48%;border-radius:36px 4px 4px 4px}
+.sahten-catering-photo+.cta{margin-block:14px 20px;background:#235328;color:#fff4d6;border-radius:4px}
+@media(max-width:680px){.sahten-calendars{grid-template-columns:1fr}}
