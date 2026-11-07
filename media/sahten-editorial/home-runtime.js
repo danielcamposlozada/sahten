@@ -1,10 +1,10 @@
 (function(){
  'use strict';
  var menu=JSON.parse(document.getElementById('editorial-menu').textContent),busy=false,programs=[];
- var benefit=document.querySelector('[data-payment-benefit]'),ads=document.getElementById('live-public-promos');
+ var benefit=document.querySelector('[data-payment-benefit]'),ads=document.getElementById('live-public-promos'),lastOffers=null;
  function update(){
   if(benefit)benefit.hidden=!editorialBenefitEnabled(menu);
-  if(ads){var html=editorialCampaignMarkup(menu,new Date())+editorialLoyaltyMarkup(menu,programs);if(ads.innerHTML!==html)ads.innerHTML=html;ads.hidden=!html;}
+  if(ads){var html=editorialCampaignMarkup(menu,new Date())+editorialLoyaltyMarkup(menu,programs);if(lastOffers!==html){var open=[...ads.querySelectorAll('[data-public-promotion]')].filter(function(el){return el.querySelector('details[open]')}).map(function(el){return el.dataset.publicPromotion});ads.innerHTML=html;lastOffers=html;ads.querySelectorAll('[data-public-promotion]').forEach(function(el){if(open.includes(el.dataset.publicPromotion)&&el.querySelector('details'))el.querySelector('details').open=true;});}ads.hidden=!html;}
   document.querySelectorAll('[data-home-product]').forEach(function(a){
    var p=menu.products.find(function(p){return p.id===a.dataset.homeProduct&&!p.retired&&!p.upsellOnly});
    a.hidden=!p;if(!p)return;

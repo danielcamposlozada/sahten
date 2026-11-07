@@ -27,6 +27,25 @@ html{scroll-padding-top:100px}
 @media(max-width:1000px){.combo-beneficio{grid-template-columns:90px minmax(0,1fr) 240px;gap:24px}.vida-catering{grid-template-columns:160px 1fr!important}.vida-catering .catering-photo{width:160px;height:230px;grid-row:1/4}.vida-catering>p,.vida-catering>a{grid-column:2}.public-promos{margin-inline:28px;padding:0}.public-promo{align-items:start}.public-promo .combo-cta{white-space:normal;max-width:200px}}
 @media(max-width:700px){.combo-beneficio{grid-template-columns:72px minmax(0,1fr);gap:18px;padding:22px}.combo-copy{grid-row:1;grid-column:2}.combo-sello{grid-row:1;grid-column:1}.combo-beneficio h2{font-size:24px}.combo-foto,.combo-carta .combo-foto{grid-column:1/-1;grid-row:2;width:100%;height:200px;min-height:200px;margin-top:6px;border-radius:32px 4px 4px 4px}.benefit-photos{min-height:200px}.combo-nota{font-size:14px;line-height:1.6}.combo-desc{font-size:16px}.combo-cta{margin-top:14px}.public-promos{margin:0 20px 28px}.public-promo{display:block}.public-promo h2{font-size:24px}.public-promo p{font-size:16px}.public-promo .combo-cta{max-width:none}.vida-catering{grid-template-columns:1fr!important;gap:20px}.vida-catering .catering-photo{grid-column:1;grid-row:1;width:100%;height:240px}.vida-catering>div,.vida-catering>p,.vida-catering>a{grid-column:1;grid-row:auto}.map-title{font-size:28px;line-height:1.14}.vida-map-shell::after{min-height:100px}.review-quote{font-size:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.benefit-photos img{transition:none}}
+/* Beneficios: tarjetas compactas con icono y condiciones desplegables. */
+#live-public-promos{display:flex;align-items:flex-start;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding-block:4px 16px}
+#live-public-promos[hidden]{display:none}
+#live-public-promos .public-promo{display:flex;flex-direction:column;align-items:stretch;gap:12px;flex:0 0 min(355px,86vw);scroll-snap-align:start;padding:18px;border:1px solid #d6dfce;border-radius:14px;background:#fff;color:#173d21;min-height:0}
+#live-public-promos .offer-head{display:flex;align-items:center;gap:12px}
+#live-public-promos .promo-icon{--promo-icon-detail:#FFF4D6;flex:none;width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:#F28C00;color:#235328}
+#live-public-promos .promo-icon svg{display:block;width:37px;height:37px}
+#live-public-promos .combo-kicker{font:800 10px/1.35 DM,system-ui,sans-serif;letter-spacing:.06em;color:#526e52;margin:0 0 4px}
+#live-public-promos .offer-names h2{font:750 19px/1.2 DM,system-ui,sans-serif;letter-spacing:-.01em;margin:0;color:#173d21}
+#live-public-promos .offer-amounts{display:grid;gap:8px}
+#live-public-promos .offer-amounts p{background:#f2f8ee;border-radius:9px;padding:10px 12px;margin:0;color:#254c2a;font:400 13px/1.4 DM,system-ui,sans-serif}
+#live-public-promos .offer-amounts p>strong{font-size:16px;line-height:1.3;font-weight:800;color:#235328}
+#live-public-promos .offer-details{font:400 13px/1.5 DM,system-ui,sans-serif;color:#465b49}
+#live-public-promos .offer-details summary{min-height:38px;padding:8px 0;font-size:13px;font-weight:700;color:#235328;cursor:pointer}
+#live-public-promos .offer-full-terms p{font-size:13px;line-height:1.5;margin:8px 0}
+#live-public-promos .offer-full-terms ul{padding-left:20px}
+#live-public-promos .combo-cta{display:flex;justify-content:center;align-items:center;min-height:44px;width:100%;max-width:none;margin:0;padding:9px 12px;background:#235328;color:#FFF4D6;border:1px solid #235328;border-radius:9px;text-decoration:none;font:700 14px/1.3 DM,system-ui,sans-serif;white-space:normal}
+#live-public-promos .combo-cta:focus-visible{outline:3px solid #F28C00;outline-offset:3px}
+@media(max-width:700px){#live-public-promos .public-promo{flex-basis:min(320px,87vw);padding:16px}}
 /* Los controles reales de video necesitan más ancho que el póster de la maqueta. */
 body.route-c .reel{display:flex;flex-direction:column;padding:18px;gap:18px;align-items:stretch}
 body.route-c .reel-poster{width:100%;max-width:290px;align-self:center;aspect-ratio:9/16}

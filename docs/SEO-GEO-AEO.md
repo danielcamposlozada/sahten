@@ -1,5 +1,9 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Tarjetas y filtros de beneficios · 7/11/2026
+
+Implementación local preparada sobre `main` 8ae19ac: tarjetas aprobadas en home y carta con el ícono naranja/verde/crema, condiciones desplegables y enlace a productos participantes. La carta identifica el beneficio activo y «Ver toda la carta» elimina el filtro, categoría y búsqueda. Se amplía el resumen de escritorio. Los valores, productos y condiciones siguen proviniendo de la configuración pública del negocio; no se crean campañas ni se cambian pagos. El checkout informa cuándo falta validar la dirección y permite reintentar consultas demoradas. No se publicó ni se escribieron datos de Supabase. La vista previa local bloquea pedidos y pagos; la publicación requiere la confirmación indicada en `AGENTS.md`.
+
 ## Auditoría de promociones y descripciones · 4/11/2026
 
 Consulta de solo lectura del menú publicado: 46 productos y 46 descripciones vacías. El archivo local guardado el 3/11 tampoco aporta descripciones para esos ID; se recuperaron 31 borradores cotejados del 30/10 y se identificaron 15 faltantes. Comparación y fuentes en `docs/sahten/recuperacion-descripciones-2026-11-04.json`. No se publicaron textos ni se modificaron catálogo, precios, pedidos o clientes.
