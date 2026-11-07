@@ -19,9 +19,10 @@ function linkMarkup(root,page,{footer=false}={}) {
 function headerMarkup(root,page) {
   const links=linkMarkup(root,page);
   const cartLabel='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg><span class="sahten-shell-cart-label">Mi pedido</span>';
+  const cartCount='<span class="sahten-shell-count" data-editorial-cart-count aria-hidden="true" hidden></span>';
   const cart=page==='pedir'
-    ? '<button type="button" class="sahten-shell-action sahten-shell-cart pedido" data-editorial-cart aria-label="Mi pedido" disabled>'+cartLabel+'<span class="sahten-shell-count" data-editorial-cart-count aria-hidden="true" hidden></span></button>'
-    : '<a class="sahten-shell-action sahten-shell-cart" href="'+root+'pedir/?carrito=1" aria-label="Mi pedido">'+cartLabel+'</a>';
+    ? '<button type="button" class="sahten-shell-action sahten-shell-cart pedido" data-editorial-cart aria-label="Mi pedido" disabled>'+cartLabel+cartCount+'</button>'
+    : '<a class="sahten-shell-action sahten-shell-cart" href="'+root+'pedir/?carrito=1" aria-label="Mi pedido">'+cartLabel+cartCount+'</a>';
   return '<header id="snav" class="sahten-shell"><div class="sahten-shell-inner">'
     +'<a href="'+root+'" class="sahten-shell-logo" aria-label="Sahten · Inicio"><img src="'+root+'editorial/logo-verde-crema-naranja.svg" width="128" height="61" alt=""></a>'
     +'<nav class="sahten-shell-links" aria-label="Navegación principal">'+links+'</nav>'
@@ -83,7 +84,7 @@ function refineInformationalPage(d,page,root) {
 }
 
 /** Solo la edición Sahten; no se integra en la plantilla general de la app. */
-export function applyEditorialShell(html,{page,homeFooter,version,hoursScript=''}) {
+export function applyEditorialShell(html,{page,homeFooter,version,cartStorageKey,hoursScript=''}) {
   const dom=new JSDOM(html),d=dom.window.document;
   try{
     const before=seoSignature(d),order=page==='pedir',home=page==='home',root=home||order?'./':'../';
@@ -91,7 +92,11 @@ export function applyEditorialShell(html,{page,homeFooter,version,hoursScript=''
     d.body.dataset.editorialShell=page;
     const header=order?d.getElementById('s-nav'):d.querySelector('body > header');
     assert.ok(header,'Falta el espacio de cabecera para '+page);
-    if(order)header.innerHTML=headerMarkup(root,page);else header.outerHTML=headerMarkup(root,page);
+    if(order)header.innerHTML=headerMarkup(root,page);
+    else {
+      header.outerHTML=headerMarkup(root,page);
+      d.querySelector('.sahten-shell-cart').dataset.editorialCartStorage=cartStorageKey;
+    }
     const footer=home?d.querySelector('footer'):new JSDOM(homeFooter).window.document.querySelector('footer');
     assert.ok(footer,'Falta el pie editorial');
     const commonFooter=home?footer:d.importNode(footer,true);

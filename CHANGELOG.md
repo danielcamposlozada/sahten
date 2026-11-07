@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.
+
 - Navegación web de Sahten: «Ver menú» lleva a los platos que se pueden pedir, «Mi pedido» abre el carrito y la carta de consulta se enlaza desde el pie. Historia, Videos, Catering y Encontranos abren sus secciones en el inicio. En celular, el menú de compra, el carrito y las secciones caben en una sola fila.
 
 - Web de Sahten: navegación y pie comunes, acceso más rápido a los platos y resumen de pago plegable en celular. El beneficio automático indica cuando cubre toda la carta y conserva el detalle cuando la cobertura es parcial.

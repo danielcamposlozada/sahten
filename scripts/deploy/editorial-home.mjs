@@ -3,7 +3,7 @@ import {JSDOM} from 'jsdom';
 import {createHash} from 'node:crypto';
 const versionHash=createHash('sha256');
 for(const file of ['design.css','production.css','checkout.css','home-runtime.js','editorial-shell.css','editorial-shell.js','editorial-pages.css'])versionHash.update(await fs.readFile('media/sahten-editorial/'+file));
-versionHash.update(await fs.readFile('src/online/editorial-state.js'));
+for(const file of ['editorial-state.js','storefront.js'])versionHash.update(await fs.readFile('src/online/'+file));
 export const editorialAssetVersion=process.env.GITHUB_SHA||versionHash.digest('hex').slice(0,16);
 
 const descriptionRegistry=JSON.parse(await fs.readFile('media/sahten-editorial/product-descriptions.json','utf8')).products;
@@ -46,7 +46,9 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  const benefit=menu.payments?.benefit;
  banner.hidden=!(benefit?.enabled&&Number(benefit.percent)===10&&benefit.channels?.online!==false&&(menu.payments.methods?.efectivo||menu.payments.methods?.transferencia));
  const menuSection=d.querySelector('#menu');
- menuSection.querySelector('.section-heading a').href='menu/';
+ const menuAction=menuSection.querySelector('.section-heading a');
+ menuAction.href='pedir/#catalog-title';
+ menuAction.innerHTML='Ver menú completo <span aria-hidden="true">↗</span>';
  menuSection.querySelector('.categories').innerHTML='<a href="pedir/">Todos</a>'+[...new Set(products.filter(p=>!p.upsellOnly&&!p.retired).map(p=>p.category).filter(Boolean))].map(c=>'<a href="pedir/#pedido/'+encodeURIComponent(c)+'">'+esc(c)+'</a>').join('');
  const picks=['shawarma_carne','hummus','fatay'].map(byId).filter(Boolean);
  menuSection.querySelector('.food-grid').innerHTML=picks.map(p=>'<a class="food-card" data-home-product="'+esc(p.id)+'" href="pedir/#pedido/'+encodeURIComponent(p.category||'')+'"><div class="food-image"><img src="'+esc(p.image)+'" width="800" height="600" loading="lazy" alt="'+esc(p.name)+'"></div><div class="food-meta"><div><small>'+esc(p.category)+'</small><h3>'+esc(p.name)+'</h3></div><span aria-hidden="true">↗</span></div></a>').join('');
