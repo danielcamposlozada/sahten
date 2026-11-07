@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- Web de Sahten: navegación y pie comunes, acceso más rápido a los platos y resumen de pago plegable en celular. El beneficio automático indica cuando cubre toda la carta y conserva el detalle cuando la cobertura es parcial.
+
 - Tienda: primera y segunda compra muestran «todo el menú disponible» cuando el beneficio alcanza a toda la carta. Las revisiones de costos son privadas y específicas de cada programa.
 
 - Tienda: tarjetas de beneficios con condiciones desplegables e ícono de cupón, filtro visible y botón para volver a toda la carta; carrito lateral más amplio en escritorio.

@@ -20,11 +20,14 @@ export function editorialCampaignMarkup(menu,now=new Date(),shopHref='pedir/'){
    +'<details class="offer-details"><summary>Condiciones y platos participantes</summary><div class="offer-full-terms"><p class="promo-conditions">'+(c.maxUnits?'Hasta '+editorialEscape(c.maxUnits)+' unidad'+(Number(c.maxUnits)===1?'':'es')+' participante'+(Number(c.maxUnits)===1?'':'s')+' por pedido. ':'')+editorialEscape(validity)+'. Envío excluido. No acumulable con otras promociones.</p><ul>'+names.map(n=>'<li>'+editorialEscape(n)+'</li>').join('')+'</ul></div></details><a class="combo-cta" href="'+editorialEscape(shopHref)+'?beneficio='+encodeURIComponent(c.id)+'#pedido">Elegir estos platos ↗</a></article>';
  }).join('');
 }
+export function loyaltyMenuProducts(menu){
+ return (menu.products||[]).filter(product=>!product.retired&&!product.upsellOnly&&!salesPaused(product));
+}
 export function editorialLoyaltyMarkup(menu,programs=[],shopHref='pedir/'){
  if(menu.config?.enabled===false||menu.config?.showPrices===false||menu.promotions?.enabled!==true)return '';
  const money=n=>'$'+Number(n).toLocaleString('es-AR',{maximumFractionDigits:2});
+ const available=loyaltyMenuProducts(menu);
  return programs.map(p=>{
-  const available=(menu.products||[]).filter(product=>!product.retired&&!product.upsellOnly&&!salesPaused(product));
   const products=available.filter(product=>p.productIds?.includes(product.id));
   if(!products.length)return '';
   const allMenu=available.length>0&&available.every(product=>p.productIds?.includes(product.id));
@@ -36,6 +39,6 @@ export function editorialLoyaltyMarkup(menu,programs=[],shopHref='pedir/'){
    +(p.mercadopago?.enabled===true?'<p><strong>'+Number(p.mercadopago.totalPercent)+'% pagando con Mercado Pago</strong>'+ (Number(p.mercadopago.minEligibleSubtotal)>0?' desde '+money(p.mercadopago.minEligibleSubtotal)+' en '+coverage:' en '+coverage)+(p.mercadopago.maxExtraAmount==null?', sin tope de descuento.':', tope '+money(p.mercadopago.maxExtraAmount)+'.')+' Envío aparte.</p>':'')
    +'</div><details class="offer-details"><summary>'+(allMenu?'Condiciones del beneficio':'Condiciones y platos participantes')+'</summary><div class="offer-full-terms"><p class="promo-conditions">'+(Number(p.minEligibleSubtotal)>0?'Desde '+money(p.minEligibleSubtotal)+' en '+coverage+'.':allMenu?'En todo el menú disponible.':'Productos participantes.')+'</p><p>'+ (Number(p.minEligibleSubtotal)>0?'Mínimo en '+coverage+': '+money(p.minEligibleSubtotal)+'. ':'')+(p.maxExtraAmount!=null?'Tope del descuento adicional '+money(p.maxExtraAmount)+'. ':'')+'Incluye el beneficio por pago. Envío excluido. Un uso por teléfono. No acumulable con otras promociones. '+(p.endsOn?'Programa hasta '+editorialEscape(p.endsOn)+'. ':'Programa sin fecha final programada. ')+'Cada cupón vence '+Number(p.validDays)+' días después de su emisión.</p>'
    +'<p>'+(p.id==='first_online'?'Ingresá tu teléfono en la tienda para consultar el beneficio.':'El beneficio se emite después de confirmar y cobrar tu primera compra web. Usá el mismo teléfono para encontrarlo en tu próximo pedido.')+'</p>'
-   +(allMenu?'':'<ul>'+products.map(product=>'<li>'+editorialEscape(product.name)+'</li>').join('')+'</ul>')+'</div></details><a class="combo-cta" href="'+editorialEscape(shopHref)+'?beneficio='+encodeURIComponent(p.id)+'#pedido">Ver productos del beneficio ↗</a></article>';
+   +(allMenu?'':'<ul>'+products.map(product=>'<li>'+editorialEscape(product.name)+'</li>').join('')+'</ul>')+'</div></details><a class="combo-cta" href="'+editorialEscape(shopHref)+(allMenu?'':'?beneficio='+encodeURIComponent(p.id))+'#pedido">'+(allMenu?'Ver la carta ↗':'Ver productos del beneficio ↗')+'</a></article>';
  }).join('');
 }

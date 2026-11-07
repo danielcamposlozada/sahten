@@ -7,6 +7,7 @@ on:
       - "scripts/deploy/catalog-integrity.mjs"
       - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
+      - "scripts/deploy/editorial-shell.mjs"
       - "src/online/editorial-state.js"
       - "src/online/web/**"
       - "src/online/publish.js"
@@ -19,6 +20,7 @@ on:
       - "scripts/deploy/catalog-integrity.mjs"
       - "scripts/deploy/indexnow.mjs"
       - "scripts/deploy/editorial-home.mjs"
+      - "scripts/deploy/editorial-shell.mjs"
       - "src/online/editorial-state.js"
       - "src/online/web/**"
       - "src/online/publish.js"
@@ -60,7 +62,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'0d72c947-bc44-473c-91ff-f0243d2a69e5');
+          assert.equal(r.sourceDeploymentId,'3ed34e75-ed46-4793-9dc9-0c7d1bb0da8a');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);
@@ -71,7 +73,8 @@ jobs:
           assert.equal(r.approvedEditorialDesign,true);
           assert.equal(r.homepageCatalogGuarded,true);
           assert.equal(r.defaultCashBenefit,10);
-          assert.equal(r.preserved.length,14);
+          assert.equal(r.preserved.length,11);
+          assert.equal(r.seoPreserved,true);
           assert.equal(r.descriptions,r.products);
           for(const p of ['index.html','pedir/index.html','menu.json','img/site_familia.jpg','img/site_historia.jpg'])
             assert.ok(fs.statSync('sahten-promo-export/'+p).size>0);
@@ -84,6 +87,11 @@ jobs:
           const home=fs.readFileSync('sahten-promo-export/index.html','utf8');
           assert.ok(home.includes('data-editorial="sahten-c-3"'));
           assert.ok(home.includes('Nos encontramos'));
+          for(const page of ['home','menu','pedir','delivery-y-retiro','catering','nuestra-historia']){
+            const file=page==='home'?'index.html':page+'/index.html';
+            const rendered=fs.readFileSync('sahten-promo-export/'+file,'utf8');
+            assert.ok(rendered.includes('data-editorial-shell="'+page+'"'),file);
+          }
           assert.ok(!home.includes('noindex'));
           assert.ok(html.includes('data-upsell-consult'));
           assert.ok(html.includes('upsell-offer'));
@@ -145,7 +153,7 @@ jobs:
           if(digest!==report.commercialFingerprint)throw new Error('El catálogo cambió: generar un paquete actualizado antes de publicar');
           console.log('Estado comercial vigente confirmado sin modificarlo');
           NODE
-      - name: Desplegar sólo el checkout y JSON actualizados, preservando otros recursos
+      - name: Desplegar las páginas verificadas y conservar el catálogo vigente
         id: deploy_pages
         uses: cloudflare/wrangler-action@v3
         with:
@@ -166,8 +174,19 @@ jobs:
              const digest=crypto.createHash('sha256').update(JSON.stringify(canonical(commercial))).digest('hex');
              if(digest!==report.commercialFingerprint)process.exit(1);
             })" && curl --fail --silent --show-error "https://sahten.online/pedir/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-upsell-consult')||!s.includes('upsell-offer')||!s.includes('function couponSection()'))process.exit(1)})" && curl --fail --silent --show-error "https://sahten.online/?verify=$GITHUB_RUN_ID-$i" | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('data-editorial=\"sahten-c-3\"'))process.exit(1)})"; then
-              echo "Producción confirmada: catálogo comercial íntegro y cliente de complementos actualizado, sin activar ofertas."
-              exit 0
+              if node --input-type=module <<'NODE'
+          const pages=['home','menu','pedir','delivery-y-retiro','catering','nuestra-historia'];
+          await Promise.all(pages.map(async page=>{
+            const url=new URL(page==='home'?'/':'/'+page+'/','https://sahten.online');
+            url.searchParams.set('verify',process.env.GITHUB_RUN_ID);
+            const response=await fetch(url,{signal:AbortSignal.timeout(10000)});
+            if(!response.ok||!(await response.text()).includes('data-editorial-shell="'+page+'"'))throw new Error('No se verificó '+url.pathname);
+          }));
+          NODE
+              then
+                echo "Producción confirmada: seis páginas actualizadas, catálogo íntegro y checkout disponible."
+                exit 0
+              fi
             fi
             sleep 5
           done

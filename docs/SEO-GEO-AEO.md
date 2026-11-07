@@ -1,5 +1,9 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Continuidad visual · 7/11/2026
+
+Paquete web autorizado para Cloudflare Pages. Cabecera y pie comunes para portada, carta, tienda y páginas informativas. La tienda adelanta búsqueda, categorías y platos. La tarjeta del checkout indica «En todo el menú disponible» cuando el cupón cubre la carta y conserva el detalle si es parcial. Se verificaron siete tamaños de pantalla y se cotejaron los 37 productos, sus descripciones, el sitemap, los canonical, los títulos, las reglas de indexación y los datos estructurados de las seis páginas.
+
 ## Tarjetas y filtros de beneficios · 7/11/2026
 
 Implementación local preparada sobre `main` 8ae19ac: tarjetas aprobadas en home y carta con el ícono naranja/verde/crema, condiciones desplegables y enlace a productos participantes. La carta identifica el beneficio activo y «Ver toda la carta» elimina el filtro, categoría y búsqueda. Se amplía el resumen de escritorio. Los valores, productos y condiciones siguen proviniendo de la configuración pública del negocio; no se crean campañas ni se cambian pagos. El checkout informa cuándo falta validar la dirección y permite reintentar consultas demoradas. No se publicó ni se escribieron datos de Supabase. La vista previa local bloquea pedidos y pagos; la publicación requiere la confirmación indicada en `AGENTS.md`.
