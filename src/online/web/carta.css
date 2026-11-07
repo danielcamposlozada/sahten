@@ -177,6 +177,8 @@
 .sheet .catalog-benefit p{margin:8px 0}
 .sheet .catalog-benefit summary{cursor:pointer;font-weight:700;padding:8px 0}
 .sheet .loyalty-benefit{background:#eef6e9;color:#173b20;border-color:#588b56}
+.sheet .loyalty-benefit .loyalty-terms{margin-bottom:4px}
+.sheet .loyalty-benefit .loyalty-restrictions{color:var(--checkout-muted);font-size:13px;line-height:1.5;margin-top:0}
 .sheet .loyalty-heading{display:flex;align-items:flex-start;gap:12px}
 .sheet .loyalty-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;color:#235328;background:#d5eacc;border-radius:10px}
 .sheet .loyalty-icon svg{width:30px;height:30px}

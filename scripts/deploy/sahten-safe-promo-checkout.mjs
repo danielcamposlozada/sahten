@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-// Preserva la portada de producción y todos sus recursos. Sólo reconstruye
-// /pedir/index.html y menu.json con los beneficios publicados en Supabase.
+// Conserva las rutas y el catálogo público de producción al armar la edición editorial.
 // Nunca descarga ni incorpora costos, claves privadas ni datos de clientes.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createServer} from 'vite';
+import {JSDOM} from 'jsdom';
 import {INDEXNOW_KEY} from './indexnow.mjs';
 import {assertCatalogPreserved,catalogFingerprint} from './catalog-integrity.mjs';
 import {buildEditorialHome,accurateEditorialMenu,editorialAssetVersion,editorialSitemap} from './editorial-home.mjs';
+import {applyEditorialShell} from './editorial-shell.mjs';
 import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/promotions.js';
 import {salesPaused} from '../../src/core/sales-availability.js';
-import {editorialBenefitEnabled,editorialCampaignMarkup,editorialLoyaltyMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='0d72c947-bc44-473c-91ff-f0243d2a69e5';
-const PINNED_URL='https://0d72c947.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='3ed34e75-ed46-4793-9dc9-0c7d1bb0da8a';
+const PINNED_URL='https://3ed34e75.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -52,7 +52,8 @@ async function run(){
  const base=JSON.parse(assets.get('/menu.json').toString('utf8'));
  const live=await liveMenu(base);
  const vite=await createServer({server:{middlewareMode:true},appType:'custom',logLevel:'error'});
- let storefront,menu,homepage,menuPage,descriptions;
+ let storefront,menu,homepage,descriptions;
+ const infoPages=new Map();
  try{
   const [{buildIndexHtml},{publishedMenuWithLiveCatalog},seo,{serviceHoursPageScript},{buildSitePages}]=await Promise.all([
    vite.ssrLoadModule('/src/online/publish.js'),
@@ -62,12 +63,24 @@ async function run(){
   menu=accurateEditorialMenu(publishedMenuWithLiveCatalog(base,live));
   menu.supabase={...base.supabase,storeId:base.supabase.storeId};
   check(menu,base,live);
-  storefront=buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css?v='+encodeURIComponent(editorialAssetVersion)+'"></head>').replace('</body>','<script defer src="editorial/checkout-runtime.js?v='+encodeURIComponent(editorialAssetVersion)+'"></script></body>');
-  menuPage=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
-  if(!menuPage)throw Error('Missing indexable menu');
+  const hoursScript=serviceHoursPageScript(menu);
+  const pinnedHome=new JSDOM(assets.get('/index.html').toString('utf8'));
+  const videoDates=Object.fromEntries([...pinnedHome.window.document.querySelectorAll('script[type="application/ld+json"]')].map(el=>JSON.parse(el.textContent)).filter(x=>x['@type']==='VideoObject'&&x.contentUrl&&x.uploadDate).map(x=>[x.contentUrl.split('/').at(-1).replace(/\.mp4$/,''),x.uploadDate]));
+  pinnedHome.window.close();
+  homepage=await buildEditorialHome(menu,{seoHead:seo.renderSeoHead(menu),hoursScript,openingHours:seo.seoServiceHoursText(menu,'opening'),videoDates});
+  const homeFooter=homepage.match(/<footer\b[\s\S]*?<\/footer>/)?.[0];
+  if(!homeFooter)throw Error('Missing editorial footer');
+  const shell={homeFooter,version:editorialAssetVersion};
+  homepage=applyEditorialShell(homepage,{...shell,page:'home'});
+  storefront=applyEditorialShell(buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css?v='+encodeURIComponent(editorialAssetVersion)+'"></head>'),{...shell,page:'pedir',hoursScript});
+  const indexableMenu=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
+  if(!indexableMenu)throw Error('Missing indexable menu');
+  for(const page of ['menu','delivery-y-retiro','catering','nuestra-historia']){
+   const raw=page==='menu'?indexableMenu:assets.get('/'+page+'/index.html').toString('utf8');
+   infoPages.set(page+'/index.html',applyEditorialShell(raw,{...shell,page}));
+  }
   descriptions=menu.products.filter(p=>seo.publicProductDescription(menu,p)).length;
   if(descriptions!==menu.products.length)throw Error('A published product has no description');
-  homepage=await buildEditorialHome(menu,{seoHead:seo.renderSeoHead(menu),hoursScript:serviceHoursPageScript(menu),openingHours:seo.seoServiceHoursText(menu,'opening')});
   for(const required of ['function fatayUpgradePanel()','function couponSection()',
       'function serviceAvailable(','function cartBenefit(','function applyCoupon()',
       'createStorefrontUpsells','data-upsell-consult','upsell-offer']){
@@ -96,12 +109,13 @@ async function run(){
  await fs.writeFile(path.join(output,'index.html'),homepage);
  await fs.writeFile(path.join(output,'sitemap.xml'),editorialSitemap(assets.get('/sitemap.xml').toString('utf8'),menu.site.seo.url));
  await fs.writeFile(path.join(output,'pedir/index.html'),storefront);
- await fs.writeFile(path.join(output,'menu/index.html'),menuPage);
+ for(const [file,html] of infoPages)await fs.writeFile(path.join(output,file),html);
  await fs.writeFile(path.join(output,'menu.json'),JSON.stringify(menu,null,1));
+ const generated=['/index.html','/pedir/index.html','/menu.json',...[...infoPages.keys()].map(p=>'/'+p),'/sitemap.xml'];
  const report={
   status:'ready-for-safe-checkout-review',sourceDeploymentId:SOURCE_DEPLOYMENT_ID,
-  preserved:FILES.filter(f=>!['/index.html','/pedir/index.html','/menu.json','/menu/index.html','/sitemap.xml'].includes(f)),
-  generated:['/index.html','/pedir/index.html','/menu.json','/menu/index.html','/sitemap.xml'],descriptions,
+  preserved:FILES.filter(f=>!generated.includes(f)),
+  generated,descriptions,seoPreserved:true,
   products:menu.products.length,remotePhotos:menu.products.filter(p=>p.image?.startsWith('https://')).length,
   beverages:menu.products.filter(p=>p.category==='Bebidas').length,
   campaigns:(menu.promotions?.campaigns||[]).map(p=>({id:p.id,enabled:p.enabled===true})),
