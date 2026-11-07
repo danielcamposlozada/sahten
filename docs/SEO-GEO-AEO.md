@@ -2,6 +2,8 @@
 
 ## Navegación hacia las secciones de inicio · 7/11/2026
 
+Producción de Cloudflare Pages verificada en `b65056b3-aa4d-4fc6-a106-f69c7644a53b` (PR #127). El dominio público confirma la navegación, la tienda y el carrito en celular y escritorio. Se verificaron las seis rutas, los 40 productos, los metadatos y el sitemap.
+
 La versión A concentra la navegación móvil en una fila. «Ver menú» abre la tienda y «Mi pedido» abre el carrito. Historia, Videos, Catering y Encontranos enlazan a secciones de la portada. Carta, Delivery y retiro, Catering y Nuestra historia conservan sus URLs informativas en el pie y el sitemap. Se cotejaron los metadatos, canonical y datos estructurados de las seis páginas y se probó el recorrido en celular y escritorio.
 
 ## Continuidad visual · 7/11/2026
