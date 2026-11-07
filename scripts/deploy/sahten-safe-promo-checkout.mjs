@@ -12,8 +12,8 @@ import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/pro
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {editorialBenefitEnabled,editorialCampaignMarkup,editorialLoyaltyMarkup} from '../../src/online/editorial-state.js';
 
-const SOURCE_DEPLOYMENT_ID='a2ec832a-b399-43fd-b6f0-de6174fe1878';
-const PINNED_URL='https://a2ec832a.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='0d72c947-bc44-473c-91ff-f0243d2a69e5';
+const PINNED_URL='https://0d72c947.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',

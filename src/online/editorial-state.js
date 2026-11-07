@@ -24,15 +24,18 @@ export function editorialLoyaltyMarkup(menu,programs=[],shopHref='pedir/'){
  if(menu.config?.enabled===false||menu.config?.showPrices===false||menu.promotions?.enabled!==true)return '';
  const money=n=>'$'+Number(n).toLocaleString('es-AR',{maximumFractionDigits:2});
  return programs.map(p=>{
-  const products=(menu.products||[]).filter(product=>p.productIds?.includes(product.id)&&!product.retired&&!product.upsellOnly&&!salesPaused(product));
+  const available=(menu.products||[]).filter(product=>!product.retired&&!product.upsellOnly&&!salesPaused(product));
+  const products=available.filter(product=>p.productIds?.includes(product.id));
   if(!products.length)return '';
+  const allMenu=available.length>0&&available.every(product=>p.productIds?.includes(product.id));
+  const coverage=allMenu?'todo el menú disponible':'productos participantes';
   const total=Number(p.totalPercent??Number(p.extraPercent)+Number(p.paymentPercent||0));
   if(!Number.isFinite(total)||total<=0)return '';
   return '<article class="public-promo" data-public-promotion="'+editorialEscape(p.id)+'"><div class="offer-head">'+editorialPromoIcon+'<div class="offer-names"><p class="combo-kicker">'+(p.id==='first_online'?'TU PRIMER PEDIDO WEB':'VOLVÉ A ELEGIRNOS')+'</p><h2>'+editorialEscape(p.name)+'</h2></div></div><div class="offer-amounts">'
-   +'<p><strong>Hasta '+total+'% total</strong> con efectivo o transferencia, en productos participantes.</p>'
-   +(p.mercadopago?.enabled===true?'<p><strong>'+Number(p.mercadopago.totalPercent)+'% pagando con Mercado Pago</strong>'+ (Number(p.mercadopago.minEligibleSubtotal)>0?' desde '+money(p.mercadopago.minEligibleSubtotal)+' en productos participantes':' en productos participantes')+(p.mercadopago.maxExtraAmount==null?', sin tope de descuento.':', tope '+money(p.mercadopago.maxExtraAmount)+'.')+' Envío aparte.</p>':'')
-   +'</div><details class="offer-details"><summary>Condiciones y platos participantes</summary><div class="offer-full-terms"><p class="promo-conditions">'+(Number(p.minEligibleSubtotal)>0?'Desde '+money(p.minEligibleSubtotal)+' en productos participantes.':'Productos participantes.')+'</p><p>'+ (Number(p.minEligibleSubtotal)>0?'Mínimo en productos participantes '+money(p.minEligibleSubtotal)+'. ':'')+(p.maxExtraAmount!=null?'Tope del descuento adicional '+money(p.maxExtraAmount)+'. ':'')+'Incluye el beneficio por pago. Envío excluido. Un uso por teléfono. No acumulable con otras promociones. '+(p.endsOn?'Programa hasta '+editorialEscape(p.endsOn)+'. ':'Programa sin fecha final programada. ')+'Cada cupón vence '+Number(p.validDays)+' días después de su emisión.</p>'
+   +'<p><strong>Hasta '+total+'% total</strong> con efectivo o transferencia, en '+coverage+'.</p>'
+   +(p.mercadopago?.enabled===true?'<p><strong>'+Number(p.mercadopago.totalPercent)+'% pagando con Mercado Pago</strong>'+ (Number(p.mercadopago.minEligibleSubtotal)>0?' desde '+money(p.mercadopago.minEligibleSubtotal)+' en '+coverage:' en '+coverage)+(p.mercadopago.maxExtraAmount==null?', sin tope de descuento.':', tope '+money(p.mercadopago.maxExtraAmount)+'.')+' Envío aparte.</p>':'')
+   +'</div><details class="offer-details"><summary>'+(allMenu?'Condiciones del beneficio':'Condiciones y platos participantes')+'</summary><div class="offer-full-terms"><p class="promo-conditions">'+(Number(p.minEligibleSubtotal)>0?'Desde '+money(p.minEligibleSubtotal)+' en '+coverage+'.':allMenu?'En todo el menú disponible.':'Productos participantes.')+'</p><p>'+ (Number(p.minEligibleSubtotal)>0?'Mínimo en '+coverage+': '+money(p.minEligibleSubtotal)+'. ':'')+(p.maxExtraAmount!=null?'Tope del descuento adicional '+money(p.maxExtraAmount)+'. ':'')+'Incluye el beneficio por pago. Envío excluido. Un uso por teléfono. No acumulable con otras promociones. '+(p.endsOn?'Programa hasta '+editorialEscape(p.endsOn)+'. ':'Programa sin fecha final programada. ')+'Cada cupón vence '+Number(p.validDays)+' días después de su emisión.</p>'
    +'<p>'+(p.id==='first_online'?'Ingresá tu teléfono en la tienda para consultar el beneficio.':'El beneficio se emite después de confirmar y cobrar tu primera compra web. Usá el mismo teléfono para encontrarlo en tu próximo pedido.')+'</p>'
-   +'<ul>'+products.map(product=>'<li>'+editorialEscape(product.name)+'</li>').join('')+'</ul></div></details><a class="combo-cta" href="'+editorialEscape(shopHref)+'?beneficio='+encodeURIComponent(p.id)+'#pedido">Ver productos del beneficio ↗</a></article>';
+   +(allMenu?'':'<ul>'+products.map(product=>'<li>'+editorialEscape(product.name)+'</li>').join('')+'</ul>')+'</div></details><a class="combo-cta" href="'+editorialEscape(shopHref)+'?beneficio='+encodeURIComponent(p.id)+'#pedido">Ver productos del beneficio ↗</a></article>';
  }).join('');
 }
