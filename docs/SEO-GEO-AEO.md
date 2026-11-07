@@ -1,5 +1,9 @@
 # SEO, GEO y AEO de Sahten — lo que hay que saber antes de tocar la web
 
+## Contador del pedido y acceso al menú · 7/11/2026
+
+Producción de Cloudflare Pages verificada en `eda20121-12fd-4049-8159-897ffde77d4b` (PR #128). El contador lee el mismo carrito de la pestaña en inicio y en la tienda. «Ver menú completo» lleva a los platos para pedir y la Carta de consulta queda enlazada desde el pie. Se verificaron seis rutas, 40 productos, metadatos y sitemap. El rediseño del bloque de beneficios se presentó como propuesta visual.
+
 ## Navegación hacia las secciones de inicio · 7/11/2026
 
 Producción de Cloudflare Pages verificada en `b65056b3-aa4d-4fc6-a106-f69c7644a53b` (PR #127). El dominio público confirma la navegación, la tienda y el carrito en celular y escritorio. Se verificaron las seis rutas, los 40 productos, los metadatos y el sitemap.
