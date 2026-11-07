@@ -14,7 +14,7 @@
 .catalog-search-box svg{width:20px;height:20px;flex:none;color:var(--catalog-muted)}
 .catalog-search input{border:0;outline:none;background:transparent;padding:12px 0;min-width:0;min-height:46px;border-radius:0}
 .catalog-search input:focus-visible{outline:none}
-.catalog-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;align-items:start}
+.catalog-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(350px,29vw,400px);gap:28px;align-items:start}
 .catalog-main{min-width:0}
 #menuwrap #menu{max-width:none;padding:0;margin:0;min-width:0}
 #menuwrap .cats{position:static;padding:0 0 16px;border:0;overflow:visible;flex-wrap:wrap;background:transparent}
@@ -102,7 +102,7 @@
 .sheet-footer .checkout-back{font-size:14px}
 .sheet-footer #err:not(:empty){font-size:14px;line-height:1.5;margin-top:8px}
 @media(min-width:1100px){
- .has-site.view-order #menuwrap,body:not(.has-site) #menuwrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:28px;row-gap:18px;align-items:start}
+ .has-site.view-order #menuwrap,body:not(.has-site) #menuwrap{display:grid;grid-template-columns:minmax(0,1fr) clamp(350px,29vw,400px);column-gap:28px;row-gap:18px;align-items:start}
  #menuwrap .oback{grid-column:1/-1;padding-bottom:0}
  .catalog-heading{grid-column:1;margin-bottom:0;min-width:0}
  #catalog-benefit{grid-column:1}
@@ -206,3 +206,19 @@
 .catalog-promos-list h2{font-size:17px;margin:6px 0}.catalog-promos-list p{font-size:14px;line-height:1.5;margin:8px 0}.catalog-promos-list .combo-kicker{font-size:11px;font-weight:750;letter-spacing:.04em}
 .catalog-promos-list summary{font-size:14px;font-weight:650;min-height:44px;cursor:pointer;padding:10px 0}.catalog-promos-list ul{font-size:14px;line-height:1.5;padding-left:18px}
 .catalog-promos-list .combo-cta{display:block;min-height:44px;padding:10px 12px;margin-top:10px;background:var(--primary);color:var(--on-primary);border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;text-align:center}
+
+/* Beneficios: tarjetas compactas con condiciones legibles, sin estirar las vecinas. */
+.catalog-public-promos h2{font-size:22px;line-height:1.2;margin:22px 0 14px}
+.catalog-promos-list{align-items:flex-start;gap:14px;padding:2px 2px 14px;scroll-snap-type:x mandatory;scrollbar-color:var(--primary) transparent}
+.catalog-promos-list .public-promo{flex-basis:min(340px,86vw);min-height:0;padding:18px;border:1px solid var(--benefit-border);border-left:4px solid var(--primary);border-radius:8px 24px 8px 8px;background:var(--card)}
+.catalog-promos-list .promo-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:9px;background:var(--benefit-bg);color:var(--benefit-ink);margin-bottom:10px}
+.catalog-promos-list .promo-icon svg{width:28px;height:28px}
+.catalog-promos-list .public-promo h2{font-size:19px;margin:6px 0 10px}
+.catalog-promos-list .public-promo p{font-size:14px;line-height:1.5}
+.catalog-promos-list .public-promo p>strong{font-size:16px;line-height:1.4}
+.catalog-promos-list .public-promo .promo-conditions{color:var(--catalog-muted);font-size:13px}
+.catalog-promos-list .public-promo summary{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.order-summary .side-items .cart-item{padding:14px 0;gap:12px}
+.order-summary .cart-item-name{font-size:16px;line-height:1.35;overflow-wrap:anywhere}
+.order-summary .cart-item-product{gap:12px}
+.order-summary .checkout-thumbnail{width:52px;height:52px;flex:none}
