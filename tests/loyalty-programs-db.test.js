@@ -21,6 +21,7 @@ beforeAll(async()=>{
  await db.exec(read('supabase/migrations/20261105020000_phone_loyalty_programs.sql'));
  await db.exec(read('supabase/migrations/20261105040000_public_promotion_programs.sql'));
  await db.exec(read('supabase/migrations/20261106000100_online_loyalty_origin.sql'));
+ await db.exec(read('supabase/migrations/20261107162243_reviewed_web_loyalty_coverage.sql'));
  await db.exec(`select set_config('request.jwt.claim.sub','${owner}',false);`);
 },60000);
 afterAll(async()=>db?.close());
@@ -120,4 +121,20 @@ it('counts only paid online purchases for welcome and returning customer benefit
  await expect(rpc('sahten_customer_coupon_lookup',[sid,await digest(second.id),phone])).rejects.toThrow(/coupon_origin_unpaid/);
  await db.query('update sahten_private.promotion_coupons set origin_order_id=$1 where id=$2',[online,second.id]);
  await insert('delivery');expect(await rpc('sahten_phone_benefit',[sid,phone])).toBeNull();
+});
+
+it('honors an existing welcome-only review for unchanged terms, and rejects client-supplied or stale exceptions',async()=>{
+ const ownerProgram=(await rpc('get_store_loyalty_programs',[sid])).find(r=>r.id==='first_online');
+ const review={baklava:{price:10000,costCeiling:5000,marginFloor:35}};
+ const original={...ownerProgram.terms,totalPercent:20,extraPercent:10};
+ await db.exec("create or replace function public.sahten_promotion_costs(sid uuid,channel text default 'mostrador') returns jsonb language sql as $$select '{\"baklava\":5000}'::jsonb$$;");
+ // A caller cannot add an exception through the public editor.
+ await expect(rpc('set_store_loyalty_program',[sid,'first_online',{...original,coverageReview:review},true,ownerProgram.revision])).rejects.toThrow(/campaign_margin_below_minimum/);
+ await db.query("update sahten_private.loyalty_programs set terms=$2 where store_id=$1 and id='first_online'",[sid,{...original,coverageReview:review}]);
+ const saved=await rpc('set_store_loyalty_program',[sid,'first_online',original,true,ownerProgram.revision]);
+ expect(saved.saved).toBe(true);
+ expect((await rpc('get_public_loyalty_programs',[sid])).find(x=>x.id==='first_online')).not.toHaveProperty('coverageReview');
+ await expect(rpc('set_store_loyalty_program',[sid,'first_online',{...original,minEligibleSubtotal:0},true,saved.revision])).rejects.toThrow(/campaign_margin_below_minimum/);
+ await db.query("update public.menus set json=jsonb_set(json,'{products,0,price}','11000'::jsonb) where store_id=$1",[sid]);
+ await expect(rpc('set_store_loyalty_program',[sid,'first_online',original,true,saved.revision])).rejects.toThrow(/promotion_cost_review_changed/);
 });

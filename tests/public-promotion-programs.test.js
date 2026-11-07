@@ -25,7 +25,8 @@ it('does not advertise paused products or private drafts and lists all valid pub
  m.products[0].salesAvailability=null;m.config.showPrices=false;expect(editorialCampaignMarkup(m)).toBe('');
 });
 it('presenta el beneficio con cupón decorativo y conserva condiciones y productos',()=>{
- const doc=new JSDOM(editorialLoyaltyMarkup(menu,programs));
+ const partial={...menu,products:[product,{id:'other',name:'Otro plato',price:15000}]};
+ const doc=new JSDOM(editorialLoyaltyMarkup(partial,programs));
  try{const d=doc.window.document;
   expect(d.querySelector('.promo-icon[aria-hidden="true"] svg')).not.toBeNull();
   expect(d.querySelector('.offer-amounts').textContent).toContain('20%');
@@ -33,6 +34,12 @@ it('presenta el beneficio con cupón decorativo y conserva condiciones y product
   expect(d.querySelector('details').textContent).toContain('14 días');
   expect(d.querySelector('details').textContent).toContain('Plato de prueba');
  }finally{doc.window.close();}
+});
+it('dice todo el menú disponible solo cuando todos los productos disponibles participan',()=>{
+ const all=new JSDOM(editorialLoyaltyMarkup(menu,programs)),partial=new JSDOM(editorialLoyaltyMarkup({...menu,products:[product,{id:'other',name:'Otro plato'}]},programs));
+ try{expect(all.window.document.body.textContent).toContain('todo el menú disponible');expect(all.window.document.querySelector('details summary').textContent).toBe('Condiciones del beneficio');expect(all.window.document.querySelector('details ul')).toBeNull();
+  expect(partial.window.document.body.textContent).not.toContain('todo el menú disponible');expect(partial.window.document.querySelector('details ul').textContent).toContain('Plato de prueba');
+ }finally{all.window.close();partial.window.close();}
 });
 it('conserva abiertas las condiciones al actualizar los beneficios de la home',async()=>{
  const runtime=readFileSync('media/sahten-editorial/home-runtime.js','utf8');let calls=0,items=structuredClone(programs);

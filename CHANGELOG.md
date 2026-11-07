@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- Tienda: primera y segunda compra muestran «todo el menú disponible» cuando el beneficio alcanza a toda la carta. Las revisiones de costos son privadas y específicas de cada programa.
+
 - Tienda: tarjetas de beneficios con condiciones desplegables e ícono de cupón, filtro visible y botón para volver a toda la carta; carrito lateral más amplio en escritorio.
 - Checkout: las consultas de beneficios y cotizaciones permiten reintentar si no responden y se aclara cuándo hace falta validar la dirección para calcular un descuento.
 - Tienda: los beneficios elegibles de primera y segunda compra se consultan con el teléfono y se aplican automáticamente; los errores y el reintento se muestran sin impedir continuar la compra.
