@@ -60,7 +60,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'d8187a55-c873-4c4b-b52e-de23aa7f924d');
+          assert.equal(r.sourceDeploymentId,'a2ec832a-b399-43fd-b6f0-de6174fe1878');
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
           assert.equal(r.commercialFingerprint,r.sourceCatalogFingerprint);

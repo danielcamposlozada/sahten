@@ -3,6 +3,7 @@
 @font-face{font-family:DM;src:url('fonts/dm-sans-900.woff2');font-weight:900;font-display:swap}
 @font-face{font-family:Lora;src:url('fonts/lora-latin-italic.woff2');font-weight:400 700;font-style:italic;font-display:swap}
 :root{--primary:#235328;--accent:#EF8E23;--bg:#FAF8F5;--serif:DM,Arial,sans-serif}
+.catalog-promos-list .promo-icon{--promo-icon-detail:#FFF4D6;background:#F28C00;color:#235328}
 body,input,button,textarea,select{font-family:DM,Arial,sans-serif}
 #snav{background:#235328;color:#FFF4D6;min-height:80px;border:0;gap:24px}
 #snav a,#snav summary{color:#FFF4D6}#snav .pedido{background:#FFF4D6;color:#235328;border-radius:4px;font-weight:700;min-height:44px}
