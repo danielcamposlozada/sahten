@@ -61,13 +61,16 @@ export function createCloudEntry({w,project,online}) {
       }
     }
     if(!rawFile?.project||!rawFile?.online)throw new SupabaseError('La nube no devolvió los datos de este negocio. No se cambió el proyecto local.');
-    if(rawFile.project.id && rawFile.project.id!==selected.id)throw new SupabaseError('Los identificadores del negocio no coinciden. No se abrió ningún proyecto.');
+    // El UUID de la nube (projects.id) NO es el ID local del archivo .sahten.
+    // Ambos se conservan para evitar duplicados y errores de sincronización.
+    const localId=rawFile.project.id;
+    if(typeof localId!=='string'||!localId.trim())throw new SupabaseError('El negocio no tiene un identificador local válido.');
     const cloudConn=rawFile.online.supabase||{};
     const store=(Array.isArray(storeRows)?storeRows:[]).find(x=>x.id===cloudConn.storeId)||(Array.isArray(storeRows)?storeRows:[])[0];
     if(!store?.id)throw new SupabaseError('Este negocio todavía no tiene una tienda conectada. Consultá al administrador.');
     const conn={url:SAHTEN_AUTH_URL,anonKey:SAHTEN_AUTH_PUBLISHABLE_KEY,storeId:store.id,slug:store.slug||'',projectId:selected.id};
     const session=project.session;
-    const alreadyOpen=session.isOpen&&session.id===selected.id;
+    const alreadyOpen=session.isOpen&&session.id===localId;
     if(session.isOpen&&!alreadyOpen){
       const ok=await w.sahtenConfirm('Se abrirá «'+selected.name+'» desde la nube. El proyecto local actual se conservará en su archivo y respaldos. ¿Querés cambiar de negocio?',
         {title:'Cambiar de negocio',okLabel:'Abrir desde la nube',w});
@@ -78,15 +81,15 @@ export function createCloudEntry({w,project,online}) {
     const authSession=client.auth.session;
     if(!authSession?.access_token||!authSession?.refresh_token)throw new SupabaseError('La sesión de correo venció. Volvé a ingresar.');
     // Preparar sesión y rol antes de abrir el proyecto: onProjectOpened hace resume().
-    config.set('online-session:'+selected.id,authSession);
-    config.set('online-role:'+selected.id,selected.role);
+    config.set('online-session:'+localId,authSession);
+    config.set('online-role:'+localId,selected.role);
     if(alreadyOpen){
       Object.assign(w.SAHTEN_SUPABASE,conn);
       project.markDirty();
       await online.onProjectOpened();
     }else{
       const file=await createImageStore(client).restore(rawFile,{});
-      file.project.id=selected.id;
+      file.project.id=localId;
       file.online={...file.online,supabase:conn};
       await session.openText(serialize(file),null,(file.project.name||selected.name)+'.sahten');
       session.setReadOnly(selected.role==='lectura');
