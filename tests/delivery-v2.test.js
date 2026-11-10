@@ -80,7 +80,6 @@ it('Zona 2 conserva envío gratis tras el 10 % en efectivo: caso real $35.450',(
  expect(ineligible).toMatchObject({cost:3000,nextBenefit:{remaining:3095}});
  const eligible=deliveryQuote(p,d,31905,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545});
  expect(eligible).toMatchObject({cost:0,free:true,progress:100,eligibleSubtotal:35450});
- // Otra promoción sobre productos sí reduce la base de beneficio de delivery.
  const withProductPromotion=deliveryQuote(p,d,30132.5,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545});
  expect(withProductPromotion).toMatchObject({cost:3000,eligibleSubtotal:33677.5});
 });
