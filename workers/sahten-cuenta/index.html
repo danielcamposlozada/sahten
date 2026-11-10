@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#143d2b">
+<title>Acceso y recuperación de cuenta | Sahten</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#163326;background:#f7f5ef;line-height:1.45;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:flex;flex-direction:column}button,input{font:inherit}
+header{background:#153d2c;color:#fff;padding:21px max(22px,calc((100vw - 1060px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{letter-spacing:.11em;font:700 25px Georgia,serif}.brand small{display:block;font:400 11px system-ui,sans-serif;letter-spacing:.17em;color:#d4bc83}
+header a{font-size:13px;color:#e7d6b3;text-decoration:none}
+main{width:min(100% - 32px,570px);margin:55px auto 70px;flex:1}
+.eyebrow{text-transform:uppercase;color:#7a633f;letter-spacing:.17em;font-size:11px;font-weight:800}
+h1{font-size:clamp(29px,5vw,42px);line-height:1.14;letter-spacing:-.035em;margin:9px 0 12px;font-weight:750}
+.intro{color:#56695f;margin:0 0 27px;font-size:15px}
+.panel{background:#fff;border:1px solid #e1e2d9;border-radius:17px;box-shadow:0 16px 44px rgba(27,52,32,.07);padding:24px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:26px}
+.tab{border:1px solid #e0e5dd;background:#f5f6f1;padding:12px 9px;border-radius:9px;font-weight:600;font-size:13px;color:#2d5340;cursor:pointer}
+.tab[aria-selected="true"]{background:#1a4932;border-color:#1a4932;color:white}
+h2{font-size:18px;margin:0 0 7px}p.muted{color:#63736b;font-size:13px;line-height:1.55;margin:0 0 18px}
+label{display:block;font-size:13px;font-weight:650;margin-bottom:7px}
+input{width:100%;border:1px solid #b8c9bf;border-radius:8px;padding:13px 12px;outline-offset:2px;min-height:46px;background:#fff;color:#1d3125}
+input:focus{outline:2px solid #3b7455;border-color:transparent}
+.field{margin:0 0 16px}.help{font-size:12px;color:#68756e;margin:6px 0 0}
+.btn{width:100%;border:none;border-radius:8px;padding:13px 18px;min-height:48px;background:#1a4932;color:#fff;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.58;cursor:wait}.btn.secondary{background:#e9f2eb;color:#1a4932;border:1px solid #bbcfbf}
+.rule{border:0;border-top:1px solid #e8ebe5;margin:26px 0}
+details{background:#f8f9f6;border-radius:10px;padding:14px;margin:15px 0}
+summary{cursor:pointer;color:#24513a;font-weight:650;font-size:13px}
+details .field{margin-top:14px}#status{padding:11px 13px;border-radius:8px;background:#f4f7f2;color:#294b33;font-size:13px;margin:17px 0;white-space:pre-wrap}
+#status[data-kind="error"]{background:#fff0ef;color:#922c22}
+#status[data-kind="success"]{background:#eaf5ea;color:#235b35}
+#status:empty{display:none}
+.hidden{display:none!important}
+#complete{margin-top:20px;padding:20px;background:#f1f8ed;border:1px solid #cadfcb;border-radius:11px}
+#complete strong{display:block;font-size:18px;margin-bottom:8px}
+#complete p{font-size:14px;line-height:1.6;color:#415a49;margin:0}
+footer{background:#f0efe7;padding:21px 20px;text-align:center;font-size:12px;color:#6a7267}
+footer a{color:#27523a}a:focus-visible,button:focus-visible{outline:3px solid #bd9b51;outline-offset:3px}
+@media(max-width:560px){main{margin-top:30px}.panel{padding:18px}header{padding:16px 20px}.brand{font-size:22px}}
+</style>
+<script src="/cuenta/app.js" defer></script>
+</head>
+<body>
+<header><div class="brand">SAHTEN<small>GASTRONOMÍA ÁRABE</small></div><a href="/">Volver a la web de Sahten</a></header>
+<main>
+<div class="eyebrow">Acceso seguro al sistema</div>
+<h1>Recuperá tu cuenta</h1>
+<p class="intro">Gestioná tu contraseña o verificá el acceso desde el correo que recibiste. No necesitás tener abierta la app de Sahten.</p>
+<section class="panel" aria-label="Acceso a la cuenta">
+<div class="tabs" role="tablist" aria-label="Tipo de acceso">
+<button class="tab" type="button" id="tab-recovery" role="tab" aria-selected="true" aria-controls="steps">Recuperar contraseña</button>
+<button class="tab" type="button" id="tab-login" role="tab" aria-selected="false" aria-controls="steps">Acceso por correo</button>
+</div>
+<div id="steps">
+<div id="step-request">
+<h2 id="request-title">1. Pedí un correo de recuperación</h2>
+<p class="muted" id="request-description">Te enviaremos un enlace o código al correo de tu cuenta de Sahten.</p>
+<form id="request-form" novalidate>
+<div class="field"><label for="email">Correo electrónico</label><input id="email" name="email" autocomplete="email" inputmode="email" type="email" placeholder="tu-correo@ejemplo.com" required></div>
+<button class="btn" id="request-button" type="submit">Enviar correo</button>
+</form>
+</div>
+<hr class="rule">
+<div id="step-verify">
+<h2 id="verify-title">2. Verificá el correo</h2>
+<p class="muted">Si recibiste un código numérico, ingresalo aquí. Si el correo trae un botón, podés pulsarlo después de configurar su redirección, o pegar su enlace original.</p>
+<form id="verify-form" novalidate>
+<div class="field"><label for="otp">Código recibido</label><input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Código de 6 dígitos"><p class="help">El código solo funciona una vez y vence por seguridad.</p></div>
+<details id="paste-link"><summary>Mi correo tiene un enlace, no un código</summary>
+<div class="field"><label for="original-link">Dirección original del enlace</label><input id="original-link" type="text" spellcheck="false" autocomplete="off" placeholder="https://…supabase.co/auth/v1/verify?…">
+<p class="help">Copiá la dirección del botón desde el correo, sin abrirlo. Nunca compartas ese enlace con otra persona.</p></div>
+</details>
+<button class="btn secondary" id="verify-button" type="submit">Verificar acceso</button>
+</form>
+</div>
+<form id="password-form" class="hidden" novalidate>
+<h2>Elegí una contraseña nueva</h2>
+<p class="muted">El correo ya fue verificado. Tu contraseña anterior no es necesaria.</p>
+<div class="field"><label for="password">Contraseña nueva</label><input id="password" type="password" minlength="8" autocomplete="new-password" required><p class="help">Usá al menos 8 caracteres; preferentemente una frase única.</p></div>
+<div class="field"><label for="confirm-password">Repetir contraseña</label><input id="confirm-password" type="password" minlength="8" autocomplete="new-password" required></div>
+<button class="btn" id="password-button" type="submit">Guardar nueva contraseña</button>
+</form>
+</div>
+<div id="status" role="status" aria-live="polite"></div>
+<div id="complete" class="hidden" role="status" aria-live="polite">
+<strong id="complete-title"></strong><p id="complete-message"></p>
+</div>
+</section>
+<p class="help" style="margin-top:16px">Esta página es para cuentas del sistema de gestión de Sahten, no para realizar pedidos. Si necesitás ayuda, contactá al administrador de tu negocio.</p>
+</main>
+<footer>Sahten · Portal de cuentas seguro · <a href="/">Volver a la tienda</a></footer>
+</body>
+</html>
