@@ -32,8 +32,8 @@
     return 'No se pudo completar la operación. Revisá los datos e intentá nuevamente.';
   }
   async function auth(path, body, token = null, method = 'POST') {
-    const headers = {'apikey': PUBLIC_KEY, 'Content-Type':'application/json'};
-    if (token) headers.Authorization = 'Bearer ' + token;
+    const headers = {'apikey': PUBLIC_KEY, 'Content-Type':'application/json',
+      'Authorization':'Bearer ' + (token || PUBLIC_KEY)};
     const res = await fetch(AUTH + path, {
       method, mode:'cors',credentials:'omit',cache:'no-store',redirect:'error',referrerPolicy:'no-referrer',
       headers, ...(body === undefined ? {} : {body: JSON.stringify(body)})
