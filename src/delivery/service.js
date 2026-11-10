@@ -56,7 +56,7 @@ export function createDeliveryService({repo,authenticate,resolveRoute,geocode,no
     const menu=await repo.menu(sid),p=deliveryPolicyWithHours(menu?.delivery);
     if(menu.delivery?.enabled===false)fail('El delivery está pausado por el local.',409,'service_paused');
     if(!p?.active||p.revision!==record.revision)fail('Cambió la configuración. Volvé a calcular la entrega.',409);
-    const q=deliveryQuote(p,record.route.destination,record.result.netSubtotal,{route:record.route,now:now(),hasPaymentDiscount:!!record.payload.paymentDiscount});
+    const q=deliveryQuote(p,record.route.destination,record.result.netSubtotal,{route:record.route,now:now(),hasPaymentDiscount:!!record.payload.paymentDiscount,paymentDiscountAmount:record.result.paymentDiscountExcluded||0});
     if(!['available','authorization_required'].includes(q.status))fail('No se puede autorizar una zona pausada, fuera de cobertura o bajo el mínimo.',409);
     await repo.run('authorize',{store_id:sid,id:record.id,actor:user.id,reason,tariff_exception:b.tariffFloorException===true});
     return response({approved:true});
