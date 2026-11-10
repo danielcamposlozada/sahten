@@ -21,6 +21,21 @@ Con Supabase sumás:
    **Nunca uses ni pegues la `service_role`**: da acceso total a la base. La app la detecta y la rechaza.
 4. **Authentication › Providers › Email**: dejá activado. Para empezar rápido podés desactivar *Confirm email*; si no, cada persona confirma su email.
 
+## Corregir enlaces de correo que terminan en localhost (v0.4.54)
+
+**Síntoma:** el correo de acceso rápido o recuperación abre Chrome en `localhost` y muestra `ERR_CONNECTION_REFUSED`. Es una configuración de desarrollo de Supabase Auth; no implica que tu cuenta ni tu contraseña estén mal.
+
+**Solución disponible dentro de Sahten 0.4.54:**
+1. Abrí **Iniciar sesión › Ingresar con código por correo** o **Recuperar contraseña** y solicitá un correo **nuevo**.
+2. Si el correo contiene código numérico, escribilo directamente en Sahten; no toques el enlace.
+3. Si el correo solo tiene un botón/enlace, utilizá **Copiar dirección del enlace** desde el propio mensaje (clic derecho en escritorio o mantener pulsado en móvil). **No lo abras primero**, porque puede quedar consumido. Volvé a Sahten y pegalo en **Enlace original del correo**, debajo del campo Código.
+4. Para recuperación, elegí y repetí la nueva contraseña; para acceso rápido, Sahten verificará el enlace e iniciará sesión.
+5. No compartas el enlace con nadie: es una credencial de un solo uso. No pegues la URL de `localhost` de la pantalla de error, sino el vínculo original del correo.
+
+**Corregir además la configuración de Supabase:** en el panel del proyecto, **Authentication › URL Configuration**, revisá **Site URL**: no debe quedar en `http://localhost:3000` ni en otro `localhost`; indicá una URL pública **que tenga un flujo de autenticación implementado**. Agregá esa URL a **Redirect URLs** y verificá la política de redirecciones. Para el flujo de la app de escritorio, el método recomendado sigue siendo **OTP dentro de Sahten**, no abrir enlaces web. Las plantillas de **Magic Link** y **Reset Password** deben incluir el código numérico `{{ .Token }}` para ofrecer este camino.
+
+No cambies redirecciones a rutas sin un manejador de sesiones válido. La opción de pegar el enlace evita el problema incluso mientras la URL de desarrollo continúe configurada.
+
 ## Códigos de acceso y recuperación de contraseña (Sahten 0.4.52)
 
 La app ofrece **Iniciar sesión › Ingresar con código por correo** y **Recuperar contraseña**, también en **Nube y usuarios** cuando la tienda está conectada. No se solicita nuevamente la URL de Supabase ni la clave pública en el equipo ya configurado.

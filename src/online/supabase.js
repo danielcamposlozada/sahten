@@ -46,6 +46,27 @@ const MESSAGES = {
   '23505': 'Ese nombre de tienda ya existe: elegí otro.', '42501': 'No tenés permiso para hacer eso con tu rol.', '23514': 'El valor no es válido.',
 };
 
+/** Interpreta SOLO enlaces originales de Supabase Auth, sin navegar hacia redirect_to.
+ * El token del correo es confidencial: no guardarlo, enviarlo a otros dominios ni registrarlo.
+ */
+export function parseEmailActionLink(link, baseUrl, purpose) {
+  const raw = String(link || '').trim();
+  if (!raw || raw.length > 8192) throw new SupabaseError('Copiá el enlace ORIGINAL del correo, sin abrirlo.', { code: 'invalid_email_link' });
+  let url, origin;
+  try { url = new URL(raw); origin = new URL(baseUrl).origin; }
+  catch { throw new SupabaseError('Pegá la dirección completa del botón del correo.', { code: 'invalid_email_link' }); }
+  if (url.origin !== origin || url.pathname !== '/auth/v1/verify' || url.username || url.password)
+    throw new SupabaseError('El enlace no pertenece al sistema de acceso de Sahten. Copiá el original desde el correo.', { code: 'invalid_email_link' });
+  const type = url.searchParams.get('type');
+  const validTypes = purpose === 'recovery' ? ['recovery'] : ['magiclink', 'email'];
+  if (!validTypes.includes(type)) throw new SupabaseError('El enlace corresponde a otra operación. Solicitá uno desde esta pantalla.', { code: 'invalid_email_link' });
+  const token = url.searchParams.get('token');
+  const tokenHash = url.searchParams.get('token_hash');
+  if ((!token && !tokenHash) || (token && tokenHash) || String(token || tokenHash).length > 2048)
+    throw new SupabaseError('No se encontró un código válido en el enlace. Solicitá uno nuevo.', { code: 'invalid_email_link' });
+  return token ? { type, token } : { type, token_hash: tokenHash };
+}
+
 export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () => Date.now(), session = null, onSession = () => {} }) {
   const v = validateConnection({ url, anonKey }); if (!v.ok) throw new SupabaseError(v.problem, { code: 'invalid_connection' });
   const base = v.url, key = v.anonKey;
@@ -96,6 +117,14 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
       const r = await raw('/auth/v1/verify', { method: 'POST', body: { email: String(email).trim(), token, type: 'recovery' } });
       if (!r?.access_token || !r?.refresh_token || !r?.user) throw new SupabaseError('El código de recuperación no es válido o venció.', { code: 'invalid_otp' });
       return setSession(r);
+    },
+    /** Consume un enlace original del correo EN LA APP (sin abrir localhost). */
+    async verifyEmailActionLink(link, purpose) {
+      const body = parseEmailActionLink(link, base, purpose);
+      const result = await raw('/auth/v1/verify', { method: 'POST', body });
+      if (!result?.access_token || !result?.refresh_token || !result?.user)
+        throw new SupabaseError('No se pudo validar el enlace. Solicitá uno nuevo y copialo sin abrirlo.', { code: 'invalid_email_link' });
+      return setSession(result);
     },
     async updatePassword(password) {
       if (!sess?.access_token) throw new SupabaseError('Primero verificá el código de recuperación.', { code: 'no_session' });

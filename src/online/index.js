@@ -188,8 +188,14 @@ export function createOnline({ w = window, project, events }) {
       ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume();
       zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates();
     },
+    async signInWithLink(link) {
+      await controller.signInWithLink(link);
+      ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume();
+      zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates();
+    },
     async requestPasswordReset(email) { return controller.recover(email); },
     async resetPassword(email, code, password) { return controller.resetPassword(email, code, password); },
+    async resetPasswordWithLink(link, password) { return controller.resetPasswordWithLink(link, password); },
     /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
     signOut() { availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 
