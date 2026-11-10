@@ -74,8 +74,34 @@ export function createClient({ url, anonKey, fetchImpl, WebSocketImpl, now = () 
     async signUp(email, password) { const d = await raw('/auth/v1/signup', { method: 'POST', body: { email, password } }); return d && d.access_token ? setSession(d) : { pendingConfirmation: true, user: d && (d.user || d) }; },
     async refresh() { if (!sess || !sess.refresh_token) throw new SupabaseError('Hay que volver a iniciar sesión.', { code: 'no_session' }); return setSession(await raw('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: sess.refresh_token } })); },
     signOut() { sess = null; onSession(null); },
-    /** Manda el email para elegir una contraseña nueva. */
-    async recover(email) { await raw('/auth/v1/recover', { method: 'POST', body: { email } }); return true; },
+    /** Solicita un código temporal solo para cuentas existentes (no crea usuarios). */
+    async sendLoginCode(email) {
+      await raw('/auth/v1/otp', { method: 'POST', body: { email: String(email).trim(), create_user: false } });
+      return true;
+    },
+    /** Supabase verifica el código; la sesión se guarda únicamente si es válida. */
+    async verifyLoginCode(email, code) {
+      const token = String(code).trim();
+      if (!/^\d{6,10}$/.test(token)) throw new SupabaseError('Ingresá el código numérico que recibiste por correo.', { code: 'invalid_otp' });
+      const r = await raw('/auth/v1/verify', { method: 'POST', body: { email: String(email).trim(), token, type: 'email' } });
+      if (!r?.access_token || !r?.refresh_token || !r?.user) throw new SupabaseError('No se pudo verificar el código. Solicitá uno nuevo.', { code: 'invalid_otp' });
+      return setSession(r);
+    },
+    /** Solicita el código/link de recuperación. No modifica la sesión local. */
+    async recover(email) { await raw('/auth/v1/recover', { method: 'POST', body: { email: String(email).trim() } }); return true; },
+    /** Verifica un token de recuperación en un cliente temporal, sin persistirlo. */
+    async verifyRecoveryCode(email, code) {
+      const token = String(code).trim();
+      if (!/^\d{6,10}$/.test(token)) throw new SupabaseError('Ingresá el código numérico que recibiste por correo.', { code: 'invalid_otp' });
+      const r = await raw('/auth/v1/verify', { method: 'POST', body: { email: String(email).trim(), token, type: 'recovery' } });
+      if (!r?.access_token || !r?.refresh_token || !r?.user) throw new SupabaseError('El código de recuperación no es válido o venció.', { code: 'invalid_otp' });
+      return setSession(r);
+    },
+    async updatePassword(password) {
+      if (!sess?.access_token) throw new SupabaseError('Primero verificá el código de recuperación.', { code: 'no_session' });
+      await raw('/auth/v1/user', { method: 'PUT', body: { password }, token: await auth.token() });
+      return true;
+    },
     async token() { if (!sess) return null; if (sess.expires_at - 60 <= Math.floor(now() / 1000)) await auth.refresh(); return sess.access_token; },
     get user() { return sess && sess.user; },
   };
