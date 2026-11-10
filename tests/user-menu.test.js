@@ -5,6 +5,8 @@ import { createMemoryAdapter } from '../src/project/adapters/memory.js';
 import { encodeConnection, decodeConnection } from '../src/online/supabase.js';
 import { initials } from '../src/online/userMenu.js';
 import { sahtenDialog, sahtenConfirm } from '../src/ui/dialog.js';
+import { emptyFile } from '../src/project/schema.js';
+import { SAHTEN_AUTH_URL } from '../src/online/cloudConfig.js';
 
 beforeAll(async () => { await buildTestBundle(); }, 180000);
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -77,6 +79,67 @@ describe('confirmaciones y errores sin bloquear', () => {
     expect(a.d.querySelectorAll('.st-toast').length).toBe(n);
     w.close();
   }, 60000);
+});
+
+describe('login directo sin conexión técnica',()=>{
+  it('abre Sahten con correo y contraseña desde bienvenida, descubre tienda y conserva ambos IDs',async()=>{
+    const a=await app(),w=a.window;
+    const cloud=emptyFile('Sahten nube');
+    cloud.project.id='id-local-sahten';
+    cloud.online.supabase={url:'',anonKey:'',storeId:''};
+    const calls=[];
+    w.fetch=async(url,opts={})=>{
+      const body=opts.body?JSON.parse(opts.body):null;
+      calls.push({url,body,headers:opts.headers||{}});
+      const routes=[
+        ['/auth/v1/token?grant_type=password',{access_token:'access',refresh_token:'refresh',expires_in:3600,user:{id:'u1',email:'dani@x.com'}}],
+        ['/rest/v1/project_members?', [{project_id:'remote-uuid-1',role:'owner'}]],
+        ['/rest/v1/projects?', [{id:'remote-uuid-1',name:'Sahten nube',version:1}]],
+        ['/rest/v1/stores?', [{id:'store-1',slug:'sahten',project_id:'remote-uuid-1'}]],
+        ['/rest/v1/rpc/get_project_data', {data:cloud,version:1}],
+        ['/rest/v1/orders',[]],
+      ];
+      const route=routes.find(([key])=>url.includes(key));
+      return {ok:!!route,status:route?200:404,json:async()=>route?route[1]:{message:'Missing: '+url}};
+    };
+    try{
+      await wait(35);
+      expect(a.d.querySelector('#proj-welcome').textContent).toContain('Iniciar sesión');
+      const task=a.on.cloudEntry.start();
+      await wait(20);
+      expect(a.d.querySelector('.sd-title').textContent).toBe('Ingresar a Sahten');
+      expect(a.d.querySelector('.sd-box').textContent).not.toContain('anon key');
+      a.d.getElementById('cloud-mail').value='dani@x.com';
+      a.d.getElementById('cloud-pass').value='segura';
+      a.d.querySelector('.sd-btn.primary').click();
+      expect(await task).toBe(true);
+      await wait(60);
+      expect(a.p.session.id).toBe('id-local-sahten');
+      expect(a.ev('SAHTEN_SUPABASE.projectId')).toBe('remote-uuid-1');
+      expect(a.ev('SAHTEN_SUPABASE.storeId')).toBe('store-1');
+      expect(a.ev('SAHTEN_SUPABASE.url')).toBe(SAHTEN_AUTH_URL);
+      expect(a.on.controller.info().signedIn).toBe(true);
+      expect(a.p.config.get('online-session:id-local-sahten',null).access_token).toBe('access');
+      expect(a.p.config.get('online-role:id-local-sahten',null)).toBe('owner');
+      expect(calls.find(c=>c.url.includes('project_members')).headers.Authorization).toBe('Bearer access');
+      expect(a.d.getElementById('proj-welcome')).toBeNull();
+    }finally{w.close();}
+  },60000);
+  it('sin membresías no abre ni reemplaza un proyecto, aunque las credenciales sean válidas',async()=>{
+    const a=await app(),w=a.window;
+    w.fetch=async(url)=>({ok:true,status:200,json:async()=>url.includes('/auth/v1/token')?
+      {access_token:'a',refresh_token:'r',expires_in:3600,user:{id:'u1',email:'dani@x.com'}}:[]});
+    try{
+      const task=a.on.cloudEntry.start();await wait(15);
+      a.d.getElementById('cloud-mail').value='dani@x.com';
+      a.d.getElementById('cloud-pass').value='segura';
+      a.d.querySelector('.sd-btn.primary').click();await wait(25);
+      expect(a.d.querySelector('.sd-box').textContent).toMatch(/no tiene todavía un negocio asignado/);
+      a.d.querySelector('.sd-btn.primary').click();
+      expect(await task).toBe(false);
+      expect(a.p.session.isOpen).toBe(false);
+    }finally{w.close();}
+  },60000);
 });
 
 describe('usuario en la barra superior', () => {
