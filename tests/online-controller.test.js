@@ -64,6 +64,36 @@ describe('conectar el proyecto', () => {
   });
 });
 
+describe('código de acceso y contraseña perdida',()=>{
+  const conn={url:URL_OK,anonKey:ANON,storeId:'st-1',slug:'mi-local'};
+  const routes={
+    '/auth/v1/otp':{body:{}},'/auth/v1/recover':{body:{}},
+    '/auth/v1/verify':{body:{access_token:'ONE_TIME',refresh_token:'REFRESH',expires_in:3600,user:{id:'u1',email:'a@x.com'}}},
+    '/auth/v1/user':{body:{id:'u1',email:'a@x.com'}},'/rest/v1/orders':{body:[]},
+  };
+  it('el restablecimiento usa una sesión efímera, sin guardar el token ni abrir la tienda',async()=>{
+    const s=setup({conn,routes});
+    await s.ctl.recover('a@x.com');
+    await s.ctl.resetPassword('a@x.com','123456','nueva-contrasena');
+    expect(s.calls.find(c=>c.url.includes('/auth/v1/verify')).body.type).toBe('recovery');
+    expect(s.calls.find(c=>c.url.includes('/auth/v1/user')).body.password).toBe('nueva-contrasena');
+    expect(s.store['online-session:p1']).toBeUndefined();
+    expect(s.ctl.info().signedIn).toBe(false);
+    expect(s.host.conn).toEqual(conn);
+    await expect(s.ctl.resetPassword('a@x.com','123456','corta')).rejects.toThrow(/8 caracteres/);
+  });
+  it('el código de ingreso no crea usuarios y tras validarlo retoma pedidos',async()=>{
+    const s=setup({conn,routes});
+    await s.ctl.sendLoginCode('a@x.com');
+    expect(s.calls[0].body).toEqual({email:'a@x.com',create_user:false});
+    expect(s.ctl.info().signedIn).toBe(false);
+    await s.ctl.signInWithCode('a@x.com','123456');
+    expect(s.ctl.info()).toMatchObject({signedIn:true,email:'a@x.com',mode:'conectado'});
+    expect(s.store['online-session:p1'].access_token).toBe('ONE_TIME');
+    expect(s.calls.some(c=>c.url.includes('/rest/v1/orders'))).toBe(true);
+  });
+});
+
 describe('menú y pedidos', () => {
   const conn = { url: URL_OK, anonKey: ANON, storeId: 'st-1', slug: 'mi-local' };
   const session = { access_token: 'T', refresh_token: 'R', expires_at: 9e9, user: { id: 'u1', email: 'a@x.com' } };
