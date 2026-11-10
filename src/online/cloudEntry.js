@@ -104,6 +104,12 @@ export function createCloudEntry({w,project,online}) {
 
   const resetApi={
     requestPasswordReset:async email=>newClient().auth.recover(email),
+    resetPasswordWithLink:async(link,password)=>{
+      if(password.length<8)throw new SupabaseError('La contraseña debe tener al menos 8 caracteres.');
+      const temp=newClient();
+      try{await temp.auth.verifyEmailActionLink(link,'recovery');await temp.auth.updatePassword(password);}
+      finally{temp.auth.signOut();}
+    },
     resetPassword:async(email,code,password)=>{
       if(password.length<8)throw new SupabaseError('La contraseña debe tener al menos 8 caracteres.');
       const temp=newClient();
@@ -147,7 +153,8 @@ export function createCloudEntry({w,project,online}) {
         const otpClient=newClient();
         const otpApi={
           sendLoginCode:email=>otpClient.auth.sendLoginCode(email),
-          signInWithCode:async(email,code)=>{await otpClient.auth.verifyLoginCode(email,code);pending=otpClient;}
+          signInWithCode:async(email,code)=>{await otpClient.auth.verifyLoginCode(email,code);pending=otpClient;},
+          signInWithLink:async link=>{await otpClient.auth.verifyEmailActionLink(link,'login');pending=otpClient;}
         };
         const result=await showLoginCode({online:otpApi,w,email:remembered(),remember,name:'Sahten',notify:false});
         if(result!==true)return false;
