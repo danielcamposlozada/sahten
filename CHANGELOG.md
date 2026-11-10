@@ -2,6 +2,8 @@
 
 ## Sin publicar
 
+- Mostrador con delivery: la caja consulta la cotización vigente del servidor antes de confirmar, muestra diferencias de productos, promociones, efectivo y envío para aceptación explícita y registra los importes y el vuelto de la validación definitiva. Si la consulta falla, cambia el pedido o falta efectivo, conserva el carrito sin crear ni duplicar órdenes.
+
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.
 
 - Navegación web de Sahten: «Ver menú» lleva a los platos que se pueden pedir, «Mi pedido» abre el carrito y la carta de consulta se enlaza desde el pie. Historia, Videos, Catering y Encontranos abren sus secciones en el inicio. En celular, el menú de compra, el carrito y las secciones caben en una sola fila.
