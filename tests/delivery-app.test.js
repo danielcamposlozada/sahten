@@ -41,6 +41,68 @@ it('Mostrador actualiza progreso, descuentos y cambio de dirección; valida ante
  const changed=w._getTiendaConfig();changed.deliveryV2.zones[2].baseCost=9999;w._saveTiendaConfig(changed);expect(order.deliverySnapshot.baseCost).toBe(3990);w.openOrderDetail(order.id);expect(d.getElementById('order-detail-overlay').textContent).toContain('2.000');
  }finally{w.close();}
 });
+
+it('Mostrador acepta una recotización del servidor sin quedar bloqueado y guarda el total verificado',async()=>{
+ const {window:w}=await openApp();try{
+ loadRawDemo(w);const policy=configure(w),place=places[2],product=w.SAHTEN.state.products[0];
+ product.fixedPrices={mostrador:20000};w.SAHTEN.libs.leaflet=async()=>{};
+ w.showPanel('mostrador');w.mostradorAddToCart(product.id);w.mostradorAddToCart(product.id);
+ w.mostradorSetOrderType('delivery');
+ w.eval('mostradorDelivery='+JSON.stringify({...place.destination,address:place.label,route:place.route}));
+ w._renderCartExtras();w._renderCartTotals();
+ w.mostradorSetPayment(w.eval('_mostPaymentOptions()[0].id'));
+ const original=w.eval('_calcCartTotals().total');expect(original).toBe(41990);
+ const q=deliveryQuote(policy,place.destination,36000,{route:place.route});
+ const server={items:[{productId:product.id,name:product.name,qty:2,unitPrice:20000,lineTotal:40000}],
+  subtotal:40000,discount:4000,discountName:'Promociones y beneficios',shipping:1990,total:37990,
+  deliverySnapshot:deliverySnapshot(q,place.route)};
+ const client=w.SAHTEN.delivery.client;
+ client.quote=vi.fn(async()=>({order:server,quoteId:'cotizacion-verificada'}));
+ client.validate=vi.fn(async()=>({order:server,validationId:'validacion-servidor'}));
+ const confirm=vi.fn(async()=>true);w.sahtenConfirm=confirm;
+ await w.mostradorCheckout();
+ expect(confirm).toHaveBeenCalledOnce();
+ expect(confirm.mock.calls[0][0]).toContain('37.990');
+ expect(client.validate).toHaveBeenCalledOnce();
+ expect(client.validate.mock.calls[0][0]).toMatchObject({total:37990,deliveryQuoteId:'cotizacion-verificada',paymentMethod:'efectivo'});
+ const order=w.sahtenOrders()[0];
+ expect(order).toMatchObject({total:37990,subtotal:40000,discount:4000,shipping:1990,discountName:'Promociones y beneficios',deliveryValidationId:'validacion-servidor'});
+ expect(order.items).toEqual(server.items);
+ expect(w.eval('mostradorCart.length')).toBe(0);
+ }finally{w.close();}
+});
+it('Mostrador preserva el carrito si se rechaza la nueva cotización',async()=>{
+ const {window:w}=await openApp();try{
+ loadRawDemo(w);configure(w);const place=places[2],product=w.SAHTEN.state.products[0];
+ product.fixedPrices={mostrador:20000};w.SAHTEN.libs.leaflet=async()=>{};
+ w.showPanel('mostrador');w.mostradorAddToCart(product.id);w.mostradorAddToCart(product.id);
+ w.mostradorSetOrderType('delivery');w.eval('mostradorDelivery='+JSON.stringify({...place.destination,address:place.label,route:place.route}));
+ w._renderCartExtras();w._renderCartTotals();w.mostradorSetPayment(w.eval('_mostPaymentOptions()[0].id'));
+ w.SAHTEN.delivery.client.quote=vi.fn(async()=>({order:{subtotal:40000,discount:4000,shipping:1990,total:37990}}));
+ const validate=vi.fn();w.SAHTEN.delivery.client.validate=validate;
+ w.sahtenConfirm=vi.fn(async()=>false);
+ await w.mostradorCheckout();
+ expect(w.sahtenOrders()).toHaveLength(0);expect(w.eval('mostradorCart.length')).toBe(1);
+ expect(validate).not.toHaveBeenCalled();
+ }finally{w.close();}
+});
+it('Mostrador no permite cobrar si el efectivo queda corto tras recotizar',async()=>{
+ const {window:w}=await openApp();try{
+ loadRawDemo(w);configure(w);const place=places[2],product=w.SAHTEN.state.products[0];
+ product.fixedPrices={mostrador:20000};w.SAHTEN.libs.leaflet=async()=>{};
+ w.showPanel('mostrador');w.mostradorAddToCart(product.id);w.mostradorAddToCart(product.id);
+ w.mostradorSetOrderType('delivery');w.eval('mostradorDelivery='+JSON.stringify({...place.destination,address:place.label,route:place.route}));
+ w._renderCartExtras();w._renderCartTotals();w.mostradorSetPayment(w.eval('_mostPaymentOptions()[0].id'));
+ w.mostradorSetCash('42000');w.alert=vi.fn();w.sahtenConfirm=vi.fn(async()=>true);
+ w.SAHTEN.delivery.client.quote=vi.fn(async()=>({order:{subtotal:40000,discount:0,shipping:6000,total:46000}}));
+ const validate=vi.fn();w.SAHTEN.delivery.client.validate=validate;
+ await w.mostradorCheckout();
+ expect(w.alert).toHaveBeenCalledWith(expect.stringContaining('efectivo indicado no alcanza'));
+ expect(w.sahtenOrders()).toHaveLength(0);expect(w.eval('mostradorCart.length')).toBe(1);
+ expect(validate).not.toHaveBeenCalled();
+ }finally{w.close();}
+});
+
 it('Mostrador muestra cierre de delivery sin dirección; retiro no muestra promociones y no consulta servidor',async()=>{
  const {window:w}=await openApp();try{loadRawDemo(w);configure(w);const cfg=w._getTiendaConfig();cfg.deliveryV2.hours={...sahtenDeliveryPolicy().hours,weekly:Array.from({length:7},()=>[])};w._saveTiendaConfig(cfg);w.showPanel('mostrador');const product=w.SAHTEN.state.products[0];w.mostradorAddToCart(product.id);w.eval("mostradorSetOrderType('delivery')");
  expect(w.document.getElementById('most-delivery-incentive').textContent).toContain('Delivery fuera de horario');expect(w.document.getElementById('most-delivery-incentive').compareDocumentPosition(w.document.getElementById('most-addr-input')) & w.Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();w.eval("mostradorSetOrderType('retiro')");expect(w.document.getElementById('most-delivery-incentive')).toBeNull();w.SAHTEN.delivery.client.validate=vi.fn();await w.mostradorCheckout();expect(w.SAHTEN.delivery.client.validate).not.toHaveBeenCalled();expect(w.sahtenOrders()).toHaveLength(1);
