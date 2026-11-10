@@ -17,6 +17,13 @@
 - Fidelización: la emisión y validación consideran solamente pedidos online cobrados y comprueban que el pedido de origen de la segunda compra corresponde al mismo teléfono.
 
 
+## 0.4.54
+
+- Login y recuperación por correo: si el mensaje contiene un enlace que redirige a `localhost`, ahora se puede **copiar el enlace original del correo y pegarlo en Sahten**, sin abrir el navegador. La app verifica el token directamente con el servicio de autenticación.
+- Admite tanto enlaces de acceso rápido como de recuperación, incluidos los que usan `token_hash`. Rechaza enlaces ajenos al proyecto y tipos incorrectos antes de enviar cualquier solicitud, y no guarda ni registra enlaces con tokens.
+- La recuperación mantiene su sesión aislada: el enlace no abre la tienda ni otorga permisos antes de definir una nueva contraseña.
+- Las redirecciones y plantillas de correos de Supabase se documentan por separado, pues se administran desde el panel de Authentication. El pegado de enlaces no requiere cambiar dicha configuración.
+
 ## 0.4.53
 
 - Inicio de sesión directo: en bienvenida y barra superior, Sahten pide correo y contraseña o un código temporal, sin exigir URL ni clave pública de Supabase al usuario.
