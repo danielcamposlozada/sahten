@@ -163,6 +163,22 @@ export function createController(host) {
       await next.auth.verifyLoginCode(email, code);
       stopFeed(); client = next; set('conectado'); await startFeed(); syncStoreName();
     },
+    async signInWithLink(link) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      const next = mk(host.conn, null);
+      await next.auth.verifyEmailActionLink(link, 'login');
+      stopFeed(); client = next; set('conectado'); await startFeed(); syncStoreName();
+    },
+    async resetPasswordWithLink(link, newPassword) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      if (typeof newPassword !== 'string' || newPassword.length < 8) throw new SupabaseError('La contraseña nueva debe tener al menos 8 caracteres.');
+      const temporary = mk(host.conn, null, false);
+      try {
+        await temporary.auth.verifyEmailActionLink(link, 'recovery');
+        await temporary.auth.updatePassword(newPassword);
+        return true;
+      } finally { temporary.auth.signOut(); }
+    },
     /** Usa un cliente efímero: el OTP de recuperación no entra en la sesión de Sahten. */
     async resetPassword(email, code, newPassword) {
       if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
