@@ -21,6 +21,21 @@ Con Supabase sumás:
    **Nunca uses ni pegues la `service_role`**: da acceso total a la base. La app la detecta y la rechaza.
 4. **Authentication › Providers › Email**: dejá activado. Para empezar rápido podés desactivar *Confirm email*; si no, cada persona confirma su email.
 
+## Códigos de acceso y recuperación de contraseña (Sahten 0.4.52)
+
+La app ofrece **Iniciar sesión › Ingresar con código por correo** y **Recuperar contraseña**, también en **Nube y usuarios** cuando la tienda está conectada. No se solicita nuevamente la URL de Supabase ni la clave pública en el equipo ya configurado.
+
+**Importante: los correos deben contener el código `{{ .Token }}`.** La plantilla estándar puede mandar solo un enlace, y eso **no alcanza** para introducir el código dentro de Sahten. Configurá estas dos plantillas en el panel de Supabase del proyecto, en **Authentication › Email Templates**:
+
+- **Magic Link / OTP:** agregá un párrafo que diga `Tu código para ingresar a Sahten: {{ .Token }}`.
+- **Reset Password:** agregá un párrafo que diga `Tu código para recuperar la contraseña: {{ .Token }}`.
+
+Podés conservar los enlaces `{{ .ConfirmationURL }}` de ambas plantillas para no romper los mensajes que ya usan enlaces. **No agregues una service_role ni claves secretas a los correos o a la aplicación.**
+
+**Correo de producción:** Supabase recomienda un proveedor SMTP propio para enviar correos a todas las cuentas del personal. Sin SMTP configurado, el servicio de prueba puede limitar destinatarios y volumen de envíos. Revisá **Project › Authentication › SMTP settings** y las restricciones de frecuencia/expiración en **Email Provider**.
+
+Para comprobarlo, probá con una cuenta del equipo ya registrada: solicitá un código, revisá el correo, ingresalo y comprobá que se abre el mismo proyecto con el mismo rol. Después cerrá sesión, solicitá recuperación, verificá el código de recuperación y cambiá la contraseña; el restablecimiento **no debe iniciar sesión por sí mismo**. Si el correo trae únicamente un enlace, ajustá primero la plantilla como se indicó.
+
 ## 2. Conectar el proyecto desde Sahten
 
 **Nube y usuarios › Conexión con Supabase**: pegá la URL y la anon key, elegí el nombre de tu tienda en la web (`mi-local`),

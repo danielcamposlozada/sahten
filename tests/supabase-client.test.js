@@ -106,6 +106,40 @@ class FakeWS {
   msg(o) { this.onmessage({ data: JSON.stringify(o) }); }
 }
 
+describe('códigos de correo y recuperación de contraseña', () => {
+  it('envía el código solo a cuentas existentes y verifica la sesión en el servidor', async () => {
+    const f = fakeFetch({
+      '/auth/v1/otp': { body: {} },
+      '/auth/v1/verify': { body: { access_token:'A', refresh_token:'B', expires_in:3600, user:{id:'u1',email:'test@x.com'} } },
+    });
+    const stored=[]; const client=createClient({url:URL_OK,anonKey:ANON,fetchImpl:f,onSession:s=>stored.push(s)});
+    await client.auth.sendLoginCode(' test@x.com ');
+    expect(f.calls[0].body).toEqual({email:'test@x.com',create_user:false});
+    expect(stored).toHaveLength(0);
+    await expect(client.auth.verifyLoginCode('test@x.com','no-code')).rejects.toThrow(/código numérico/);
+    expect(f.calls).toHaveLength(1);
+    await client.auth.verifyLoginCode('test@x.com','123456');
+    expect(f.calls[1].body).toEqual({email:'test@x.com',token:'123456',type:'email'});
+    expect(client.auth.user.email).toBe('test@x.com');expect(stored).toHaveLength(1);
+  });
+  it('recupera la contraseña únicamente después de verificar el código y usar el token',async()=>{
+    const f=fakeFetch({
+      '/auth/v1/recover':{body:{}},
+      '/auth/v1/verify':c=>c.body.type==='recovery'?{body:{access_token:'RESET',refresh_token:'R',user:{id:'u1',email:'test@x.com'}}}:{status:422,body:{message:'wrong type'}},
+      '/auth/v1/user':{body:{id:'u1',email:'test@x.com'}}
+    });
+    const c=createClient({url:URL_OK,anonKey:ANON,fetchImpl:f});
+    await c.auth.recover('test@x.com');
+    await c.auth.verifyRecoveryCode('test@x.com','654321');
+    await c.auth.updatePassword('nueva-clave-segura');
+    expect(f.calls.map(x=>x.url.split('/auth/v1/').at(-1))).toEqual(['recover','verify','user']);
+    expect(f.calls[1].body).toEqual({email:'test@x.com',token:'654321',type:'recovery'});
+    expect(f.calls[2].headers.Authorization).toBe('Bearer RESET');
+    expect(f.calls[2].body).toEqual({password:'nueva-clave-segura'});
+    expect(f.calls.every(x=>x.headers.apikey===ANON)).toBe(true);
+  });
+});
+
 describe('pedidos en tiempo real', () => {
   const mk = (extra = {}) => {
     const f = fakeFetch({ '/rest/v1/orders': { body: [] } });

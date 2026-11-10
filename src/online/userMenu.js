@@ -11,6 +11,7 @@ import { ROLE_LABEL } from './roles.js';
 import { encodeConnection, decodeConnection } from './supabase.js';
 import { PROJECT_ACTION, CATALOG_ACTION, PROJECT_HELP, CATALOG_HELP } from './cloud-help.js';
 import { publishMenuConfirmed } from './menuConfirm.js';
+import { showLoginCode, showPasswordRecovery } from './authDialogs.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
 const hostOf = u => { try { return new URL(u).host; } catch (e) { return String(u || ''); } };
@@ -88,22 +89,21 @@ export function createUserMenu({ online, project, w = window }) {
 
   async function login() {
     const { name, slug } = identity();
-    let wantsSetup = false;
+    let nextFlow = '';
     const body = `<p class="sd-text">Tienda: <b>${esc(name)}</b>${slug ? ` <span class="sd-mute">(${esc(slug)})</span>` : ''}</p>
       ${field('um-mail', 'Email', { type: 'email', v: project.config.get(emailKey(), '') || '', ac: 'username', af: true })}
       <div class="sd-field"><label for="um-pass">Contraseña</label><div class="sd-pw"><input id="um-pass" class="sd-input" type="password" autocomplete="current-password"><button type="button" class="sd-eye" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></div></div>
-      <div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="forgot">Olvidé mi contraseña</button><button type="button" class="sd-linkbtn" data-sd="setup">Usar otra tienda</button></div>`;
+      <div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="login-code">Ingresar con código por correo</button><button type="button" class="sd-linkbtn" data-sd="forgot">Recuperar contraseña</button></div><div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="setup">Usar otra tienda</button></div>`;
     await sahtenDialog({
       title: 'Iniciar sesión', body, w, width: 420,
       actions: [{ label: 'Cancelar', value: false }, { label: 'Entrar', value: true, primary: true }],
       onOpen: api => {
         const pass = api.box.querySelector('#um-pass'), eye = api.box.querySelector('.sd-eye');
         eye.onclick = () => { const show = pass.type === 'password'; pass.type = show ? 'text' : 'password'; eye.textContent = show ? 'Ocultar' : 'Ver'; eye.setAttribute('aria-pressed', show); eye.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña'); };
-        api.box.querySelector('[data-sd="setup"]').onclick = () => { wantsSetup = true; api.close(false); };
-        api.box.querySelector('[data-sd="forgot"]').onclick = async () => {
-          const em = val(api.box, 'um-mail').trim(); if (!em) return api.setError('Escribí tu email y volvé a tocar «Olvidé mi contraseña».');
-          try { await online.controller.recover(em); api.setError(''); w.sahtenToast('Te mandamos un email para elegir una contraseña nueva.'); } catch (e) { api.setError(e.message || String(e)); }
-        };
+        const next = flow => { const email=val(api.box,'um-mail').trim();if(email)project.config.set(emailKey(),email);nextFlow=flow;api.close(false); };
+        api.box.querySelector('[data-sd="setup"]').onclick = () => next('setup');
+        api.box.querySelector('[data-sd="forgot"]').onclick = () => next('recovery');
+        api.box.querySelector('[data-sd="login-code"]').onclick = () => next('code');
       },
       validate: async (_v, api) => {
         const em = val(api.box, 'um-mail').trim(), pw = val(api.box, 'um-pass');
@@ -113,7 +113,22 @@ export function createUserMenu({ online, project, w = window }) {
         catch (e) { api.busy(false); api.setError(e.message || String(e)); return false; }
       },
     });
-    if (wantsSetup) return setup();
+    if (nextFlow === 'setup') return setup();
+    if (nextFlow === 'code') return loginWithCode();
+    if (nextFlow === 'recovery') return recoverPassword();
+  }
+
+  async function loginWithCode() {
+    const done=await showLoginCode({online,w,name:identity().name,
+      email:project.config.get(emailKey(),'')||'',remember:email=>project.config.set(emailKey(),email)});
+    if(done===true)render();
+    return done;
+  }
+  async function recoverPassword() {
+    const done=await showPasswordRecovery({online,w,
+      email:project.config.get(emailKey(),'')||'',remember:email=>project.config.set(emailKey(),email)});
+    if(done===true)return login();
+    return done;
   }
 
   async function setup() {
@@ -188,5 +203,5 @@ export function createUserMenu({ online, project, w = window }) {
   w.addEventListener('sahten:brand', () => { if (!open) render(); });
   project.session.onChange(() => { if (!open) render(); });
   render();
-  return { render, login, setup, state, close };
+  return { render, login, loginWithCode, recoverPassword, setup, state, close };
 }

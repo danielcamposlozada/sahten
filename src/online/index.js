@@ -180,6 +180,15 @@ export function createOnline({ w = window, project, events }) {
       await controller.signIn(email, password); ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates();
       if (conn().projectId) sync.sync().catch(() => { /* queda en cola */ });
     },
+    /** Login sin contraseña: código enviado a la cuenta existente. */
+    async sendLoginCode(email) { return controller.sendLoginCode(email); },
+    async signInWithCode(email, code) {
+      await controller.signInWithCode(email, code);
+      ensureSync(); availability.resume(); salesPublisher.resume(); deliveryPublisher.resume();
+      zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); readStates();
+    },
+    async requestPasswordReset(email) { return controller.recover(email); },
+    async resetPassword(email, code, password) { return controller.resetPassword(email, code, password); },
     /** Cerrar sesión: la conexión de la tienda queda guardada en el proyecto. */
     signOut() { availability.cancel(); salesPublisher.cancel(); deliveryPublisher.cancel(); zonePublisher.cancel(); hoursPublisher.cancel(); configurationPublisher.cancel(); photoPublisher.cancel(); controller.signOut(); if (sync) { sync.cancel(); sync = null; } },
 

@@ -19,7 +19,7 @@ async function app() {
   const calls = [];
   w.fetch = async (url, o = {}) => { calls.push({ url, method: o.method || 'GET', body: o.body ? JSON.parse(o.body) : undefined });
     const routes = { '/auth/v1/token': { body: { access_token: 'T', refresh_token: 'R', expires_in: 3600, user: { id: 'u1', email: 'dani@x.com' } } },
-      '/auth/v1/recover': { body: {} }, '/rest/v1/stores?select': { body: [{ id: 'st-1', slug: 'casapan' }] }, '/rest/v1/orders': { body: [] } };
+      '/auth/v1/recover': { body: {} }, '/auth/v1/otp': { body: {} }, '/auth/v1/verify': { body: { access_token:'OTP',refresh_token:'R-OTP',expires_in:3600,user:{id:'u1',email:'dani@x.com'} } }, '/auth/v1/user': { body: { id:'u1',email:'dani@x.com' } }, '/rest/v1/stores?select': { body: [{ id: 'st-1', slug: 'casapan' }] }, '/rest/v1/orders': { body: [] } };
     const k = Object.keys(routes).find(x => url.includes(x)); const r = k ? routes[k] : { status: 404, body: { message: 'no route ' + url } };
     return { ok: (r.status || 200) < 400, status: r.status || 200, json: async () => r.body }; };
   w.WebSocket = FakeWS; a.calls = calls;
@@ -112,6 +112,48 @@ describe('usuario en la barra superior', () => {
     expect(a.on.controller.info().signedIn).toBe(true);
     a.window.close();
   }, 60000);
+
+  it('el login ofrece el código y confirma el acceso sin contraseña ni datos técnicos',async()=>{
+    const a=await app();await a.p.openDemo();
+    Object.assign(a.window.SAHTEN_SUPABASE,{url:URL_OK,anonKey:ANON,storeId:'st-1',slug:'casapan'});
+    a.on.controller.signOut();await wait(15);
+    btn(a).click();await wait(15);
+    expect(a.d.querySelector('.sd-box').textContent).toContain('Ingresar con código por correo');
+    a.d.querySelector('[data-sd="login-code"]').click();await wait(20);
+    expect(a.d.querySelector('.sd-title').textContent).toBe('Ingresar con código');
+    a.d.getElementById('auth-otp-email').value='dani@x.com';
+    a.d.querySelector('[data-sd="auth-send-login"]').click();await wait(35);
+    expect(a.calls.find(c=>c.url.includes('/auth/v1/otp')).body).toEqual({email:'dani@x.com',create_user:false});
+    a.d.getElementById('auth-otp-code').value='123456';
+    a.d.querySelector('.sd-btn.primary').click();await wait(65);
+    expect(a.d.querySelector('.sd-overlay')).toBeNull();
+    expect(a.on.controller.info().signedIn).toBe(true);
+    expect(a.calls.find(c=>c.url.includes('/auth/v1/verify')).body.type).toBe('email');
+    a.window.close();
+  },60000);
+  it('recuperar contraseña exige código, cambia la clave y no inicia una sesión de forma implícita',async()=>{
+    const a=await app();await a.p.openDemo();
+    Object.assign(a.window.SAHTEN_SUPABASE,{url:URL_OK,anonKey:ANON,storeId:'st-1',slug:'casapan'});
+    a.on.controller.signOut();await wait(15);
+    btn(a).click();await wait(15);a.d.querySelector('[data-sd="forgot"]').click();await wait(20);
+    expect(a.d.querySelector('.sd-title').textContent).toBe('Recuperar contraseña');
+    a.d.getElementById('auth-reset-email').value='dani@x.com';
+    a.d.querySelector('[data-sd="auth-send-reset"]').click();await wait(35);
+    expect(a.calls.find(c=>c.url.includes('/auth/v1/recover')).body).toEqual({email:'dani@x.com'});
+    a.d.getElementById('auth-reset-code').value='123456';
+    a.d.getElementById('auth-reset-password').value='nueva-segura';
+    a.d.getElementById('auth-reset-confirm').value='otra-segura';
+    a.d.querySelector('.sd-btn.primary').click();await wait(20);
+    expect(a.d.querySelector('.sd-error').textContent).toContain('no coinciden');
+    a.d.getElementById('auth-reset-confirm').value='nueva-segura';
+    a.d.querySelector('.sd-btn.primary').click();await wait(70);
+    expect(a.calls.find(c=>c.url.includes('/auth/v1/verify')).body.type).toBe('recovery');
+    expect(a.calls.find(c=>c.url.includes('/auth/v1/user')).body).toEqual({password:'nueva-segura'});
+    expect(a.on.controller.info().signedIn).toBe(false);
+    expect(a.d.querySelector('.sd-title').textContent).toBe('Iniciar sesión');
+    a.d.querySelector('.sd-btn:not(.primary)').click();
+    a.window.close();
+  },60000);
 
   it('con sesión: menú con tienda, cuenta y «Cerrar sesión» que conserva la conexión', async () => {
     const a = await app(); await a.p.openDemo();
