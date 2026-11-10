@@ -48,7 +48,7 @@ export function createUserMenu({ online, project, w = window }) {
   function button(st) {
     const { b, slug, name } = identity();
     if (st.kind === 'off') return '';
-    const label = st.kind === 'setup' ? 'Conectar tienda' : st.kind === 'login' ? 'Iniciar sesión' : name;
+    const label = st.kind === 'setup' ? 'Iniciar sesión' : st.kind === 'login' ? 'Iniciar sesión' : name;
     const sub = st.kind === 'in' ? (st.c.email || '') : st.kind === 'login' ? name : 'Sin conexión';
     const av = st.kind === 'in' || st.kind === 'login'
       ? `<span class="um-av" style="background:${esc(b.color)};color:#fff" aria-hidden="true">${b.logo ? `<img src="${esc(b.logo)}" alt="">` : esc(initials(name))}</span>`
@@ -166,7 +166,7 @@ export function createUserMenu({ online, project, w = window }) {
   }
 
   const handlers = {
-    async toggle() { const st = state(); if (st.kind === 'in') { open = !open; render(); if (open) [...d.querySelectorAll('.um-menu [role="menuitem"]')].find(x => x.offsetParent !== null)?.focus(); } else if (st.kind === 'login') await login(); else if (st.kind === 'setup') await setup(); },
+    async toggle() { const st = state(); if (st.kind === 'in') { open = !open; render(); if (open) [...d.querySelectorAll('.um-menu [role="menuitem"]')].find(x => x.offsetParent !== null)?.focus(); } else if (st.kind === 'login') await login(); else if (st.kind === 'setup') await online.cloudEntry.start(); },
     async sync() { close(); try { const r = await online.syncNow(); w.sahtenToast({ noop: 'Todo al día.', push: 'Cambios subidos.', pull: 'Cambios de la nube descargados.', conflict: 'Hay un conflicto: resolvelo en Nube y usuarios.' }[r && r.action || r] || 'Sincronizado.'); } catch (e) { w.sahtenAlert(e.message || String(e)); } render(); },
     async menu() { close(); try { const n = await publishMenuConfirmed(online, w); w.sahtenToast(n == null ? 'No se cambió nada: el menú publicado sigue igual.' : `Menú actualizado en línea (${n} productos).`); } catch (e) { w.sahtenAlert(e.message || String(e)); } },
     async remote() {

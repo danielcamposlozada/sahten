@@ -58,6 +58,7 @@ export function showWelcome() {
   const ov = d.createElement('div'); ov.id = 'proj-welcome'; ov.className = 'sw-ov';
   ov.innerHTML = `<div class="sw-box"><div class="sw-head"><div class="sw-title">Bienvenido a Sahten</div><div class="sw-sub">Costos, precios y pedidos de tu negocio, en un solo lugar.</div></div>
     <div class="sw-body">
+      ${w.SAHTEN?.online?.enabled ? '<button class="sw-card" onclick="SAHTEN.online.cloudEntry.start()"><b>Iniciar sesión</b><span>Entrá con tu correo, contraseña o código. Sin configurar Supabase.</span></button>' : ''}
       <button class="sw-card" onclick="SAHTEN.projectUi.run('new',true)"><b>Crear mi negocio</b><span>Unas preguntas cortas y listo.</span></button>
       <button class="sw-card" onclick="SAHTEN.projectUi.run('demo',true)"><b>Explorar con un ejemplo</b><span>Una pizzería de muestra, con un recorrido guiado.</span></button>
       <div class="pj-links"><button class="sw-link" onclick="SAHTEN.projectUi.run('open',true)">Abrir un archivo…</button><span aria-hidden="true">·</span><button class="sw-link" onclick="SAHTEN.projectUi.run('importJson',true)">Importar una copia (.json)</button></div>

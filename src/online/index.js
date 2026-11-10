@@ -13,6 +13,7 @@ import { toPublicProject, applyPublicToFile, canSeePanel, receivesFullProject, w
 import { applyRole, installRoleGuard } from './roleView.js';
 import { createOnlineUi } from './ui.js';
 import { createUserMenu } from './userMenu.js';
+import { createCloudEntry } from './cloudEntry.js';
 import { stateFromSahten } from '../core/projectFile.js';
 import { channelPriceWithDisc, pricingQuoteIds } from '../core/index.js';
 import { emptyFile, serialize } from '../project/schema.js';
@@ -286,7 +287,10 @@ export function createOnline({ w = window, project, events }) {
   const ui = createOnlineUi({ online: api, w });
   api.payments = createPaymentUi({ online: api, w });
   api.ui = ui;
-  if (ONLINE_ENABLED) api.userMenu = createUserMenu({ online: api, project, w });
+  if (ONLINE_ENABLED) {
+    api.cloudEntry = createCloudEntry({ w, project, online: api });
+    api.userMenu = createUserMenu({ online: api, project, w });
+  }
   installRoleGuard(role, events);
   let catalogPublishedAt = null;
   controller.onChange(() => { ui.render(); const at = controller.info().lastSync; if (at && at !== catalogPublishedAt) { catalogPublishedAt = at; availability.resume(); salesPublisher.resume(); deliveryPublisher.resume(); zonePublisher.resume(); hoursPublisher.resume(); configurationPublisher.resume(); } });

@@ -27,7 +27,7 @@ function installSender(api,{button,email,status,send,remember}) {
   };
 }
 
-export async function showLoginCode({online,w,email='',remember=()=>{},name='Sahten'}) {
+export async function showLoginCode({online,w,email='',remember=()=>{},name='Sahten',notify=true}) {
   const body='<p class="sd-text">Ingresá sin contraseña con un código temporal enviado al correo de tu cuenta.</p>'+
     field('auth-otp-email','Correo electrónico',{type:'email',ac:'username',value:email,extra:'autofocus'})+
     '<div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="auth-send-login">Enviar código al correo</button></div>'+
@@ -47,7 +47,7 @@ export async function showLoginCode({online,w,email='',remember=()=>{},name='Sah
       try{
         await online.signInWithCode(mail,code);
         remember(mail);
-        w.sahtenToast('Sesión iniciada en '+name);
+        if(notify)w.sahtenToast('Sesión iniciada en '+name);
         return true;
       }catch(e){api.busy(false);api.setError(e.message||'El código es incorrecto o venció.');return false;}
     }

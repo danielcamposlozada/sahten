@@ -380,10 +380,10 @@ describe('la app arranca siempre limpia', () => {
 describe('proyectos: entrar al último, pantalla tipo perfiles y eliminar', () => {
   const doc = a => a.window.document;
   const crear = async (a, nombre) => { a.mem.queueSaveAs(nombre + '.sahten'); await a.s.newProject(nombre); };
-  it('primera vez: bienvenida simple con dos caminos y sin lista de recientes', async () => {
+  it('primera vez: bienvenida con login directo y opciones de proyecto, sin recientes', async () => {
     const a = await app({}); const html = doc(a).getElementById('proj-welcome').textContent;
     expect(html).toMatch(/Crear mi negocio/); expect(html).toMatch(/Explorar con un ejemplo/); expect(html).not.toMatch(/Recientes/);
-    expect(doc(a).querySelectorAll('#proj-welcome .sw-card').length).toBe(2);
+    expect(doc(a).querySelectorAll('#proj-welcome .sw-card').length).toBe(3);expect(html).toMatch(/Iniciar sesión/);
     a.window.close();
   }, 60000);
   it('con proyectos: la pantalla muestra una tarjeta por negocio (Último / Abierto ahora) y «Nuevo proyecto»', async () => {

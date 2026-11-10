@@ -16,6 +16,14 @@
 - Checkout: se distingue mejor el beneficio automático del campo para ingresar un cupón manual.
 - Fidelización: la emisión y validación consideran solamente pedidos online cobrados y comprueban que el pedido de origen de la segunda compra corresponde al mismo teléfono.
 
+
+## 0.4.53
+
+- Inicio de sesión directo: en bienvenida y barra superior, Sahten pide correo y contraseña o un código temporal, sin exigir URL ni clave pública de Supabase al usuario.
+- Descubrimiento seguro del negocio: consulta las membresías auténticas de la cuenta, permite seleccionar el negocio si hay más de uno y abre desde la nube únicamente el proyecto autorizado, respetando el rol.
+- Conserva la identidad local del archivo y el UUID del proyecto remoto por separado, y preserva los archivos y respaldos locales antes de cambiar de negocio.
+- Nube y usuarios: acceso por correo como acción principal; configuración manual de Supabase relegada a «Configuración avanzada».
+
 ## 0.4.52
 
 - Acceso: «Ingresar con código por correo» para cuentas ya existentes, sin guardar contraseñas ni habilitar altas automáticas. Código temporal verificado por Supabase, sesión persistida solo después de la validación correcta.
