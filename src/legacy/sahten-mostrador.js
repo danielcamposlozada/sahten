@@ -374,10 +374,13 @@ function _calcCartTotals() {
   const benefit=applied?{amount:applied.discount,label:applied.appliedPromotionIds.length?'Promociones y beneficios':'Beneficio por pago',
     paymentDiscount:applied.appliedPromotionIds.length?null:legacyBenefit.paymentDiscount}:legacyBenefit;
   const discount=benefit.amount, disc=discount?{name:benefit.label}:null;
+  const paymentDiscountAmount=applied
+    ? applied.lines.reduce((sum,line)=>sum+Number(line.paymentDiscount||0),0)
+    : Number(benefit.paymentDiscount?.amount||0);
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
     const cfg=_mostTiendaCfg();
-    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount,paymentDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
     else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
