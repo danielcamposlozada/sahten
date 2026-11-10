@@ -31,9 +31,12 @@ it('Mostrador actualiza progreso, descuentos y cambio de dirección; valida ante
  w.mostradorAddToCart(product.id);expect(d.querySelector('#most-delivery-incentive [role="progressbar"]').getAttribute('aria-valuenow')).toBe('80');
  const payment=w.eval('_mostPaymentOptions()[0]');w.mostradorSetPayment(payment.id);w._mostAddrInput('Dirección cambiada');expect(d.getElementById('most-delivery-incentive').textContent).not.toContain('desbloqueado');expect(w.mostradorDeliveryValue().route).toBeUndefined();
  w.eval('mostradorDelivery='+JSON.stringify(dest));w._renderCartExtras();w._renderCartTotals();
- w.SAHTEN.delivery.client.validate=vi.fn(async()=>{throw Error('Sin conexión: no se confirmó el delivery');});w.alert=vi.fn();await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(0);expect(w.eval('mostradorCart.length')).toBe(1);
+ const items=[{productId:product.id,name:product.name,qty:2,unitPrice:20000,lineTotal:40000}];
  const q=deliveryQuote(p,place.destination,40000,{route:place.route});const snapshot=deliverySnapshot(q,place.route);
- w.SAHTEN.delivery.client.validate=vi.fn(async req=>({validationId:'validation-test',order:{deliverySnapshot:snapshot,items:[{productId:product.id,name:product.name,qty:2,unitPrice:20000,lineTotal:40000}]}}));
+ const serverOrder={items,subtotal:40000,discount:0,shipping:1990,total:41990,deliverySnapshot:snapshot};
+ w.SAHTEN.delivery.client.quote=vi.fn(async()=>({order:serverOrder,route:place.route}));
+ w.SAHTEN.delivery.client.validate=vi.fn(async()=>{throw Error('Sin conexión: no se confirmó el delivery');});w.alert=vi.fn();await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(0);expect(w.eval('mostradorCart.length')).toBe(1);
+ w.SAHTEN.delivery.client.validate=vi.fn(async req=>({validationId:'validation-test',order:serverOrder}));
  await w.mostradorCheckout();expect(w.sahtenOrders()).toHaveLength(1);const order=w.sahtenOrders()[0];expect(order).toMatchObject({shipping:1990,total:41990,deliverySnapshot:{baseCost:3990,discount:2000,charged:1990},deliveryValidationId:'validation-test'});
  const changed=w._getTiendaConfig();changed.deliveryV2.zones[2].baseCost=9999;w._saveTiendaConfig(changed);expect(order.deliverySnapshot.baseCost).toBe(3990);w.openOrderDetail(order.id);expect(d.getElementById('order-detail-overlay').textContent).toContain('2.000');
  }finally{w.close();}
