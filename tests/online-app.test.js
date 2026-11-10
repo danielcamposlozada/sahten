@@ -138,7 +138,7 @@ describe('pedidos en tiempo real y conexión', () => {
   it('el panel «Nube y usuarios» muestra la conexión y rechaza la service_role', async () => {
     const a = await app(); await a.p.openDemo(); a.ev("showPanel('nube')"); await wait(30);
     const html = a.window.document.getElementById('panel-nube').innerHTML;
-    expect(html).toMatch(/Conexión con Supabase/); expect(html).toMatch(/anon key/i); expect(html).toMatch(/service_role/);
+    expect(html).toMatch(/Accedé a Sahten/);expect(html).toMatch(/Iniciar sesión con mi cuenta/); expect(html).toMatch(/anon key/i); expect(html).toMatch(/service_role/);
     const svc = `${b64({ alg: 'HS256' })}.${b64({ role: 'service_role' })}.x`;
     a.window.document.getElementById('nb-url').value = URL_OK; a.window.document.getElementById('nb-key').value = svc;
     a.window.document.getElementById('nb-slug').value = 'mi-local'; a.window.document.getElementById('nb-mail').value = 'a@x.com'; a.window.document.getElementById('nb-pass').value = 'x';
