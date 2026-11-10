@@ -72,7 +72,8 @@ export function createCloudEntry({w,project,online}) {
     const session=project.session;
     const alreadyOpen=session.isOpen&&session.id===localId;
     if(session.isOpen&&!alreadyOpen){
-      const ok=await w.sahtenConfirm('Se abrirá «'+selected.name+'» desde la nube. El proyecto local actual se conservará en su archivo y respaldos. ¿Querés cambiar de negocio?',
+      if(!session.info().hasFile)throw new SupabaseError('El proyecto actual todavía no tiene archivo guardado. Guardalo o exportá una copia antes de cambiar de negocio.');
+      const ok=await w.sahtenConfirm('Se abrirá «'+selected.name+'» desde la nube. El archivo local actual se guardará antes de cambiar. ¿Querés continuar?',
         {title:'Cambiar de negocio',okLabel:'Abrir desde la nube',w});
       if(!ok)return false;
       await session.backupBeforeSync().catch(()=>{});
@@ -86,6 +87,7 @@ export function createCloudEntry({w,project,online}) {
     if(alreadyOpen){
       Object.assign(w.SAHTEN_SUPABASE,conn);
       project.markDirty();
+      session.setReadOnly(selected.role==='lectura');
       await online.onProjectOpened();
     }else{
       const file=await createImageStore(client).restore(rawFile,{});
