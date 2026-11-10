@@ -27,7 +27,7 @@ export function createController(host) {
   const emit = () => listeners.forEach(fn => { try { fn(api.info()); } catch (e) { console.error(e); } });
   const set = (m, e) => { mode = m; error = e || null; emit(); };
   const sessKey = () => 'online-session:' + (host.projectId() || 'x');
-  const mk = (conn, session) => createClient({ url: conn.url, anonKey: conn.anonKey, fetchImpl: host.fetchImpl, WebSocketImpl: host.WebSocketImpl, session, onSession: s => host.storage.set(sessKey(), s) });
+  const mk = (conn, session, persist = true) => createClient({ url: conn.url, anonKey: conn.anonKey, fetchImpl: host.fetchImpl, WebSocketImpl: host.WebSocketImpl, session, onSession: s => { if (persist) host.storage.set(sessKey(), s); } });
 
   function importRow(row, { initial = false } = {}) {
     const existing = host.orders.list().find(o => o.remoteId === row.id);
@@ -151,6 +151,30 @@ export function createController(host) {
     async signIn(email, password) {
       if (!host.conn.url) throw new SupabaseError('Primero conectá el proyecto.');
       client = mk(host.conn, null); await client.auth.signIn(email, password); set('conectado'); await startFeed(); syncStoreName();
+    },
+    /** Solo solicita correo para una cuenta existente, sin tocar la sesión actual. */
+    async sendLoginCode(email) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      return mk(host.conn, null, false).auth.sendLoginCode(email);
+    },
+    async signInWithCode(email, code) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      const next = mk(host.conn, null);
+      await next.auth.verifyLoginCode(email, code);
+      stopFeed(); client = next; set('conectado'); await startFeed(); syncStoreName();
+    },
+    /** Usa un cliente efímero: el OTP de recuperación no entra en la sesión de Sahten. */
+    async resetPassword(email, code, newPassword) {
+      if (!host.conn.url || !host.conn.anonKey) throw new SupabaseError('Primero conectá el proyecto.');
+      if (typeof newPassword !== 'string' || newPassword.length < 8) throw new SupabaseError('La contraseña nueva debe tener al menos 8 caracteres.');
+      const temporary = mk(host.conn, null, false);
+      try {
+        await temporary.auth.verifyRecoveryCode(email, code);
+        await temporary.auth.updatePassword(newPassword);
+        return true;
+      } finally {
+        temporary.auth.signOut();
+      }
     },
 
     /** Cerrar sesión SIN perder la conexión del proyecto (URL, clave y tienda quedan guardadas para volver a entrar con email y contraseña). */
