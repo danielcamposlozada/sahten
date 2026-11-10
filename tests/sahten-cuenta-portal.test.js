@@ -1,6 +1,7 @@
 import {describe,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
+import {execFileSync} from 'node:child_process';
 const html=readFileSync('workers/sahten-cuenta/index.html','utf8');
 const js=readFileSync('workers/sahten-cuenta/app.js','utf8');
 const API='https://dtnbokdrxojdcvguuidk.supabase.co';
@@ -23,6 +24,14 @@ function submit(w,id){
  w.document.getElementById(id).dispatchEvent(event);
 }
 describe('Portal de cuenta de Sahten en Cloudflare',()=>{
+ it('construye un Worker independiente que no cambia Pages ni las páginas de venta',()=>{
+  execFileSync('node',['scripts/deploy/build-sahten-cuenta.mjs'],{stdio:'pipe'});
+  execFileSync('node',['--check','.sahten-cuenta-deploy/worker.mjs'],{stdio:'pipe'});
+  const code=readFileSync('.sahten-cuenta-deploy/worker.mjs','utf8');
+  expect(code).toContain("'/cuenta/app.js'");
+  expect(code).toContain("if(!script&&!page)return new Response('Not found'");
+  expect(code).toContain("Referrer-Policy");
+ });
  it('no carga recursos remotos y no indexa ni revela el origen de tokens',()=>{
   expect(html).toContain('name="robots" content="noindex,nofollow,noarchive"');
   expect(html).toContain('src="/cuenta/app.js"');
