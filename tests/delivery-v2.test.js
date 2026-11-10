@@ -52,6 +52,38 @@ it('barra real: 57 %, 80 %, gratis y último descuento sin inventar objetivos',(
  const free=quote(4.5,50000);expect(free.progress).toBe(100);expect(free.nextBenefit).toBeNull();expect(deliveryIncentiveHtml(free)).toContain('gratis desbloqueado');
  const last=quote(7.5,80000);expect(last.cost).toBe(3500);expect(last.nextBenefit).toBeNull();expect(deliveryIncentiveHtml(last)).not.toContain('conseguí envío gratis');
 });
+it('Zona 2 conserva envío gratis tras el 10 % en efectivo: caso real $35.450',()=>{
+ const p=policy();
+ p.zones[1]={...p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
+ const d=point(2.9),r=route(3,d);
+ const menu={products:[{id:'p',name:'Plato de prueba',price:35450}],config:{},delivery:{deliveryV2:p},
+  store:{currency:{symbol:'
+ const p=policy(),d=point(4),r=route(4.5,d),menu={products:[{id:'p',name:'Prueba',price:40000}],config:{},delivery:{deliveryV2:p},store:{currency:{symbol:'$',locale:'es-AR'}},payments:{methods:{efectivo:true,mercadopago:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}}};
+ const input={source:'delivery',lat:d.lat,lng:d.lng,address:'Dirección de prueba',customerName:'Cliente',customerPhone:'12345678',paymentMethod:'efectivo',items:[{id:'p',qty:1}]};
+ const o=quoteOrder(menu,input,{route:r,allowOtherPayments:true});expect(o).toMatchObject({subtotal:40000,discount:4000,shipping:1990,total:37990,deliverySnapshot:{netSubtotal:36000,discount:2000}});
+ p.stackWithPayment=false;expect(quoteOrder(menu,input,{route:r,allowOtherPayments:true}).shipping).toBe(3990);
+ expect(o.deliverySnapshot.discount).toBe(2000);p.zones[2].baseCost=9999;expect(o.deliverySnapshot.baseCost).toBe(3990);
+ const pickup=quoteOrder(menu,{...input,source:'pickup'},{allowOtherPayments:true});expect(pickup.shipping).toBe(0);expect(pickup.deliverySnapshot).toBeUndefined();
+});
+,locale:'es-AR'}},
+  payments:{methods:{efectivo:true,transferencia:true,mercadopago:true},
+   benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}}};
+ const input={source:'delivery',lat:d.lat,lng:d.lng,address:'Dirección de prueba 123',
+   customerName:'Cliente',customerPhone:'12345678',paymentMethod:'efectivo',items:[{id:'p',qty:1}]};
+ const cash=quoteOrder(menu,input,{route:r,allowOtherPayments:true});
+ expect(cash).toMatchObject({subtotal:35450,discount:3545,shipping:0,total:31905,
+  deliverySnapshot:{netSubtotal:31905,eligibleSubtotal:35450,paymentDiscountExcluded:3545,
+   baseCost:3000,charged:0,discount:3000}});
+ const transfer=quoteOrder(menu,{...input,paymentMethod:'transferencia'},{route:r,allowOtherPayments:true});
+ expect(transfer.total).toBe(31905);expect(transfer.shipping).toBe(0);
+ const ineligible=deliveryQuote(p,d,31905,{route:r,hasPaymentDiscount:true});
+ expect(ineligible).toMatchObject({cost:3000,nextBenefit:{remaining:3095}});
+ const eligible=deliveryQuote(p,d,31905,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545});
+ expect(eligible).toMatchObject({cost:0,free:true,progress:100,eligibleSubtotal:35450});
+ // Otra promoción sobre productos sí reduce la base de beneficio de delivery.
+ const withProductPromotion=deliveryQuote(p,d,30132.5,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545});
+ expect(withProductPromotion).toMatchObject({cost:3000,eligibleSubtotal:33677.5});
+});
 it('los umbrales usan subtotal neto, mantiene el 10 % y registra ahorro sin duplicarlo como gasto',()=>{
  const p=policy(),d=point(4),r=route(4.5,d),menu={products:[{id:'p',name:'Prueba',price:40000}],config:{},delivery:{deliveryV2:p},store:{currency:{symbol:'$',locale:'es-AR'}},payments:{methods:{efectivo:true,mercadopago:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}}};
  const input={source:'delivery',lat:d.lat,lng:d.lng,address:'Dirección de prueba',customerName:'Cliente',customerPhone:'12345678',paymentMethod:'efectivo',items:[{id:'p',qty:1}]};
