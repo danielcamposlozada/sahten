@@ -28,7 +28,7 @@ it('servidor respeta envío gratis de Zona 2 aunque se aplique efectivo 10 %',as
  const a=setup(3);
  a.p.zones[1]={...a.p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
  a.menu.products[0].price=35450;
- const order={...a.input,total:31905,localOrderId:'ord_35450_cash',cashTendered:35450};
+ const order={...a.input,total:31905,localOrderId:'ord_35450cash',cashTendered:35450};
  const q=await a.call('quote',{order},'cashier');
  expect(q.status).toBe(200);
  expect(q.data.order).toMatchObject({subtotal:35450,discount:3545,shipping:0,total:31905,
