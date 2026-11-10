@@ -444,7 +444,7 @@ function _renderCartTotals() {
     (t.discount > 0 ? '<div class="most-cart-row discount"><span>'+_esc(t.disc?.name||'Descuento')+'</span><span class="val">−$'+_fmt(t.discount)+'</span></div>' : '') +
     (t.shipping > 0 ? '<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(t.shipping)+'</span></div>' : (t.freeShip ? '<div class="most-cart-row"><span>Envío</span><span class="val" style="color:var(--green)">Gratis</span></div>' : '')) +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(t.total)+'</span></div>' +
-    '<button class="most-checkout" '+(t.items.length===0||!cash.valid||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
+    '<button class="most-checkout" '+(t.items.length===0||(!cash.valid&&!(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryV2?.active))||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
   if(f._totalsMarkup!==totalsHtml){f.innerHTML=totalsHtml;f._totalsMarkup=totalsHtml;}
   const incentive=document.getElementById('most-delivery-incentive');
   if(incentive){const html=SAHTEN.delivery.incentive(mostradorDelivery?.routeLoading?{status:'loading'}:t.deliveryQuote,{pos:true})+(mostradorDelivery?.routeError?'<p role="status">'+_esc(mostradorDelivery.routeError)+'</p><button class="btn" onclick="SAHTEN.delivery.refreshPos()">Reintentar ruta</button>':'')+(t.deliveryQuote?.status==='authorization_required'&&(!document.body.dataset.role||['owner','admin'].includes(document.body.dataset.role))?'<button class="btn" onclick="SAHTEN.delivery.authorizePos()">Autorizar esta entrega</button>':'');if(incentive._deliveryMarkup!==html){const open=incentive.querySelector('details')?.open;incentive.innerHTML=html;incentive._deliveryMarkup=html;if(open&&incentive.querySelector('details'))incentive.querySelector('details').open=true;}}
@@ -554,7 +554,7 @@ async function mostradorCheckout() {
   const t = _calcCartTotals(); if (t.items.length === 0) return;
   if(!SAHTEN.customerPicker.valid())return;
   if(mostradorCart.some(it=>{const p=PRODUCTS.find(p=>p.id===it.productId);return !p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p);})){alert('Hay productos internos o no disponibles en el pedido. Quitalos antes de confirmar.');return;}
-  if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){alert('El efectivo indicado no alcanza el total.');return;}
+  if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid && !(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryV2?.active)){alert('El efectivo indicado no alcanza el total.');return;}
   if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
   let deliverySnapshot=null,deliveryValidationId=null,validatedOrder=null;
