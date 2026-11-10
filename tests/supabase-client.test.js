@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createClient, validateConnection, slugify, validSlug, SupabaseError } from '../src/online/supabase.js';
+import { createClient, validateConnection, slugify, validSlug, SupabaseError, parseEmailActionLink } from '../src/online/supabase.js';
 import { toLocalOrder, STATUS_TO_REMOTE } from '../src/online/orders.js';
 
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -137,6 +137,46 @@ describe('códigos de correo y recuperación de contraseña', () => {
     expect(f.calls[2].headers.Authorization).toBe('Bearer RESET');
     expect(f.calls[2].body).toEqual({password:'nueva-clave-segura'});
     expect(f.calls.every(x=>x.headers.apikey===ANON)).toBe(true);
+  });
+});
+
+describe('enlaces de correos que redirigen a localhost',()=>{
+  const magic=URL_OK+'/auth/v1/verify?token=TOKEN-123&type=magiclink&redirect_to=http%3A%2F%2Flocalhost%3A3000';
+  const reset=URL_OK+'/auth/v1/verify?token_hash=HASH-456&type=recovery&redirect_to=http%3A%2F%2Flocalhost%3A3000';
+  it('valida en Sahten el token original del enlace, ignorando localhost',async()=>{
+    expect(parseEmailActionLink(magic,URL_OK,'login')).toEqual({type:'magiclink',token:'TOKEN-123'});
+    expect(parseEmailActionLink(reset,URL_OK,'recovery')).toEqual({type:'recovery',token_hash:'HASH-456'});
+    const f=fakeFetch({'/auth/v1/verify':{body:{access_token:'TOKEN',refresh_token:'REF',user:{id:'u1'}}}});
+    const c=createClient({url:URL_OK,anonKey:ANON,fetchImpl:f});
+    await c.auth.verifyEmailActionLink(magic,'login');
+    expect(f.calls[0].url).toBe(URL_OK+'/auth/v1/verify');
+    expect(f.calls[0].body).toEqual({type:'magiclink',token:'TOKEN-123'});
+    expect(f.calls[0].url).not.toContain('localhost');
+    expect(c.auth.session.access_token).toBe('TOKEN');
+  });
+  it('rechaza phishing, URL del error y cambio de propósito sin llamar a ningún host',async()=>{
+    const f=fakeFetch();const c=createClient({url:URL_OK,anonKey:ANON,fetchImpl:f});
+    for(const link of [
+      'http://localhost:3000/#access_token=private',
+      'https://phishing.example/auth/v1/verify?token=T&type=magiclink',
+      URL_OK+'/auth/v1/verify?token=T&type=recovery',
+      URL_OK+'/auth/v1/verify?type=magiclink',
+      URL_OK+'/auth/v1/verify?token=T&type=signup'
+    ]){
+      await expect(c.auth.verifyEmailActionLink(link,'login')).rejects.toThrow();
+    }
+    expect(f.calls).toHaveLength(0);
+    expect(c.auth.session).toBeNull();
+  });
+  it('recupera contraseña usando un enlace sin abrirlo, con sesión temporal',async()=>{
+    const f=fakeFetch({'/auth/v1/verify':{body:{access_token:'RESET',refresh_token:'REF',user:{id:'u1'}}},
+      '/auth/v1/user':{body:{id:'u1'}}});
+    const c=createClient({url:URL_OK,anonKey:ANON,fetchImpl:f});
+    await c.auth.verifyEmailActionLink(reset,'recovery');
+    await c.auth.updatePassword('password-segura');
+    expect(f.calls[0].body).toEqual({token_hash:'HASH-456',type:'recovery'});
+    expect(f.calls[1].headers.Authorization).toBe('Bearer RESET');
+    expect(f.calls[1].body).toEqual({password:'password-segura'});
   });
 });
 
