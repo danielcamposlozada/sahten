@@ -24,6 +24,22 @@ it('POS usa las condiciones guardadas en vivo sin exigir republicar el proyecto,
  expect((await a.call('validate-pos',{order:{...input,total:1}},'cashier')).status).toBe(409);
 });
 
+it('servidor respeta envío gratis de Zona 2 aunque se aplique efectivo 10 %',async()=>{
+ const a=setup(3);
+ a.p.zones[1]={...a.p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
+ a.menu.products[0].price=35450;
+ const order={...a.input,total:31905,localOrderId:'ord_35450cash',cashTendered:35450};
+ const q=await a.call('quote',{order},'cashier');
+ expect(q.status).toBe(200);
+ expect(q.data.order).toMatchObject({subtotal:35450,discount:3545,shipping:0,total:31905,
+  deliverySnapshot:{baseCost:3000,charged:0,netSubtotal:31905,eligibleSubtotal:35450,paymentDiscountExcluded:3545}});
+ const validated=await a.call('validate-pos',{order},'cashier');
+ expect(validated.status).toBe(200);
+ expect(validated.data.order.total).toBe(31905);
+ expect(a.repo.savePos).toHaveBeenCalledTimes(1);
+ const rejected=await a.call('validate-pos',{order:{...order,total:34905}},'cashier');
+ expect(rejected.status).toBe(409);
+});
 it('calcula en servidor, rechaza importes falsos y no acepta Mercado Pago sin Checkout Pro',async()=>{
  const a=setup();let r=await a.call('quote',{order:{...a.input,shipping:1,total:1}});expect(r.data.order).toMatchObject({discount:4000,shipping:1990,total:37990});
  r=await a.call('order',{order:{...a.input,total:1},requestId:qid});expect(r.status).toBe(409);expect(a.orders).toHaveLength(0);

@@ -374,10 +374,13 @@ function _calcCartTotals() {
   const benefit=applied?{amount:applied.discount,label:applied.appliedPromotionIds.length?'Promociones y beneficios':'Beneficio por pago',
     paymentDiscount:applied.appliedPromotionIds.length?null:legacyBenefit.paymentDiscount}:legacyBenefit;
   const discount=benefit.amount, disc=discount?{name:benefit.label}:null;
+  const paymentDiscountAmount=applied
+    ? applied.lines.reduce((sum,line)=>sum+Number(line.paymentDiscount||0),0)
+    : Number(benefit.paymentDiscount?.amount||0);
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
     const cfg=_mostTiendaCfg();
-    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
     else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
@@ -444,7 +447,7 @@ function _renderCartTotals() {
     (t.discount > 0 ? '<div class="most-cart-row discount"><span>'+_esc(t.disc?.name||'Descuento')+'</span><span class="val">−$'+_fmt(t.discount)+'</span></div>' : '') +
     (t.shipping > 0 ? '<div class="most-cart-row"><span>Envío</span><span class="val">$'+_fmt(t.shipping)+'</span></div>' : (t.freeShip ? '<div class="most-cart-row"><span>Envío</span><span class="val" style="color:var(--green)">Gratis</span></div>' : '')) +
     '<div class="most-cart-row total"><span>Total</span><span class="val">$'+_fmt(t.total)+'</span></div>' +
-    '<button class="most-checkout" '+(t.items.length===0||!cash.valid||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
+    '<button class="most-checkout" '+(t.items.length===0||(!cash.valid&&!(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryV2?.active))||(t.deliveryQuote&&!t.deliveryQuote.ok)||mostradorDelivery?.routeLoading?'disabled':'')+' onclick="mostradorCheckout()">Cobrar · $'+_fmt(t.total)+'</button>';
   if(f._totalsMarkup!==totalsHtml){f.innerHTML=totalsHtml;f._totalsMarkup=totalsHtml;}
   const incentive=document.getElementById('most-delivery-incentive');
   if(incentive){const html=SAHTEN.delivery.incentive(mostradorDelivery?.routeLoading?{status:'loading'}:t.deliveryQuote,{pos:true})+(mostradorDelivery?.routeError?'<p role="status">'+_esc(mostradorDelivery.routeError)+'</p><button class="btn" onclick="SAHTEN.delivery.refreshPos()">Reintentar ruta</button>':'')+(t.deliveryQuote?.status==='authorization_required'&&(!document.body.dataset.role||['owner','admin'].includes(document.body.dataset.role))?'<button class="btn" onclick="SAHTEN.delivery.authorizePos()">Autorizar esta entrega</button>':'');if(incentive._deliveryMarkup!==html){const open=incentive.querySelector('details')?.open;incentive.innerHTML=html;incentive._deliveryMarkup=html;if(open&&incentive.querySelector('details'))incentive.querySelector('details').open=true;}}
@@ -554,17 +557,49 @@ async function mostradorCheckout() {
   const t = _calcCartTotals(); if (t.items.length === 0) return;
   if(!SAHTEN.customerPicker.valid())return;
   if(mostradorCart.some(it=>{const p=PRODUCTS.find(p=>p.id===it.productId);return !p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p);})){alert('Hay productos internos o no disponibles en el pedido. Quitalos antes de confirmar.');return;}
-  if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){alert('El efectivo indicado no alcanza el total.');return;}
+  if(!SAHTEN.orderDetails.cashChangeQuote(t.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid && !(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryV2?.active)){alert('El efectivo indicado no alcanza el total.');return;}
   if(_mostEstimateValue()!==''&&!SAHTEN.orderActions.minutes(_mostEstimateValue())){alert('Indicá un tiempo estimado de 1 a 1440 minutos, sin decimales.');return;}
   const localOrderId='ord_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-  let deliverySnapshot=null,deliveryValidationId=null,validatedItems=null;
+  let deliverySnapshot=null,deliveryValidationId=null,validatedOrder=null;
   if(mostradorOrderType==='delivery'&&_mostTiendaCfg().deliveryEnabled===false){alert('El delivery está pausado. Reactivalo en Ajustes › Negocio › Horarios y delivery o elegí retiro.');return;}
   if(mostradorOrderType==='delivery'&&!SAHTEN.delivery.hours.deliveryStatus().open){alert(SAHTEN.delivery.hours.deliveryNotice());return;}
   if(_mostTiendaCfg().deliveryV2?.active&&mostradorOrderType==='delivery'){
     if(!_mostSelectedPayment()){alert('Elegí un medio de pago antes de confirmar el delivery.');return;}
-    const fingerprint=JSON.stringify(_mostDeliveryRequest());_deliveryChecking=true;
-    try{const result=await SAHTEN.delivery.client.validate({..._mostDeliveryRequest(),localOrderId});if(fingerprint!==JSON.stringify(_mostDeliveryRequest())){alert('El pedido cambió durante la validación. Revisá el total y volvé a confirmar.');return;}deliverySnapshot=result.order.deliverySnapshot;deliveryValidationId=result.validationId;validatedItems=result.order.items;}
-    catch(e){alert(e.message);return;}finally{_deliveryChecking=false;}
+    // El cálculo local es una vista previa: las campañas, costos y tarifas publicados
+    // pueden diferir. Antes de guardar se consulta y confirma la cotización del servidor.
+    const request=_mostDeliveryRequest(),fingerprint=JSON.stringify(request),project=SAHTEN.project.session.id;
+    const unchanged=()=>project===SAHTEN.project.session.id&&fingerprint===JSON.stringify(_mostDeliveryRequest());
+    const cents=v=>Math.round(Number(v)*100);
+    _deliveryChecking=true;
+    try {
+      const quote=await SAHTEN.delivery.client.quote(request);
+      if(!unchanged()){alert('El pedido cambió mientras se calculaba. Revisá el total y volvé a confirmar.');return;}
+      const server=quote?.order;
+      if(!server||!Number.isFinite(Number(server.total))||Number(server.total)<=0)throw new Error('El servidor no devolvió un total válido. No se creó el pedido.');
+      const changed=['subtotal','discount','shipping','total'].some(k=>cents(server[k]||0)!==cents(t[k]||0));
+      if(changed){
+        const summary='El servidor actualizó el pedido de $'+_fmt(t.total)+' a $'+_fmt(server.total)+
+          '. Subtotal: $'+_fmt(server.subtotal)+'. Descuentos: −$'+_fmt(server.discount||0)+
+          '. Envío: $'+_fmt(server.shipping||0)+'. ¿Confirmás el nuevo importe?';
+        if(!await sahtenConfirm(summary,{title:'Total actualizado',okLabel:'Confirmar $'+_fmt(server.total),cancelLabel:'Revisar pedido'}))return;
+        if(!unchanged()){alert('El pedido cambió durante la confirmación. Volvé a revisarlo.');return;}
+      }
+      if(!SAHTEN.orderDetails.cashChangeQuote(server.total,mostradorCashTendered,_mostSelectedPayment()?.method).valid){
+        alert('El efectivo indicado no alcanza el total actualizado de $'+_fmt(server.total)+'. Corregí el importe entregado y volvé a confirmar.');return;
+      }
+      // Nunca omitir validate-pos: comprueba precios, ruta, promociones y permisos otra vez.
+      const result=await SAHTEN.delivery.client.validate({...request,total:server.total,deliveryQuoteId:quote.quoteId||request.deliveryQuoteId,localOrderId});
+      if(!unchanged()){alert('El pedido cambió durante la validación. Revisá el total y volvé a confirmar.');return;}
+      if(!result?.order||cents(result.order.total)!==cents(server.total)){
+        alert('Las condiciones cambiaron durante la confirmación. Volvé a revisar el total.');return;
+      }
+      validatedOrder=result.order;
+      deliverySnapshot=validatedOrder.deliverySnapshot;
+      deliveryValidationId=result.validationId;
+    } catch(e) {
+      alert(e?.code==='menu_changed'?'El servidor volvió a actualizar las condiciones. Revisá el pedido e intentá confirmar nuevamente.':e.message||'No se pudo validar el total del pedido.');
+      return;
+    } finally {_deliveryChecking=false;}
   }
   const benefitPolicy=SAHTEN.paymentChoices.policy(_mostTiendaCfg().paymentBenefit);
   if(benefitPolicy.enabled&&benefitPolicy.channels.mostrador&&!_mostSelectedPayment()){alert('Elegí cómo se paga para calcular el descuento correcto.');document.querySelector('#most-cart-extras [data-payment-choice]')?.focus();return;}
@@ -575,29 +610,29 @@ async function mostradorCheckout() {
   const del = mostradorOrderType === 'delivery' ? mostradorDelivery : null;
   const order = {
     ...(del?SAHTEN.orderDetails.deliveryDetails(del,'delivery'):{}),
-    ...SAHTEN.orderDetails.cashOrderFields(t.total,mostradorCashTendered,pay?.method),
+    ...SAHTEN.orderDetails.cashOrderFields(validatedOrder?.total??t.total,mostradorCashTendered,pay?.method),
     ...(_mostEstimateValue()!==''?{fulfillmentEstimate:SAHTEN.orderActions.snapshot(_mostEstimateValue())}:{}),
     id: localOrderId,
     num: _nextOrderNum(),
-    items: validatedItems || t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
+    items: validatedOrder?.items || t.items.map(it => ({ productId: it.product.id, name: it.product.name, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, ...(SAHTEN.pricing.quoteIds(it.product).mostrador ? { priceRevision: SAHTEN.pricing.quoteIds(it.product).mostrador } : {}) })),
     customerId: mostradorActiveCustomerId || null,
     customerName: cust ? cust.name : 'Consumidor Final',
     customerPhone: cust ? cust.phone || '' : '',
     origin: 'mostrador',
-    discountId: t.paymentDiscount ? 'cash-transfer' : mostradorActiveDiscountId || null,
-    discountName: t.disc ? t.disc.name : null,
-    discountAmount: t.discount,
-    discount: t.discount,
-    paymentDiscount: t.paymentDiscount,
-    ...(t.promotionSnapshot?{promotionSnapshot:t.promotionSnapshot}:{}),
-    shipping: t.shipping,
+    discountId: validatedOrder ? (validatedOrder.paymentDiscount ? 'cash-transfer' : (!validatedOrder.promotionSnapshot && validatedOrder.discount===t.discount ? mostradorActiveDiscountId : null)) : (t.paymentDiscount ? 'cash-transfer' : mostradorActiveDiscountId || null),
+    discountName: validatedOrder ? (validatedOrder.discountName || null) : (t.disc ? t.disc.name : null),
+    discountAmount: validatedOrder?.discount??t.discount,
+    discount: validatedOrder?.discount??t.discount,
+    paymentDiscount: validatedOrder ? (validatedOrder.paymentDiscount||null) : t.paymentDiscount,
+    ...((validatedOrder ? validatedOrder.promotionSnapshot : t.promotionSnapshot)?{promotionSnapshot:validatedOrder?.promotionSnapshot??t.promotionSnapshot}:{}),
+    shipping: validatedOrder?.shipping??t.shipping,
     ...(deliverySnapshot?{deliverySnapshot,deliveryValidationId}:{}),
     paymentId: mostradorActivePaymentId || null,
     paymentName: pay ? pay.label : null,
     paymentMethod: pay ? pay.method : null,
     ...(pay?.method==='mercadopago'?{paymentStatus:'unverified',paymentStatusLabel:'Sin pago verificado'}:{}),
-    subtotal: t.subtotal,
-    total: t.total,
+    subtotal: validatedOrder?.subtotal??t.subtotal,
+    total: validatedOrder?.total??t.total,
     status: 'pendiente', // pendiente | en_preparacion | listo
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

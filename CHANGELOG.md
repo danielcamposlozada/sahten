@@ -16,6 +16,12 @@
 - Checkout: se distingue mejor el beneficio automático del campo para ingresar un cupón manual.
 - Fidelización: la emisión y validación consideran solamente pedidos online cobrados y comprueban que el pedido de origen de la segunda compra corresponde al mismo teléfono.
 
+## 0.4.51
+
+- Delivery y checkout (mostrador + online): los umbrales de envío gratis y pedido mínimo se calculan antes del descuento de efectivo/transferencia, sin quitar otros descuentos promocionales de productos. Zona 2, subtotal $35.450: 10 % ($3.545) y envío gratis conservado → total $31.905. Cotizaciones, autorizaciones, ticket y barra de progreso comparten la misma base verificable; pruebas de caja, servidor y total.
+
+- Mostrador con delivery: la caja consulta la cotización vigente del servidor antes de confirmar, muestra diferencias de productos, promociones, efectivo y envío para aceptación explícita y registra los importes y el vuelto de la validación definitiva. Si la consulta falla, cambia el pedido o falta efectivo, conserva el carrito sin crear ni duplicar órdenes.
+
 ## 0.4.50
 
 - Efectivo/transferencia: selector grande de dos posiciones, accesible con teclado y con estado visible, separado de los botones de acción.

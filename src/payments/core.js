@@ -83,13 +83,18 @@ export function quoteOrder(menu, input, {route=null,authorization=null,allowOthe
         paymentDiscount:promotion.lines.every(l=>l.promotionDiscount===0)&&hasPaymentBenefit
           ? paymentDiscountQuote(sub/100,method,paymentPolicy,salesChannel).paymentDiscount:null}
     : oldBenefit;
+  // El 10 % por medio de pago NO debe desactivar un beneficio de envío ya
+  // alcanzado. Descuentos adicionales de productos/cupones siguen restando.
+  const paymentDiscountAmount=promotion
+    ? promotion.lines.reduce((sum,line)=>sum+Number(line.paymentDiscount||0),0)
+    : Number(benefit.paymentDiscount?.amount||0);
   let shipping = 0, zoneName = '', lat = null, lng = null, address = 'Retiro en local', shippingQuote=null;
   if (source === 'delivery') {
     if (menu.delivery?.enabled === false) fail('El delivery está pausado por el local. Podés elegir retiro.',409,'service_paused');
     lat = Number(input.lat); lng = Number(input.lng); address = text(input.address, 300);
     if (input.lat == null || input.lng == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || address.length < 5) fail('Seleccioná una dirección de entrega válida.');
     const modern=menu.delivery?.deliveryV2?.active;
-    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:promotion?hasPaymentBenefit:!!benefit.paymentDiscount});
+    const ship = shippingFor(menu.delivery, lat, lng, sub/100-(modern?benefit.amount:0),{route,authorization,now,hasPaymentDiscount:promotion?hasPaymentBenefit:!!benefit.paymentDiscount,paymentDiscountAmount:modern?paymentDiscountAmount:0});
     if (!ship.ok && validateCustomer) fail(ship.belowMin ? 'No se alcanza el pedido mínimo de delivery.' : ship.status==='closed'?'El delivery está fuera de horario. Volvé durante el horario de atención.':ship.status==='hours_invalid'?'El horario de delivery necesita revisión del local.':ship.status==='authorization_required'?'La entrega requiere autorización del local.':ship.status==='route_unverified'?'No se pudo validar la ruta por calles.':'La dirección está fuera de cobertura o no está habilitada para entrega.',409,ship.status||'invalid_delivery');
     shippingQuote=ship;
     shipping = cents(ship.cost); zoneName = text(ship.zone?.name, 100);

@@ -38,10 +38,10 @@ it('mínimos, tarifa y beneficios llegan a un checkout abierto sin subir archivo
  }finally{a.close();}
 });
 
-it('web usa ruta del servidor, progreso neto y pagos; cambiar dirección quita la tarifa anterior sin perder foco',async()=>{
+it('web usa ruta del servidor, progreso antes del descuento por pago; cambiar dirección quita la tarifa anterior sin perder foco',async()=>{
  const a=await web();try{a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente de prueba');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await wait(600);
  expect(a.calls.filter(c=>c.url.includes('/geocode'))).toHaveLength(0);await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);
- expect(a.d.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('72');expect(a.d.querySelector('#delivery-card').textContent).toContain('$1.990');expect(a.d.querySelector('#send').disabled).toBe(false);
+ expect(a.d.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('80');expect(a.d.querySelector('#delivery-card').textContent).toContain('$1.990');expect(a.d.querySelector('#send').disabled).toBe(false);
  a.click('[data-payment-choice="mercadopago"]');expect(a.d.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('80');
  a.click('[data-payment-choice="efectivo"]');a.d.getElementById('f-addr').focus();a.type('#f-addr','Otra dirección');expect(a.d.activeElement.id).toBe('f-addr');expect(a.d.getElementById('delivery-card').textContent).not.toContain('$1.990');expect(a.d.getElementById('send').disabled).toBe(true);expect(a.d.querySelectorAll('[data-shipping-total]')).toHaveLength(0);expect(a.d.querySelectorAll('[data-order-total]')[0].textContent).toBe('$36.000');
  a.click('[data-type="pickup"]');expect(a.d.querySelector('[role="progressbar"]')).toBeNull();expect(a.d.querySelector('#send').disabled).toBe(false);
