@@ -755,7 +755,17 @@ function cartBenefit(method){
     promotionQuote:accepted?accepted.snapshot:quote};
 }
 function modernDelivery(){return !!(MENU&&MENU.delivery&&MENU.delivery.deliveryV2&&MENU.delivery.deliveryV2.active);}
-function shippingForMethod(method){return MENU.delivery?.enabled===false||geo||modernDelivery()?shippingFor(MENU.delivery,geo&&geo.lat,geo&&geo.lng,subtotal()-(modernDelivery()?cartBenefit(method).amount:0),{route:deliveryRoute,authorization:deliveryAuthorization,now:Date.now()+deliveryServerOffset,hasPaymentDiscount:!!cartBenefit(method).paymentDiscount}):null;}
+function shippingForMethod(method){
+ var benefit=cartBenefit(method);
+ var paymentDiscountAmount=Array.isArray(benefit.promotionQuote?.lines)
+   ? benefit.promotionQuote.lines.reduce(function(n,l){return n+(Number(l.paymentDiscount)||0);},0)
+   : Number(benefit.paymentDiscount?.amount)||0;
+ return MENU.delivery?.enabled===false||geo||modernDelivery()
+   ? shippingFor(MENU.delivery,geo&&geo.lat,geo&&geo.lng,subtotal()-(modernDelivery()?benefit.amount:0),
+     {route:deliveryRoute,authorization:deliveryAuthorization,now:Date.now()+deliveryServerOffset,
+       hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount:modernDelivery()?paymentDiscountAmount:0})
+   : null;
+}
 function recalcDelivery(){ship=shippingForMethod(pay);}
 function deliveryApi(action,body){var s=sb();if(!s)return Promise.reject(new Error('Falta la conexión con el servidor de envíos.'));var url=s.url+'/functions/v1/sahten-delivery/'+action,options={method:'POST',headers:sbHeaders(),body:JSON.stringify(Object.assign({storeId:s.storeId},body))};return (action==='loyalty'||action==='quote'?fetchLimited(url,options,15000):fetch(url,options)).then(function(r){return r.json().then(function(data){if(!r.ok){var error=new Error(data.message||'No se pudo validar el envío.');error.code=data.error;if(error.code==='service_paused')MENU.delivery=Object.assign({},MENU.delivery,{enabled:false});throw error;}return data;});}).catch(function(e){if(e.name==='AbortError')throw new Error('La consulta demoró demasiado. Volvé a intentarlo.');throw e;});}
 function sheetKeepFocus(){var active=document.activeElement,id=active?.id,start=active?.selectionStart,end=active?.selectionEnd;sheet();var input=id&&$(id);if(input){input.focus({preventScroll:true});if(typeof start==='number'&&input.setSelectionRange)try{input.setSelectionRange(start,end);}catch{}}}
