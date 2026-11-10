@@ -52,6 +52,7 @@ it('Mostrador acepta una recotización del servidor sin quedar bloqueado y guard
  w._renderCartExtras();w._renderCartTotals();
  w.mostradorSetPayment(w.eval('_mostPaymentOptions()[0].id'));
  const original=w.eval('_calcCartTotals().total');expect(original).toBe(41990);
+ w.mostradorSetCash('38000');expect(w.document.querySelector('.most-checkout').disabled).toBe(false);
  const q=deliveryQuote(policy,place.destination,36000,{route:place.route});
  const server={items:[{productId:product.id,name:product.name,qty:2,unitPrice:20000,lineTotal:40000}],
   subtotal:40000,discount:4000,discountName:'Promociones y beneficios',shipping:1990,total:37990,
@@ -66,7 +67,7 @@ it('Mostrador acepta una recotización del servidor sin quedar bloqueado y guard
  expect(client.validate).toHaveBeenCalledOnce();
  expect(client.validate.mock.calls[0][0]).toMatchObject({total:37990,deliveryQuoteId:'cotizacion-verificada',paymentMethod:'efectivo'});
  const order=w.sahtenOrders()[0];
- expect(order).toMatchObject({total:37990,subtotal:40000,discount:4000,shipping:1990,discountName:'Promociones y beneficios',deliveryValidationId:'validacion-servidor'});
+ expect(order).toMatchObject({total:37990,subtotal:40000,discount:4000,shipping:1990,discountName:'Promociones y beneficios',cashTendered:38000,cashChange:10,deliveryValidationId:'validacion-servidor'});
  expect(order.items).toEqual(server.items);
  expect(w.eval('mostradorCart.length')).toBe(0);
  }finally{w.close();}
