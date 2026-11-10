@@ -143,10 +143,10 @@ describe('login directo sin conexión técnica',()=>{
 });
 
 describe('usuario en la barra superior', () => {
-  it('sin conexión: «Conectar tienda»; el diálogo acepta el código de conexión y rellena todo', async () => {
+  it('la configuración técnica sigue disponible solo como opción avanzada', async () => {
     const a = await app(); await a.p.openDemo(); await wait(30);
-    expect(btn(a).textContent).toMatch(/Conectar tienda/);
-    btn(a).click(); await wait(20);
+    expect(btn(a).textContent).toMatch(/Iniciar sesión/);
+    const setupTask=a.on.userMenu.setup(); await wait(20);
     expect(a.d.querySelector('.sd-title').textContent).toBe('Conectar tienda');
     const code = a.d.getElementById('um-code'); code.value = encodeConnection({ url: URL_OK, anonKey: ANON, slug: 'casapan' }); code.dispatchEvent(new a.window.Event('input', { bubbles: true }));
     expect(a.d.getElementById('um-url').value).toBe(URL_OK); expect(a.d.getElementById('um-slug').value).toBe('casapan');
@@ -156,6 +156,7 @@ describe('usuario en la barra superior', () => {
     expect(a.d.querySelector('.sd-overlay')).toBeNull();
     expect(btn(a).textContent).toMatch(/dani@x\.com/);
     expect(JSON.stringify(a.p.collect())).not.toMatch(/secreta/);
+    await setupTask;
     a.window.close();
   }, 60000);
 
