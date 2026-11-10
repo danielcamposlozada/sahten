@@ -94,6 +94,30 @@ describe('código de acceso y contraseña perdida',()=>{
   });
 });
 
+describe('enlaces del correo sin localhost',()=>{
+  const link=URL_OK+'/auth/v1/verify?token=MAGIC&type=magiclink&redirect_to=http%3A%2F%2Flocalhost%3A3000';
+  const recovery=URL_OK+'/auth/v1/verify?token=RECOVERY&type=recovery&redirect_to=http%3A%2F%2Flocalhost%3A3000';
+  it('ingresa con enlace del correo y no solicita abrir su redirect a localhost',async()=>{
+    const s=setup({conn:{url:URL_OK,anonKey:ANON,storeId:'st-1'},
+      routes:{'/auth/v1/verify':{body:{access_token:'OK',refresh_token:'R',user:{id:'u1',email:'a@x.com'}}},
+       '/rest/v1/orders':{body:[]}}});
+    await s.ctl.signInWithLink(link);
+    expect(s.ctl.info().signedIn).toBe(true);
+    expect(s.calls.find(c=>c.url.includes('/auth/v1/verify')).body).toEqual({type:'magiclink',token:'MAGIC'});
+    expect(s.calls.every(c=>!c.url.includes('localhost'))).toBe(true);
+  });
+  it('recupera contraseña con link en sesión aislada sin dejarla iniciada',async()=>{
+    const s=setup({conn:{url:URL_OK,anonKey:ANON,storeId:'st-1'},
+      routes:{'/auth/v1/verify':{body:{access_token:'RESET',refresh_token:'R',user:{id:'u1'}}},
+       '/auth/v1/user':{body:{id:'u1'}}}});
+    await s.ctl.resetPasswordWithLink(recovery,'nueva-clave-segura');
+    expect(s.calls.find(c=>c.url.includes('/auth/v1/verify')).body).toEqual({type:'recovery',token:'RECOVERY'});
+    expect(s.calls.find(c=>c.url.includes('/auth/v1/user')).body).toEqual({password:'nueva-clave-segura'});
+    expect(s.ctl.info().signedIn).toBe(false);
+    expect(s.store['online-session:p1']).toBeUndefined();
+  });
+});
+
 describe('menú y pedidos', () => {
   const conn = { url: URL_OK, anonKey: ANON, storeId: 'st-1', slug: 'mi-local' };
   const session = { access_token: 'T', refresh_token: 'R', expires_at: 9e9, user: { id: 'u1', email: 'a@x.com' } };
