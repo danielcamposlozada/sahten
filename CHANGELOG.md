@@ -16,6 +16,12 @@
 - Checkout: se distingue mejor el beneficio automático del campo para ingresar un cupón manual.
 - Fidelización: la emisión y validación consideran solamente pedidos online cobrados y comprueban que el pedido de origen de la segunda compra corresponde al mismo teléfono.
 
+## 0.4.52
+
+- Acceso: «Ingresar con código por correo» para cuentas ya existentes, sin guardar contraseñas ni habilitar altas automáticas. Código temporal verificado por Supabase, sesión persistida solo después de la validación correcta.
+- Recuperación de contraseña: pedir un código por correo, verificarlo y configurar una contraseña nueva desde la aplicación. La recuperación usa una sesión temporal aislada que no abre el proyecto ni guarda el token. Accesos disponibles en el menú de usuario y en Nube y usuarios.
+- Requisito de entrega de correos: documentadas las plantillas Magic Link/OTP y Reset Password con `{{ .Token }}` y el SMTP de producción para que el usuario reciba códigos numéricos.
+
 ## 0.4.51
 
 - Delivery y checkout (mostrador + online): los umbrales de envío gratis y pedido mínimo se calculan antes del descuento de efectivo/transferencia, sin quitar otros descuentos promocionales de productos. Zona 2, subtotal $35.450: 10 % ($3.545) y envío gratis conservado → total $31.905. Cotizaciones, autorizaciones, ticket y barra de progreso comparten la misma base verificable; pruebas de caja, servidor y total.
