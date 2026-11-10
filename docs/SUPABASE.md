@@ -36,6 +36,19 @@ Podés conservar los enlaces `{{ .ConfirmationURL }}` de ambas plantillas para n
 
 Para comprobarlo, probá con una cuenta del equipo ya registrada: solicitá un código, revisá el correo, ingresalo y comprobá que se abre el mismo proyecto con el mismo rol. Después cerrá sesión, solicitá recuperación, verificá el código de recuperación y cambiá la contraseña; el restablecimiento **no debe iniciar sesión por sí mismo**. Si el correo trae únicamente un enlace, ajustá primero la plantilla como se indicó.
 
+
+## Ingreso directo desde Sahten (versión 0.4.53)
+
+**No es necesario copiar la URL de Supabase ni pegar una clave para entrar a Sahten.** En la pantalla «Bienvenido a Sahten» o en el botón de cuenta de arriba, elegí **Iniciar sesión**. Podés usar tu correo y contraseña, **Ingresar con código por correo** o **Recuperar contraseña**.
+
+Tras validar tu cuenta, Sahten busca los proyectos a los que estás autorizado en la nube y abre tu negocio automáticamente. Si tu usuario pertenece a más de uno, podés elegirlo. Los permisos siguen controlándose en Supabase (RLS y funciones de acceso) y no se asignan roles de dueño por defecto.
+
+Es necesario que el usuario tenga una cuenta existente y esté asociado al proyecto mediante «Nube y usuarios». Si la tienda ya estaba conectada antes, no hay que realizar ninguna migración, volver a subir el catálogo ni cambiar los precios.
+
+Si tenés un proyecto local distinto abierto, Sahten lo preserva y pide confirmación antes de abrir el negocio desde la nube; si aún no tiene archivo guardado, primero tendrás que guardarlo. El acceso avanzado por URL y clave pública sigue disponible dentro de «Nube y usuarios», pero es opcional para el uso normal.
+
+La URL y la publishable key de Sahten son **parámetros públicos** incluidos en la aplicación, no credenciales privadas. No se incluye ninguna clave de administración ni service_role.
+
 ## 2. Conectar el proyecto desde Sahten
 
 **Nube y usuarios › Conexión con Supabase**: pegá la URL y la anon key, elegí el nombre de tu tienda en la web (`mi-local`),
