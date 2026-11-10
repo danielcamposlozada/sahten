@@ -149,7 +149,7 @@ export function createCloudEntry({w,project,online}) {
           sendLoginCode:email=>otpClient.auth.sendLoginCode(email),
           signInWithCode:async(email,code)=>{await otpClient.auth.verifyLoginCode(email,code);pending=otpClient;}
         };
-        const result=await showLoginCode({online:otpApi,w,email:remembered(),remember,name:'Sahten'});
+        const result=await showLoginCode({online:otpApi,w,email:remembered(),remember,name:'Sahten',notify:false});
         if(result!==true)return false;
       } else if(accepted!==true) return false;
       return await openAccount(pending);
