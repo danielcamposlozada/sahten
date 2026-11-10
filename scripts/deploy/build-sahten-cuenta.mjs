@@ -19,7 +19,7 @@ const headers={
   'X-Frame-Options':'DENY',
   'X-Robots-Tag':'noindex, nofollow, noarchive',
   'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security':'max-age=31536000; includeSubDomains',
+  'Strict-Transport-Security':'max-age=31536000',
   'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src https://dtnbokdrxojdcvguuidk.supabase.co; img-src 'self' data:; font-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests"
 };
 const code=[
@@ -31,6 +31,7 @@ const code=[
   "  const url=new URL(request.url);",
   "  if(request.method!=='GET'&&request.method!=='HEAD')return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});",
   "  if(!['sahten.online','www.sahten.online'].includes(url.hostname))return new Response('Not found',{status:404});",
+  "  if(url.protocol!=='https:')return Response.redirect('https://'+url.hostname+url.pathname,308);",
   "  const script=url.pathname==='/cuenta/app.js';",
   "  const page=url.pathname==='/cuenta'||url.pathname==='/cuenta/';",
   "  if(!script&&!page)return new Response('Not found',{status:404});",
