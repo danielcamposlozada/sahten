@@ -380,7 +380,7 @@ function _calcCartTotals() {
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
     const cfg=_mostTiendaCfg();
-    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:!!benefit.paymentDiscount,paymentDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
     else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
     else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
