@@ -33,19 +33,22 @@ export async function showLoginCode({online,w,email='',remember=()=>{},name='Sah
     '<div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="auth-send-login">Enviar código al correo</button></div>'+
     '<p class="sd-text sd-mute" role="status" aria-live="polite" data-sd="auth-login-status"></p>'+
     field('auth-otp-code','Código recibido',{ac:'one-time-code',extra:'inputmode="numeric" maxlength="10" placeholder="Código de 6 dígitos"'})+
-    '<p class="sd-mute sd-small">El código vence y solo sirve una vez. Si no llega, revisá la carpeta de spam.</p>';
+    '<p class="sd-text sd-mute">¿El correo trae un botón o enlace, pero no un código? Copiá la dirección del enlace SIN abrirlo y pegala acá:</p>'+
+    field('auth-otp-link','Enlace original del correo',{extra:'placeholder="https://…supabase.co/auth/v1/verify?…" aria-label="Pegar enlace original sin abrirlo"'})+
+    '<p class="sd-mute sd-small">Si ya abriste el enlace y terminaste en localhost, solicitá un correo nuevo. No pegues aquí la URL de localhost.</p>';
   return sahtenDialog({
     title:'Ingresar con código',body,w,width:430,
     actions:[{label:'Cancelar',value:false},{label:'Verificar e ingresar',value:true,primary:true}],
     onOpen:api=>installSender(api,{button:'auth-send-login',email:'auth-otp-email',status:'auth-login-status',
       send:mail=>online.sendLoginCode(mail),remember}),
     validate:async(_v,api)=>{
-      const mail=read(api,'auth-otp-email').trim(),code=read(api,'auth-otp-code').trim();
+      const mail=read(api,'auth-otp-email').trim(),code=read(api,'auth-otp-code').trim(),link=read(api,'auth-otp-link').trim();
       if(!emailOk(mail)){api.setError('Ingresá un correo electrónico válido.');return false;}
-      if(!codeOk(code)){api.setError('Ingresá el código numérico recibido por correo.');return false;}
+      if(!link&&!codeOk(code)){api.setError('Ingresá el código o pegá el enlace original del correo.');return false;}
       api.setError('');api.busy(true,'Verificando…');
       try{
-        await online.signInWithCode(mail,code);
+        if(link)await online.signInWithLink(link);
+        else await online.signInWithCode(mail,code);
         remember(mail);
         if(notify)w.sahtenToast('Sesión iniciada en '+name);
         return true;
@@ -60,6 +63,8 @@ export async function showPasswordRecovery({online,w,email='',remember=()=>{}}) 
     '<div class="sd-row"><button type="button" class="sd-linkbtn" data-sd="auth-send-reset">Enviar código de recuperación</button></div>'+
     '<p class="sd-text sd-mute" role="status" aria-live="polite" data-sd="auth-reset-status"></p>'+
     field('auth-reset-code','Código recibido',{ac:'one-time-code',extra:'inputmode="numeric" maxlength="10" placeholder="Código de 6 dígitos"'})+
+    '<p class="sd-text sd-mute">¿El correo solo incluye un botón de recuperación? Copiá su enlace original SIN abrirlo y pegalo acá:</p>'+
+    field('auth-reset-link','Enlace original del correo',{extra:'placeholder="https://…supabase.co/auth/v1/verify?…" aria-label="Pegar enlace original sin abrirlo"'})+
     field('auth-reset-password','Nueva contraseña',{type:'password',ac:'new-password',extra:'minlength="8"'})+
     field('auth-reset-confirm','Repetir contraseña',{type:'password',ac:'new-password',extra:'minlength="8"'})+
     '<p class="sd-mute sd-small">La nueva contraseña debe tener al menos 8 caracteres.</p>';
@@ -69,15 +74,16 @@ export async function showPasswordRecovery({online,w,email='',remember=()=>{}}) 
     onOpen:api=>installSender(api,{button:'auth-send-reset',email:'auth-reset-email',status:'auth-reset-status',
       send:mail=>online.requestPasswordReset(mail),remember}),
     validate:async(_v,api)=>{
-      const mail=read(api,'auth-reset-email').trim(),code=read(api,'auth-reset-code').trim(),
+      const mail=read(api,'auth-reset-email').trim(),code=read(api,'auth-reset-code').trim(),link=read(api,'auth-reset-link').trim(),
         password=read(api,'auth-reset-password'),confirm=read(api,'auth-reset-confirm');
       if(!emailOk(mail)){api.setError('Ingresá un correo electrónico válido.');return false;}
-      if(!codeOk(code)){api.setError('Ingresá el código numérico recibido por correo.');return false;}
+      if(!link&&!codeOk(code)){api.setError('Ingresá el código o pegá el enlace original del correo.');return false;}
       if(password.length<8){api.setError('Elegí una contraseña de al menos 8 caracteres.');return false;}
       if(password!==confirm){api.setError('Las contraseñas no coinciden.');return false;}
       api.setError('');api.busy(true,'Actualizando…');
       try {
-        await online.resetPassword(mail,code,password);
+        if(link)await online.resetPasswordWithLink(link,password);
+        else await online.resetPassword(mail,code,password);
         remember(mail);
         w.sahtenToast('Contraseña actualizada. Iniciá sesión con la nueva contraseña.');
         return true;
