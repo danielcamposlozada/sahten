@@ -2,6 +2,7 @@ import {beforeAll,it,expect,vi} from 'vitest';
 import {buildTestBundle,openApp,loadRawDemo} from './app-harness.js';
 import {sahtenDeliveryPolicy,SAHTEN_CENTER} from '../src/delivery/preset.js';
 import {deliveryQuote,deliverySnapshot} from '../src/core/delivery.js';
+import {circlePoints} from '../src/delivery/geometry.js';
 import places from './fixtures/delivery/routes-verified-2026-10-24.json';
 beforeAll(()=>buildTestBundle(),120000);
 const wait=async()=>new Promise(r=>setTimeout(r,60));
@@ -42,6 +43,29 @@ it('Mostrador actualiza progreso, descuentos y cambio de dirección; valida ante
  }finally{w.close();}
 });
 
+it('Mostrador no quita envío gratis de Zona 2 al activar 10 % en efectivo',async()=>{
+ const {window:w}=await openApp();try{
+ loadRawDemo(w);
+ const p=configure(w);p.zones[1]={...p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
+ const config=w._getTiendaConfig();
+ w._saveTiendaConfig({...config,deliveryV2:p,
+  paymentBenefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}});
+ const product=w.SAHTEN.state.products[0];product.fixedPrices={mostrador:35450};
+ w.SAHTEN.libs.leaflet=async()=>{};w.showPanel('mostrador');w.mostradorAddToCart(product.id);
+ w.mostradorSetOrderType('delivery');
+ const [lat,lng]=circlePoints(p.center,2.9)[0],route={origin:p.center,destination:{lat,lng},
+   distanceMeters:3000,provider:'test-verified',validatedAt:new Date().toISOString()};
+ w.eval('mostradorDelivery='+JSON.stringify({lat,lng,address:'Calle ficticia 123, Olivos',route}));
+ w._renderCartExtras();w._renderCartTotals();
+ const pay=w.eval("_mostPaymentOptions().find(p=>p.method==='efectivo').id");
+ w.mostradorSetPayment(pay);
+ const t=w.eval('_calcCartTotals()');
+ expect(t).toMatchObject({subtotal:35450,discount:3545,shipping:0,total:31905,freeShip:true});
+ expect(w.document.getElementById('most-cart-totals').textContent).toContain('31.905');
+ expect(w.document.getElementById('most-delivery-incentive').textContent).toContain('Gratis');
+ expect(w.document.getElementById('most-delivery-incentive').textContent).not.toContain('3.095 más');
+ }finally{w.close();}
+});
 it('Mostrador acepta una recotización del servidor sin quedar bloqueado y guarda el total verificado',async()=>{
  const {window:w}=await openApp();try{
  loadRawDemo(w);const policy=configure(w),place=places[2],product=w.SAHTEN.state.products[0];
