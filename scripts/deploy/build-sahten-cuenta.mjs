@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 const ROOT=path.resolve('workers/sahten-cuenta');
 const html=await fs.readFile(path.join(ROOT,'index.html'),'utf8');
 const app=await fs.readFile(path.join(ROOT,'app.js'),'utf8');
-for(const field of ['auth-reset-code','password-form','/cuenta/app.js']){
+for(const field of ['id="otp"','id="password-form"','/cuenta/app.js']){
   if(!html.includes(field)&&!app.includes(field))throw new Error('Portal incompleto: '+field);
 }
 if(!app.includes("create_user:false") || !app.includes("redirect_to=") || !app.includes("accessToken = null"))
