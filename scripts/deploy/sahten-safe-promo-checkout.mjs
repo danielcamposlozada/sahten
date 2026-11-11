@@ -13,8 +13,8 @@ import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/pro
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {parseStorefrontCart,storefrontCartKey,storefrontCartLabel} from '../../src/online/storefront.js';
 
-const SOURCE_DEPLOYMENT_ID='eda20121-12fd-4049-8159-897ffde77d4b';
-const PINNED_URL='https://eda20121.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='7668a251-c98f-4135-9826-3d9460db87d2';
+const PINNED_URL='https://7668a251.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
