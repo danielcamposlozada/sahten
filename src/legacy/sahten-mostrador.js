@@ -377,12 +377,13 @@ function _calcCartTotals() {
   const paymentDiscountAmount=applied
     ? applied.lines.reduce((sum,line)=>sum+Number(line.paymentDiscount||0),0)
     : Number(benefit.paymentDiscount?.amount||0);
+  const promotionDiscountAmount=Math.max(0,+(Number(discount||0)-paymentDiscountAmount).toFixed(2));
   let shipping=0, freeShip=false, deliveryQuote=null;
   if(mostradorOrderType==='delivery'){
     const cfg=_mostTiendaCfg();
-    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
+    if(cfg.deliveryEnabled===false||cfg.deliveryV2?.active){deliveryQuote=SAHTEN.core.shippingFor(cfg,mostradorDelivery?.lat,mostradorDelivery?.lng,subtotal-discount,{route:mostradorDelivery?.route,authorization:mostradorDelivery?.authorization,now:Date.now()+(mostradorDelivery?.serverOffset||0),hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount,promotionDiscountAmount});shipping=deliveryQuote.cost;freeShip=deliveryQuote.free;}
     else if(mostradorShipManual) shipping=Math.max(0,mostradorShipping||0);
-    else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && (subtotal-(benefit.paymentDiscount?0:discount))>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
+    else if(mostradorDelivery && mostradorDelivery.zone){ const cfg=_mostTiendaCfg(); freeShip=!!(cfg.freeShippingMin && subtotal>=cfg.freeShippingMin); shipping=freeShip?0:(mostradorDelivery.zone.baseCost||0); }
   }
   const total=Math.round((subtotal-discount+shipping)*100)/100;
   return {items,subtotal,discount,shipping,total,disc,freeShip,paymentDiscount:benefit.paymentDiscount,deliveryQuote,...(applied?{promotionSnapshot:applied}:{})};
