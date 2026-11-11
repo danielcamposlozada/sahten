@@ -3,14 +3,15 @@ import {createDeliveryService} from '../src/delivery/service.js';
 import {roadRoute} from '../src/delivery/routing.js';
 import {sahtenDeliveryPolicy} from '../src/delivery/preset.js';
 import {circlePoints} from '../src/delivery/geometry.js';
+import {initialPromotionConfig} from '../src/core/promotions.js';
 const sid='00000000-0000-4000-8000-000000000001',qid='00000000-0000-4000-8000-000000000002';
-function setup(km=4.5){
+function setup(km=4.5,clock=()=>Date.now()){
  const p={...sahtenDeliveryPolicy(),hours:{...sahtenDeliveryPolicy().hours,enabled:false},active:true,promotionsEnabled:true},point=circlePoints(p.center,Math.min(km-.1,7.5))[0],destination={lat:point[0],lng:point[1]},route={origin:p.center,destination,provider:'verified-test-provider',distanceMeters:km*1000,validatedAt:'2026-10-24T12:00:00Z'};
  const menu={config:{},store:{currency:{symbol:'$',locale:'es-AR'}},products:[{id:'p',name:'Producto',price:40000}],delivery:{deliveryV2:p},payments:{methods:{efectivo:true,transferencia:true,mercadopago:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}}};
  const quotes=new Map(),orders=[],run=vi.fn(async(action,a)=>{if(action==='limit')return true;if(action==='save_quote'){const q={id:qid,store_id:sid,revision:a.revision,payload:a.payload,route:a.route,result:a.result};quotes.set(qid,q);return q;}if(action==='quote')return quotes.get(a.id)||null;if(action==='authorize'){Object.assign(quotes.get(a.id),{authorized_at:'2026-10-24T13:00:00Z',authorized_by:a.actor,authorization_reason:a.reason,tariff_exception:a.tariff_exception});return quotes.get(a.id);}if(action==='order'){orders.push(a.payload);return{id:'order-id'};}if(action==='request')return quotes.get(a.id);return{};});
  const repo={run,menu:async()=>menu,canManage:async(s,u)=>u.id==='owner',canOperate:async()=>true,posRules:async()=>({payments:[{method:'qr'}],discounts:[{id:'d',name:'Beneficio',type:'pct',value:15}]}),savePos:vi.fn(async()=>qid)};
  const resolveRoute=vi.fn(async()=>route),authenticate=async req=>req.headers.get('authorization')==='Bearer owner'?{id:'owner'}:req.headers.get('authorization')==='Bearer cashier'?{id:'cashier'}:null;
- const handler=createDeliveryService({repo,resolveRoute,authenticate,geocode:async()=>[],originKey:async()=> 'ip-hash'});
+ const handler=createDeliveryService({repo,resolveRoute,authenticate,geocode:async()=>[],originKey:async()=> 'ip-hash',now:clock});
  const input={source:'delivery',lat:destination.lat,lng:destination.lng,address:'Dirección ficticia',customerName:'Prueba',customerPhone:'12345678',items:[{productId:'p',qty:1}],paymentMethod:'efectivo',total:37990};
  const call=async(action,body={},token='')=>{const response=await handler(new Request('https://test.invalid/'+action,{method:'POST',headers:{'Content-Type':'application/json',authorization:'Bearer '+token},body:JSON.stringify({storeId:sid,...body})}));return {status:response.status,data:await response.json()};};
  return {call,menu,route,input,repo,resolveRoute,quotes,orders,p};
@@ -39,6 +40,31 @@ it('servidor respeta envío gratis de Zona 2 aunque se aplique efectivo 10 %',as
  expect(a.repo.savePos).toHaveBeenCalledTimes(1);
  const rejected=await a.call('validate-pos',{order:{...order,total:34905}},'cashier');
  expect(rejected.status).toBe(409);
+});
+it('servidor rechaza el cobro de envío del ticket Fatay cuando subtotal bruto supera $35.000',async()=>{
+ const a=setup(3,()=>Date.parse('2026-11-10T16:00:00-03:00'));
+ a.p.zones[1]={...a.p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
+ a.menu.products=[
+  {id:'shawarma-carne',name:'Shawarma de Carne',price:18600},
+  {id:'fatay-3',name:'Promo Fatay (3U)',price:16850}
+ ];
+ const config=initialPromotionConfig();
+ config.enabled=true;config.campaigns[0].enabled=true;config.campaigns[0].productIds=['fatay-3'];
+ a.menu.promotions=config;
+ a.repo.promotionCosts=async()=>({'shawarma-carne':7200,'fatay-3':6000});
+ const order={...a.input,items:[{productId:'shawarma-carne',qty:1},{productId:'fatay-3',qty:1}],
+  total:31062.5,cashTendered:35450,localOrderId:'ord_fataygratis35450'};
+ const quote=await a.call('quote',{pos:true,order},'cashier');
+ expect(quote.status).toBe(200);
+ expect(quote.data.order).toMatchObject({subtotal:35450,discount:4387.5,shipping:0,total:31062.5,
+  deliverySnapshot:{charged:0,eligibleSubtotal:35450,paymentDiscountExcluded:3545,
+   promotionDiscountExcluded:842.5}});
+ const rejected=await a.call('validate-pos',{order:{...order,total:34062.5}},'cashier');
+ expect(rejected.status).toBe(409);
+ const accepted=await a.call('validate-pos',{order},'cashier');
+ expect(accepted.status).toBe(200);
+ expect(accepted.data.order.shipping).toBe(0);
+ expect(a.repo.savePos).toHaveBeenCalledTimes(1);
 });
 it('calcula en servidor, rechaza importes falsos y no acepta Mercado Pago sin Checkout Pro',async()=>{
  const a=setup();let r=await a.call('quote',{order:{...a.input,shipping:1,total:1}});expect(r.data.order).toMatchObject({discount:4000,shipping:1990,total:37990});

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.55
+
+- **Delivery gratis + promociones:** el umbral de cada zona se evalúa sobre el subtotal bruto de productos, antes de descuentos por efectivo/transferencia, campañas, cupones u otras rebajas. No se pierde un beneficio de envío ganado por añadir un descuento.
+- **Zona 2, caso real:** Shawarma de Carne $18.600 + Promo Fatay (3U) $16.850 = $35.450. Con 10 % en efectivo (−$3.545) y campaña Fatay (−$842,50), el envío es $0 y el total **$31.062,50**. Antes se sumaban $3.000 de envío incorrectamente.
+- Se corrige el mismo cálculo en Mostrador, checkout web, servidor seguro y revalidación de la tarifa; los registros separan el descuento por pago del promocional sin alterar las condiciones configuradas.
+- Pruebas automáticas de la combinación real y de rechazo de importes incorrectos.
+
 ## Sin publicar
 
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.

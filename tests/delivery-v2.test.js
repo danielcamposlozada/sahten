@@ -4,6 +4,7 @@ import {deliveryQuote,deliverySnapshot,haversineKm} from '../src/core/delivery.j
 import {circlePoints,toPolygon,validateDeliveryPolicy} from '../src/delivery/geometry.js';
 import {deliveryIncentiveHtml} from '../src/delivery/incentive.js';
 import {quoteOrder} from '../src/payments/core.js';
+import {initialPromotionConfig} from '../src/core/promotions.js';
 import {emptyFile,migrate,serialize} from '../src/project/schema.js';
 const policy=()=>({...sahtenDeliveryPolicy(),hours:{...sahtenDeliveryPolicy().hours,enabled:false},active:true,promotionsEnabled:true});
 const point=km=>({lat:circlePoints(SAHTEN_CENTER,km)[0][0],lng:circlePoints(SAHTEN_CENTER,km)[0][1]});
@@ -74,6 +75,33 @@ it('Zona 2 conserva envío gratis tras el 10 % en efectivo: caso real $35.450',(
  expect(eligible).toMatchObject({cost:0,free:true,progress:100,eligibleSubtotal:35450});
  const withProductPromotion=deliveryQuote(p,d,30132.5,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545});
  expect(withProductPromotion).toMatchObject({cost:3000,eligibleSubtotal:33677.5});
+ const stacked=deliveryQuote(p,d,31062.5,{route:r,hasPaymentDiscount:true,paymentDiscountAmount:3545,promotionDiscountAmount:842.5});
+ expect(stacked).toMatchObject({cost:0,free:true,eligibleSubtotal:35450,paymentDiscountExcluded:3545,promotionDiscountExcluded:842.5});
+});
+it('ticket real Zona 2: 35.450 en productos, -3.545 en efectivo y -842,50 por Fatay conserva envío gratis',()=>{
+ const p=policy(); p.zones[1]={...p.zones[1],baseCost:3000,benefits:[{threshold:35000,cost:0}]};
+ const d=point(2.9),r=route(3,d);
+ const promotion=initialPromotionConfig();
+ promotion.enabled=true;
+ promotion.campaigns[0].enabled=true;
+ promotion.campaigns[0].productIds=['fatay-3'];
+ const menu={config:{enabled:true,showPrices:true},
+   products:[{id:'shawarma-carne',name:'Shawarma de Carne',price:18600},{id:'fatay-3',name:'Promo Fatay (3U)',price:16850}],
+   delivery:{deliveryV2:p},
+   payments:{methods:{efectivo:true,transferencia:true,mercadopago:true},
+    benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}},
+   promotions:promotion};
+ const order={source:'delivery',lat:d.lat,lng:d.lng,address:'Dirección de prueba 123',
+   customerName:'Cliente',customerPhone:'12345678',paymentMethod:'efectivo',
+   items:[{productId:'shawarma-carne',qty:1},{productId:'fatay-3',qty:1}]};
+ const result=quoteOrder(menu,order,{route:r,salesChannel:'mostrador',
+   now:Date.parse('2026-11-10T16:00:00-03:00'),
+   trustedCosts:{'shawarma-carne':7200,'fatay-3':6000},allowOtherPayments:true});
+ expect(result).toMatchObject({subtotal:35450,discount:4387.5,shipping:0,total:31062.5,
+   deliverySnapshot:{baseCost:3000,charged:0,eligibleSubtotal:35450,netSubtotal:31062.5,
+     paymentDiscountExcluded:3545,promotionDiscountExcluded:842.5}});
+ expect(result.promotionSnapshot.lines.find(l=>l.productId==='fatay-3').promotionDiscount).toBe(842.5);
+ expect(deliveryQuote(p,d,34900,{route:r})).toMatchObject({cost:3000,free:false});
 });
 it('los umbrales usan subtotal neto, mantiene el 10 % y registra ahorro sin duplicarlo como gasto',()=>{
  const p=policy(),d=point(4),r=route(4.5,d),menu={products:[{id:'p',name:'Prueba',price:40000}],config:{},delivery:{deliveryV2:p},store:{currency:{symbol:'$',locale:'es-AR'}},payments:{methods:{efectivo:true,mercadopago:true},benefit:{enabled:true,percent:10,channels:{online:true,mostrador:true}}}};
