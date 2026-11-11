@@ -763,7 +763,8 @@ function shippingForMethod(method){
  return MENU.delivery?.enabled===false||geo||modernDelivery()
    ? shippingFor(MENU.delivery,geo&&geo.lat,geo&&geo.lng,subtotal()-(modernDelivery()?benefit.amount:0),
      {route:deliveryRoute,authorization:deliveryAuthorization,now:Date.now()+deliveryServerOffset,
-       hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount:modernDelivery()?paymentDiscountAmount:0})
+       hasPaymentDiscount:paymentDiscountAmount>0,paymentDiscountAmount:modernDelivery()?paymentDiscountAmount:0,
+       promotionDiscountAmount:modernDelivery()?Math.max(0,Math.round((Number(benefit.amount||0)-paymentDiscountAmount)*100)/100):0})
    : null;
 }
 function recalcDelivery(){ship=shippingForMethod(pay);}
