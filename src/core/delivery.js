@@ -41,11 +41,14 @@ export function zoneFor(tienda, lat, lng) {
  * Envío de un pedido: costo de la zona, gratis desde `freeShippingMin` y mínimo de pedido para delivery.
  * → { ok, out, zone, distKm, cost, free, belowMin, minOrder }
  */
-// Los beneficios de delivery se ganan con el importe después de promociones de
-// productos, pero ANTES del descuento por efectivo/transferencia.
-export function deliveryEligibilitySubtotal(netSubtotal, paymentDiscountAmount = 0) {
-  const cash = Number(paymentDiscountAmount);
-  return Math.round((Number(netSubtotal) + (Number.isFinite(cash) ? Math.max(0, cash) : 0)) * 100) / 100;
+// El mínimo y los beneficios de delivery se alcanzan con el subtotal de
+// productos ANTES de todos los descuentos (pago, promociones y cupones).
+// La validación del importe siempre se hace sobre un pedido recotizado.
+export function deliveryEligibilitySubtotal(netSubtotal, paymentDiscountAmount = 0, promotionDiscountAmount = 0) {
+  const cash = Number(paymentDiscountAmount), promotional = Number(promotionDiscountAmount);
+  return Math.round((Number(netSubtotal)
+    + (Number.isFinite(cash) ? Math.max(0,cash) : 0)
+    + (Number.isFinite(promotional) ? Math.max(0,promotional) : 0)) * 100) / 100;
 }
 export function shippingFor(tienda, lat, lng, subtotal, options = {}) {
   const t = tienda || {};
@@ -56,7 +59,7 @@ export function shippingFor(tienda, lat, lng, subtotal, options = {}) {
   const z = zoneFor(t, lat, lng);
   if (!z.zone) return { ok: false, out: true, zone: null, distKm: z.distKm, cost: 0, free: false, belowMin: false, minOrder: t.deliveryMinOrder || 0 };
   const freeMin = t.freeShippingMin || 0;
-  const qualifyingSubtotal = deliveryEligibilitySubtotal(subtotal, options.paymentDiscountAmount);
+  const qualifyingSubtotal = deliveryEligibilitySubtotal(subtotal, options.paymentDiscountAmount, options.promotionDiscountAmount);
   const free = freeMin > 0 && qualifyingSubtotal >= freeMin;
   const minOrder = t.deliveryMinOrder || 0;
   const belowMin = minOrder > 0 && qualifyingSubtotal < minOrder;
@@ -68,7 +71,7 @@ export function deliveryPolicyWithHours(delivery) {
 }
 
 /** Motor v2: recibe una ruta comprobada por el servidor. Nunca convierte el radio en recorrido. */
-export function deliveryQuote(policy, destination, netSubtotal, { route = null, hasPaymentDiscount = false, paymentDiscountAmount = 0, authorization = null, now = Date.now() } = {}) {
+export function deliveryQuote(policy, destination, netSubtotal, { route = null, hasPaymentDiscount = false, paymentDiscountAmount = 0, promotionDiscountAmount = 0, authorization = null, now = Date.now() } = {}) {
   const base = { version:2, revision:policy?.revision||'', geographicZone:null, effectiveZone:null, zone:null, distKm:null, routeKm:null, baseCost:0, cost:0, savings:0, free:false, belowMin:false, minOrder:0, nextBenefit:null, progress:0, ok:false, status:'address_required', requiresAuthorization:false };
   if (!policy || !validDeliveryPoint(policy.center) || !policy.center.verifiedAt) return { ...base, status:'store_unverified' };
   const hours=deliveryHours(policy.hours,now); base.hours=hours;
@@ -94,7 +97,7 @@ export function deliveryQuote(policy, destination, netSubtotal, { route = null, 
   if (!effective.enabled || !floor.enabled) return { ...base, status:'paused' };
   base.zone = {id:effective.id,name:effective.name}; base.effectiveZone=base.zone;
   base.minOrder = Math.max(Number(geo.minOrder)||0,Number(effective.minOrder)||0);
-  const eligibleSubtotal = deliveryEligibilitySubtotal(netSubtotal, paymentDiscountAmount);
+  const eligibleSubtotal = deliveryEligibilitySubtotal(netSubtotal, paymentDiscountAmount, promotionDiscountAmount);
   base.belowMin = eligibleSubtotal < base.minOrder;
   base.baseCost = Math.max(0,Number(effective.baseCost)||0);
   base.cost = base.baseCost;
@@ -106,7 +109,8 @@ export function deliveryQuote(policy, destination, netSubtotal, { route = null, 
   const target=next?.threshold || [...benefits].reverse().find(b=>b.threshold<=eligibleSubtotal)?.threshold || 0;
   base.progress=target?Math.min(100,Math.max(0,eligibleSubtotal/target*100)):0;
   base.threshold=target; base.netSubtotal=netSubtotal; base.eligibleSubtotal=eligibleSubtotal;
-  base.paymentDiscountExcluded=+(eligibleSubtotal-netSubtotal).toFixed(2);
+  base.paymentDiscountExcluded=+(Number(paymentDiscountAmount)||0).toFixed(2);
+  base.promotionDiscountExcluded=+(Number(promotionDiscountAmount)||0).toFixed(2);
   base.requiresAuthorization=!!(geo.requiresAuthorization||effective.requiresAuthorization||base.routeKm>regular);
   base.status=base.belowMin?'below_minimum':base.requiresAuthorization&&!authorized?'authorization_required':'available';
   base.ok=base.status==='available';
@@ -120,7 +124,7 @@ export function zoneContains(center,z,p) {
 }
 export function deliverySnapshot(q, route, authorization = null) {
   if(!q?.ok) return null;
-  return {version:2,revision:q.revision,geographicZone:q.geographicZone,effectiveZone:q.effectiveZone,radialKm:q.distKm,routeKm:q.routeKm,baseCost:q.baseCost,charged:q.cost,discount:q.savings,netSubtotal:q.netSubtotal,eligibleSubtotal:q.eligibleSubtotal,paymentDiscountExcluded:q.paymentDiscountExcluded,provider:route.provider,validatedAt:route.validatedAt,hours:q.hours?.enabled?{timeZone:q.hours.timeZone,checkedAt:q.hours.checkedAt,closesAt:q.hours.closesAt}:null,authorization:authorization?{approved:!!authorization.approved,actor:authorization.actor,reason:authorization.reason,at:authorization.at,tariffFloorException:!!authorization.tariffFloorException}:null};
+  return {version:2,revision:q.revision,geographicZone:q.geographicZone,effectiveZone:q.effectiveZone,radialKm:q.distKm,routeKm:q.routeKm,baseCost:q.baseCost,charged:q.cost,discount:q.savings,netSubtotal:q.netSubtotal,eligibleSubtotal:q.eligibleSubtotal,paymentDiscountExcluded:q.paymentDiscountExcluded,promotionDiscountExcluded:q.promotionDiscountExcluded,provider:route.provider,validatedAt:route.validatedAt,hours:q.hours?.enabled?{timeZone:q.hours.timeZone,checkedAt:q.hours.checkedAt,closesAt:q.hours.closesAt}:null,authorization:authorization?{approved:!!authorization.approved,actor:authorization.actor,reason:authorization.reason,at:authorization.at,tariffFloorException:!!authorization.tariffFloorException}:null};
 }
 /** Descuento comercial de envío, separado del gasto operativo del repartidor. */
 export function deliveryReport(orders) {
