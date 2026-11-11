@@ -53,7 +53,7 @@ it('servidor rechaza el cobro de envío del ticket Fatay cuando subtotal bruto s
  a.menu.promotions=config;
  a.repo.promotionCosts=async()=>({'shawarma-carne':7200,'fatay-3':6000});
  const order={...a.input,items:[{productId:'shawarma-carne',qty:1},{productId:'fatay-3',qty:1}],
-  total:31062.5,cashTendered:35450,localOrderId:'ord_fatay_gratis_35450'};
+  total:31062.5,cashTendered:35450,localOrderId:'ord_fataygratis35450'};
  const quote=await a.call('quote',{pos:true,order},'cashier');
  expect(quote.status).toBe(200);
  expect(quote.data.order).toMatchObject({subtotal:35450,discount:4387.5,shipping:0,total:31062.5,
