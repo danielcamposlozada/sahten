@@ -25,6 +25,15 @@ async function web({closed=false,geocodeDelay=0,price=20000,geocodeFallback=fals
  const search=async()=>{await vi.waitFor(()=>expect(d.querySelector('[data-delivery-search]').hidden).toBe(false));click('[data-delivery-search]');expect(d.querySelector('[data-delivery-search]').hidden).toBe(true);};
  return {w,d,click,type,search,calls,orders,close:()=>w.close(),setTime:t=>serverNow=Date.parse(t),setZone:(id,fields)=>Object.assign(menu.delivery.deliveryV2.zones.find(z=>z.id===id),fields),setDeliveryRevision:value=>{menu.delivery.configurationRevision=value;menu.delivery.deliveryV2.revision=value;},refreshAvailability:()=>intervals.filter(i=>i.ms===10000).forEach(i=>i.fn()),setPrice:value=>menu.products[0].price=value,setOpening:value=>menu.store.openingHours=structuredClone(value),setDeliveryHours:value=>menu.delivery.hours=structuredClone(value),tickHours:()=>intervals.filter(i=>i.ms===15000).forEach(i=>i.fn())};
 }
+it('el checkout web distingue descuentos de pago y Fatay al calcular el envío gratis',()=>{
+ const html=buildIndexHtml({version:1,store:{name:'Sahten prueba',currency:{symbol:'$',locale:'es-AR'}},
+  config:{enabled:true,showPrices:true},products:[{id:'fatay',name:'Fatay',price:16850}],
+  site:null,delivery:{deliveryV2:sahtenDeliveryPolicy()},
+  payments:{methods:{efectivo:true},benefit:{enabled:true,percent:10,channels:{online:true}}},
+  supabase:{url:'https://server.test',storeId:sid,anonKey:'public-test-only-key'}});
+ expect(html).toContain('promotionDiscountAmount:modernDelivery()');
+ expect(html).toContain('Number(benefit.amount||0)-paymentDiscountAmount');
+});
 it('mínimos, tarifa y beneficios llegan a un checkout abierto sin subir archivos ni perder datos o precios de productos',async()=>{
  const a=await web();try{
   a.click('[data-inc]');a.click('[data-inc]');a.click('#bar button');a.click('#cart-next');a.type('#f-name','Cliente escrito');a.type('#f-phone','1112345678');a.type('#f-addr','Dirección ficticia 123');await a.search();await wait(650);a.click('[data-sug="0"]');await wait(100);
