@@ -9,6 +9,8 @@
 
 ## Sin publicar
 
+- Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4 y consentimiento de analítica.
+
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.
 
 - Navegación web de Sahten: «Ver menú» lleva a los platos que se pueden pedir, «Mi pedido» abre el carrito y la carta de consulta se enlaza desde el pie. Historia, Videos, Catering y Encontranos abren sus secciones en el inicio. En celular, el menú de compra, el carrito y las secciones caben en una sola fila.

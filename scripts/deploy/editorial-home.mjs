@@ -74,6 +74,7 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  d.querySelector('.vida-mini-photo img').src=hero?.image||S.images.hero;
  d.querySelector('.vida-catering').insertAdjacentHTML('afterbegin','<img class="catering-photo" src="editorial/catering-mesa.webp" width="815" height="1080" loading="lazy" alt="Mesa de Sahten para compartir en un evento">');
  d.querySelector('.vida-catering>a').href='https://wa.me/'+String(menu.store.whatsapp).replace(/\D/g,'')+'?text='+encodeURIComponent('Hola, quiero consultar por catering');
+ d.querySelector('.vida-catering>a').dataset.whatsappPlacement='catering';
  const reviews=d.querySelector('.reviews');
  const quote=reviews.querySelector('blockquote');quote.innerHTML=(S.resenas.items||[]).map(r=>'<div class="review-quote">“'+esc(r.text)+'”<cite>'+esc(r.author)+' · '+esc(r.source)+'</cite></div>').join('');
  const reviewLink=reviews.querySelector('.review-call a');reviewLink.href=S.resenas.reviewUrl;reviewLink.target='_blank';reviewLink.rel='noopener noreferrer';
