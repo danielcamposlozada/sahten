@@ -13,8 +13,8 @@ import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/pro
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {parseStorefrontCart,storefrontCartKey,storefrontCartLabel} from '../../src/online/storefront.js';
 
-const SOURCE_DEPLOYMENT_ID='7668a251-c98f-4135-9826-3d9460db87d2';
-const PINNED_URL='https://7668a251.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='3514b1bf-42ad-49df-a25b-745c8f7bcf87';
+const PINNED_URL='https://3514b1bf.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',
@@ -25,6 +25,7 @@ const FILES=[
  '/pedir/index.html','/robots.txt','/site.webmanifest','/sitemap.xml'
 ];
 const output=path.resolve(process.env.SAHTEN_DEPLOY_OUTPUT||'sahten-promo-export');
+const measurementId='G-FD337Z2743';
 async function get(url,options){
  const r=await fetch(url,{...options,signal:AbortSignal.timeout(25000)});
  if(!r.ok)throw new Error('Unable to download approved asset: '+new URL(url).pathname+' ('+r.status+')');
@@ -73,7 +74,7 @@ async function run(){
   if(!homeFooter)throw Error('Missing editorial footer');
   const canonical=seo.buildSeo(menu).canonical;
   const siteBase=canonical.endsWith('/')?canonical:canonical+'/';
-  const shell={homeFooter,version:editorialAssetVersion,cartStorageKey:storefrontCartKey(menu,siteBase)};
+  const shell={homeFooter,version:editorialAssetVersion,cartStorageKey:storefrontCartKey(menu,siteBase),measurementId};
   homepage=applyEditorialShell(homepage,{...shell,page:'home'});
   storefront=applyEditorialShell(buildIndexHtml(menu,{storefront:true}).replace('</head>','<link rel="stylesheet" href="editorial/checkout.css?v='+encodeURIComponent(editorialAssetVersion)+'"></head>'),{...shell,page:'pedir',hoursScript});
   const indexableMenu=buildSitePages(menu).find(p=>p.path==='menu/index.html')?.data;
@@ -120,6 +121,7 @@ async function run(){
  const generated=['/index.html','/pedir/index.html','/menu.json',...[...infoPages.keys()].map(p=>'/'+p),'/sitemap.xml'];
  const report={
   status:'ready-for-safe-checkout-review',sourceDeploymentId:SOURCE_DEPLOYMENT_ID,
+  analyticsMeasurementId:measurementId,
   preserved:FILES.filter(f=>!generated.includes(f)),
   generated,descriptions,seoPreserved:true,
   products:menu.products.length,remotePhotos:menu.products.filter(p=>p.image?.startsWith('https://')).length,

@@ -1,0 +1,35 @@
+.sahten-analytics-notice {
+  position: fixed;
+  z-index: 10000;
+  inset: auto 1rem max(1rem, env(safe-area-inset-bottom)) auto;
+  width: min(24rem, calc(100% - 2rem));
+  box-sizing: border-box;
+  padding: 1rem;
+  border: 1px solid #235328;
+  border-radius: .75rem;
+  background: #fff4d6;
+  color: #235328;
+  box-shadow: 0 4px 20px #0003;
+  font: 1rem/1.4 system-ui, sans-serif;
+}
+.sahten-analytics-notice[hidden] { display: none; }
+.sahten-analytics-notice p { margin: 0 0 .75rem; }
+.sahten-analytics-notice div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.sahten-analytics-notice button {
+  padding: .5rem .7rem;
+  border: 1px solid currentColor;
+  border-radius: .4rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.sahten-analytics-preferences {
+  margin: .5rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
