@@ -83,17 +83,21 @@
   const banner = document.createElement('section');
   banner.className = 'sahten-analytics-notice';
   banner.setAttribute('aria-label', 'Preferencias de analítica');
-  banner.innerHTML = '<p>Usamos Google Analytics para medir visitas y clics. Podés cambiar tu elección desde el pie de página.</p>' +
-    '<div><button type="button" data-choice="denied">Rechazar</button>' +
-    '<button type="button" data-choice="granted">Aceptar analítica</button></div>';
+  banner.innerHTML = '<p>¿Nos ayudás a mejorar la web? Usamos Google Analytics para medir cómo se usa.</p>' +
+    '<div><button type="button" data-choice="granted">Aceptar</button>' +
+    '<button type="button" data-choice="denied">Rechazar</button></div>';
   banner.hidden = choice === 'granted' || choice === 'denied';
-  document.body.append(banner);
+  const header = document.querySelector('#s-nav, header.sahten-shell');
+  if (header) header.after(banner);
+  else document.body.prepend(banner);
   const preferences = document.createElement('button');
   preferences.type = 'button';
   preferences.className = 'sahten-analytics-preferences';
   preferences.textContent = 'Preferencias de analítica';
   (document.querySelector('footer.sahten-footer') || document.body).append(preferences);
+  let openedFromPreferences = false;
   preferences.addEventListener('click', () => {
+    openedFromPreferences = true;
     banner.hidden = false;
     banner.querySelector('button').focus();
   });
@@ -103,7 +107,8 @@
     choice = next;
     try { localStorage.setItem(storageKey, choice); } catch {}
     banner.hidden = true;
-    preferences.focus({ preventScroll: true });
+    if (openedFromPreferences) preferences.focus();
+    openedFromPreferences = false;
     if (choice === 'granted') {
       window['ga-disable-' + id] = false;
       if (loaded) tag('consent', 'update', { ...consent, analytics_storage: 'granted' });
