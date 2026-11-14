@@ -9,7 +9,7 @@
 
 ## Sin publicar
 
-- Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4 y consentimiento de analítica.
+- Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4. La elección se muestra en una franja integrada a la página.
 
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.
 
