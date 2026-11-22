@@ -62,7 +62,8 @@ export function buildMenuJson(s, { menuConfig = {}, tienda = {}, images = {}, su
       enabled: menuConfig.enabled !== false, title: menuConfig.title || 'Nuestro Menú', subtitle: menuConfig.subtitle || '',
       showPrices, showImages, deliveryNote: menuConfig.deliveryNote || '',
       categories: cats, categoryImages,
-      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id && !item.upsellOnly)])),
+      // Es una marca de transporte hacia el backend; la carta oculta upsellOnly en renderCatalog.
+      productVisibility: Object.fromEntries(s.products.filter(p => !p.recetaOnly && p.name).map(p => [p.id, items.some(item => item.id === p.id)])),
     },
     products: items,
     // Las recomendaciones no son promociones de precio. Solo IDs publicados,
