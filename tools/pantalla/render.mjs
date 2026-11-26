@@ -52,14 +52,14 @@ async function photoFor(id) {
 }
 
 async function catalogFor(v) {
-  const ids = new Set(v.scenes.flatMap(s => [s.product, ...(s.items || []), ...(s.photos || [])]).filter(Boolean));
+  const ids = new Set(v.scenes.flatMap(s => [s.product, ...(s.items || []), ...(s.photos || []), ...(s.products || [])]).filter(Boolean));
   const out = {};
   for (const id of ids) {
     const p = byId[id], scene = v.scenes.find(s => s.product === id || s.items?.includes(id));
     if (!p && !scene?.allowUnpublished && !VIDEOS.some(x => x.scenes.some(s => s.product === id && s.allowUnpublished))) throw new Error(v.id + ': ' + id + ' no está en el menú publicado');
     if (p?.salesAvailability?.paused || p?.retired) throw new Error(v.id + ': ' + (p.name || id) + ' está pausado');
-    out[id] = { id, name: registry[id]?.name || p?.name || id, description: registry[id]?.description || '', price: p ? Number(p.price) : null, photo: await photoFor(id) };
-    if (v.scenes.some(s => (s.items?.includes(id) || (s.product === id && s.price !== false))) && !(out[id].price > 0)) throw new Error(v.id + ': ' + id + ' no tiene precio publicado');
+    out[id] = { id, name: registry[id]?.name || p?.name || id, description: registry[id]?.description || '', price: p ? Number(p.price) : null, photo: await photoFor(id), cutout: fs.existsSync(path.join(DIR, 'recortes', id + '.png')) ? pathToFileURL(path.join(DIR, 'recortes', id + '.png')).href : null };
+    if (v.scenes.some(s => (s.items?.includes(id) || s.products?.includes(id) && s.type === 'orbit' || (s.product === id && s.price !== false))) && !(out[id].price > 0)) throw new Error(v.id + ': ' + id + ' no tiene precio publicado');
   }
   return out;
 }

@@ -272,6 +272,125 @@ const SCENES = {
     const cal = el('div', 'abs', calligraphy(sc.bg === C.green ? C.orange : C.green), scene); css(cal, { left: '300px', top: '1640px', width: '480px', opacity: .9 }); cal.querySelector('svg').setAttribute('width', '480'); cal.querySelector('svg').removeAttribute('height');
     K(cal, [[a + 1.2, { o: 0, y: 30 }], [a + 1.8, { o: .9, y: 0 }]]);
   },
+
+  // ── Marcos por tipo de promoción (v2) ──
+  // Plato recortado flotando con sombra de contacto: el «hero shot» de menu board.
+  podium(scene, sc, a, b, p, prod) {
+    background(scene, sc, a, b);
+    const num = el('div', 'abs', String(p.rank), scene);
+    css(num, { left: '0', right: '0', top: '60px', textAlign: 'center', font: 'italic 400 1100px/1 Lora', letterSpacing: '-.08em', color: sc.accent, opacity: .9 });
+    K(num, [[a, { y: 400, o: 0 }], [a + .7, { y: 0, o: .9 }], [b, { y: -40, s: 1.04 }]], [E.out, E.lin]);
+    const sh = el('div', 'abs', null, scene); css(sh, { left: '190px', top: '1180px', width: '700px', height: '90px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.38), transparent)' });
+    K(sh, [[a + .2, { s: .2, o: 0 }], [a + .85, { s: 1, o: 1 }], [b, { s: 1.06 }]], [E.out, E.lin]);
+    // Sin recorte limpio: la foto completa en un plato circular (nunca se publica un recorte sucio).
+    const dish = el('div', 'abs', prod.cutout ? `<img src="${prod.cutout}" style="width:100%;display:block">` : `<div style="width:740px;height:740px;border-radius:50%;overflow:hidden;border:14px solid ${C.cream};box-shadow:0 30px 60px rgba(0,0,0,.3);margin:auto"><img src="${prod.photo}" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.15)"></div>`, scene);
+    css(dish, prod.cutout ? { left: '110px', top: '470px', width: '860px' } : { left: '170px', top: '360px', width: '740px' });
+    K(dish, [[a + .15, { y: -900, r: -14, s: .9 }], [a + .85, { y: 0, r: 2, s: 1 }], [a + 1.1, { y: -14, r: 0 }], [b, { y: -40, r: -2, s: 1.04 }]], [E.out, E.inout, E.lin]);
+    const txt = el('div', 'abs', null, scene); css(txt, { left: '80px', right: '80px', top: '1330px' });
+    const k = el('div', 'kicker', p.kicker, txt); css(k, { color: sc.bg === C.orange ? C.cream : C.orange, marginBottom: '18px' }); K(k, [[a + .5, { o: 0, x: -40 }], [a + 1, { o: 1, x: 0 }]]);
+    maskedLines(txt, [p.heavy], 'heavy', a + .55)[0].style.fontSize = '170px';
+    const it = maskedLines(txt, [p.italic], 'ital', a + .65)[0]; it.style.fontSize = '120px'; it.style.color = sc.bg === C.orange ? C.cream : C.orange;
+    if (prod.price) { const pr = el('div', 'price abs', fmt(prod.price), scene); css(pr, { width: '280px', height: '280px', right: '50px', top: '420px', background: sc.card, color: sc.cardFg, border: `6px solid ${sc.accent}` }); K(pr, [[a + 1, { s: 0, r: -30 }], [a + 1.5, { s: 1, r: -8 }], [b, { s: 1.04, r: 4 }]], [E.back, E.lin]); }
+  },
+
+  // Tira semanal L-D con los días de la campaña encendidos; los platos caen por turno.
+  weekstrip(scene, sc, a, b, p, _, prods) {
+    background(scene, sc, a, b);
+    const top = el('div', 'abs', null, scene); css(top, { left: '80px', right: '80px', top: '150px' });
+    const k = el('div', 'kicker', p.kicker, top); css(k, { color: C.orange, marginBottom: '20px' }); K(k, [[a + .1, { o: 0, y: 20 }], [a + .6, { o: 1, y: 0 }]]);
+    maskedLines(top, [p.heavy], 'heavy', a + .15)[0].style.fontSize = '170px';
+    const it = maskedLines(top, [p.italic], 'ital', a + .25, .1, C.orange)[0]; it.style.fontSize = '96px';
+    const days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'], on = p.days;
+    const strip = el('div', 'abs', null, scene); css(strip, { left: '70px', right: '70px', top: '640px', display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '16px' });
+    days.forEach((d, i) => {
+      const lit = on.includes(i), c = el('div', null, d, strip);
+      css(c, { height: '150px', borderRadius: '20px', display: 'grid', placeItems: 'center', font: '900 72px DM', background: lit ? C.orange : 'transparent', color: lit ? C.deep : sc.fg, border: `5px solid ${lit ? C.orange : sc.fg}`, opacity: lit ? 1 : .45 });
+      K(c, [[a + .3 + i * .06, { y: 60, o: 0 }], [a + .75 + i * .06, { y: 0, o: lit ? 1 : .45 }], ...(lit ? [[a + 1.1 + i * .1, { s: 1 }], [a + 1.3 + i * .1, { s: 1.12 }], [a + 1.5 + i * .1, { s: 1 }]] : [])], E.out);
+    });
+    const span = (b - (a + 1.2)) / prods.length;
+    prods.forEach((pr, i) => {
+      const s0 = a + 1.2 + i * span, s1 = s0 + span, last = i === prods.length - 1;
+      const g = el('div', 'abs', null, scene); css(g, { left: '0', right: '0', top: '860px', height: '1000px' });
+      const sh = el('div', 'abs', null, g); css(sh, { left: '230px', top: '640px', width: '620px', height: '80px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.35), transparent)' });
+      const im = el('div', 'abs', pr.cutout ? `<img src="${pr.cutout}" style="width:100%;display:block">` : `<div style="width:600px;height:600px;border-radius:50%;overflow:hidden;border:12px solid ${C.cream};margin:0 auto"><img src="${pr.photo}" style="width:100%;height:100%;object-fit:cover;transform:scale(1.15)"></div>`, g); css(im, { left: '170px', top: '30px', width: '740px' });
+      const nm = el('div', 'abs', `<div style="font:900 96px/.95 DM;letter-spacing:-.05em;text-align:center">${pr.name}</div>`, g); css(nm, { left: '60px', right: '60px', top: '760px' });
+      K(g, [[0, { o: 0 }], [s0, { o: 0 }], [s0, { o: 1 }], [s1, { o: 1 }], [s1, { o: last ? 1 : 0 }], [b + 1, { o: last ? 1 : 0 }]], E.lin);
+      K(im, [[s0, { y: -700, r: -10 }], [s0 + .55, { y: 0, r: 0 }], [s1, { y: -20, r: 2 }]], [E.out, E.lin]);
+      K(sh, [[s0, { s: .2, o: 0 }], [s0 + .55, { s: 1, o: 1 }]], E.out);
+      K(nm, [[s0 + .2, { y: 40, o: 0 }], [s0 + .6, { y: 0, o: 1 }]], E.out);
+    });
+  },
+
+  // Calendario del mes: 5 semanas × 7 días, sin fechas inventadas; marca 2.º y 3.er viernes y sábado.
+  calendar(scene, sc, a, b, p, prod) {
+    background(scene, sc, a, b);
+    const top = el('div', 'abs', null, scene); css(top, { left: '80px', right: '80px', top: '140px' });
+    const k = el('div', 'kicker', p.kicker, top); css(k, { color: C.orange, marginBottom: '20px' }); K(k, [[a + .1, { o: 0, y: 20 }], [a + .6, { o: 1, y: 0 }]]);
+    maskedLines(top, [p.heavy], 'heavy', a + .15)[0].style.fontSize = '170px';
+    maskedLines(top, [p.italic], 'ital', a + .25, .1, C.orange)[0].style.fontSize = '96px';
+    const cal = el('div', 'abs', null, scene); css(cal, { left: '140px', right: '140px', top: '600px', display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '10px' });
+    ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach(d => { const h = el('div', null, d, cal); css(h, { textAlign: 'center', font: '700 40px DM', opacity: .7 }); });
+    for (let w = 0; w < 5; w++) for (let d = 0; d < 7; d++) {
+      const lit = (w === 1 || w === 2) && (d === 4 || d === 5), c = el('div', null, null, cal);
+      css(c, { height: '80px', borderRadius: '14px', background: lit ? C.orange : 'transparent', border: `4px solid ${lit ? C.orange : sc.fg}`, opacity: lit ? 1 : .3 });
+      K(c, [[a + .3 + (w * 7 + d) * .015, { s: .4, o: 0 }], [a + .7 + (w * 7 + d) * .015, { s: 1, o: lit ? 1 : .3 }], ...(lit ? [[a + 1.3, { s: 1 }], [a + 1.5, { s: 1.15 }], [a + 1.7, { s: 1 }]] : [])], E.out);
+    }
+    const sh = el('div', 'abs', null, scene); css(sh, { left: '240px', top: '1760px', width: '600px', height: '80px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.35), transparent)' });
+    const im = el('div', 'abs', `<img src="${prod.cutout || prod.photo}" style="width:100%;display:block">`, scene); css(im, { left: '190px', top: '1230px', width: '700px' });
+    K(im, [[a + 1.6, { x: 1100, r: 12 }], [a + 2.3, { x: 0, r: 0 }], [b, { x: -20, y: -16 }]], [E.out, E.lin]);
+    K(sh, [[a + 1.8, { o: 0, s: .3 }], [a + 2.3, { o: 1, s: 1 }]], E.out);
+    const nm = el('div', 'abs chip-name', prod.name, scene); css(nm, { left: '80px', top: '1150px', font: '900 64px DM', letterSpacing: '-.04em', background: C.green, color: C.cream, padding: '14px 26px' });
+    K(nm, [[a + 2.1, { o: 0, x: -40 }], [a + 2.5, { o: 1, x: 0 }]], E.out);
+  },
+
+  // Órbita: los complementos giran alrededor de un «+» y se suman.
+  orbit(scene, sc, a, b, p, _, prods) {
+    background(scene, sc, a, b);
+    const top = el('div', 'abs', null, scene); css(top, { left: '80px', right: '80px', top: '150px' });
+    const k = el('div', 'kicker', p.kicker, top); css(k, { color: sc.bg === C.orange ? C.cream : C.orange, marginBottom: '20px' }); K(k, [[a + .1, { o: 0, y: 20 }], [a + .6, { o: 1, y: 0 }]]);
+    maskedLines(top, [p.heavy], 'heavy', a + .15)[0].style.fontSize = '170px';
+    const it = maskedLines(top, [p.italic], 'ital', a + .25, .1)[0]; it.style.fontSize = '120px'; it.style.color = sc.bg === C.orange ? C.cream : C.orange;
+    const cx = 540, cy = 1080;
+    const ring = el('div', 'abs', rosette(sc.line, 900, 4), scene); css(ring, { left: (cx - 450) + 'px', top: (cy - 450) + 'px', opacity: .3 });
+    K(ring, [[a, { r: 0, s: .6 }], [a + .8, { r: 40, s: 1 }], [b, { r: 110, s: 1 }]], [E.out, E.lin]);
+    const plus = el('div', 'stamp abs', '<div style="font:900 120px/1 DM">+</div>', scene); css(plus, { left: (cx - 85) + 'px', top: (cy - 120) + 'px', width: '170px', height: '170px', background: sc.card, color: sc.cardFg });
+    K(plus, [[a + .5, { s: 0, r: -90 }], [a + 1, { s: 1, r: 0 }], [b, { r: 0, s: 1.06 }]], [E.back, E.lin]);
+    const slots = [{ x: -270, y: -190 }, { x: 270, y: -190 }, { x: 0, y: 260 }], w = 430;
+    prods.forEach((pr, i) => {
+      const sl = slots[i % 3], g = el('div', 'abs', null, scene); css(g, { left: (cx + sl.x - w / 2) + 'px', top: (cy + sl.y - w / 2) + 'px', width: w + 'px' });
+      const img = pr.cutout ? `<img src="${pr.cutout}" style="width:100%;display:block;filter:drop-shadow(0 26px 26px rgba(0,0,0,.35))">` : `<div style="width:${w}px;height:${w}px;border-radius:50%;overflow:hidden;border:10px solid ${C.cream}"><img src="${pr.photo}" style="width:100%;height:100%;object-fit:cover"></div>`;
+      el('div', null, img, g);
+      const lab = el('div', null, `<span style="font:900 46px DM;letter-spacing:-.03em">${pr.name}</span><br><span style="font:900 52px DM;color:${sc.bg === C.orange ? C.deep : C.orange}">${pr.price ? fmt(pr.price) : ''}</span>`, g);
+      css(lab, { textAlign: 'center', lineHeight: '1.05', marginTop: '10px', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' });
+      const ph = i * 1.7, keys = [[a + .3 + i * .15, { x: -sl.x * .9, y: -sl.y * .9, s: 0, r: -20 }]];
+      for (let t = a + .95 + i * .15; t <= b + .001; t += .3) keys.push([t, { x: Math.sin((t - a) * 1.1 + ph) * 14, y: Math.cos((t - a) * 1.3 + ph) * 12, s: 1, r: Math.sin((t - a) * .8 + ph) * 3 }]);
+      K(g, keys, [E.back, ...keys.slice(1).map(() => E.soft)]);
+      K(lab, [[a + .9 + i * .15, { o: 0, y: 20 }], [a + 1.3 + i * .15, { o: 1, y: 0 }]], E.out);
+    });
+  },
+
+  // 10 %: tipografía cinética en capas (falso 3D) y las fotos del banner en ventanas de estrella.
+  kinetic(scene, sc, a, b, p) {
+    background(scene, sc, a, b);
+    const big = el('div', 'abs', null, scene); css(big, { left: '0', right: '0', top: '260px', textAlign: 'center' });
+    for (let i = 7; i >= 0; i--) {
+      const l = el('div', null, '10<span style="font-size:.45em">%</span>', big);
+      css(l, { position: i ? 'absolute' : 'relative', left: 0, right: 0, top: 0, font: '900 520px/1 DM', letterSpacing: '-.07em', color: i ? (i % 2 ? C.green : C.deep) : C.cream });
+      K(l, [[a + .05 * i, { y: 260, o: 0, x: 0 }], [a + .7 + .05 * i, { y: i * 7, x: i * 5, o: 1 }], [b, { y: i * 7 - 20, x: i * 5 + 10, o: 1 }]], [E.out, E.lin]);
+    }
+    K(big, [[a, { r: -4, s: .9 }], [b, { r: 2, s: 1.04 }]], E.soft);
+    const label = el('div', 'abs', null, scene); css(label, { left: '80px', right: '80px', top: '840px', textAlign: 'center' });
+    maskedLines(label, [p.italic], 'ital', a + .6, .1, C.cream)[0].style.fontSize = '130px';
+    const W = 470, star = starPath(W / 2, W / 2, W / 2, W * .42).replace(/^M/, 'M');
+    p.banners.forEach((ph, i) => {
+      const f = el('div', 'abs', `<img src="${window.ASSETS.photos[ph]}" style="width:100%;height:100%;object-fit:cover">`, scene);
+      css(f, { left: (i ? 560 : 50) + 'px', top: (i ? 1280 : 1130) + 'px', width: W + 'px', height: W + 'px', clipPath: `path('${star}')` });
+      K(f, [[a + .8 + i * .2, { s: 0, r: -60 }], [a + 1.5 + i * .2, { s: 1, r: 0 }], [b, { s: 1.05, r: i ? 10 : -10 }]], [E.back, E.lin]);
+      K(f.querySelector('img'), [[a, { s: 1.3 }], [b, { s: 1.05 }]], E.lin);
+    });
+    const n = el('div', 'abs', `<div class="kicker" style="color:${C.deep}">${p.kicker}</div><div style="font:900 74px/1 DM;letter-spacing:-.04em;margin-top:10px">${p.heavy}</div>`, scene);
+    css(n, { left: '80px', right: '80px', top: '1780px', textAlign: 'center' }); K(n, [[a + 1.4, { o: 0, y: 30 }], [a + 1.9, { o: 1, y: 0 }]], E.out);
+  },
 };
 
 // ───────────────────────────── Construcción ─────────────────────────────
@@ -282,7 +401,7 @@ window.build = function (video, catalog) {
   const total = t + .55 + .35;
   plan.forEach(([s, a, b], i) => {
     const scene = el('div', 'scene', null, stage), sc = SCHEME[s.bg];
-    const prod = s.product ? catalog[s.product] : null, prods = (s.items || s.photos || []).map(id => catalog[id]);
+    const prod = s.product ? catalog[s.product] : null, prods = (s.items || s.photos || s.products || []).map(id => catalog[id]);
     SCENES[s.type](scene, sc, a, b, s, prod, prods);
     window_(scene, i === 0 ? 0 : a, i === plan.length - 1 ? total : b, total);
     if (i > 0) wipe(stage, a, total, null, 1);

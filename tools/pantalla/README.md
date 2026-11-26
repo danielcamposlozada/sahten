@@ -47,3 +47,24 @@ NODE_USE_ENV_PROXY=1 node tools/pantalla/render.mjs --stills   # cuadros de cont
   - cortinas de transición con borde de arcos.
 - Textos cortos para leer a distancia: nombre, una línea y precio. Sin descripciones largas.
 - Un único reloj (`seek(t)`) anima todo, así que cada cuadro es determinista.
+
+## v2 (26/11/2026): marcos por tipo de promoción, cómo comprar y delivery
+
+| Archivo | Marco |
+|---|---|
+| `01-10-off` | Tipografía cinética 3D («10 %» en capas) y las fotos del banner en ventanas de estrella |
+| `02-lunes-a-miercoles` | Tira semanal L–D con L-M-M encendidos; los platos caen por turno |
+| `03-tablas-fin-de-semana` | Calendario del mes (sin fechas inventadas) con el 2.º y 3.er viernes y sábado marcados |
+| `05-los-mas-pedidos` | Podio: número gigante detrás del plato recortado que flota con sombra |
+| `06-para-compartir` | Arco ogival (único video que lo usa) |
+| `07-sumale` | Órbita: los complementos alrededor de un «+» |
+| `08-como-comprar` | Celular 3D con capturas reales de sahten.online (`v2/capturar-web.cjs`, sin confirmar pedidos) |
+| `09-delivery` | Mapa real (MapLibre + OpenFreeMap) con la ruta real (OSRM, `v2/ruta.json`), moto, anillos de 2–8 km y barrios |
+
+- **Recortes:** los platos recortados están en `recortes/` (rembg `isnet-general-use`, bordes suavizados). Si un recorte no queda limpio, se usa la foto entera en un plato circular, como pasa con el Shawarma Mixto y el de Pollo.
+- **Video 09:** dice «Envío gratis*», con la aclaración al pie «Según zona y monto del pedido». Muestra el horario de delivery publicado (lunes a sábado, de 18 a 22 h) y los barrios confirmados por el dueño.
+- **Comandos:** `tools/pantalla/render-v2-promos.sh`, `node tools/pantalla/v2/render-howto.mjs` y `node tools/pantalla/v2/render-delivery.mjs`. Los tres admiten `--stills` (salvo el `.sh`).
+- **Hosts que tiene que permitir la red:**
+  - `tiles.openfreemap.org` y `router.project-osrm.org`, para el mapa y la ruta;
+  - `dtnbokdrxojdcvguuidk.supabase.co`, para las fotos;
+  - `sahten.online`, para las capturas.

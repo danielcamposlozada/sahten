@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Sahten · Cómo comprar en la web</title>
+<style>
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-500.woff2');font-weight:500}
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-900.woff2');font-weight:900}
+@font-face{font-family:Lora;src:url('../../../media/sahten-editorial/fonts/lora-latin-italic.woff2');font-style:italic}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:DM,sans-serif;background:#EF8E23;color:#183d23}
+.abs{position:absolute}
+.kicker{font:700 40px/1.2 DM;letter-spacing:.14em;text-transform:uppercase}
+.heavy{font:900 190px/.86 DM;letter-spacing:-.055em;text-transform:uppercase}
+.ital{font:italic 400 150px/1 Lora;letter-spacing:-.03em}
+.mask{display:block;overflow:hidden;padding:.16em .04em .06em;margin-top:-.16em}
+.mask>span{display:block}
+#scene3d{position:absolute;left:0;top:0;width:1080px;height:1920px;perspective:2600px;perspective-origin:50% 55%;z-index:1}
+#phone{position:absolute;left:230px;top:540px;width:620px;height:1025px;transform-style:preserve-3d;transform-origin:50% 50%}
+.body{position:absolute;inset:0;border-radius:84px;background:#112d1b;box-shadow:0 60px 120px rgba(0,0,0,.45),inset 0 0 0 4px #2c6a37}
+.screen{position:absolute;left:22px;top:22px;right:22px;bottom:22px;border-radius:64px;overflow:hidden;background:#FAF8F5}
+.screen img{position:absolute;left:0;top:0;width:100%;height:auto}
+.island{position:absolute;left:50%;top:44px;width:180px;height:50px;margin-left:-90px;border-radius:30px;background:#112d1b;z-index:5}
+.tap{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(255,244,214,.55);border:8px solid #EF8E23;z-index:6}
+.stepnum{font:italic 400 520px/1 Lora;letter-spacing:-.06em;color:#FFF4D6;opacity:.9}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="pattern" style="inset:-200px"></div>
+  <div class="abs" id="bignum" style="left:-30px;top:120px"></div>
+  <div id="scene3d"><div id="phone"><div class="body"></div><div class="screen" id="screen"></div><div class="island"></div><div class="tap" id="tap"></div></div></div>
+  <div class="abs" id="fly" style="z-index:8"></div>
+  <div class="abs" id="txt" style="left:90px;right:90px;top:150px;z-index:10"></div>
+  <div class="abs" id="cta" style="inset:0;z-index:20"></div>
+  <div class="abs" id="bump" style="inset:0;z-index:30"></div>
+</div>
+<script>
+const C={green:'#235328',deep:'#183d23',darker:'#112d1b',cream:'#FFF4D6',orange:'#EF8E23',pale:'#E3F1DD'};
+const E={out:t=>1-Math.pow(1-t,4),inout:t=>t<.5?8*t**4:1-Math.pow(-2*t+2,4)/2,back:t=>{const c=1.70158*1.3,c3=c+1;return 1+c3*Math.pow(t-1,3)+c*Math.pow(t-1,2)}};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a)),lerp=(a,b,u)=>a+(b-a)*u;
+const $=id=>document.getElementById(id);
+const SW=576, SH=SW*664/390; // tamaño de la pantalla del celular en el video
+let A,SH_LIST,T_TOTAL,STEPS,TAPS,IMG={};
+
+// Escenas: [inicio, captura, toque?]
+function plan(shots){
+  const by=n=>shots.find(s=>s.file.includes(n));
+  return [
+    [0.0, by('01-carta')],[3.9,by('02-lista')],[4.7,by('03-antes-agregar')],[5.6,by('04-agregado')],
+    [6.5,by('05-antes-agregar-2')],[7.3,by('06-agregado-2')],
+    [8.8,by('07-antes-carrito')],[9.6,by('08-carrito')],
+    [11.6,by('09-antes-continuar')],[12.4,by('10-entrega-pago')],[13.4,by('11-antes-retiro')],[14.1,by('12-retiro')],
+    [15.0,by('13-antes-efectivo')],[15.6,by('14-efectivo')],
+  ].filter(x=>x[1]);
+}
+const STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedido',a:8.6,b:11.4},{n:'03',t:'Elegí entrega y pago',a:11.4,b:17.4}];
+const TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
+
+function patternSVG(color,op){const h=75,s=54;return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="150" height="150" patternUnits="userSpaceOnUse"><g fill="none" stroke="${color}" stroke-width="3" opacity="${op}"><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/><circle cx="${h}" cy="${h}" r="23"/></g></pattern><radialGradient id="mg" cx="50%" cy="50%" r="62%"><stop offset="55%" stop-color="#000"/><stop offset="100%" stop-color="#fff"/></radialGradient><mask id="mm"><rect width="100%" height="100%" fill="url(#mg)"/></mask></defs><rect width="100%" height="100%" fill="url(#pp)" mask="url(#mm)"/></svg>`;}
+
+window.build=(assets,data)=>{
+  A=assets;SH_LIST=plan(data.shots);
+  $('pattern').innerHTML=patternSVG(C.cream,.18);
+  const sc=$('screen');
+  SH_LIST.forEach(([,s])=>{const i=document.createElement('img');i.src=data.base+s.file;i.dataset.f=s.file;sc.appendChild(i);IMG[s.file]=i;});
+  TAPS=TAPLIST.map(([t,f,dish])=>({t,s:data.shots.find(s=>s.file.includes(f)),dish}));
+  // títulos de paso
+  const txt=$('txt');
+  txt.innerHTML=`<div id="hook"><div class="kicker" style="color:${C.cream};margin-bottom:28px">sahten.online</div><span class="mask"><span class="heavy" id="h1">Pedí</span></span><span class="mask"><span class="heavy" id="h1b">online</span></span><span class="mask"><span class="ital" id="h2" style="color:${C.cream};font-size:120px">en tres pasos</span></span></div>`+
+    STEP.map((s,i)=>`<div class="abs st" id="st${i}" style="left:0;right:0;top:0;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center"><div style="font:italic 400 190px/1 Lora;color:${C.cream};letter-spacing:-.05em">${s.n}</div><div style="font:900 92px/.95 DM;letter-spacing:-.05em">${s.t}</div></div>`).join('');
+  // platos que vuelan a la bolsa
+  $('fly').innerHTML=TAPS.filter(x=>x.dish).map((x,i)=>`<img id="d${i}" src="${assets.cutouts[x.dish]}" style="position:absolute;width:300px;left:0;top:0;opacity:0;filter:drop-shadow(0 30px 30px rgba(0,0,0,.35))">`).join('');
+  $('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:90px;right:90px;top:230px;color:${C.cream}"><div class="kicker" style="color:${C.orange};margin-bottom:26px">Tu pedido en minutos</div><div class="heavy" style="font-size:170px">Escaneá</div><div class="ital" style="font-size:140px;color:${C.orange}">y pedí online</div></div><div id="qrbox" style="position:absolute;left:220px;top:820px;width:640px;height:640px;background:${C.cream};padding:40px;box-sizing:content-box;clip-path:polygon(0 0,100% 0,100% calc(100% - 80px),calc(100% - 80px) 100%,0 100%)">${assets.qr}</div><div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`;
+  const q=$('cta').querySelector('svg');q.setAttribute('width','640');q.setAttribute('height','640');
+  $('bump').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:260px;top:760px;width:560px">${assets.logo}</div>`;
+  const lg=$('bump').querySelector('svg');lg.setAttribute('width','560');lg.removeAttribute('height');
+  T_TOTAL=20.9;return T_TOTAL;
+};
+// punto de toque en coordenadas de la pantalla del video
+const tapPt=s=>({x:s.tap.x/390*SW,y:s.tap.y/664*SH});
+
+window.frame=t=>{
+  // celular: entra girando, luego zoom a cada toque con seguimiento amortiguado
+  const enter=E.out(seg(t,1.1,2.6));
+  const rise=E.inout(seg(t,3.2,3.9));let ry=lerp(-38,-10,enter),rx=lerp(14,4,enter),ty=lerp(1100,380,enter)*(1-rise),sc=1,px=0,py=0;
+  ry+=Math.sin(t*.6)*3; rx+=Math.cos(t*.5)*1.5;
+  // foco: el toque más cercano
+  let focus=null,w=0;for(const k of TAPS){const d=Math.abs(t-(k.t-.25));const ww=1-seg(d,.45,1.2);if(ww>w){w=ww;focus=k;}}
+  if(t>3.6&&t<17.2){sc=lerp(1.08,1.3,E.inout(w));if(focus){const p=tapPt(focus.s);px=-(p.x-SW/2)*(sc-1);py=Math.max(-(p.y-SH/2)*(sc-1),-40)+ (sc-1)*SH*.5;}}
+  const exitU=E.inout(seg(t,17.2,17.9));
+  $('phone').style.transform=`translate3d(${px}px,${ty+py+exitU*-200}px,0) rotateY(${ry*(1-.6*w)}deg) rotateX(${rx}deg) scale(${sc*(1-.15*exitU)})`;
+  $('phone').style.opacity=String(1-seg(t,17.6,17.9));
+  // pantallas: fundido + leve desplazamiento
+  SH_LIST.forEach(([a,s],i)=>{const next=SH_LIST[i+1]?.[0]??99,img=IMG[s.file];const u=E.out(seg(t,a,a+.25)),out=t>=next+.25;img.style.opacity=String(t<a?0:(out?0:u));img.style.transform=`translateY(${(1-u)*24}px)`;img.style.zIndex=String(i);});
+  // toque
+  const tap=$('tap');let tv=0,tp={x:-200,y:-200};for(const k of TAPS){const d=t-(k.t-.35);if(d>-.05&&d<.7){tv=d;tp=tapPt(k.s);}}
+  const press=seg(tv,0,.25),rel=seg(tv,.3,.7);tap.style.left=(tp.x+22)+'px';tap.style.top=(tp.y+22)+'px';
+  tap.style.opacity=String(tv>0?(1-rel):0);tap.style.transform=`scale(${lerp(1.3,.8,E.out(press))+rel*.9})`;
+  // platos volando a la bolsa (desde la pantalla hacia arriba a la derecha)
+  TAPS.filter(x=>x.dish).forEach((k,i)=>{const u=seg(t,k.t-.1,k.t+.75),d=$('d'+i);if(u<=0||u>=1){d.style.opacity='0';return;}
+    const x=lerp(540,860,E.inout(u)),y=lerp(1050,520,E.inout(u))-Math.sin(u*Math.PI)*260;d.style.opacity=String(Math.min(1,u*5)*(1-seg(u,.8,1)));d.style.transform=`translate(${x-150}px,${y-110}px) scale(${lerp(1.1,.35,E.inout(u))}) rotate(${lerp(-10,25,u)}deg)`;});
+  // textos
+  const hIn=E.out(seg(t,1.0,1.8)),hOut=seg(t,3.2,3.6);
+  $('h1').style.transform=`translateY(${(1-hIn)*110}%)`;$('h1b').style.transform=`translateY(${(1-E.out(seg(t,1.08,1.88)))*110}%)`;$('h2').style.transform=`translateY(${(1-E.out(seg(t,1.15,1.95)))*110}%)`;$('hook').style.opacity=String(1-hOut);
+  STEP.forEach((s,i)=>{const u=E.out(seg(t,s.a+.05,s.a+.6)),o=1-seg(t,s.b-.25,s.b);const v=t>=s.a&&t<s.b?u*o:0;const st=$('st'+i);st.style.opacity=String(v);st.style.transform=`translateY(${(1-u)*40}px)`;
+});
+  // cierre QR
+  const ct=E.inout(seg(t,17.4,17.95));$('cta').style.transform=`translateY(${(1-ct)*1920}px)`;
+  $('qrbox').style.transform=`scale(${.6+.4*E.back(seg(t,17.9,18.5))})`;
+  // bumper (cuadros inicial y final idénticos)
+  const bOut=E.inout(seg(t,.35,.9)),bIn=E.inout(seg(t,T_TOTAL-.9,T_TOTAL-.35));
+  $('bump').style.transform=`translateY(${t<T_TOTAL/2?-bOut*1920:(1-bIn)*1920}px)`;
+  // fondo: deriva lenta del patrón
+  $('pattern').style.transform=`translate(${-t*3}px,${-t*5}px)`;
+  return true;
+};
+window.ready=async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>null)));return true;};
+</script>
+</body>
+</html>

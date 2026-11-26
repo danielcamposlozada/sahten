@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Sahten · Tenemos delivery</title>
+<link rel="stylesheet" href="../../../media/sahten-editorial/maplibre-gl.css">
+<script src="../../../media/sahten-editorial/maplibre-gl.js"></script>
+<style>
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-500.woff2');font-weight:500}
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-900.woff2');font-weight:900}
+@font-face{font-family:Lora;src:url('../../../media/sahten-editorial/fonts/lora-latin-italic.woff2');font-style:italic}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:DM,sans-serif;background:#183d23}
+#map{position:absolute;inset:0}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-logo{display:none!important}
+#ov{position:absolute;inset:0;pointer-events:none}
+.abs{position:absolute}
+.kicker{font:700 40px/1.2 DM;letter-spacing:.14em;text-transform:uppercase}
+.heavy{font:900 200px/.86 DM;letter-spacing:-.055em;text-transform:uppercase}
+.ital{font:italic 400 170px/1 Lora;letter-spacing:-.03em}
+.mask{display:block;overflow:hidden;padding:.16em .04em .06em;margin-top:-.16em}
+.mask>span{display:block}
+.chip{font:700 38px/1 DM;letter-spacing:-.01em;padding:16px 26px;border-radius:999px;background:#FFF4D6;color:#235328;white-space:nowrap;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.card{background:#FFF4D6;color:#235328;padding:44px 50px;clip-path:polygon(0 0,100% 0,100% calc(100% - 70px),calc(100% - 70px) 100%,0 100%)}
+</style>
+</head>
+<body>
+<div id="stage"><div id="map"></div><div id="ov"></div></div>
+<script>
+const C={green:'#235328',deep:'#183d23',darker:'#112d1b',cream:'#FFF4D6',orange:'#EF8E23',pale:'#E3F1DD'};
+const E={out:t=>1-Math.pow(1-t,4),inout:t=>t<.5?8*t**4:1-Math.pow(-2*t+2,4)/2,back:t=>{const c=1.70158*1.4,c3=c+1;return 1+c3*Math.pow(t-1,3)+c*Math.pow(t-1,2)},lin:t=>t};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const el=(tag,cls,html,parent)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(html!=null)n.innerHTML=html;(parent||document.getElementById('ov')).appendChild(n);return n;};
+const css=(n,o)=>(Object.assign(n.style,o),n);
+
+// ── Geometría ──
+const R=6371008.8;
+function dist(a,b){const toR=Math.PI/180,dLat=(b[1]-a[1])*toR,dLng=(b[0]-a[0])*toR,x=Math.sin(dLat/2)**2+Math.cos(a[1]*toR)*Math.cos(b[1]*toR)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+function circle(c,km,n=160){const out=[];for(let i=0;i<=n;i++){const a=2*Math.PI*i/n,dx=km*1000*Math.cos(a),dy=km*1000*Math.sin(a);out.push([c[0]+dx/(R*Math.cos(c[1]*Math.PI/180))*180/Math.PI,c[1]+dy/R*180/Math.PI]);}return out;}
+function bearing(a,b){const toR=Math.PI/180,y=Math.sin((b[0]-a[0])*toR)*Math.cos(b[1]*toR),x=Math.cos(a[1]*toR)*Math.sin(b[1]*toR)-Math.sin(a[1]*toR)*Math.cos(b[1]*toR)*Math.cos((b[0]-a[0])*toR);return Math.atan2(y,x)*180/Math.PI;}
+
+let ROUTE, CUM, TOTAL_M, map, T_TOTAL, OV={};
+function along(p){ // posición y rumbo a una fracción p del recorrido
+  const d=clamp(p)*TOTAL_M;let i=1;while(i<CUM.length-1&&CUM[i]<d)i++;
+  const a=ROUTE[i-1],b=ROUTE[i],u=(d-CUM[i-1])/Math.max(1e-6,CUM[i]-CUM[i-1]);
+  return {pt:[lerp(a[0],b[0],u),lerp(a[1],b[1],u)],i,brg:bearing(a,b)};
+}
+function sliceTo(p){const {pt,i}=along(p);return ROUTE.slice(0,i).concat([pt]);}
+// Rumbo suavizado (ventana de 150 m) para que la cámara no gire de golpe.
+function smoothBearing(p){let sx=0,sy=0;for(let k=-6;k<=6;k++){const q=clamp(p+k*150/TOTAL_M/6);const a=along(q).pt,b=along(clamp(q+40/TOTAL_M)).pt;const r=bearing(a,b)*Math.PI/180;sx+=Math.sin(r);sy+=Math.cos(r);}return Math.atan2(sx,sy)*180/Math.PI;}
+function angLerp(a,b,u){let d=((b-a+540)%360)-180;return a+d*u;}
+
+// ── Estilo de mapa con la paleta de Sahten ──
+function brandStyle(){return {version:8,glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+ sources:{omt:{type:'vector',url:'https://tiles.openfreemap.org/planet'}},
+ layers:[
+  {id:'bg',type:'background',paint:{'background-color':C.deep}},
+  {id:'land',type:'fill',source:'omt','source-layer':'landuse',paint:{'fill-color':'#1d4a2a','fill-opacity':.22}},
+  {id:'park',type:'fill',source:'omt','source-layer':'park',paint:{'fill-color':'#2c6a37','fill-opacity':.55}},
+  {id:'water',type:'fill',source:'omt','source-layer':'water',paint:{'fill-color':'#0f2a19'}},
+  {id:'road-minor',type:'line',source:'omt','source-layer':'transportation',filter:['in',['get','class'],['literal',['minor','service','street','tertiary']]],paint:{'line-color':C.cream,'line-opacity':.24,'line-width':['interpolate',['exponential',1.6],['zoom'],12,.6,16,5]}},
+  {id:'road-major',type:'line',source:'omt','source-layer':'transportation',filter:['in',['get','class'],['literal',['primary','secondary','trunk']]],paint:{'line-color':C.cream,'line-opacity':.58,'line-width':['interpolate',['exponential',1.6],['zoom'],12,1.4,16,10]}},
+  {id:'road-motorway',type:'line',source:'omt','source-layer':'transportation',filter:['==',['get','class'],'motorway'],paint:{'line-color':C.orange,'line-opacity':.35,'line-width':['interpolate',['exponential',1.6],['zoom'],12,1.8,16,12]}},
+  {id:'rail',type:'line',source:'omt','source-layer':'transportation',filter:['==',['get','class'],'rail'],paint:{'line-color':C.pale,'line-opacity':.18,'line-width':1.4,'line-dasharray':[2,2]}},
+  {id:'buildings',type:'fill-extrusion',source:'omt','source-layer':'building',minzoom:13.5,paint:{'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],6],0,'#245a31',40,'#3b7a45'],'fill-extrusion-height':['coalesce',['get','render_height'],6],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':.85}},
+ ]};}
+
+// ── Moto ilustrada (vista lateral, colores de marca, caja térmica con estrella) ──
+const MOTO=`<svg viewBox="0 0 260 180" width="340" xmlns="http://www.w3.org/2000/svg">
+ <g stroke="${C.darker}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="58" cy="140" r="30" fill="${C.darker}"/><circle cx="58" cy="140" r="12" fill="${C.cream}"/>
+  <circle cx="204" cy="140" r="30" fill="${C.darker}"/><circle cx="204" cy="140" r="12" fill="${C.cream}"/>
+  <path d="M58 140 L104 104 L170 104 L204 140" fill="none"/>
+  <path d="M92 112 Q120 84 170 92 L186 118 L120 122 Z" fill="${C.orange}"/>
+  <path d="M170 92 L188 58 L210 58" fill="none"/>
+  <rect x="18" y="38" width="86" height="72" rx="10" fill="${C.orange}"/>
+  <path d="M61 52 l6 11 12 0 -9 8 4 12 -13 -7 -13 7 4 -12 -9 -8 12 0z" fill="${C.cream}" stroke="none"/>
+  <path d="M120 92 Q132 46 150 40 Q170 36 168 62 L160 92" fill="${C.green}"/>
+  <circle cx="156" cy="26" r="18" fill="${C.cream}"/><path d="M138 22 Q156 0 176 22 Z" fill="${C.orange}"/>
+ </g></svg>`;
+const STAR=(fill,size)=>`<svg viewBox="0 0 100 100" width="${size}" height="${size}"><path d="M50 0 L61 26 L85 15 L74 39 L100 50 L74 61 L85 85 L61 74 L50 100 L39 74 L15 85 L26 61 L0 50 L26 39 L15 15 L39 26Z" fill="${fill}"/></svg>`;
+
+// ── Guion (segundos) ──
+const S={bumpOut:.9, hook:[.9,4.2], pin:[3.6,6.8], ride:[6.6,12.4], arrive:[12.2,13.8], info:[13.6,17.6], cta:[17.6,21.4]};
+function camera(t){
+  const c0={center:[-58.4840,-34.5150],zoom:11.9,pitch:0,bearing:-20};
+  const c1={center:[-58.4818959,-34.5264314],zoom:13.0,pitch:52,bearing:-25};
+  if(t<S.pin[0]) {const u=E.inout(seg(t,0,S.pin[0]));return {center:c0.center,zoom:c0.zoom+.35*u,pitch:0,bearing:c0.bearing+8*u};}
+  if(t<S.ride[0]) {const u=E.inout(seg(t,S.pin[0],S.ride[0]));return {center:[lerp(c0.center[0],c1.center[0],u),lerp(c0.center[1],c1.center[1],u)],zoom:lerp(c0.zoom+.35,c1.zoom,u),pitch:lerp(0,c1.pitch,u),bearing:lerp(c0.bearing+8,c1.bearing,u)};}
+  if(t<S.arrive[1]) { // seguimiento en tercera persona
+    const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1])), m=along(p).pt, b=smoothBearing(p), u=E.inout(seg(t,S.ride[0],S.ride[0]+1.2));
+    const zoomIn=lerp(c1.zoom,14.7,u), pitch=lerp(c1.pitch,62,u);
+    return {center:[lerp(c1.center[0],m[0],u),lerp(c1.center[1],m[1],u)],zoom:zoomIn+.25*E.out(seg(t,S.ride[1],S.arrive[1])),pitch,bearing:angLerp(c1.bearing,b,u*.85)};
+  }
+  const pEnd=along(1).pt, bEnd=smoothBearing(.98), u=E.inout(seg(t,S.arrive[1],S.info[0]+1.4));
+  const wide={center:[-58.4830,-34.5300],zoom:13.3,pitch:0,bearing:0};
+  return {center:[lerp(pEnd[0],wide.center[0],u),lerp(pEnd[1],wide.center[1],u)],zoom:lerp(14.95,wide.zoom,u),pitch:lerp(62,wide.pitch,u),bearing:angLerp(bEnd,wide.bearing,u)};
+}
+
+function maskLine(parent,txt,cls,color){const m=el('span','mask',null,parent),s=el('span',cls,txt,m);if(color)s.style.color=color;return s;}
+function build(assets,data){
+  ROUTE=data.route.coordinates;CUM=[0];for(let i=1;i<ROUTE.length;i++)CUM.push(CUM[i-1]+dist(ROUTE[i-1],ROUTE[i]));TOTAL_M=CUM[CUM.length-1];
+  const ov=document.getElementById('ov');
+  // velo para legibilidad del texto sobre el mapa
+  OV.veil=el('div','abs');css(OV.veil,{inset:0,background:'linear-gradient(180deg,rgba(17,45,27,.92) 0%,rgba(17,45,27,.55) 34%,rgba(17,45,27,0) 55%,rgba(17,45,27,0) 70%,rgba(17,45,27,.85) 100%)'});
+  // gancho
+  OV.hook=el('div','abs');css(OV.hook,{left:'90px',right:'90px',top:'230px',color:C.cream});
+  OV.k1=el('div','kicker','De nuestra cocina a tu mesa',OV.hook);css(OV.k1,{color:C.orange,marginBottom:'30px'});
+  OV.h1=maskLine(OV.hook,'Tenemos','heavy');OV.h2=maskLine(OV.hook,'delivery','ital',C.orange);
+  // pin del local
+  OV.pin=el('div','abs',`<div style="position:relative;width:150px;height:150px;display:grid;place-items:center">
+    <div class="pulse" style="position:absolute;inset:0;border-radius:50%;border:6px solid ${C.orange}"></div>
+    <div style="width:120px;height:120px;border-radius:50%;background:${C.green};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)">${STAR(C.orange,70)}</div></div>
+    <div class="chip" style="position:absolute;left:50%;top:166px;transform:translateX(-50%)">Sahten</div>`);
+  OV.ringLabel=el('div','abs chip','Hasta 8 km');css(OV.ringLabel,{background:C.orange,color:C.deep});
+  OV.moto=el('div','abs',`<div class="speed" style="position:absolute;right:230px;top:60px;width:120px;height:70px;background:repeating-linear-gradient(180deg,${C.cream} 0 6px,transparent 6px 22px);opacity:.6;border-radius:6px"></div><div class="mbody">${MOTO}</div>`);
+  OV.home=el('div','abs',`<div style="width:130px;height:130px;border-radius:50%;background:${C.orange};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)"><svg viewBox="0 0 64 64" width="70"><path d="M8 30 L32 10 L56 30 V56 H8Z" fill="${C.cream}"/><rect x="26" y="38" width="12" height="18" fill="${C.green}"/></svg></div>`);
+  OV.lleg=el('div','abs',`<span style="font:italic 400 120px Lora;color:${C.cream};text-shadow:0 8px 30px rgba(0,0,0,.6)">¡Llegó!</span>`);
+  // barrios
+  OV.barrios=data.barrios.map(b=>{const n=el('div','abs chip',b.name);return {...b,n};});
+  // tarjeta de información
+  OV.info=el('div','abs');css(OV.info,{left:'90px',right:'90px',top:'1330px'});
+  OV.infoCard=el('div','card',`<div style="font:900 96px/1 DM;letter-spacing:-.05em">Envío gratis<span style="color:${C.orange}">*</span></div><div style="font:700 50px/1.2 DM;margin-top:20px">Lunes a sábado · 18 a 22 h</div>`,OV.info);
+  OV.foot=el('div','abs',`*Según zona y monto del pedido. Validá tu dirección en sahten.online.`);css(OV.foot,{left:'90px',right:'90px',top:'1720px',font:'500 40px/1.3 DM',color:C.cream});
+  OV.infoTitle=el('div','abs');css(OV.infoTitle,{left:'90px',right:'90px',top:'200px',color:C.cream});
+  el('div','kicker','Llegamos a',OV.infoTitle).style.color=C.orange;
+  // atribución del mapa (requerida)
+  OV.attr=el('div','abs','© OpenStreetMap · OpenMapTiles · OpenFreeMap');css(OV.attr,{left:'90px',bottom:'60px',font:'500 24px DM',color:C.cream,opacity:.7});
+  // cierre con QR
+  OV.cta=el('div','abs',`<div style="position:absolute;inset:0;background:${C.green}"></div>
+    <div style="position:absolute;left:90px;right:90px;top:230px;color:${C.cream}"><div class="kicker" style="color:${C.orange};margin-bottom:26px">Delivery</div>
+      <div class="heavy" style="font-size:170px">Pedí</div><div class="ital" style="font-size:140px;color:${C.orange}">en sahten.online</div></div>
+    <div style="position:absolute;left:220px;top:820px;width:640px;height:640px;background:${C.cream};padding:40px;box-sizing:content-box;clip-path:polygon(0 0,100% 0,100% calc(100% - 80px),calc(100% - 80px) 100%,0 100%)">${assets.qr}</div>
+    <div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`);
+  css(OV.cta,{inset:0});const qs=OV.cta.querySelector('svg');qs.setAttribute('width','640');qs.setAttribute('height','640');
+  // bumper con el logo (cuadros inicial y final idénticos)
+  OV.bump=el('div','abs',`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:260px;top:760px;width:560px">${assets.logo}</div>`);css(OV.bump,{inset:0});
+  const lg=OV.bump.querySelector('svg');lg.setAttribute('width','560');lg.removeAttribute('height');
+  T_TOTAL=S.cta[1]+.9;
+  return T_TOTAL;
+}
+
+function addMapLayers(){
+  const c=[-58.4818959,-34.5264314];
+  map.addSource('rings',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+  map.addLayer({id:'rings-fill',type:'fill',source:'rings',paint:{'fill-color':C.orange,'fill-opacity':['get','fo']}});
+  map.addLayer({id:'rings-line',type:'line',source:'rings',paint:{'line-color':['get','col'],'line-width':['get','w'],'line-opacity':['get','o'],'line-dasharray':[2,1.4]}});
+  map.addSource('route',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[c,c]}}});
+  map.addLayer({id:'route-glow',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':C.orange,'line-width':26,'line-opacity':.28,'line-blur':10}});
+  map.addLayer({id:'route',type:'line',source:'route',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':C.orange,'line-width':10}});
+}
+const KM=[2,3.5,5,6.5,8];
+function setMapState(t){
+  const c=[-58.4818959,-34.5264314];
+  const g=seg(t,S.pin[0]+.6,S.pin[1]); const fade=1-seg(t,S.ride[0]+.2,S.ride[0]+1.2)+seg(t,S.info[0],S.info[0]+.8)*0.6;
+  const feats=KM.map((km,i)=>{const u=E.out(seg(g,i*.12,i*.12+.45));if(u<=0)return null;return {type:'Feature',properties:{fo:.05*u*fade,o:.9*u*fade,w:i===4?5:3,col:i===4?C.orange:C.cream},geometry:{type:'Polygon',coordinates:[circle(c,km*u)]}};}).filter(Boolean);
+  map.getSource('rings').setData({type:'FeatureCollection',features:feats});
+  const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1]));
+  const route=p>0?sliceTo(p):[c,c];
+  map.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:route.length>1?route:[c,c]}});
+  map.setPaintProperty('route','line-opacity',t>S.info[0]?1-.5*seg(t,S.info[0],S.info[0]+1):1);
+}
+
+function setOverlay(t){
+  const op=(n,v)=>n.style.opacity=v;
+  // velo: más fuerte con texto arriba/abajo
+  op(OV.veil, t<S.pin[0]+.4 || t>S.info[0] ? 1 : .55);
+  // gancho
+  const hIn=E.out(seg(t,1.0,1.8)),hOut=seg(t,S.hook[1]-.4,S.hook[1]);
+  OV.k1.style.transform=`translateY(${(1-E.out(seg(t,.95,1.5)))*40}px)`;op(OV.k1,seg(t,.95,1.5)*(1-hOut));
+  OV.h1.style.transform=`translateY(${(1-hIn)*110}%)`;OV.h2.style.transform=`translateY(${(1-E.out(seg(t,1.1,1.9)))*110}%)`;
+  op(OV.hook,1-hOut);
+  // pin del local
+  const pinPx=map.project([-58.4818959,-34.5264314]);
+  const pIn=E.back(seg(t,S.pin[0]+.1,S.pin[0]+.7)),pinVis=t>S.pin[0];
+  css(OV.pin,{left:(pinPx.x-75)+'px',top:(pinPx.y-75)+'px',opacity:pinVis?1:0,transform:`scale(${pinVis?pIn:0})`});
+  const pulse=((t-S.pin[0])%1.2)/1.2;const pe=OV.pin.querySelector('.pulse');css(pe,{transform:`scale(${1+pulse*1.6})`,opacity:String((1-pulse)*.9)});
+  // etiqueta del anillo de 8 km (al norte del local)
+  const lab=map.project(circle([-58.4818959,-34.5264314],8,4)[1]);const lv=E.out(seg(t,S.pin[1]-.9,S.pin[1]-.3))*(1-seg(t,S.ride[0]+.2,S.ride[0]+.8));
+  css(OV.ringLabel,{left:(lab.x-140)+'px',top:(lab.y-40)+'px',opacity:lv,transform:`scale(${.8+.2*lv})`});
+  // moto
+  const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1]));const rideVis=t>S.ride[0]+.2&&t<S.info[0]+.2;
+  const m=along(p),mp=map.project(m.pt),ahead=map.project(along(clamp(p+.01)).pt),flip=ahead.x<mp.x;
+  const bob=Math.sin(t*22)*3;const mIn=E.back(seg(t,S.ride[0]+.2,S.ride[0]+.7)),mOut=1-seg(t,S.arrive[0]+.6,S.arrive[0]+1.1);
+  css(OV.moto,{left:(mp.x-170)+'px',top:(mp.y-230+bob)+'px',opacity:rideVis?mOut:0,transform:`scale(${mIn*mOut}) scaleX(${flip?-1:1})`});
+  OV.moto.querySelector('.speed').style.opacity=String(p>0&&p<1?.55:0);
+  // destino
+  const dp=map.project(along(1).pt),hIn2=E.back(seg(t,S.arrive[0],S.arrive[0]+.5));const homeVis=t>S.arrive[0]&&t<S.info[0]+.6;
+  css(OV.home,{left:(dp.x-65)+'px',top:(dp.y-150-Math.abs(Math.sin((t-S.arrive[0])*6))*20*(1-seg(t,S.arrive[0],S.arrive[1])))+'px',opacity:homeVis?1-seg(t,S.info[0],S.info[0]+.6):0,transform:`scale(${homeVis?hIn2:0})`});
+  const lIn=E.back(seg(t,S.arrive[0]+.3,S.arrive[0]+.8));css(OV.lleg,{left:(dp.x-200)+'px',top:(dp.y-360)+'px',opacity:t>S.arrive[0]+.3&&t<S.info[0]?1-seg(t,S.info[0]-.4,S.info[0]):0,transform:`scale(${lIn}) rotate(-6deg)`});
+  // barrios
+  const P=OV.barrios.map(b=>{const q=map.project(b.c);return {x:q.x,y:q.y,w:b.n.offsetWidth+16,h:b.n.offsetHeight+14};});
+  const pin=map.project([-58.4818959,-34.5264314]);P.push({x:pin.x,y:pin.y,w:150,h:150,fixed:true});
+  const clampP=()=>P.forEach(q=>{if(!q.fixed){q.y=Math.max(360,Math.min(1270,q.y));q.x=Math.max(90+q.w/2,Math.min(990-q.w/2,q.x));}});
+  for(let it=0;it<80;it++){clampP();for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],b=P[j],ox=(a.w+b.w)/2-Math.abs(a.x-b.x),oy=(a.h+b.h)/2-Math.abs(a.y-b.y);if(ox>0&&oy>0){const push=Math.min(ox,oy)/2+1,horiz=ox<oy,s=horiz?Math.sign(a.x-b.x||1):Math.sign(a.y-b.y||1);if(!a.fixed){if(horiz)a.x+=s*push;else a.y+=s*push;}if(!b.fixed){if(horiz)b.x-=s*push;else b.y-=s*push;}}}}
+  clampP();
+  OV.barrios.forEach((b,i)=>{const q=P[i],a=S.info[0]+.3+i*.12,v=E.back(seg(t,a,a+.5));css(b.n,{left:q.x+'px',top:q.y+'px',transform:`translate(-50%,-50%) scale(${v})`,opacity:t>a&&t<S.cta[0]?1:0});});
+  const chip=OV.pin.querySelector('.chip');if(chip)chip.style.opacity=t>S.info[0]?String(1-seg(t,S.info[0],S.info[0]+.4)):'1';
+  const ti=E.out(seg(t,S.info[0]+.1,S.info[0]+.7));css(OV.infoTitle,{opacity:t<S.cta[0]?ti:0,transform:`translateY(${(1-ti)*30}px)`});
+  const ci=E.out(seg(t,S.info[0]+.9,S.info[0]+1.5));css(OV.info,{opacity:t<S.cta[0]?ci:0,transform:`translateY(${(1-ci)*120}px)`});
+  const fi=seg(t,S.info[0]+1.3,S.info[0]+1.8);css(OV.foot,{opacity:t<S.cta[0]?fi:0});
+  op(OV.attr,t<S.cta[0]?.7:0);
+  // cierre QR: entra con barrido vertical
+  const ct=E.inout(seg(t,S.cta[0]-.5,S.cta[0]));css(OV.cta,{transform:`translateY(${(1-ct)*1920}px)`});
+  const qrIn=E.back(seg(t,S.cta[0]+.2,S.cta[0]+.8));OV.cta.children[2].style.transform=`scale(${.6+.4*qrIn})`;
+  // bumper
+  const bOut=E.inout(seg(t,.35,.9)),bIn=E.inout(seg(t,T_TOTAL-.9,T_TOTAL-.35));
+  css(OV.bump,{transform:`translateY(${t<T_TOTAL/2?-bOut*1920:(1-bIn)*1920}px)`});
+}
+
+window.init=async(assets,data)=>{
+  const total=build(assets,data);
+  map=new maplibregl.Map({container:'map',style:brandStyle(),center:[-58.484,-34.515],zoom:11.9,pitch:0,bearing:-20,interactive:false,attributionControl:false,fadeDuration:0,canvasContextAttributes:{preserveDrawingBuffer:true,antialias:true},pixelRatio:1,maxPitch:70});
+  await new Promise(r=>map.on('load',r));
+  addMapLayers();
+  await document.fonts.ready;
+  return total;
+};
+// Posiciones reales de los barrios a partir de las etiquetas del mapa (OpenMapTiles).
+window.findPlaces=names=>{const out={};for(const f of map.querySourceFeatures('omt',{sourceLayer:'place'})){const n=f.properties['name:es']||f.properties.name;if(names.includes(n)&&!out[n]&&f.geometry.type==='Point')out[n]=f.geometry.coordinates;}return out;};
+window.frame=async t=>{
+  const cam=camera(t);map.jumpTo(cam);setMapState(t);
+  const t0=performance.now();
+  await new Promise(r=>{const chk=()=>{if((map.loaded()&&map.areTilesLoaded())||performance.now()-t0>20000)r();else setTimeout(chk,40);};chk();});
+  await new Promise(r=>{map.once('render',()=>r());map.triggerRepaint();});
+  setOverlay(t);return true;
+};
+window.camAt=camera;
+</script>
+</body>
+</html>
