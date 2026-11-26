@@ -149,6 +149,7 @@ window.build=async(assets,data)=>{
   if(SC.outro==='web'){$('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px;opacity:.0" id="ctapat"><div style="position:absolute;left:0;right:0;top:640px;text-align:center"><div id="ctalogo" style="width:620px;margin:0 auto">${assets.logo}</div><div class="kicker" style="color:${C.orange};margin-top:40px">Gastronomía árabe</div><div class="ital" style="font-size:92px;color:${C.cream};margin-top:60px">Te esperamos en</div><div style="font:900 110px/1 DM;letter-spacing:-.04em;color:${C.cream};margin-top:16px">sahten.online</div></div>`;const l=$('cta').querySelector('#ctalogo svg');l.setAttribute('width','620');l.removeAttribute('height');}
   if(SC.listo){$('fly').insertAdjacentHTML('beforeend',`<div id="listo" style="position:absolute;left:120px;right:120px;top:720px;background:${C.green};color:${C.cream};padding:56px 60px;border-radius:36px;box-shadow:0 40px 80px rgba(0,0,0,.35);text-align:center;opacity:0"><svg viewBox="0 0 32 32" width="120" height="120" style="display:block;margin:0 auto 24px"><circle cx="16" cy="16" r="15" fill="#25D366"/><path d="M9 23l1.3-3.8A7.5 7.5 0 1 1 13 22.1z" fill="#fff"/><path d="M13.2 12.4c.3-.6.6-.6.9-.6h.5c.2 0 .4 0 .6.5l.7 1.6c.1.2.1.4 0 .6l-.5.7c-.1.2-.2.3 0 .6.5.9 1.4 1.8 2.4 2.3.3.1.4.1.6-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.8c.2.1.4.2.4.4 0 .6-.2 1.3-.7 1.7-.6.5-1.6.6-2.6.2-1.8-.7-3.3-2.1-4.2-3.8-.6-1.2-.6-2.2-.4-2.6z" fill="#25D366"/></svg><div style="font:900 96px/1 DM;letter-spacing:-.05em">¡Listo!</div><div style="font:700 50px/1.2 DM;margin-top:22px">Te escribimos por WhatsApp para confirmar tu pedido</div></div>`);}
   if(SC.bumper)$('bump').innerHTML='<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">';
+  if(SC.safe){$('txt').style.top='290px';$('subs').style.bottom='400px';}
   T_TOTAL=SC.total;return T_TOTAL;
 };
 
@@ -156,7 +157,7 @@ window.frame=t=>{
   // cámara y celular
   const c=camAt(t);
   phone.rotation.set(c.rx,c.ry+(SC.calm?Math.sin(t*.3)*.012:Math.sin(t*.7)*.025),0);phone.position.set(0,c.py,0);
-  const D=25/c.zoom,cy=c.fy+.62;camera.position.set(c.fx,cy,D);camera.lookAt(c.fx,cy,0);
+  const D=(SC.safe?30:25)/c.zoom,cy=c.fy+(SC.safe?.35:.62);camera.position.set(c.fx,cy,D);camera.lookAt(c.fx,cy,0);
   drawScreen(t);renderer.render(scene,camera);
   // toque (proyectado desde la pantalla 3D)
   const tap=$('tap');let tv=-1,tp=null;for(const k of TAPS){const d=t-(k.t-.35);if(d>-.05&&d<.7){tv=d;tp=k;}}

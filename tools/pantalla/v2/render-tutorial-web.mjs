@@ -14,7 +14,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, '../../..');
-const OUT = path.resolve(DIR, '../out/web');
+const story = process.argv.includes('--story'); // versión Instagram Stories (zonas seguras)
+const OUT = path.resolve(DIR, story ? '../out/story' : '../out/web');
 const AUDIO = path.join(ROOT, 'media/sahten-editorial/tutorial.mp4'); // audio original, sin modificar
 const FPS = 30, stills = process.argv.includes('--stills');
 
@@ -28,7 +29,7 @@ const FPS = 30, stills = process.argv.includes('--stills');
 // 19,4–23,1 «Pagando en efectivo o transferencia tenés un 10 % de descuento»
 // 23,1–25,7 «Te escribimos por WhatsApp para confirmar tu pedido»
 // 25,7–29,4 «Sahten, gastronomía árabe, te esperamos en sahten.online»
-const script = web;
+const script = story ? { ...web, safe: true } : web;
 
 const photo = id => pathToFileURL(path.resolve(DIR, '../fotos', id + '.jpg')).href;
 const assets = { qr: '', logo: fs.readFileSync(path.join(ROOT, 'media/sahten-editorial/logo-verde-crema-naranja.svg'), 'utf8'), cutouts: { tabla_compartir: photo('tabla_compartir') } };
@@ -57,7 +58,8 @@ if (stills) {
   }
   ff.stdin.end(); await done;
   // Audio original copiado tal cual (-c:a copy): misma voz, misma música, mismos tiempos.
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-i', AUDIO, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', path.join(OUT, 'tutorial-1080x1920.mp4')]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-i', AUDIO, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', path.join(OUT, story ? 'tutorial-story-1080x1920.mp4' : 'tutorial-1080x1920.mp4')]);
+  if (story) { fs.rmSync(silent); console.log('✓ tutorial story', total.toFixed(2) + ' s'); await browser.close(); process.exit(0); }
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-i', AUDIO, '-map', '0:v', '-map', '1:a', '-vf', 'scale=540:960:flags=lanczos', '-c:v', 'libx264', '-profile:v', 'high', '-preset', 'slow', '-crf', '23', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', path.join(OUT, 'tutorial.mp4')]);
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', '3.4', '-i', silent, '-frames:v', '1', '-vf', 'scale=540:960:flags=lanczos', '-q:v', '3', path.join(OUT, 'tutorial.jpg')]);
   fs.rmSync(silent);
