@@ -39,7 +39,7 @@ const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a
 const $=id=>document.getElementById(id);
 const VW=390,VH=800;                  // viewport capturado (CSS px)
 const SW=3.6,SH=SW*VH/VW;             // pantalla 3D (unidades)
-const BW=SW+.34,BH=SH+.5,BD=.42;      // cuerpo
+const BW=SW+.3,BH=SH+.34,BD=.4;      // cuerpo
 
 const STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedido',a:8.6,b:11.4},{n:'03',t:'Elegí entrega y pago',a:11.4,b:17.4}];
 const TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
@@ -49,29 +49,40 @@ let SHOTS,IMGS={},TAPS,T_TOTAL,renderer,scene,camera,phone,screenTex,sctx,CAMKEY
 function patternSVG(color,op){const h=75,s=54;return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="150" height="150" patternUnits="userSpaceOnUse"><g fill="none" stroke="${color}" stroke-width="3" opacity="${op}"><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/><circle cx="${h}" cy="${h}" r="23"/></g></pattern><radialGradient id="mg" cx="50%" cy="50%" r="62%"><stop offset="55%" stop-color="#000"/><stop offset="100%" stop-color="#fff"/></radialGradient><mask id="mm"><rect width="100%" height="100%" fill="url(#mg)"/></mask></defs><rect width="100%" height="100%" fill="url(#pp)" mask="url(#mm)"/></svg>`;}
 function toonGrad(){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);const t=new THREE.DataTexture(d,3,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t;}
 
+function roundRect(w,h,r){const s=new THREE.Shape(),x=-w/2,y=-h/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s;}
+function flatShape(w,h,r){const g=new THREE.ShapeGeometry(roundRect(w,h,r),24);const uv=g.attributes.uv,pos=g.attributes.position;for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)+w/2)/w,(pos.getY(i)+h/2)/h);return g;}
+function glossTexture(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,256,256);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.42,'rgba(255,255,255,0)');gr.addColorStop(.5,'rgba(255,255,255,1)');gr.addColorStop(.62,'rgba(255,255,255,0)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,256,256);const t=new THREE.CanvasTexture(c);return t;}
+// Celular: esquinas concéntricas (cuerpo → vidrio → pantalla), canto claro tipo marco, botones integrados.
+const R_BODY=.52,GAP_GLASS=.05,GAP_SCREEN=.12;
 function buildPhone(){
   const grad=toonGrad(),toon=c=>new THREE.MeshToonMaterial({color:c,gradientMap:grad});
-  const outline=new THREE.MeshBasicMaterial({color:0x0d2414,side:THREE.BackSide});
   const g=new THREE.Group();
-  const bodyGeo=new RoundedBoxGeometry(BW,BH,BD,8,.5);
-  const body=new THREE.Mesh(bodyGeo,[toon(0x2c6a37)]);g.add(body);
-  const ol=new THREE.Mesh(bodyGeo,outline);ol.scale.set(1.012,1.008,1.08);g.add(ol);
-  // marco frontal más oscuro
-  const bezel=new THREE.Mesh(new RoundedBoxGeometry(BW-.06,BH-.06,.02,6,.46),toon(0x112d1b));bezel.position.z=BD/2+.001;g.add(bezel);
-  // pantalla con textura viva (esquinas redondeadas en la textura)
+  // cuerpo: canto verde claro (marco) y tapa trasera más oscura
+  const bev=.05,bodyGeo=new THREE.ExtrudeGeometry(roundRect(BW-2*bev,BH-2*bev,R_BODY-bev),{depth:BD-2*bev,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:5,curveSegments:24});
+  bodyGeo.translate(0,0,-(BD-2*bev)/2);
+  const body=new THREE.Mesh(bodyGeo,toon(0x3a8446));g.add(body);
+  const back=new THREE.Mesh(flatShape(BW-.1,BH-.1,R_BODY-.05),toon(0x1d4a26));back.position.z=-BD/2-.001;back.rotation.y=Math.PI;g.add(back);
+  // vidrio frontal negro con el mismo centro de curvatura
+  const gw=BW-2*GAP_GLASS,gh=BH-2*GAP_GLASS,gr=R_BODY-GAP_GLASS;
+  const glass=new THREE.Mesh(flatShape(gw,gh,gr),new THREE.MeshBasicMaterial({color:0x0a140d}));glass.position.z=BD/2+.002;g.add(glass);
+  // pantalla (textura viva) concéntrica
+  const sw=SW,sh=SH,sr=gr-GAP_SCREEN+.02;
   const cv=document.createElement('canvas');cv.width=VW*2;cv.height=VH*2;sctx=cv.getContext('2d');
-  screenTex=new THREE.CanvasTexture(cv);screenTex.colorSpace=THREE.SRGBColorSpace;screenTex.anisotropy=4;
-  const scr=new THREE.Mesh(new THREE.PlaneGeometry(SW,SH),new THREE.MeshBasicMaterial({map:screenTex,transparent:true}));scr.position.z=BD/2+.02;g.add(scr);
-  // isla dinámica y botones
-  const island=new THREE.Mesh(new RoundedBoxGeometry(1.0,.28,.03,4,.13),new THREE.MeshBasicMaterial({color:0x0a1a10}));island.position.set(0,SH/2-.15,BD/2+.035);island.scale.set(.8,.75,1);g.add(island);
-  for(const [y,h] of [[1.9,.7],[1.0,.7]]){const b=new THREE.Mesh(new RoundedBoxGeometry(.08,h,.16,3,.035),toon(0xef8e23));b.position.set(-BW/2-.02,y,0);g.add(b);}
-  const pw=new THREE.Mesh(new RoundedBoxGeometry(.08,1.0,.16,3,.035),toon(0xef8e23));pw.position.set(BW/2+.02,1.6,0);g.add(pw);
+  screenTex=new THREE.CanvasTexture(cv);screenTex.colorSpace=THREE.SRGBColorSpace;screenTex.anisotropy=8;
+  const scr=new THREE.Mesh(flatShape(sw,sh,sr),new THREE.MeshBasicMaterial({map:screenTex}));scr.position.z=BD/2+.004;g.add(scr);
+  // reflejo sutil en diagonal
+  const gloss=new THREE.Mesh(flatShape(gw,gh,gr),new THREE.MeshBasicMaterial({map:glossTexture(),transparent:true,opacity:.07,depthWrite:false}));gloss.position.z=BD/2+.006;g.add(gloss);
+  // isla dinámica (cápsula)
+  const island=new THREE.Mesh(flatShape(.92,.26,.13),new THREE.MeshBasicMaterial({color:0x050b07}));island.position.set(0,sh/2-.19,BD/2+.005);g.add(island);
+  // botones: finos, del tono del canto, apenas salientes
+  const btn=(x,y,h)=>{const b=new THREE.Mesh(new RoundedBoxGeometry(.05,h,.13,4,.024),toon(0x2f7039));b.position.set(x,y,0);g.add(b);};
+  btn(-BW/2-.012,2.35,.32);btn(-BW/2-.012,1.75,.62);btn(-BW/2-.012,1.0,.62);btn(BW/2+.012,1.55,.95);
   return g;
 }
-const SB=64;
+const SB=64; // barra de estado (px a 2×)
 function drawScreen(t){
   const w=VW*2,h=VH*2,r=86;sctx.clearRect(0,0,w,h);sctx.save();
-  sctx.beginPath();sctx.roundRect(0,0,w,h,r);sctx.clip();sctx.fillStyle='#FAF8F5';sctx.fillRect(0,0,w,h);
+  sctx.fillStyle='#FAF8F5';sctx.fillRect(0,0,w,h);
   PLAN.forEach(([a,f],i)=>{const next=PLAN[i+1]?.[0]??99,img=IMGS[f];if(!img||t<a||t>=next+.35)return;
     const u=E.out(seg(t,a,a+.35));sctx.globalAlpha=t>=next?1-seg(t,next,next+.35):u;sctx.drawImage(img,0,SB+(1-u)*30,w,h);});
   sctx.globalAlpha=1;sctx.fillStyle='#235328';sctx.fillRect(0,0,w,SB);
