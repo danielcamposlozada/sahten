@@ -98,11 +98,11 @@ function camera(t){
   if(t<S.pin[0]) {const u=E.inout(seg(t,0,S.pin[0]));return {center:c0.center,zoom:c0.zoom+.35*u,pitch:0,bearing:c0.bearing+8*u};}
   if(t<S.ride[0]) {const u=E.inout(seg(t,S.pin[0],S.ride[0]));return {center:[lerp(c0.center[0],c1.center[0],u),lerp(c0.center[1],c1.center[1],u)],zoom:lerp(c0.zoom+.35,c1.zoom,u),pitch:lerp(0,c1.pitch,u),bearing:lerp(c0.bearing+8,c1.bearing,u)};}
   if(t<S.arrive[1]) { // seguimiento en tercera persona
-    const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1])), m=along(p).pt, b=smoothBearing(p), u=E.inout(seg(t,S.ride[0],S.ride[0]+1.2));
+    const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1])), m=along(p).pt, b=smoothBearing(p)-90, u=E.inout(seg(t,S.ride[0],S.ride[0]+1.2));
     const zoomIn=lerp(c1.zoom,14.7,u), pitch=lerp(c1.pitch,62,u);
     return {center:[lerp(c1.center[0],m[0],u),lerp(c1.center[1],m[1],u)],zoom:zoomIn+.25*E.out(seg(t,S.ride[1],S.arrive[1])),pitch,bearing:angLerp(c1.bearing,b,u*.85)};
   }
-  const pEnd=along(1).pt, bEnd=smoothBearing(.98), u=E.inout(seg(t,S.arrive[1],S.info[0]+1.4));
+  const pEnd=along(1).pt, bEnd=smoothBearing(.98)-90, u=E.inout(seg(t,S.arrive[1],S.info[0]+1.4));
   const wide={center:[-58.4830,-34.5300],zoom:13.3,pitch:0,bearing:0};
   return {center:[lerp(pEnd[0],wide.center[0],u),lerp(pEnd[1],wide.center[1],u)],zoom:lerp(14.95,wide.zoom,u),pitch:lerp(62,wide.pitch,u),bearing:angLerp(bEnd,wide.bearing,u)};
 }
@@ -195,7 +195,7 @@ function setOverlay(t){
   const heading=Math.atan2(fwd.x-back.x,-(fwd.y-back.y))*180/Math.PI;
   const mIn=E.back(seg(t,S.ride[0]+.2,S.ride[0]+.7)),mOut=1-seg(t,S.arrive[0]+.6,S.arrive[0]+1.1);
   css(OV.moto,{left:(mp.x-310)+'px',top:(mp.y-455)+'px',opacity:rideVis?mOut:0,transform:`scale(${(mIn*mOut).toFixed(3)})`,transformOrigin:'310px 455px'});
-  if(rideVis&&OV.vespa)OV.vespa.render(t,heading+40,90-map.getPitch(),p>0&&p<1?1:.15); // +40°: vista 3/4 para lucir el perfil
+  if(rideVis&&OV.vespa)OV.vespa.render(t,heading,90-map.getPitch(),p>0&&p<1?1:.15); // la moto mira hacia donde avanza
   // destino
   const dp=map.project(along(1).pt),hIn2=E.back(seg(t,S.arrive[0],S.arrive[0]+.5));const homeVis=t>S.arrive[0]&&t<S.info[0]+.6;
   css(OV.home,{left:(dp.x-65)+'px',top:(dp.y-470-Math.abs(Math.sin((t-S.arrive[0])*6))*20*(1-seg(t,S.arrive[0],S.arrive[1])))+'px',opacity:homeVis?1-seg(t,S.info[0],S.info[0]+.6):0,transform:`scale(${homeVis?hIn2:0})`});

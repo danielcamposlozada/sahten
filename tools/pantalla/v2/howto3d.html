@@ -45,7 +45,7 @@ let STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedid
 let TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
 let PLAN=[[0.0,'01-carta'],[3.9,'02-lista'],[4.7,'03-antes-agregar'],[5.6,'04-agregado'],[6.5,'05-antes-agregar-2'],[7.3,'06-agregado-2'],[8.8,'07-antes-carrito'],[9.6,'08-carrito'],[11.6,'09-antes-continuar'],[12.4,'10-entrega-pago'],[13.4,'11-antes-retiro'],[14.1,'12-retiro'],[15.0,'13-antes-efectivo'],[15.6,'14-efectivo']];
 let SC={hook:{kicker:'sahten.online',l1:'Pedí',l1b:'online',ital:'en tres pasos',a:1.0,b:3.6},rise:[3.3,4.1],exitAt:16.6,outro:'qr',total:20.9,bumper:true,subs:[],listo:null};
-let SHOTS,IMGS={},TAPS,T_TOTAL,renderer,scene,camera,phone,screenTex,sctx,CAMKEYS;
+let SEQS={};let SHOTS,IMGS={},TAPS,T_TOTAL,renderer,scene,camera,phone,screenTex,sctx,CAMKEYS;
 
 function patternSVG(color,op){const h=75,s=54;return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="150" height="150" patternUnits="userSpaceOnUse"><g fill="none" stroke="${color}" stroke-width="3" opacity="${op}"><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/><circle cx="${h}" cy="${h}" r="23"/></g></pattern><radialGradient id="mg" cx="50%" cy="50%" r="62%"><stop offset="55%" stop-color="#000"/><stop offset="100%" stop-color="#fff"/></radialGradient><mask id="mm"><rect width="100%" height="100%" fill="url(#mg)"/></mask></defs><rect width="100%" height="100%" fill="url(#pp)" mask="url(#mm)"/></svg>`;}
 function toonGrad(){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);const t=new THREE.DataTexture(d,3,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t;}
@@ -81,14 +81,18 @@ function buildPhone(){
   return g;
 }
 const SB=64; // barra de estado (px a 2×)
+// PLAN: [inicio, 'nombre'] o [inicio, 'seq:nombre', duración]. Las secuencias (scroll, tipeo) se reproducen
+// cuadro a cuadro; entre entradas hay un fundido limpio de 0,4 s (sin desplazamientos).
+function frameOf(entry,t){const [a,name,dur]=entry;if(name.startsWith('seq:')){const files=SEQS[name.slice(4)]||[];const k=Math.min(files.length-1,Math.max(0,Math.round(clamp((t-a)/dur)*(files.length-1))));return IMGS[files[k]];}const sh=SHOTS.find(x=>x.name===name);return sh?IMGS[sh.file]:null;}
 function drawScreen(t){
-  const w=VW*2,h=VH*2,r=86;sctx.clearRect(0,0,w,h);sctx.save();
-  sctx.fillStyle='#FAF8F5';sctx.fillRect(0,0,w,h);
-  PLAN.forEach(([a,f],i)=>{const next=PLAN[i+1]?.[0]??99,img=IMGS[f];if(!img||t<a||t>=next+.35)return;
-    const u=E.out(seg(t,a,a+.35));sctx.globalAlpha=t>=next?1-seg(t,next,next+.35):u;sctx.drawImage(img,0,SB+(1-u)*30,w,h);});
-  sctx.globalAlpha=1;sctx.fillStyle='#235328';sctx.fillRect(0,0,w,SB);
+  const w=VW*2,h=VH*2;sctx.globalAlpha=1;sctx.fillStyle='#FAF8F5';sctx.fillRect(0,0,w,h);
+  let i=0;while(i<PLAN.length-1&&PLAN[i+1][0]<=t)i++;
+  const cur=PLAN[i],prev=PLAN[i-1],u=prev?E.inout(seg(t,cur[0],cur[0]+.4)):1;
+  if(prev&&u<1){const pi=frameOf(prev,t);if(pi)sctx.drawImage(pi,0,SB,w,h);}
+  const ci=frameOf(cur,t);if(ci){sctx.globalAlpha=u;sctx.drawImage(ci,0,SB,w,h);sctx.globalAlpha=1;}
+  sctx.fillStyle='#235328';sctx.fillRect(0,0,w,SB);
   sctx.fillStyle='#FFF4D6';sctx.font='700 30px DM';sctx.fillText('19:30',70,46);sctx.fillRect(w-150,24,46,22);sctx.fillRect(w-96,30,10,10);
-  sctx.restore();screenTex.needsUpdate=true;
+  screenTex.needsUpdate=true;
 }
 // Pantalla (x,y en px CSS del celular) → punto 3D local → píxel de la página
 function screenToLocal(x,y){y=y+SB/2;return new THREE.Vector3((x/VW-.5)*SW,(.5-y/VH)*SH,BD/2+.03);}
@@ -103,7 +107,7 @@ function camKeys(){
   k.push({t:Math.min(2.6,r0-.4),zoom:.95,fx:0,fy:0,ry:-.38,rx:.12,py:-3.2});
   k.push({t:r0,zoom:.97,fx:0,fy:0,ry:-.3,rx:.1,py:-2.9});
   k.push({t:r1,...N});
-  for(const tp of TAPS){const p=screenToLocal(tp.s.tap.x,tp.s.tap.y);
+  for(const tp of (SC.calm?[]:TAPS)){const p=screenToLocal(tp.s.tap.x,tp.s.tap.y);
     k.push({t:tp.t-.65,zoom:1.06,fx:p.x*.3,fy:clamp(p.y*.3,-.1,.6),ry:-.13,rx:.05,py:0});
     k.push({t:tp.t+.25,zoom:1.18,fx:p.x*.45,fy:clamp(p.y*.45,-.15,.8),ry:-.09,rx:.03,py:0});}
   const X=SC.exitAt;
@@ -123,12 +127,10 @@ function camAt(t){
 
 window.build=async(assets,data)=>{
   if(data.script){const g=data.script;SC={...SC,...g};if(g.steps)STEP=g.steps;if(g.taps)TAPLIST=g.taps;if(g.plan)PLAN=g.plan;}
-  SHOTS=data.shots;
-  await Promise.all(SHOTS.map(s=>new Promise(r=>{const i=new Image();i.onload=()=>{IMGS[s.file.replace('.png','').replace(/^\d+-/,'').replace(/^/,'')]=i;IMGS[s.file.slice(0,-4)]=i;r();};i.src=data.base+s.file;})));
-  // índice por nombre "NN-nombre"
-  for(const s of SHOTS){IMGS[s.file.slice(0,-4)]=IMGS[s.file.slice(0,-4)];}
-  for(const p of PLAN){const s=SHOTS.find(x=>x.file.includes(p[1]));if(s){p[1]=s.file.slice(0,-4);}}
-  TAPS=TAPLIST.map(([t,f,dish])=>({t,s:SHOTS.find(x=>x.file.includes(f)),dish})).filter(x=>x.s&&x.s.tap);
+  SHOTS=data.shots.filter(x=>x.file);SEQS=Object.fromEntries(data.shots.filter(x=>x.seq).map(x=>[x.seq,x.files]));
+  await Promise.all(SHOTS.map(sh=>new Promise(r=>{const im=new Image();im.onload=()=>{IMGS[sh.file]=im;r();};im.onerror=r;im.src=data.base+sh.file;})));
+  const tapOf=name=>{const x=data.shots.find(z=>(z.name===name||z.tapAt===name)&&z.tap);return x?{tap:x.tap}:null;};
+  TAPS=TAPLIST.map(([t,name,dish])=>({t,s:tapOf(name),dish})).filter(x=>x.s);
   $('pattern').innerHTML=patternSVG(C.cream,.18);
   renderer=new THREE.WebGLRenderer({canvas:$('gl'),alpha:true,antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.setSize(1080,1920,false);renderer.outputColorSpace=THREE.SRGBColorSpace;
   scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1080/1920,.1,100);
@@ -153,7 +155,7 @@ window.build=async(assets,data)=>{
 window.frame=t=>{
   // cámara y celular
   const c=camAt(t);
-  phone.rotation.set(c.rx,c.ry+Math.sin(t*.7)*.025,0);phone.position.set(0,c.py,0);
+  phone.rotation.set(c.rx,c.ry+(SC.calm?Math.sin(t*.3)*.012:Math.sin(t*.7)*.025),0);phone.position.set(0,c.py,0);
   const D=25/c.zoom,cy=c.fy+.62;camera.position.set(c.fx,cy,D);camera.lookAt(c.fx,cy,0);
   drawScreen(t);renderer.render(scene,camera);
   // toque (proyectado desde la pantalla 3D)
