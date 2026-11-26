@@ -115,12 +115,14 @@ Todos los videos:
 
 **02 · Lunes a miércoles (16 s)**
 - Copy: «Hasta 15 %» · «en platos seleccionados» · «con efectivo o transferencia».
-- Platos de la campaña `weekly-meals` (máximo 3 en pantalla): Promo Fatay (3U), Sandwich de Falafel, Shawarma de Pollo. Árabe Clásico y Promo Compartir Clásico solo si el dueño lo pide.
+- Platos de la campaña `weekly-meals` publicados en la web (máximo 3 en pantalla): Sandwich de Falafel, Shawarma de Pollo, Árabe Clásico. Promo Compartir Clásico como alternativa.
+- **Sin Promo Fatay (3U)**: no está en el menú web publicado (decisión del dueño, 26/11).
 - Sin precios de lista: el descuento depende del medio de pago.
 
 **03 · Tablas · 2.º y 3.er viernes y sábado (14 s)**
 - Copy: «Hasta 15 %» · «en tablas seleccionadas».
-- Productos: Tabla para Celebrar y Promo Compartir para Dos (campaña `central-tables`).
+- Producto: Promo Compartir para Dos (campaña `central-tables`).
+- **Sin Tabla para Celebrar**: no está en el menú web publicado (decisión del dueño, 26/11).
 
 **04 · Pedí online (16 s)**
 - «Tu primer pedido web: hasta 15 %» (5 % con Mercado Pago, desde $30.000 en productos).
@@ -161,9 +163,9 @@ Todos los videos:
   - Sale del local y recorre una **ruta real por calles** hasta un destino de ejemplo dentro de la Zona 3.
   - Va orientada según la tangente de la ruta; deja una estela naranja y la cámara la sigue en tercera persona.
   - Al llegar, una casa-pin rebota y aparece el texto «¡Llegó!».
-- **Barrios:** aparecen como etiquetas sobre el mapa. La lista se toma del texto publicado y **requiere confirmación del dueño**: Vicente López, Olivos, Florida, La Lucila, Martínez, Núñez y Belgrano.
+- **Barrios:** aparecen como etiquetas sobre el mapa. La lista se toma del texto publicado y **está confirmada por el dueño**: Vicente López, Olivos, Florida, La Lucila, Martínez, Núñez y Belgrano.
 - **Horario:** «Lunes a sábado · 18 a 22 h» (`deliveryV2.hours` publicado).
-- **Envío gratis:** **no se muestra una cifra única**, porque depende de la zona y el texto actual de la web contradice la configuración. Copy: «Envío gratis según tu zona — validá tu dirección en sahten.online».
+- **Envío gratis** (decisión del dueño): se anuncia «Envío gratis*» con una **aclaración chica al pie**, de 40 px como mínimo: «*Según zona y monto del pedido. Validá tu dirección en sahten.online.» No se muestra una cifra única.
 - Cierre: QR + «Pedí delivery en sahten.online».
 
 ## 7. Datos y veracidad
@@ -172,7 +174,7 @@ Todos los videos:
 - Rankings y márgenes: agregados por producto, **sin datos personales**. Los costos nunca aparecen en pantalla.
 - Inconsistencias que hay que resolver antes de publicar:
   1. Texto de delivery de la web («Envío gratis desde $45.000», «Pedido mínimo $15.000») contra las zonas publicadas (gratis desde $25.000, $35.000, $50.000 o $80.000 según la zona; mínimos de $15.000 a $45.000).
-  2. La Promo Fatay (3U) y la Tabla para Celebrar están en campañas del local pero no en el menú web publicado.
+  2. La Promo Fatay (3U) y la Tabla para Celebrar están en campañas del local pero no en el menú web publicado. **Resuelto:** quedan fuera de los videos.
 
 ## 8. Requisitos técnicos del entorno
 

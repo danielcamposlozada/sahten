@@ -3,6 +3,7 @@
 // Precios, fotos y disponibilidad se leen del menú publicado al renderizar: si un producto se pausa
 // o desaparece, el render se detiene en lugar de anunciar algo que no se vende.
 // Si cambia una promoción en Sahten, actualizar el texto acá y volver a renderizar.
+// Decisión del dueño (26/11): solo productos publicados en la web (sin Promo Fatay 3U ni Tabla para Celebrar).
 
 export const PALETTE = { green: '#235328', deep: '#183d23', darker: '#112d1b', cream: '#FFF4D6', paper: '#FAF8F5', orange: '#EF8E23', pale: '#E3F1DD', ink: '#213326' };
 
@@ -21,8 +22,7 @@ export const VIDEOS = [
     id: '02-lunes-a-miercoles', title: 'Lunes a miércoles · Platos seleccionados',
     requires: { campaign: 'weekly-meals' },
     scenes: [
-      { type: 'hook', dur: 4.0, bg: 'green', kicker: 'Lunes a miércoles', photos: ['p1779467294622', 'sandwich_falafel', 'arabe_clasico'], lines: ['HASTA', '15 %'], italic: 'en platos seleccionados', badge: { top: 'LUN', mid: 'MAR', bottom: 'MIÉ' } },
-      { type: 'spot', dur: 3.0, bg: 'orange', product: 'p1779467294622', heavy: 'Promo Fatay', italic: '(3 unidades)', kicker: 'Platos seleccionados', price: false, allowUnpublished: true },
+      { type: 'hook', dur: 4.0, bg: 'green', kicker: 'Lunes a miércoles', photos: ['sandwich_falafel', 'shawarma_pollo', 'arabe_clasico'], lines: ['HASTA', '15 %'], italic: 'en platos seleccionados', badge: { top: 'LUN', mid: 'MAR', bottom: 'MIÉ' } },
       { type: 'spot', dur: 3.0, bg: 'cream', product: 'shawarma_pollo', heavy: 'Shawarma', italic: 'de pollo', kicker: 'Platos seleccionados', price: false, mirror: true },
       { type: 'spot', dur: 3.0, bg: 'green', product: 'sandwich_falafel', heavy: 'Sandwich', italic: 'de falafel', kicker: 'Platos seleccionados', price: false },
       { type: 'spot', dur: 3.0, bg: 'orange', product: 'arabe_clasico', heavy: 'Árabe', italic: 'clásico', kicker: 'Platos seleccionados', price: false, mirror: true },
@@ -34,8 +34,7 @@ export const VIDEOS = [
     id: '03-tablas-fin-de-semana', title: 'Tablas para compartir · Fines de semana centrales',
     requires: { campaign: 'central-tables' },
     scenes: [
-      { type: 'hook', dur: 4.2, bg: 'cream', kicker: 'Segundo y tercer viernes y sábado', photos: ['tabla_celebrar', 'p1779997050112'], lines: ['HASTA', '15 %'], italic: 'en tablas seleccionadas', badge: { top: 'VIE', mid: '&', bottom: 'SÁB' } },
-      { type: 'spot', dur: 3.6, bg: 'green', product: 'tabla_celebrar', heavy: 'Tabla para', italic: 'celebrar', kicker: 'Tablas seleccionadas', price: false, allowUnpublished: true },
+      { type: 'hook', dur: 4.2, bg: 'cream', kicker: 'Segundo y tercer viernes y sábado', photos: ['p1779997050112'], lines: ['HASTA', '15 %'], italic: 'en tablas seleccionadas', badge: { top: 'VIE', mid: '&', bottom: 'SÁB' } },
       { type: 'spot', dur: 3.6, bg: 'orange', product: 'p1779997050112', heavy: 'Compartir', italic: 'para dos', kicker: 'Tablas seleccionadas', price: false, mirror: true },
       { type: 'terms', dur: 4.0, bg: 'green', heading: ['Hasta 15 %'], italic: 'en tablas seleccionadas', lines: ['Segundo y tercer viernes', 'y sábado de cada mes.', 'En el local y en sahten.online.'] },
     ],

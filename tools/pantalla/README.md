@@ -31,7 +31,7 @@ NODE_USE_ENV_PROXY=1 node tools/pantalla/render.mjs --stills   # cuadros de cont
   - un producto está pausado o fue retirado;
   - un producto con precio en pantalla no tiene precio publicado.
 - Los textos de las promociones están en `videos.mjs`. Si una promoción cambia en Sahten, hay que actualizar el texto ahí y volver a renderizar.
-- La **Promo Fatay (3U)** y la **Tabla para Celebrar** no figuran en el menú web publicado. Se muestran sin precio porque forman parte de las campañas del local (`allowUnpublished`). Hay que confirmar que se venden en el mostrador.
+- Solo se muestran productos publicados en la web (decisión del dueño): la Promo Fatay (3U) y la Tabla para Celebrar quedan afuera aunque figuren en campañas del local.
 - Las fotos se descargan en `fotos/` y los videos se generan en `out/`. Ninguna de las dos carpetas se sube al repositorio.
 
 ## Diseño
