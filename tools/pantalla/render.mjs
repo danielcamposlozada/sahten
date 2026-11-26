@@ -58,7 +58,7 @@ async function catalogFor(v) {
     const p = byId[id], scene = v.scenes.find(s => s.product === id || s.items?.includes(id));
     if (!p && !scene?.allowUnpublished && !VIDEOS.some(x => x.scenes.some(s => s.product === id && s.allowUnpublished))) throw new Error(v.id + ': ' + id + ' no está en el menú publicado');
     if (p?.salesAvailability?.paused || p?.retired) throw new Error(v.id + ': ' + (p.name || id) + ' está pausado');
-    out[id] = { id, name: registry[id]?.name || p?.name || id, description: registry[id]?.description || '', price: p ? Number(p.price) : null, photo: await photoFor(id), cutout: fs.existsSync(path.join(DIR, 'recortes', id + '.png')) ? pathToFileURL(path.join(DIR, 'recortes', id + '.png')).href : null };
+    out[id] = { id, name: registry[id]?.name || p?.name || id, description: registry[id]?.description || '', price: p ? Number(p.price) : null, photo: await photoFor(id), cutout: null /* sin recortes: decisión del dueño (26/11) */ };
     if (v.scenes.some(s => (s.items?.includes(id) || s.products?.includes(id) && s.type === 'orbit' || (s.product === id && s.price !== false))) && !(out[id].price > 0)) throw new Error(v.id + ': ' + id + ' no tiene precio publicado');
   }
   return out;
@@ -98,6 +98,11 @@ for (const v of VIDEOS.filter(v => !only || v.id === only)) {
   await page.evaluate(() => window.ready());
   const frames = Math.round(total * FPS * PACE);
   const stage = await page.$('#stage');
+  if (args.includes('--bumper')) { // cuadro de cierre (logo) compartido por todos los videos
+    await page.evaluate(() => window.seek(0));
+    await stage.screenshot({ path: path.join(DIR, 'v2', 'bumper.png'), type: 'png' });
+    console.log('bumper listo'); break;
+  }
   if (stills) {
     let t = .9; const marks = v.scenes.map(s => { const m = t + Math.min(s.dur - .2, 1.8); t += s.dur; return m; });
     for (const [i, m] of marks.entries()) { await page.evaluate(x => window.seek(x), m); await stage.screenshot({ path: path.join(OUT, `${v.id}-s${i + 1}.jpg`), type: 'jpeg', quality: 80 }); }

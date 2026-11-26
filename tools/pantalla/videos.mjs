@@ -5,9 +5,9 @@
 // Si cambia una promoción en Sahten, actualizar el texto acá y volver a renderizar.
 // Decisión del dueño (26/11): solo productos publicados en la web (sin Promo Fatay 3U ni Tabla para Celebrar).
 
-// Ritmo pensado para leer en la tele: todo el reloj corre 1,3× más lento al renderizar
-// (un plato queda ~5,5 s en pantalla; un tablero ~8 s). Decisión del dueño (26/11).
-export const PACE = 1.3;
+// Ritmo pensado para leer en la tele: todo el reloj corre 1,5× más lento al renderizar
+// (un plato queda ~6,3 s en pantalla; un tablero ~9 s). Decisión del dueño (26/11).
+export const PACE = 1.5;
 
 export const PALETTE = { green: '#235328', deep: '#183d23', darker: '#112d1b', cream: '#FFF4D6', paper: '#FAF8F5', orange: '#EF8E23', pale: '#E3F1DD', ink: '#213326' };
 
@@ -17,8 +17,8 @@ export const VIDEOS = [
     // Beneficio de pago publicado: 10 %, canales online y mostrador.
     requires: { paymentBenefit: 10 },
     scenes: [
-      { type: 'hook', dur: 4.4, bg: 'orange', kicker: 'Un beneficio para tu mesa', photos: ['shawarma_carne', 'hummus', 'baklava'], lines: ['10 % OFF'], italic: 'en productos', badge: null, tag: true },
-      { type: 'duo', dur: 5.8, bg: 'pale', banners: ['banner-tortas', 'banner-plato'], kicker: 'Pagando en', heavy: ['Efectivo o', 'transferencia'], note: 'En el local y en sahten.online' },
+      { type: 'kinetic', dur: 5.4, bg: 'orange', banners: ['banner-tortas', 'banner-plato'], italic: 'en productos', kicker: 'Pagando en', heavy: 'Efectivo o transferencia' },
+      { type: 'duo', dur: 5.8, bg: 'pale', banners: ['banner-plato', 'banner-tortas'], kicker: 'Pagando en', heavy: ['Efectivo o', 'transferencia'], note: 'En el local y en sahten.online' },
       { type: 'terms', dur: 5.0, bg: 'green', heading: ['10 %', 'de descuento'], italic: 'en productos', lines: ['Pagando en efectivo o transferencia.', 'Envío sin descuento.', 'No acumulable: se aplica el beneficio mayor.'] },
     ],
   },
@@ -27,9 +27,7 @@ export const VIDEOS = [
     requires: { campaign: 'weekly-meals' },
     scenes: [
       { type: 'hook', dur: 4.4, bg: 'green', kicker: 'Lunes a miércoles', photos: ['sandwich_falafel', 'shawarma_pollo', 'arabe_clasico'], lines: ['HASTA', '15 %'], italic: 'en platos seleccionados', badge: { top: 'LUN', mid: 'MAR', bottom: 'MIÉ' } },
-      { type: 'spot', dur: 4.2, bg: 'cream', product: 'shawarma_pollo', heavy: 'Shawarma', italic: 'de pollo', kicker: 'Platos seleccionados', price: false, mirror: true },
-      { type: 'spot', dur: 4.2, bg: 'green', product: 'sandwich_falafel', heavy: 'Sandwich', italic: 'de falafel', kicker: 'Platos seleccionados', price: false },
-      { type: 'spot', dur: 4.2, bg: 'orange', product: 'arabe_clasico', heavy: 'Árabe', italic: 'clásico', kicker: 'Platos seleccionados', price: false, mirror: true },
+      { type: 'weekstrip', dur: 10.5, bg: 'cream', kicker: 'Lunes a miércoles', heavy: 'Hasta 15 %', italic: 'en platos seleccionados', days: [0, 1, 2], products: ['sandwich_falafel', 'shawarma_pollo', 'arabe_clasico'] },
       { type: 'terms', dur: 5.0, bg: 'green', heading: ['Hasta 15 %'], italic: 'lunes, martes y miércoles', lines: ['Con efectivo o transferencia', 'en platos seleccionados.', 'En el local y en sahten.online.'] },
     ],
   },
@@ -37,8 +35,8 @@ export const VIDEOS = [
     id: '03-tablas-fin-de-semana', title: 'Tablas para compartir · Fines de semana centrales',
     requires: { campaign: 'central-tables' },
     scenes: [
-      { type: 'hook', dur: 4.4, bg: 'cream', kicker: 'Segundo y tercer viernes y sábado', photos: ['p1779997050112'], lines: ['HASTA', '15 %'], italic: 'en tablas seleccionadas', badge: { top: 'VIE', mid: '&', bottom: 'SÁB' } },
-      { type: 'spot', dur: 4.2, bg: 'orange', product: 'p1779997050112', heavy: 'Compartir', italic: 'para dos', kicker: 'Tablas seleccionadas', price: false, mirror: true },
+      { type: 'calendar', dur: 6.6, bg: 'cream', kicker: 'Segundo y tercer viernes y sábado', heavy: 'Hasta 15 %', italic: 'en tablas seleccionadas', product: 'p1779997050112', price: false },
+      { type: 'spot', dur: 4.2, bg: 'orange', product: 'p1779997050112', heavy: 'Compartir', italic: 'para dos', kicker: 'Tablas seleccionadas', price: false },
       { type: 'terms', dur: 5.0, bg: 'green', heading: ['Hasta 15 %'], italic: 'en tablas seleccionadas', lines: ['Segundo y tercer viernes', 'y sábado de cada mes.', 'En el local y en sahten.online.'] },
     ],
   },
@@ -57,10 +55,10 @@ export const VIDEOS = [
     // Ranking por unidades: pedidos del proyecto 26/10–08/11 y web 29/10–26/11.
     scenes: [
       { type: 'hook', dur: 4.4, bg: 'green', kicker: 'Elegidos por nuestros clientes', photos: ['shawarma_pollo', 'shawarma_carne', 'shawarma_mixto'], lines: ['LOS MÁS'], italic: 'pedidos', badge: null, tag: true },
-      { type: 'spot', dur: 4.2, bg: 'orange', product: 'shawarma_carne', heavy: 'Shawarma', italic: 'de carne', kicker: 'El más pedido', rank: 1 },
-      { type: 'spot', dur: 4.2, bg: 'cream', product: 'shawarma_mixto', heavy: 'Shawarma', italic: 'mixto', kicker: 'Carne y pollo', rank: 2, mirror: true },
-      { type: 'spot', dur: 4.2, bg: 'green', product: 'shawarma_pollo', heavy: 'Shawarma', italic: 'de pollo', kicker: 'Favorito', rank: 3 },
-      { type: 'spot', dur: 4.2, bg: 'orange', product: 'p1779299917243', heavy: 'Supermix', italic: 'carne, pollo y falafel', kicker: 'Para los que quieren todo', rank: 4, mirror: true },
+      { type: 'podium', dur: 4.2, bg: 'orange', product: 'shawarma_carne', heavy: 'Shawarma', italic: 'de carne', kicker: 'El más pedido', rank: 1 },
+      { type: 'podium', dur: 4.2, bg: 'cream', product: 'shawarma_mixto', heavy: 'Shawarma', italic: 'mixto', kicker: 'Carne y pollo', rank: 2, mirror: true },
+      { type: 'podium', dur: 4.2, bg: 'green', product: 'shawarma_pollo', heavy: 'Shawarma', italic: 'de pollo', kicker: 'Favorito', rank: 3 },
+      { type: 'podium', dur: 4.2, bg: 'orange', product: 'p1779299917243', heavy: 'Supermix', italic: 'carne, pollo y falafel', kicker: 'Para los que quieren todo', rank: 4, mirror: true },
       { type: 'board', dur: 6.2, bg: 'cream', heavy: 'Los más', italic: 'pedidos', items: ['shawarma_carne', 'shawarma_mixto', 'shawarma_pollo', 'p1779299917243'] },
     ],
   },
@@ -79,12 +77,8 @@ export const VIDEOS = [
     id: '07-sumale', title: 'Sumale algo rico',
     // Complementos con buen margen (tabulé) y foco comercial (hummus, falafel, postres). Sin pan árabe (decisión del dueño).
     scenes: [
-      { type: 'hook', dur: 4.4, bg: 'cream', kicker: 'Para acompañar', photos: ['hummus', 'falafel', 'tabule_grd'], lines: ['SUMALE'], italic: 'algo rico', badge: null, tag: true },
-      { type: 'spot', dur: 4.2, bg: 'green', product: 'hummus', heavy: 'Hummus', italic: 'con tahini', kicker: 'Crema de garbanzos', mirror: true },
-      { type: 'spot', dur: 4.2, bg: 'orange', product: 'falafel', heavy: 'Falafel', italic: 'seis croquetas', kicker: 'Para compartir' },
-      { type: 'spot', dur: 4.2, bg: 'green', product: 'tabule_grd', heavy: 'Tabulé', italic: 'fresco', kicker: 'Ensalada', mirror: true },
-      { type: 'hook', dur: 4.4, bg: 'orange', kicker: 'Un cierre dulce', photos: ['baklava', 'torta_de_chocolate', 'mamul_nuez'], lines: ['¿Y DE'], italic: 'postre?', badge: null },
-      { type: 'board', dur: 6.2, bg: 'cream', heavy: 'Dulces', italic: 'árabes', items: ['baklava', 'mamul_nuez', 'torta_de_chocolate'] },
+      { type: 'orbit', dur: 6.6, bg: 'cream', kicker: 'Para acompañar', heavy: 'Sumale', italic: 'algo rico', products: ['hummus', 'falafel', 'tabule_grd'] },
+      { type: 'orbit', dur: 6.6, bg: 'orange', kicker: 'Un cierre dulce', heavy: '¿Y de', italic: 'postre?', products: ['baklava', 'mamul_nuez', 'torta_de_chocolate'] },
     ],
   },
 ];

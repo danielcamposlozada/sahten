@@ -74,8 +74,7 @@ window.build=(assets,data)=>{
   $('fly').innerHTML=TAPS.filter(x=>x.dish).map((x,i)=>`<img id="d${i}" src="${assets.cutouts[x.dish]}" style="position:absolute;width:300px;height:300px;object-fit:cover;border-radius:50%;border:12px solid #FFF4D6;box-sizing:border-box;left:0;top:0;opacity:0;box-shadow:0 30px 40px rgba(0,0,0,.35)">`).join('');
   $('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:90px;right:90px;top:230px;color:${C.cream}"><div class="kicker" style="color:${C.orange};margin-bottom:26px">Tu pedido en minutos</div><div class="heavy" style="font-size:170px">Escaneá</div><div class="ital" style="font-size:140px;color:${C.orange}">y pedí online</div></div><div id="qrbox" style="position:absolute;left:220px;top:820px;width:640px;height:640px;background:${C.cream};padding:40px;box-sizing:content-box;clip-path:polygon(0 0,100% 0,100% calc(100% - 80px),calc(100% - 80px) 100%,0 100%)">${assets.qr}</div><div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`;
   const q=$('cta').querySelector('svg');q.setAttribute('width','640');q.setAttribute('height','640');
-  $('bump').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:260px;top:760px;width:560px">${assets.logo}</div>`;
-  const lg=$('bump').querySelector('svg');lg.setAttribute('width','560');lg.removeAttribute('height');
+  $('bump').innerHTML='<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">';
   T_TOTAL=20.9;return T_TOTAL;
 };
 // punto de toque en coordenadas de la pantalla del video

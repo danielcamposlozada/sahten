@@ -4,7 +4,7 @@ const { chromium, devices } = require('playwright');
 const fs = require('fs'), path = require('path');
 const OUT = path.join(__dirname, 'captura');
 (async () => {
-  const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 14'] }); const p = await ctx.newPage();
+  const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 14'], viewport: { width: 390, height: 800 } }); const p = await ctx.newPage();
   // Horario de atención simulado (jueves 19:30 de Argentina) para que la tienda muestre las opciones activas.
   await p.clock.install({ time: new Date('2026-11-26T22:30:00Z') });
   const shots = []; let n = 0;
@@ -29,7 +29,7 @@ const OUT = path.join(__dirname, 'captura');
     if (await efectivo.count()) { await efectivo.scrollIntoViewIfNeeded(); await p.waitForTimeout(500); const te = await center(efectivo); await shot('antes-efectivo', te); await efectivo.click(); await p.waitForTimeout(900); await shot('efectivo', te); }
   }
   const texts = await p.evaluate(() => [...document.querySelectorAll('button,label,h2,h3')].map(e => e.textContent.trim()).filter(Boolean).slice(0, 60));
-  fs.writeFileSync(path.join(OUT, 'pasos.json'), JSON.stringify({ viewport: { w: 390, h: 664, dpr: 3 }, shots, texts }, null, 1));
+  fs.writeFileSync(path.join(OUT, 'pasos.json'), JSON.stringify({ viewport: { w: 390, h: 800, dpr: 3 }, shots, texts }, null, 1));
   console.log(shots.map(s => s.file).join(' '));
   await b.close();
 })();

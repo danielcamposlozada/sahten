@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Sahten · Cómo comprar en la web (3D)</title>
+<script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js","three/addons/":"../node_modules/three/examples/jsm/"}}</script>
+<style>
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
+@font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-900.woff2');font-weight:900}
+@font-face{font-family:Lora;src:url('../../../media/sahten-editorial/fonts/lora-latin-italic.woff2');font-style:italic}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:DM,sans-serif;background:#EF8E23;color:#183d23}
+.abs{position:absolute}
+.kicker{font:700 40px/1.2 DM;letter-spacing:.14em;text-transform:uppercase}
+.heavy{font:900 190px/.86 DM;letter-spacing:-.055em;text-transform:uppercase}
+.ital{font:italic 400 150px/1 Lora;letter-spacing:-.03em}
+.mask{display:block;overflow:hidden;padding:.16em .04em .06em;margin-top:-.16em}
+.mask>span{display:block}
+.tap{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(255,244,214,.55);border:8px solid #EF8E23}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="pattern" style="inset:-200px"></div>
+  <canvas id="gl" width="1080" height="1920" class="abs" style="left:0;top:0;width:1080px;height:1920px;z-index:1"></canvas>
+  <div class="abs" id="ov" style="inset:0;z-index:5"><div class="tap" id="tap"></div></div>
+  <div class="abs" id="fly" style="inset:0;z-index:8"></div>
+  <div class="abs" id="txt" style="left:90px;right:90px;top:150px;z-index:10"></div>
+  <div class="abs" id="cta" style="inset:0;z-index:20"></div>
+  <div class="abs" id="bump" style="inset:0;z-index:30"></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const C={green:'#235328',deep:'#183d23',darker:'#112d1b',cream:'#FFF4D6',orange:'#EF8E23'};
+const E={out:t=>1-Math.pow(1-t,4),inout:t=>t<.5?8*t**4:1-Math.pow(-2*t+2,4)/2,back:t=>{const c=1.70158*1.3,c3=c+1;return 1+c3*Math.pow(t-1,3)+c*Math.pow(t-1,2)}};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a)),lerp=(a,b,u)=>a+(b-a)*u;
+const $=id=>document.getElementById(id);
+const VW=390,VH=800;                  // viewport capturado (CSS px)
+const SW=3.6,SH=SW*VH/VW;             // pantalla 3D (unidades)
+const BW=SW+.34,BH=SH+.5,BD=.42;      // cuerpo
+
+const STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedido',a:8.6,b:11.4},{n:'03',t:'Elegí entrega y pago',a:11.4,b:17.4}];
+const TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
+const PLAN=[[0.0,'01-carta'],[3.9,'02-lista'],[4.7,'03-antes-agregar'],[5.6,'04-agregado'],[6.5,'05-antes-agregar-2'],[7.3,'06-agregado-2'],[8.8,'07-antes-carrito'],[9.6,'08-carrito'],[11.6,'09-antes-continuar'],[12.4,'10-entrega-pago'],[13.4,'11-antes-retiro'],[14.1,'12-retiro'],[15.0,'13-antes-efectivo'],[15.6,'14-efectivo']];
+let SHOTS,IMGS={},TAPS,T_TOTAL,renderer,scene,camera,phone,screenTex,sctx,CAMKEYS;
+
+function patternSVG(color,op){const h=75,s=54;return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="150" height="150" patternUnits="userSpaceOnUse"><g fill="none" stroke="${color}" stroke-width="3" opacity="${op}"><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/><circle cx="${h}" cy="${h}" r="23"/></g></pattern><radialGradient id="mg" cx="50%" cy="50%" r="62%"><stop offset="55%" stop-color="#000"/><stop offset="100%" stop-color="#fff"/></radialGradient><mask id="mm"><rect width="100%" height="100%" fill="url(#mg)"/></mask></defs><rect width="100%" height="100%" fill="url(#pp)" mask="url(#mm)"/></svg>`;}
+function toonGrad(){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);const t=new THREE.DataTexture(d,3,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t;}
+
+function buildPhone(){
+  const grad=toonGrad(),toon=c=>new THREE.MeshToonMaterial({color:c,gradientMap:grad});
+  const outline=new THREE.MeshBasicMaterial({color:0x0d2414,side:THREE.BackSide});
+  const g=new THREE.Group();
+  const bodyGeo=new RoundedBoxGeometry(BW,BH,BD,8,.5);
+  const body=new THREE.Mesh(bodyGeo,[toon(0x2c6a37)]);g.add(body);
+  const ol=new THREE.Mesh(bodyGeo,outline);ol.scale.set(1.012,1.008,1.08);g.add(ol);
+  // marco frontal más oscuro
+  const bezel=new THREE.Mesh(new RoundedBoxGeometry(BW-.06,BH-.06,.02,6,.46),toon(0x112d1b));bezel.position.z=BD/2+.001;g.add(bezel);
+  // pantalla con textura viva (esquinas redondeadas en la textura)
+  const cv=document.createElement('canvas');cv.width=VW*2;cv.height=VH*2;sctx=cv.getContext('2d');
+  screenTex=new THREE.CanvasTexture(cv);screenTex.colorSpace=THREE.SRGBColorSpace;screenTex.anisotropy=4;
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(SW,SH),new THREE.MeshBasicMaterial({map:screenTex,transparent:true}));scr.position.z=BD/2+.02;g.add(scr);
+  // isla dinámica y botones
+  const island=new THREE.Mesh(new RoundedBoxGeometry(1.0,.28,.03,4,.13),new THREE.MeshBasicMaterial({color:0x0a1a10}));island.position.set(0,SH/2-.15,BD/2+.035);island.scale.set(.8,.75,1);g.add(island);
+  for(const [y,h] of [[1.9,.7],[1.0,.7]]){const b=new THREE.Mesh(new RoundedBoxGeometry(.08,h,.16,3,.035),toon(0xef8e23));b.position.set(-BW/2-.02,y,0);g.add(b);}
+  const pw=new THREE.Mesh(new RoundedBoxGeometry(.08,1.0,.16,3,.035),toon(0xef8e23));pw.position.set(BW/2+.02,1.6,0);g.add(pw);
+  return g;
+}
+const SB=64;
+function drawScreen(t){
+  const w=VW*2,h=VH*2,r=86;sctx.clearRect(0,0,w,h);sctx.save();
+  sctx.beginPath();sctx.roundRect(0,0,w,h,r);sctx.clip();sctx.fillStyle='#FAF8F5';sctx.fillRect(0,0,w,h);
+  PLAN.forEach(([a,f],i)=>{const next=PLAN[i+1]?.[0]??99,img=IMGS[f];if(!img||t<a||t>=next+.35)return;
+    const u=E.out(seg(t,a,a+.35));sctx.globalAlpha=t>=next?1-seg(t,next,next+.35):u;sctx.drawImage(img,0,SB+(1-u)*30,w,h);});
+  sctx.globalAlpha=1;sctx.fillStyle='#235328';sctx.fillRect(0,0,w,SB);
+  sctx.fillStyle='#FFF4D6';sctx.font='700 30px DM';sctx.fillText('19:30',70,46);sctx.fillRect(w-150,24,46,22);sctx.fillRect(w-96,30,10,10);
+  sctx.restore();screenTex.needsUpdate=true;
+}
+// Pantalla (x,y en px CSS del celular) → punto 3D local → píxel de la página
+function screenToLocal(x,y){y=y+SB/2;return new THREE.Vector3((x/VW-.5)*SW,(.5-y/VH)*SH,BD/2+.03);}
+function project(local){const v=local.clone();phone.localToWorld(v);v.project(camera);return {x:(v.x+1)/2*1080,y:(1-v.y)/2*1920};}
+
+// Cámara fluida: Catmull-Rom sobre claves {t, zoom, fx, fy, ry, rx, py}
+function camKeys(){
+  const N={zoom:1,fx:0,fy:0,ry:-.18,rx:.06,py:0};const k=[];
+  k.push({t:0,zoom:.92,fx:0,fy:0,ry:-.75,rx:.3,py:-10});
+  k.push({t:1.2,zoom:.92,fx:0,fy:0,ry:-.6,rx:.22,py:-8});
+  k.push({t:2.6,zoom:.95,fx:0,fy:0,ry:-.38,rx:.12,py:-3.2});
+  k.push({t:3.3,zoom:.97,fx:0,fy:0,ry:-.3,rx:.1,py:-2.9});
+  k.push({t:4.1,...N});
+  for(const tp of TAPS){const p=screenToLocal(tp.s.tap.x,tp.s.tap.y);
+    k.push({t:tp.t-.65,zoom:1.06,fx:p.x*.3,fy:clamp(p.y*.3,-.1,.6),ry:-.13,rx:.05,py:0});
+    k.push({t:tp.t+.25,zoom:1.18,fx:p.x*.45,fy:clamp(p.y*.45,-.15,.8),ry:-.09,rx:.03,py:0});}
+  k.push({t:16.6,...N,zoom:1.05});
+  k.push({t:17.3,zoom:.95,fx:0,fy:0,ry:.1,rx:.05,py:2.5});
+  k.push({t:17.9,zoom:.9,fx:0,fy:0,ry:.25,rx:.05,py:9});
+  k.push({t:99,zoom:.9,fx:0,fy:0,ry:.25,rx:.05,py:9});
+  return k.sort((a,b)=>a.t-b.t);
+}
+function camAt(t){
+  const K=CAMKEYS;let i=0;while(i<K.length-2&&K[i+1].t<=t)i++;
+  const p0=K[Math.max(0,i-1)],p1=K[i],p2=K[i+1],p3=K[Math.min(K.length-1,i+2)];
+  const u=clamp((t-p1.t)/Math.max(1e-6,p2.t-p1.t)),u2=u*u,u3=u2*u;
+  const cr=key=>.5*((2*p1[key])+(-p0[key]+p2[key])*u+(2*p0[key]-5*p1[key]+4*p2[key]-p3[key])*u2+(-p0[key]+3*p1[key]-3*p2[key]+p3[key])*u3);
+  const o={};for(const key of ['zoom','fx','fy','ry','rx','py'])o[key]=cr(key);return o;
+}
+
+window.build=async(assets,data)=>{
+  SHOTS=data.shots;
+  await Promise.all(SHOTS.map(s=>new Promise(r=>{const i=new Image();i.onload=()=>{IMGS[s.file.replace('.png','').replace(/^\d+-/,'').replace(/^/,'')]=i;IMGS[s.file.slice(0,-4)]=i;r();};i.src=data.base+s.file;})));
+  // índice por nombre "NN-nombre"
+  for(const s of SHOTS){IMGS[s.file.slice(0,-4)]=IMGS[s.file.slice(0,-4)];}
+  for(const p of PLAN){const s=SHOTS.find(x=>x.file.includes(p[1]));if(s){p[1]=s.file.slice(0,-4);}}
+  TAPS=TAPLIST.map(([t,f,dish])=>({t,s:SHOTS.find(x=>x.file.includes(f)),dish})).filter(x=>x.s&&x.s.tap);
+  $('pattern').innerHTML=patternSVG(C.cream,.18);
+  renderer=new THREE.WebGLRenderer({canvas:$('gl'),alpha:true,antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.setSize(1080,1920,false);renderer.outputColorSpace=THREE.SRGBColorSpace;
+  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(30,1080/1920,.1,100);
+  scene.add(new THREE.AmbientLight(0xffffff,1.3));const sun=new THREE.DirectionalLight(0xfff1dc,1.9);sun.position.set(-3,4,6);scene.add(sun);
+  phone=buildPhone();scene.add(phone);CAMKEYS=camKeys();
+  const txt=$('txt');
+  txt.innerHTML=`<div id="hook"><div class="kicker" style="color:${C.cream};margin-bottom:28px">sahten.online</div><span class="mask"><span class="heavy" id="h1">Pedí</span></span><span class="mask"><span class="heavy" id="h1b">online</span></span><span class="mask"><span class="ital" id="h2" style="color:${C.cream};font-size:120px">en tres pasos</span></span></div>`+
+    STEP.map((s,i)=>`<div class="abs st" id="st${i}" style="left:0;right:0;top:0;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center"><div style="font:italic 400 190px/1 Lora;color:${C.cream};letter-spacing:-.05em">${s.n}</div><div style="font:900 92px/.95 DM;letter-spacing:-.05em">${s.t}</div></div>`).join('');
+  $('fly').innerHTML=TAPS.filter(x=>x.dish).map((x,i)=>`<img id="d${i}" src="${assets.cutouts[x.dish]}" style="position:absolute;width:280px;height:280px;object-fit:cover;border-radius:50%;border:12px solid #FFF4D6;box-sizing:border-box;left:0;top:0;opacity:0;box-shadow:0 30px 40px rgba(0,0,0,.35)">`).join('');
+  $('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:90px;right:90px;top:230px;color:${C.cream}"><div class="kicker" style="color:${C.orange};margin-bottom:26px">Tu pedido en minutos</div><div class="heavy" style="font-size:170px">Escaneá</div><div class="ital" style="font-size:140px;color:${C.orange}">y pedí online</div></div><div id="qrbox" style="position:absolute;left:220px;top:820px;width:640px;height:640px;background:${C.cream};padding:40px;box-sizing:content-box;clip-path:polygon(0 0,100% 0,100% calc(100% - 80px),calc(100% - 80px) 100%,0 100%)">${assets.qr}</div><div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`;
+  const q=$('cta').querySelector('svg');q.setAttribute('width','640');q.setAttribute('height','640');
+  $('bump').innerHTML='<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">';
+  T_TOTAL=20.9;return T_TOTAL;
+};
+
+window.frame=t=>{
+  // cámara y celular
+  const c=camAt(t);
+  phone.rotation.set(c.rx,c.ry+Math.sin(t*.7)*.025,0);phone.position.set(0,c.py,0);
+  const D=25/c.zoom,cy=c.fy+.62;camera.position.set(c.fx,cy,D);camera.lookAt(c.fx,cy,0);
+  drawScreen(t);renderer.render(scene,camera);
+  // toque (proyectado desde la pantalla 3D)
+  const tap=$('tap');let tv=-1,tp=null;for(const k of TAPS){const d=t-(k.t-.35);if(d>-.05&&d<.7){tv=d;tp=k;}}
+  if(tp){const p=project(screenToLocal(tp.s.tap.x,tp.s.tap.y));const press=seg(tv,0,.25),rel=seg(tv,.3,.7);tap.style.left=p.x+'px';tap.style.top=p.y+'px';tap.style.opacity=String(1-rel);tap.style.transform=`scale(${lerp(1.3,.8,E.out(press))+rel*.9})`;}else tap.style.opacity='0';
+  // foto que vuela a la bolsa (de la pantalla al ícono de la bolsa)
+  const bag=project(screenToLocal(318,32));
+  TAPS.filter(x=>x.dish).forEach((k,i)=>{const u=seg(t,k.t-.1,k.t+.85),d=$('d'+i);if(u<=0||u>=1){d.style.opacity='0';return;}
+    const from=project(screenToLocal(k.s.tap.x,k.s.tap.y-140));const x=lerp(from.x,bag.x,E.inout(u)),y=lerp(from.y,bag.y,E.inout(u))-Math.sin(u*Math.PI)*220;
+    d.style.opacity=String(Math.min(1,u*5)*(1-seg(u,.8,1)));d.style.transform=`translate(${x-140}px,${y-140}px) scale(${lerp(1,.25,E.inout(u))})`;});
+  // textos
+  const hIn=E.out(seg(t,1.0,1.8)),hOut=seg(t,3.2,3.6);
+  $('h1').style.transform=`translateY(${(1-hIn)*110}%)`;$('h1b').style.transform=`translateY(${(1-E.out(seg(t,1.08,1.88)))*110}%)`;$('h2').style.transform=`translateY(${(1-E.out(seg(t,1.15,1.95)))*110}%)`;$('hook').style.opacity=String(1-hOut);
+  STEP.forEach((s,i)=>{const u=E.out(seg(t,s.a+.05,s.a+.6)),o=1-seg(t,s.b-.25,s.b);const v=t>=s.a&&t<s.b?u*o:0;const st=$('st'+i);st.style.opacity=String(v);st.style.transform=`translateY(${(1-u)*40}px)`;});
+  const ct=E.inout(seg(t,17.4,17.95));$('cta').style.transform=`translateY(${(1-ct)*1920}px)`;
+  $('qrbox').style.transform=`scale(${.6+.4*E.back(seg(t,17.9,18.5))})`;
+  const bOut=E.inout(seg(t,.35,.9)),bIn=E.inout(seg(t,T_TOTAL-.9,T_TOTAL-.35));
+  $('bump').style.transform=`translateY(${t<T_TOTAL/2?-bOut*1920:(1-bIn)*1920}px)`;
+  $('pattern').style.transform=`translate(${-t*3}px,${-t*5}px)`;
+  return true;
+};
+window.ready=async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>null)));return true;};
+window.__loaded=true;
+</script>
+</body>
+</html>

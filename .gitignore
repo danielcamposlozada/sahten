@@ -19,3 +19,4 @@ tools/pantalla/out-render.log
 tools/pantalla/recortes/
 tools/pantalla/v2/captura/
 tools/pantalla/out-*.log
+tools/pantalla/node_modules/

@@ -5,7 +5,13 @@
 <title>Sahten · Tenemos delivery</title>
 <link rel="stylesheet" href="../../../media/sahten-editorial/maplibre-gl.css">
 <script src="../../../media/sahten-editorial/maplibre-gl.js"></script>
-<script src="moto.js"></script>
+<script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js"}}</script>
+<script type="module">
+import { createVespa } from './vespa3d.js';
+window.__vespaReady = new Promise(r => { window.__vespaResolve = r; });
+window.__makeVespa = canvas => createVespa(canvas, { size: 620 });
+window.__vespaResolve(true);
+</script>
 <style>
 @font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-500.woff2');font-weight:500}
 @font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
@@ -117,7 +123,7 @@ function build(assets,data){
     <div style="width:120px;height:120px;border-radius:50%;background:${C.green};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)">${STAR(C.orange,70)}</div></div>
     <div class="chip" style="position:absolute;left:50%;top:166px;transform:translateX(-50%)">Sahten</div>`);
   OV.ringLabel=el('div','abs chip','Hasta 8 km');css(OV.ringLabel,{background:C.orange,color:C.deep});
-  OV.moto=el('div','abs',`<div class="speed" style="position:absolute;right:400px;top:140px;width:120px;height:70px;background:repeating-linear-gradient(180deg,${C.cream} 0 6px,transparent 6px 22px);opacity:.6;border-radius:6px"></div><div class="mbody" style="filter:drop-shadow(0 0 3px rgba(255,244,214,.85))">${motoSVG(460)}</div>`);
+  OV.moto=el('div','abs',`<div class="mshadow" style="position:absolute;left:150px;top:420px;width:320px;height:70px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),transparent)"></div><canvas class="vespa" width="620" height="620" style="position:absolute;left:0;top:0;width:620px;height:620px"></canvas>`);
   OV.home=el('div','abs',`<div style="width:130px;height:130px;border-radius:50%;background:${C.orange};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)"><svg viewBox="0 0 64 64" width="70"><path d="M8 30 L32 10 L56 30 V56 H8Z" fill="${C.cream}"/><rect x="26" y="38" width="12" height="18" fill="${C.green}"/></svg></div>`);
   OV.lleg=el('div','abs',`<span style="font:italic 400 120px Lora;color:${C.cream};text-shadow:0 8px 30px rgba(0,0,0,.6)">¡Llegó!</span>`);
   // barrios
@@ -138,8 +144,8 @@ function build(assets,data){
     <div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`);
   css(OV.cta,{inset:0});const qs=OV.cta.querySelector('svg');qs.setAttribute('width','640');qs.setAttribute('height','640');
   // bumper con el logo (cuadros inicial y final idénticos)
-  OV.bump=el('div','abs',`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:260px;top:760px;width:560px">${assets.logo}</div>`);css(OV.bump,{inset:0});
-  const lg=OV.bump.querySelector('svg');lg.setAttribute('width','560');lg.removeAttribute('height');
+  OV.bump=el('div','abs','<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">');css(OV.bump,{inset:0});
+  OV.vespa=window.__makeVespa?window.__makeVespa(OV.moto.querySelector('canvas.vespa')):null;
   T_TOTAL=S.cta[1]+.9;
   return T_TOTAL;
 }
@@ -182,13 +188,14 @@ function setOverlay(t){
   // etiqueta del anillo de 8 km (al norte del local)
   const lab=map.project(circle([-58.4818959,-34.5264314],8,4)[1]);const lv=E.out(seg(t,S.pin[1]-.9,S.pin[1]-.3))*(1-seg(t,S.ride[0]+.2,S.ride[0]+.8));
   css(OV.ringLabel,{left:(lab.x-140)+'px',top:(lab.y-40)+'px',opacity:lv,transform:`scale(${.8+.2*lv})`});
-  // moto
+  // moto 3D: rumbo en pantalla (suavizado) y elevación según la inclinación del mapa
   const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1]));const rideVis=t>S.ride[0]+.2&&t<S.info[0]+.2;
-  const m=along(p),mp=map.project(m.pt),ahead=map.project(along(clamp(p+.01)).pt),flip=ahead.x<mp.x;
-  const bob=Math.sin(t*22)*3;const mIn=E.back(seg(t,S.ride[0]+.2,S.ride[0]+.7)),mOut=1-seg(t,S.arrive[0]+.6,S.arrive[0]+1.1);
-  css(OV.moto,{left:(mp.x-230)+'px',top:(mp.y-290)+'px',opacity:rideVis?mOut:0,transform:`scale(${mIn*mOut}) scaleX(${flip?-1:1})`});
-  OV.moto.querySelector('.speed').style.opacity=String(p>0&&p<1?.55:0);
-  motoPose(OV.moto,t,p>0&&p<1?1:(p>=1?.15:.35));
+  const m=along(p),mp=map.project(m.pt);
+  const back=map.project(along(clamp(p-70/TOTAL_M)).pt),fwd=map.project(along(clamp(p+70/TOTAL_M)).pt);
+  const heading=Math.atan2(fwd.x-back.x,-(fwd.y-back.y))*180/Math.PI;
+  const mIn=E.back(seg(t,S.ride[0]+.2,S.ride[0]+.7)),mOut=1-seg(t,S.arrive[0]+.6,S.arrive[0]+1.1);
+  css(OV.moto,{left:(mp.x-310)+'px',top:(mp.y-455)+'px',opacity:rideVis?mOut:0,transform:`scale(${(mIn*mOut).toFixed(3)})`,transformOrigin:'310px 455px'});
+  if(rideVis&&OV.vespa)OV.vespa.render(t,heading+40,90-map.getPitch(),p>0&&p<1?1:.15); // +40°: vista 3/4 para lucir el perfil
   // destino
   const dp=map.project(along(1).pt),hIn2=E.back(seg(t,S.arrive[0],S.arrive[0]+.5));const homeVis=t>S.arrive[0]&&t<S.info[0]+.6;
   css(OV.home,{left:(dp.x-65)+'px',top:(dp.y-470-Math.abs(Math.sin((t-S.arrive[0])*6))*20*(1-seg(t,S.arrive[0],S.arrive[1])))+'px',opacity:homeVis?1-seg(t,S.info[0],S.info[0]+.6):0,transform:`scale(${homeVis?hIn2:0})`});
@@ -214,6 +221,7 @@ function setOverlay(t){
 }
 
 window.init=async(assets,data)=>{
+  await window.__vespaReady;
   const total=build(assets,data);
   map=new maplibregl.Map({container:'map',style:brandStyle(),center:[-58.484,-34.515],zoom:11.9,pitch:0,bearing:-20,interactive:false,attributionControl:false,fadeDuration:0,canvasContextAttributes:{preserveDrawingBuffer:true,antialias:true},pixelRatio:1,maxPitch:70});
   await new Promise(r=>map.on('load',r));

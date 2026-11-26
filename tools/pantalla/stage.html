@@ -278,19 +278,19 @@ const SCENES = {
   podium(scene, sc, a, b, p, prod) {
     background(scene, sc, a, b);
     const num = el('div', 'abs', String(p.rank), scene);
-    css(num, { left: '0', right: '0', top: '60px', textAlign: 'center', font: 'italic 400 1100px/1 Lora', letterSpacing: '-.08em', color: sc.accent, opacity: .9 });
+    css(num, { left: '10px', top: '120px', textAlign: 'left', font: 'italic 400 980px/1 Lora', letterSpacing: '-.08em', color: sc.accent, opacity: .95 });
     K(num, [[a, { y: 400, o: 0 }], [a + .7, { y: 0, o: .9 }], [b, { y: -40, s: 1.04 }]], [E.out, E.lin]);
-    const sh = el('div', 'abs', null, scene); css(sh, { left: '190px', top: '1180px', width: '700px', height: '90px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.38), transparent)' });
+    const sh = el('div', 'abs', null, scene); css(sh, { left: '320px', top: '1180px', width: '700px', height: '90px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.38), transparent)' });
     K(sh, [[a + .2, { s: .2, o: 0 }], [a + .85, { s: 1, o: 1 }], [b, { s: 1.06 }]], [E.out, E.lin]);
     // Sin recorte limpio: la foto completa en un plato circular (nunca se publica un recorte sucio).
     const dish = el('div', 'abs', prod.cutout ? `<img src="${prod.cutout}" style="width:100%;display:block">` : `<div style="width:740px;height:740px;border-radius:50%;overflow:hidden;border:14px solid ${C.cream};box-shadow:0 30px 60px rgba(0,0,0,.3);margin:auto"><img src="${prod.photo}" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.15)"></div>`, scene);
-    css(dish, prod.cutout ? { left: '110px', top: '470px', width: '860px' } : { left: '170px', top: '360px', width: '740px' });
+    css(dish, prod.cutout ? { left: '110px', top: '470px', width: '860px' } : { left: '300px', top: '400px', width: '740px' });
     K(dish, [[a + .15, { y: -900, r: -14, s: .9 }], [a + .85, { y: 0, r: 2, s: 1 }], [a + 1.1, { y: -14, r: 0 }], [b, { y: -40, r: -2, s: 1.04 }]], [E.out, E.inout, E.lin]);
     const txt = el('div', 'abs', null, scene); css(txt, { left: '80px', right: '80px', top: '1330px' });
     const k = el('div', 'kicker', p.kicker, txt); css(k, { color: sc.bg === C.orange ? C.cream : C.orange, marginBottom: '18px' }); K(k, [[a + .5, { o: 0, x: -40 }], [a + 1, { o: 1, x: 0 }]]);
     maskedLines(txt, [p.heavy], 'heavy', a + .55)[0].style.fontSize = '170px';
     const it = maskedLines(txt, [p.italic], 'ital', a + .65)[0]; it.style.fontSize = '120px'; it.style.color = sc.bg === C.orange ? C.cream : C.orange;
-    if (prod.price) { const pr = el('div', 'price abs', fmt(prod.price), scene); css(pr, { width: '280px', height: '280px', right: '50px', top: '420px', background: sc.card, color: sc.cardFg, border: `6px solid ${sc.accent}` }); K(pr, [[a + 1, { s: 0, r: -30 }], [a + 1.5, { s: 1, r: -8 }], [b, { s: 1.04, r: 4 }]], [E.back, E.lin]); }
+    if (prod.price) { const pr = el('div', 'price abs', fmt(prod.price), scene); css(pr, { width: '280px', height: '280px', right: '30px', top: '300px', background: sc.card, color: sc.cardFg, border: `6px solid ${sc.accent}` }); K(pr, [[a + 1, { s: 0, r: -30 }], [a + 1.5, { s: 1, r: -8 }], [b, { s: 1.04, r: 4 }]], [E.back, E.lin]); }
   },
 
   // Tira semanal L-D con los días de la campaña encendidos; los platos caen por turno.
@@ -335,8 +335,8 @@ const SCENES = {
       css(c, { height: '80px', borderRadius: '14px', background: lit ? C.orange : 'transparent', border: `4px solid ${lit ? C.orange : sc.fg}`, opacity: lit ? 1 : .3 });
       K(c, [[a + .3 + (w * 7 + d) * .015, { s: .4, o: 0 }], [a + .7 + (w * 7 + d) * .015, { s: 1, o: lit ? 1 : .3 }], ...(lit ? [[a + 1.3, { s: 1 }], [a + 1.5, { s: 1.15 }], [a + 1.7, { s: 1 }]] : [])], E.out);
     }
-    const sh = el('div', 'abs', null, scene); css(sh, { left: '240px', top: '1760px', width: '600px', height: '80px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.35), transparent)' });
-    const im = el('div', 'abs', `<img src="${prod.cutout || prod.photo}" style="width:100%;display:block">`, scene); css(im, { left: '190px', top: '1230px', width: '700px' });
+    const sh = el('div', 'abs', null, scene); css(sh, { left: '240px', top: '1800px', width: '600px', height: '80px', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(0,0,0,.35), transparent)' });
+    const im = el('div', 'abs', `<div style="width:600px;height:600px;border-radius:50%;overflow:hidden;border:14px solid ${C.green};box-shadow:0 30px 60px rgba(0,0,0,.3);margin:0 auto"><img src="${prod.photo}" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.15)"></div>`, scene); css(im, { left: '190px', top: '1180px', width: '700px' });
     K(im, [[a + 1.6, { x: 1100, r: 12 }], [a + 2.3, { x: 0, r: 0 }], [b, { x: -20, y: -16 }]], [E.out, E.lin]);
     K(sh, [[a + 1.8, { o: 0, s: .3 }], [a + 2.3, { o: 1, s: 1 }]], E.out);
     const nm = el('div', 'abs chip-name', prod.name, scene); css(nm, { left: '80px', top: '1150px', font: '900 64px DM', letterSpacing: '-.04em', background: C.green, color: C.cream, padding: '14px 26px' });

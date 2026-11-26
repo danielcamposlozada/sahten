@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, '../../..');
 const OUT = path.resolve(DIR, '../out');
-const PACE = 1.5; // reloj más lento para poder leer (decisión del dueño, 26/11)
+const PACE = 1.75; // reloj más lento para poder leer (decisión del dueño, 26/11)
 const FPS = 30, stills = process.argv.includes('--stills');
 
 const qr = execFileSync('python3', ['-I', '-c', `
@@ -26,9 +26,11 @@ const pasos = JSON.parse(fs.readFileSync(path.join(DIR, 'captura/pasos.json'), '
 const data = { shots: pasos.shots, base: pathToFileURL(path.join(DIR, 'captura')).href + '/' };
 
 fs.mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--allow-file-access-from-files'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-await page.goto(pathToFileURL(path.join(DIR, 'howto.html')).href);
+page.on('pageerror', e => console.error('error en la página:', e.message));
+await page.goto(pathToFileURL(path.join(DIR, 'howto3d.html')).href);
+await page.waitForFunction(() => window.__loaded, null, { timeout: 30000 });
 const total = await page.evaluate(([a, d]) => window.build(a, d), [assets, data]);
 await page.evaluate(() => window.ready());
 const stage = await page.$('#stage');

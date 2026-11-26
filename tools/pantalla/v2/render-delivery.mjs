@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, '../../..');
 const OUT = path.resolve(DIR, '../out');
-const PACE = 1.35; // reloj más lento para poder leer (decisión del dueño, 26/11)
+const PACE = 1.5; // reloj más lento para poder leer (decisión del dueño, 26/11)
 const FPS = 30, stills = process.argv.includes('--stills');
 const BARRIOS = ['Vicente López', 'Olivos', 'Florida', 'La Lucila', 'Martínez', 'Núñez', 'Belgrano']; // confirmados por el dueño (26/11)
 
@@ -25,7 +25,7 @@ const assets = { qr, logo: fs.readFileSync(path.join(ROOT, 'media/sahten-editori
 const route = JSON.parse(fs.readFileSync(path.join(DIR, 'ruta.json'), 'utf8'));
 
 fs.mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--allow-file-access-from-files'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 const url = pathToFileURL(path.join(DIR, 'delivery.html')).href;
 

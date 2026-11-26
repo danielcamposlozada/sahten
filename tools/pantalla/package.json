@@ -1,0 +1,9 @@
+{
+  "name": "sahten-pantalla",
+  "private": true,
+  "description": "Generador de videos de la pantalla del local (solo herramientas)",
+  "type": "module",
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}
