@@ -426,7 +426,7 @@ function _renderCartExtras() {
     _mostDeliveryExtrasHtml() + _mostEstimateHtml() +
     SAHTEN.paymentChoices.html({methods:_mostPaymentOptions(),selected:mostradorActivePaymentId,percent:payPolicy.enabled&&payPolicy.channels.mostrador?payPolicy.percent:0,compact:true})+_mostCashHtml()+'<button class="btn" type="button" onclick="openPaymentManager()">Gestionar métodos de pago</button>' +
     '</div>';
-  SAHTEN.customerPicker.mount(f.querySelector('#most-customer-picker'),{list:()=>SAHTEN_CUSTOMERS,selected:()=>mostradorActiveCustomerId,select:id=>{mostradorActiveCustomerId=id;_renderCartTotals();},create:seed=>mostQuickAddClient(seed)});
+  SAHTEN.customerPicker.mount(f.querySelector('#most-customer-picker'),{list:()=>SAHTEN_CUSTOMERS,selected:()=>mostradorActiveCustomerId,select:id=>{mostradorActiveCustomerId=id;if(_mostApplyCustomerAddress())setTimeout(_mostAfterCustomerAddress,0);_renderCartTotals();},create:seed=>mostQuickAddClient(seed)});
   f.querySelectorAll('[data-payment-choice]').forEach(b=>b.addEventListener('click',()=>mostradorSetPayment(b.dataset.paymentChoice)));
   if (mostradorOrderType==='delivery' && mostradorDelivery && mostradorDelivery.lat!=null) setTimeout(_mostInitDelMap, 30);
 }
@@ -463,7 +463,27 @@ function mostradorSetShipping(v) { if(_mostTiendaCfg().deliveryV2?.active)return
 function _mostTiendaCfg(){ try { return (typeof _getTiendaConfig==='function') ? _getTiendaConfig() : {}; } catch(e){ return {}; } }
 function _mostZoneFor(lat,lng){const cfg=_mostTiendaCfg();if(cfg.deliveryV2?.active){const p=cfg.deliveryV2,zone=p.zones.find(z=>SAHTEN.core.zoneContains(p.center,z,{lat,lng}));return {zone,distKm:SAHTEN.core.haversineKm(p.center.lat,p.center.lng,lat,lng),out:!zone};} return SAHTEN.core.zoneFor(cfg,lat,lng); }
 function _mostShortAddr(d){ const a=d.address||{}; const street=[a.road||a.pedestrian||a.footway, a.house_number].filter(Boolean).join(' '); const area=a.suburb||a.neighbourhood||a.city_district||a.town||a.city||a.village||''; return [street||(d.display_name||'').split(',').slice(0,2).join(','), area].filter(Boolean).join(', '); }
-function mostradorSetOrderType(t){ mostradorOrderType=t; if(t!=='delivery'){ mostradorShipManual=false; mostradorShipping=0; } _renderCartExtras(); _renderCartTotals(); if(t==='delivery' && !mostradorDelivery) setTimeout(()=>document.getElementById('most-addr-input')?.focus(),50); }
+function mostradorSetOrderType(t){ mostradorOrderType=t; if(t!=='delivery'){ mostradorShipManual=false; mostradorShipping=0; } if(_mostApplyCustomerAddress()){_mostAfterCustomerAddress();return;} _renderCartExtras(); _renderCartTotals(); if(t==='delivery' && !mostradorDelivery) setTimeout(()=>document.getElementById('most-addr-input')?.focus(),50); }
+// Dirección guardada del cliente: se precarga en el delivery sin pisar una dirección escrita a mano.
+// `autofillFrom` marca que la dirección vino del cliente; editarla a mano la borra (ver _mostAddrInput).
+function _mostApplyCustomerAddress(){
+  if(mostradorOrderType!=='delivery'||_mostTiendaCfg().deliveryEnabled===false)return false;
+  const c=SAHTEN_CUSTOMERS.find(x=>x.id===mostradorActiveCustomerId), cur=mostradorDelivery;
+  if(cur&&cur.address&&!cur.autofillFrom)return false;
+  const a=c?SAHTEN.core.customerPrimaryAddress(c):null;
+  if(!a){ if(cur?.autofillFrom){mostradorDelivery=null;return true;} return false; }
+  if(cur?.autofillFrom===c.id)return false;
+  mostradorDelivery={address:a.address,note:cur?.note||'',addressFloor:a.addressFloor,addressApartment:a.addressApartment,deliveryReference:a.deliveryReference,lat:null,lng:null,zone:null};
+  if(a.lat!=null)_mostSetDeliveryPoint(a.lat,a.lng,a.address);
+  mostradorDelivery.autofillFrom=c.id;
+  return true;
+}
+function _mostAfterCustomerAddress(){
+  _renderCartExtras(); _renderCartTotals();
+  const d=mostradorDelivery;
+  // Sin ubicación guardada: se buscan sugerencias para que el cajero confirme la dirección y la zona.
+  if(d?.autofillFrom&&d.lat==null){const id=d.autofillFrom;_mostAddrInput(d.address,!/\d/.test(d.address));if(mostradorDelivery)mostradorDelivery.autofillFrom=id;}
+}
 function _mostDeliveryExtrasHtml(){
   const seg=['retiro','delivery'].map(k=>'<button type="button" onclick="mostradorSetOrderType(\''+k+'\')" style="flex:1;padding:6px 4px;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:'+(mostradorOrderType===k?'var(--accent)':'transparent')+';color:'+(mostradorOrderType===k?'var(--on-accent)':'var(--ink)')+'">'+({retiro:'🛍️ Retiro',delivery:'🛵 Delivery'})[k]+'</button>').join('');
   let h='<div class="most-extras-row"><label>Tipo</label><div style="flex:1;display:flex;gap:2px;padding:2px;border-radius:9px;background:var(--sand2)">'+seg+'</div></div>';
@@ -474,6 +494,7 @@ function _mostDeliveryExtrasHtml(){
   else h+='<div id="most-delivery-hours-notice">'+(!SAHTEN.delivery.hours.deliveryStatus().open?'<div class="info-banner" role="status">'+_esc(SAHTEN.delivery.hours.deliveryNotice())+'</div>':'')+'</div>';
   let info='';
   if(typeof sahtenOfflineNotice==='function') info+=sahtenOfflineNotice();
+  if(d && d.autofillFrom) h+='<div class="info-banner" role="status" style="margin-top:6px">Dirección guardada del cliente'+(d.lat==null?'. Elegí la sugerencia correcta para validar la zona.':'. Revisala antes de confirmar.')+'</div>';
   if(d && d.zone){ info='<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:6px;flex-wrap:wrap"><span style="width:9px;height:9px;border-radius:50%;background:'+(d.zone.color||'var(--green)')+'"></span><strong>'+_esc(d.zone.name)+'</strong><span style="color:var(--muted)">· '+d.distKm.toFixed(1)+' km · '+(t.freeShip?'<span style="color:var(--green);font-weight:600">Envío gratis</span>':'$'+_fmt(d.zone.baseCost||0))+'</span></div>'; }
   else if(d && d.out){ info='<div style="font-size:11px;margin-top:6px;color:var(--red);font-weight:600">Fuera de las zonas de envío ('+d.distKm.toFixed(1)+' km). Cargá el envío a mano.</div>'; }
   if(d && cfg.deliveryMinOrder && t.subtotal < cfg.deliveryMinOrder) info+='<div style="font-size:11px;margin-top:4px;color:var(--accent)">Pedido mínimo para delivery: $'+_fmt(cfg.deliveryMinOrder)+'</div>';
@@ -643,6 +664,8 @@ async function mostradorCheckout() {
   };
   SAHTEN.pricing?.capture(order);
   SAHTEN_ORDERS.unshift(order); _saveOrders();
+  // La dirección usada en el delivery queda como principal del cliente para el próximo pedido.
+  if(cust&&del&&del.address&&SAHTEN.core.rememberCustomerAddress(cust,del))_saveCustomers();
   SAHTEN.receipts.enqueue(order,{origin:'local'});
   // Reset cart
   mostradorCashTendered=''; mostradorEstimate=''; mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
@@ -1062,7 +1085,7 @@ function mostQuickAddClient(seed = {}) {
   ov.innerHTML = '<div class="modal" style="max-width:420px"><div class="modal-header"><div class="modal-title" id="quick-customer-title">Nuevo cliente</div><button class="modal-close" onclick="mostQuickAddClientClose()">×</button></div><div class="modal-body"><div style="display:flex;flex-direction:column;gap:12px"><div class="disc-form-field"><label for="qc-name">Nombre</label><input type="text" class="disc-form-input" id="qc-name" placeholder="Nombre del cliente" autofocus></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="disc-form-field"><label for="qc-phone">Teléfono</label><input type="tel" class="disc-form-input" id="qc-phone" placeholder="+54 9..."></div><div class="disc-form-field"><label for="qc-email">Email (opcional)</label><input type="email" class="disc-form-input" id="qc-email" placeholder="email@..."></div></div><div class="disc-form-field"><label for="qc-addr">Dirección (opcional)</label><input type="text" class="disc-form-input" id="qc-addr" placeholder="Dirección"></div><button class="most-checkout" style="margin-top:4px" onclick="mostQuickAddClientSave()">Crear y asignar al pedido</button></div></div></div>';
   document.body.appendChild(ov);
   _quickCustomerCleanup=SAHTEN.bindModalFocus({panel:ov,close:mostQuickAddClientClose});
-  document.getElementById('qc-name').value=seed.name||'';document.getElementById('qc-phone').value=seed.phone||'';
+  document.getElementById('qc-name').value=seed.name||'';document.getElementById('qc-phone').value=seed.phone||'';if(mostradorOrderType==='delivery'&&mostradorDelivery?.address)document.getElementById('qc-addr').value=mostradorDelivery.address;
   setTimeout(() => document.getElementById(seed.phone?'qc-phone':'qc-name')?.focus(), 100);
 }
 
@@ -1073,11 +1096,14 @@ function mostQuickAddClientSave() {
   const email = (document.getElementById('qc-email')?.value || '').trim();
   if (!name && !phone) { alert('Poné al menos un nombre o teléfono.'); return; }
   const id = 'cust_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  SAHTEN_CUSTOMERS.push({ id, name: name || 'Sin nombre', phone, email, address: (document.getElementById('qc-addr')?.value||'').trim() });
+  const customer={ id, name: name || 'Sin nombre', phone, email, address: (document.getElementById('qc-addr')?.value||'').trim() };
+  // Si es la misma dirección del delivery en curso, se guarda con piso, referencia y ubicación.
+  if(mostradorOrderType==='delivery'&&mostradorDelivery?.address&&customer.address===mostradorDelivery.address)SAHTEN.core.rememberCustomerAddress(customer,mostradorDelivery);
+  SAHTEN_CUSTOMERS.push(customer);
   _saveCustomers();
   mostradorActiveCustomerId = id;
   mostQuickAddClientClose();
-  _renderCartExtras();
+  if(_mostApplyCustomerAddress()){_mostAfterCustomerAddress();}else _renderCartExtras();
   _posToast('Cliente "' + (name || phone) + '" creado y asignado');
 }
 

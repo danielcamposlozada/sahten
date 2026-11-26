@@ -6,6 +6,7 @@ export * from './pricing.js';
 export * from './price-policy.js';
 export * from './sale-costs.js';
 export * from './customer-import.js';
+export * from './customer-address.js';
 export * from './projection.js';
 export * from './menuEngineering.js';
 export * from './stock.js';

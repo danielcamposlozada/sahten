@@ -9,6 +9,8 @@
 
 ## Sin publicar
 
+- Mostrador · clientes y delivery: al elegir un cliente (o al pasar a Delivery con un cliente elegido) se carga su dirección guardada, con piso, departamento y referencia. Si la dirección tiene ubicación, se valida la zona sola; si no, se muestran sugerencias para confirmarla. Una dirección escrita a mano no se reemplaza. Al confirmar un delivery, la dirección usada queda como principal del cliente sin borrar las anteriores. «Nuevo cliente» propone la dirección del delivery en curso. El buscador de clientes muestra la dirección.
+
 - Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4. La elección se muestra en una franja integrada a la página.
 
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.

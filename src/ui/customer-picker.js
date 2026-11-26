@@ -47,7 +47,7 @@ export function installCustomerPicker(w = window) {
     }
     function search() {
       const q = state.selected ? '' : input.value;
-      options = customerMatches(list(), q).map(c => ({ id: c.id, name: c.name, detail: [c.phone, c.email].filter(Boolean).join(' · ') }));
+      options = customerMatches(list(), q).map(c => ({ id: c.id, name: c.name, detail: [c.phone, c.email, c.address].filter(Boolean).join(' · ') }));
       if (!q.trim()) options.unshift({ id: null, name: 'Consumidor Final', detail: 'Continuar sin asignar un cliente' });
       results.replaceChildren();
       options.forEach((c, i) => {
