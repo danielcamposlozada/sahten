@@ -13,3 +13,6 @@ supabase/.temp/
 sahten-promo-export/
 sahten-export/
 .sahten-cuenta-deploy/
+tools/pantalla/out/
+tools/pantalla/fotos/
+tools/pantalla/out-render.log

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Sahten · pantalla del local</title>
+<style>
+@font-face{font-family:DM;src:url('../../media/sahten-editorial/fonts/dm-sans-400.woff2');font-weight:400}
+@font-face{font-family:DM;src:url('../../media/sahten-editorial/fonts/dm-sans-500.woff2');font-weight:500}
+@font-face{font-family:DM;src:url('../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
+@font-face{font-family:DM;src:url('../../media/sahten-editorial/fonts/dm-sans-900.woff2');font-weight:900}
+@font-face{font-family:Lora;src:url('../../media/sahten-editorial/fonts/lora-latin-italic.woff2');font-style:italic}
+:root{--green:#235328;--deep:#183d23;--darker:#112d1b;--cream:#FFF4D6;--paper:#FAF8F5;--orange:#EF8E23;--pale:#E3F1DD;--ink:#213326}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:DM,sans-serif;color:var(--ink);background:var(--paper)}
+.scene,.layer{position:absolute;inset:0;overflow:hidden}
+.abs{position:absolute}
+.kicker{font:700 40px/1.2 DM;letter-spacing:.14em;text-transform:uppercase}
+.heavy{font:900 190px/.86 DM;letter-spacing:-.055em;text-transform:uppercase}
+.ital{font:italic 400 150px/1 Lora;letter-spacing:-.03em}
+.mask{display:block;overflow:hidden;padding:.16em .04em .06em;margin-top:-.16em}
+.mask>span{display:block}
+.pattern{position:absolute;inset:-200px}
+.scene>.pattern{-webkit-mask-image:radial-gradient(ellipse 62% 58% at 50% 50%,transparent 55%,#000 100%);mask-image:radial-gradient(ellipse 62% 58% at 50% 50%,transparent 55%,#000 100%)}
+.tag{background:var(--green);padding:26px 40px 30px;transform-origin:left center}
+.tag svg{display:block;width:330px;height:auto}
+.frame{position:absolute;overflow:hidden;background:#0002}
+.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%}
+.price{display:grid;place-items:center;border-radius:50%;font:900 64px/1 DM;letter-spacing:-.04em}
+.stamp{display:grid;place-items:center;text-align:center;border-radius:50%}
+.desc{font:500 38px/1.3 DM;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.small{font:500 38px/1.35 DM}
+.row{display:grid;grid-template-columns:230px 1fr auto;gap:36px;align-items:center}
+.row .thumb{width:230px;height:230px;border-radius:50%;overflow:hidden;border:8px solid currentColor}
+.row .thumb img{width:100%;height:100%;object-fit:cover}
+.row .name{font:700 64px/1.02 DM;letter-spacing:-.035em}
+.row .pr{font:900 72px/1 DM;letter-spacing:-.045em}
+.row .lead{grid-column:2/4;height:0;border-bottom:4px dotted currentColor;opacity:.35;margin-top:-6px}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+// ───────────────────────────── Reloj único ─────────────────────────────
+// Todo se anima con Web Animations en pausa. seek(t) fija TODAS las animaciones
+// en el mismo instante: cada fotograma es determinista y el loop cierra exacto.
+const ANIMS = [];
+const C = {green:'#235328',deep:'#183d23',darker:'#112d1b',cream:'#FFF4D6',paper:'#FAF8F5',orange:'#EF8E23',pale:'#E3F1DD',ink:'#213326'};
+const SCHEME = { // fondo → texto, acento, detalle (combinaciones de la web aprobada)
+  orange:{bg:C.orange, fg:C.deep, accent:C.cream, line:C.cream, card:C.cream, cardFg:C.green},
+  green: {bg:C.green,  fg:C.cream, accent:C.orange, line:C.orange, card:C.cream, cardFg:C.green},
+  cream: {bg:C.cream,  fg:C.green, accent:C.orange, line:C.orange, card:C.green, cardFg:C.cream},
+  pale:  {bg:C.pale,   fg:C.green, accent:C.orange, line:C.green, card:C.green, cardFg:C.cream},
+};
+const E = { out:'cubic-bezier(.16,1,.3,1)', inout:'cubic-bezier(.65,0,.35,1)', in:'cubic-bezier(.7,0,.84,0)', back:'cubic-bezier(.34,1.56,.64,1)', soft:'cubic-bezier(.4,0,.2,1)', lin:'linear' };
+const el = (tag, cls, html, parent) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; if (parent) parent.appendChild(n); return n; };
+const css = (n, o) => (Object.assign(n.style, o), n);
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+const xf = k => `translate(${k.x||0}px,${k.y||0}px) rotate(${k.r||0}deg) scale(${k.s==null?1:k.s})`;
+// K(elemento, [[t,{o,x,y,r,s,...css}], ...], easing) → una sola animación por elemento (sin conflictos de relleno).
+function K(n, keys, ease = E.out) {
+  keys = keys.slice().sort((a, b) => a[0] - b[0]);
+  const t0 = keys[0][0], t1 = keys[keys.length - 1][0], span = Math.max(1e-3, t1 - t0);
+  let prev = {};
+  const frames = keys.map(([t, k], i) => {
+    const cur = { ...prev, ...k }; prev = cur;
+    const f = { offset: (t - t0) / span, easing: Array.isArray(ease) ? (ease[i] || E.out) : ease };
+    if ('x' in cur || 'y' in cur || 'r' in cur || 's' in cur) f.transform = xf(cur);
+    if ('o' in cur) f.opacity = cur.o;
+    for (const [p, v] of Object.entries(cur)) if (!['x','y','r','s','o'].includes(p)) f[p] = v;
+    return f;
+  });
+  const a = n.animate(frames, { delay: t0 * 1000, duration: span * 1000, fill: 'both' });
+  a.pause(); ANIMS.push(a); return a;
+}
+function seek(t) { for (const a of ANIMS) a.currentTime = t * 1000; }
+// Visible solo entre a y b (cortes secos, cubiertos por las cortinas).
+function window_(n, a, b, total) { K(n, [[0,{o:0}],[a,{o:0}],[a,{o:1}],[b,{o:1}],[b,{o:0}],[total,{o:0}]], E.lin); }
+
+// ───────────────────────────── Ornamentos ─────────────────────────────
+function starPath(cx, cy, R, r, n = 8) { let d = ''; for (let i = 0; i < n * 2; i++) { const a = Math.PI * i / n - Math.PI / 2, rr = i % 2 ? r : R; d += (i ? 'L' : 'M') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a)).toFixed(1); } return d + 'Z'; }
+function patternSVG(color, opacity = .14, size = 150) {
+  const h = size / 2, s = size * .36, id = 'p' + (patternSVG.n = (patternSVG.n || 0) + 1);
+  return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse">
+    <g fill="none" stroke="${color}" stroke-width="3" opacity="${opacity}">
+      <rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/>
+      <circle cx="${h}" cy="${h}" r="${s*.42}"/><path d="M0 0L${size*.14} ${size*.14}M${size} 0L${size*.86} ${size*.14}M0 ${size}L${size*.14} ${size*.86}M${size} ${size}L${size*.86} ${size*.86}"/>
+    </g></pattern></defs><rect width="100%" height="100%" fill="url(#${id})"/></svg>`;
+}
+function rosette(color, size = 900, stroke = 5) {
+  const c = size / 2; let petals = '';
+  for (let i = 0; i < 16; i++) petals += `<ellipse cx="${c}" cy="${c - size * .3}" rx="${size * .055}" ry="${size * .15}" transform="rotate(${i * 22.5} ${c} ${c})"/>`;
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="${color}" stroke-width="${stroke}">
+    <circle cx="${c}" cy="${c}" r="${size * .48}" stroke-dasharray="2 18" stroke-linecap="round"/><circle cx="${c}" cy="${c}" r="${size * .455}"/>
+    ${petals}<path d="${starPath(c, c, size * .2, size * .14)}"/><circle cx="${c}" cy="${c}" r="${size * .1}"/></g></svg>`;
+}
+function star8(color, size = 120, fill = true) { return `<svg viewBox="0 0 100 100" width="${size}" height="${size}"><path d="${starPath(50, 50, 50, 36)}" fill="${fill ? color : 'none'}" stroke="${color}" stroke-width="${fill ? 0 : 4}"/></svg>`; }
+// Arco árabe apuntado (ogival) para enmarcar fotos.
+function archPath(w, h) { const r = w * .62; return `path('M0 ${h} L0 ${r} C0 ${r * .42} ${w * .3} ${r * .1} ${w / 2} 0 C${w * .7} ${r * .1} ${w} ${r * .42} ${w} ${r} L${w} ${h} Z')`; }
+const cutCorner = (w, h, c = 70, rr = 34) => `polygon(0 0, 100% 0, 100% calc(100% - ${c}px), calc(100% - ${c}px) 100%, 0 100%)`;
+
+// ───────────────────────────── Capas comunes ─────────────────────────────
+function background(scene, sc, a, b) {
+  css(scene, { background: sc.bg, color: sc.fg });
+  const p = el('div', 'pattern', patternSVG(sc.line, .11), scene);
+  K(p, [[a, { x: 0, y: 0 }], [b, { x: -60, y: -90 }]], E.lin);   // deriva lenta: nunca un cuadro quieto
+}
+function calligraphy(color) { return window.ASSETS.calligraphy.replace(/fill="#FAF8F5"/g, `fill="${color}"`); }
+function maskedLines(parent, lines, cls, a, step = .09, color) {
+  return lines.map((txt, i) => {
+    const m = el('span', 'mask', null, parent), s = el('span', cls, txt, m); if (color) s.style.color = color;
+    K(s, [[a + i * step, { y: 260, r: 4 }], [a + i * step + .75, { y: 0, r: 0 }]], E.out); return s;
+  });
+}
+// Panel con borde de arcos ogivales arriba y abajo (1080 × 1920 + 2 × 150).
+const EDGE = 150, PH = 1920 + 2 * EDGE;
+function scallop(W = 1080, n = 6) {
+  const w = W / n; let top = `M0 ${EDGE}`, bot = '';
+  for (let i = 0; i < n; i++) { const x = i * w; top += ` C${x} ${EDGE * .45} ${x + w * .32} ${EDGE * .12} ${x + w / 2} 0 C${x + w * .68} ${EDGE * .12} ${x + w} ${EDGE * .45} ${x + w} ${EDGE}`; }
+  for (let i = n - 1; i >= 0; i--) { const x = i * w, y = PH - EDGE; bot += ` C${x + w} ${y + EDGE * .55} ${x + w * .68} ${y + EDGE * .88} ${x + w / 2} ${PH} C${x + w * .32} ${y + EDGE * .88} ${x} ${y + EDGE * .55} ${x} ${y}`; }
+  return `path('${top} L${W} ${PH - EDGE}${bot} Z')`;
+}
+function panel(stage, col, z) {
+  const w = el('div', 'abs', null, stage); css(w, { left: 0, top: -EDGE + 'px', width: '1080px', height: PH + 'px', background: col, zIndex: z, clipPath: scallop(), overflow: 'hidden' });
+  el('div', 'pattern', patternSVG(col === C.green ? C.orange : C.cream, .22), w); return w;
+}
+function wipe(stage, t, total, color, dir = 1) {
+  // Cortina de marca entre escenas: dos paneles con patrón (naranja + verde) y la estrella de 8 puntas.
+  [[C.orange, 0], [C.green, .07]].forEach(([col, lag]) => {
+    const w = panel(stage, col, 50);
+    K(w, [[0, { y: PH }], [t - .42 + lag, { y: PH }], [t + lag, { y: 0 }], [t + .05 + lag, { y: 0 }], [t + .5 + lag, { y: -PH }], [total, { y: -PH }]], [E.lin, E.inout, E.lin, E.inout, E.lin]);
+  });
+}
+function bumper(stage, total, hold = .35) {
+  // Tarjeta de marca en el punto de loop: idéntica en el primer y el último fotograma.
+  const b = panel(stage, C.green, 60);
+  const logo = el('div', 'abs', window.ASSETS.logo, b); css(logo, { width: '560px', left: '260px', top: (760 + EDGE) + 'px' }); logo.querySelector('svg').setAttribute('width', '560'); logo.querySelector('svg').removeAttribute('height');
+  K(b, [[0, { y: 0 }], [hold, { y: 0 }], [hold + .55, { y: -PH }], [hold + .55, { y: PH }], [total - hold - .55, { y: PH }], [total - hold, { y: 0 }], [total, { y: 0 }]], [E.lin, E.inout, E.lin, E.lin, E.inout, E.lin]);
+}
+
+// ───────────────────────────── Escenas ─────────────────────────────
+const SCENES = {
+  hook(scene, sc, a, b, p, _, prods = []) {
+    background(scene, sc, a, b);
+    const ring = el('div', 'abs', rosette(sc.line, 1300, 4), scene); css(ring, { left: '160px', top: '780px', opacity: .22 });
+    K(ring, [[a, { r: -20, s: .8 }], [b, { r: 25, s: 1.05 }]], E.soft);
+    const box = el('div', 'abs', null, scene); css(box, { left: '80px', right: '80px', top: p.tag ? '430px' : '520px' });
+    K(box, [[a, { s: 1 }], [b, { s: 1.04 }]], E.lin);
+    if (p.tag) { const t = el('div', 'tag', calligraphy(C.cream), box); css(t, { display: 'inline-block', marginBottom: '60px' }); K(t, [[a + .1, { o: 0, x: -80, r: -12 }], [a + .7, { o: 1, x: 0, r: -4 }]], E.back); }
+    const k = el('div', 'kicker', p.kicker, box); css(k, { marginBottom: '34px' }); K(k, [[a + .15, { o: 0, y: 30 }], [a + .7, { o: 1, y: 0 }]]);
+    maskedLines(box, p.lines.map(x => x), 'heavy', a + .25);
+    const it = maskedLines(box, [p.italic], 'ital', a + .25 + p.lines.length * .09, .09, sc.accent === C.cream ? C.cream : null)[0];
+    if (sc.bg === C.cream || sc.bg === C.pale) it.style.color = C.orange;
+    if (p.badge) {
+      const s = el('div', 'stamp abs', `<div style="font:900 58px/1.05 DM;letter-spacing:.02em">${p.badge.top}<br><span style="font:italic 400 48px Lora">${p.badge.mid}</span><br>${p.badge.bottom}</div>`, scene);
+      css(s, { width: '300px', height: '300px', right: '60px', top: '600px', background: sc.accent, color: sc.bg === C.orange ? C.green : (sc.bg === C.green ? C.green : C.cream) });
+      if (sc.bg === C.cream) css(s, { background: C.green, color: C.cream });
+      K(s, [[a + .9, { s: 0, r: -90 }], [a + 1.5, { s: 1, r: -8 }], [b, { s: 1.03, r: 4 }]], [E.back, E.lin, E.lin]);
+    }
+    const fan = prods.filter(Boolean), n = fan.length;
+    fan.forEach((pr, i) => {
+      const big = n === 3 ? i === 1 : true, size = big ? 520 : 380;
+      const cx = n === 3 ? [250, 540, 830][i] : n === 2 ? [330, 750][i] : 540, cy = big ? 1470 : 1560, rot = n === 3 ? [-10, 0, 10][i] : n === 2 ? [-7, 7][i] : 0;
+      const w = el('div', 'abs', null, scene); css(w, { left: (cx - size / 2) + 'px', top: (cy - size / 2) + 'px', width: size + 'px', height: size + 'px', zIndex: big ? 2 : 1, filter: 'drop-shadow(0 30px 40px rgba(0,0,0,.3))' });
+      const f = el('div', 'frame', `<img src="${pr.photo}" alt="">`, w); css(f, { inset: 0, borderRadius: '50%', border: `10px solid ${sc.bg === C.green ? C.cream : sc.bg === C.orange ? C.cream : C.green}` });
+      K(w, [[a + .55 + i * .12, { y: 700, r: rot * 3, s: .7 }], [a + 1.35 + i * .12, { y: 0, r: rot, s: 1 }], [b, { y: -30, r: rot * .4, s: 1.03 }]], [E.out, E.lin]);
+      K(f.querySelector('img'), [[a, { s: 1.3 }], [b, { s: 1.08 }]], E.lin);
+    });
+    for (let i = 0; i < 5; i++) { const st = el('div', 'abs', star8(sc.line, 40 + i * 14, i % 2 === 0), scene); css(st, { left: (90 + i * 205) + 'px', top: (n ? 150 + (i % 2) * 90 : 1610 + (i % 2) * 120) + 'px', opacity: .8 }); K(st, [[a + .4 + i * .06, { s: 0, r: 0 }], [a + 1 + i * .06, { s: 1, r: 45 }], [b, { s: 1, r: 120, y: -60 }]], [E.back, E.lin]); }
+  },
+
+  spot(scene, sc, a, b, p, prod) {
+    background(scene, sc, a, b);
+    const mirror = !!p.mirror, W = 920, H = 1100, left = mirror ? 40 : 120;
+    const ring = el('div', 'abs', rosette(sc.line, 1150, 4), scene); css(ring, { left: (mirror ? -260 : 190) + 'px', top: '120px', opacity: .28 });
+    K(ring, [[a, { r: 0, s: .9 }], [b, { r: 40, s: 1 }]], E.soft);
+    const holder = el('div', 'abs', null, scene); css(holder, { left: left + 'px', top: '180px', width: W + 'px', height: H + 'px', filter: 'drop-shadow(0 40px 50px rgba(0,0,0,.28))' });
+    const fr = el('div', 'frame', `<img src="${prod.photo}" alt="">`, holder); css(fr, { inset: 0, clipPath: archPath(W, H) });
+    // Borde del arco: misma forma, línea de acento.
+    const border = el('div', 'abs', `<svg width="${W}" height="${H}" style="overflow:visible"><path d="${archPath(W, H).slice(6, -2)}" fill="none" stroke="${sc.accent}" stroke-width="8"/></svg>`, holder); css(border, { left: '0', top: '0' });
+    K(holder, [[a, { x: mirror ? -1100 : 1100, r: mirror ? -8 : 8, o: 1 }], [a + .85, { x: 0, r: 0 }], [b, { x: mirror ? 20 : -20, y: -20 }]], [E.out, E.lin]);
+    K(fr.querySelector('img'), [[a, { s: 1.32, x: mirror ? 30 : -30 }], [b, { s: 1.08, x: mirror ? -30 : 30 }]], E.soft);
+    const txt = el('div', 'abs', null, scene); css(txt, { left: '80px', right: '80px', top: '1360px' });
+    if (p.kicker) { const k = el('div', 'kicker', p.kicker, txt); css(k, { color: sc.accent === C.cream ? C.cream : (sc.bg === C.green ? C.orange : C.orange), marginBottom: '22px' }); if (sc.bg === C.orange) k.style.color = C.cream; K(k, [[a + .35, { o: 0, x: -40 }], [a + .9, { o: 1, x: 0 }]]); }
+    const big = p.heavy.length > 11 ? 'font-size:122px' : p.heavy.length > 8 ? 'font-size:150px' : '';
+    const hv = maskedLines(txt, [p.heavy], 'heavy', a + .4)[0]; if (big) hv.setAttribute('style', big);
+    const it = maskedLines(txt, [p.italic], 'ital', a + .5)[0]; it.style.fontSize = p.italic.length > 14 ? '92px' : '124px'; if (sc.bg !== C.orange) it.style.color = sc.bg === C.green ? C.orange : C.orange; else it.style.color = C.cream;
+    if (p.price !== false && prod.price) {
+      const pr = el('div', 'price abs', fmt(prod.price), scene); css(pr, { width: '300px', height: '300px', right: '40px', top: '1030px', background: sc.card, color: sc.cardFg, border: `6px solid ${sc.accent}`, boxShadow: '0 20px 40px #0003' });
+      K(pr, [[a + .9, { s: 0, r: -30 }], [a + 1.4, { s: 1, r: -6 }], [b, { s: 1.04, r: 2 }]], [E.back, E.lin, E.lin]);
+    }
+    if (p.rank) {
+      const r = el('div', 'stamp abs', `<div><div style="font:700 30px DM;letter-spacing:.14em">N.º</div><div style="font:900 120px/0.9 DM;letter-spacing:-.05em">${p.rank}</div></div>`, scene);
+      css(r, { width: '250px', height: '250px', [mirror ? 'right' : 'left']: '70px', top: '120px', background: p.rank === 1 ? C.orange : sc.card, color: p.rank === 1 ? C.deep : sc.cardFg, border: `6px solid ${p.rank === 1 ? C.cream : sc.accent}` });
+      if (sc.bg === C.orange && p.rank === 1) css(r, { background: C.green, color: C.cream });
+      K(r, [[a + .7, { s: 0, r: 40 }], [a + 1.2, { s: 1, r: -10 }], [b, { s: 1, r: 6 }]], [E.back, E.lin]);
+    }
+  },
+
+  duo(scene, sc, a, b, p) {
+    background(scene, sc, a, b);
+    const half = (b - a) / 2, W = 760, H = 900;
+    p.banners.forEach((ph, i) => {
+      const f = el('div', 'frame', `<img src="${window.ASSETS.photos[ph]}" alt="">`, scene);
+      css(f, { left: '160px', top: '150px', width: W + 'px', height: H + 'px', clipPath: archPath(W, H), boxShadow: '0 30px 60px #0003' });
+      const s0 = a + i * half, s1 = s0 + half;
+      K(f, [[0, { o: 0 }], [s0 - .01, { o: 0, x: i ? 0 : 0 }], [s0, { o: i ? 0 : 1 }], [s0 + .5, { o: 1 }], [s1 - (i ? 0 : .45), { o: 1 }], [s1 + (i ? 0 : .05), { o: i ? 1 : 0 }], [s1 + .06, { o: i ? 1 : 0 }]], E.soft);
+      K(f.querySelector('img'), [[s0 - .5, { s: 1.25, x: i ? 40 : -40 }], [s1 + .5, { s: 1.05, x: i ? -40 : 40 }]], E.lin);
+    });
+    const ring = el('div', 'abs', rosette(sc.line, 420, 5), scene); css(ring, { left: '700px', top: '840px' }); K(ring, [[a, { r: 0, s: 0 }], [a + .8, { r: 60, s: 1 }], [b, { r: 160, s: 1 }]], [E.back, E.lin]);
+    const pct = el('div', 'stamp abs', '<div style="font:900 120px/0.9 DM;letter-spacing:-.06em">10<span style="font-size:60px">%</span></div>', scene);
+    css(pct, { width: '300px', height: '300px', left: '760px', top: '900px', background: C.green, color: C.cream });
+    K(pct, [[a + .4, { s: 0, r: -40 }], [a + 1, { s: 1, r: 0 }], [b, { s: 1.05, r: 6 }]], [E.back, E.lin]);
+    const txt = el('div', 'abs', null, scene); css(txt, { left: '80px', right: '80px', top: '1180px' });
+    const k = el('div', 'kicker', p.kicker, txt); css(k, { color: C.orange, marginBottom: '20px' }); K(k, [[a + .3, { o: 0, y: 20 }], [a + .8, { o: 1, y: 0 }]]);
+    maskedLines(txt, p.heavy, 'heavy', a + .4).forEach(s => s.style.fontSize = '138px');
+    const n = el('div', 'small', p.note, txt); css(n, { marginTop: '34px', fontWeight: 700 }); K(n, [[a + 1, { o: 0, y: 20 }], [a + 1.5, { o: 1, y: 0 }]]);
+  },
+
+  terms(scene, sc, a, b, p) {
+    background(scene, sc, a, b);
+    const cal = el('div', 'abs', calligraphy(C.orange), scene); css(cal, { left: '120px', top: '230px', width: '840px', opacity: .95 }); cal.querySelector('svg').setAttribute('width', '840'); cal.querySelector('svg').removeAttribute('height');
+    K(cal, [[a, { o: 0, y: 40, s: .94 }], [a + .9, { o: .95, y: 0, s: 1 }], [b, { s: 1.04 }]], [E.out, E.lin]);
+    const box = el('div', 'abs', null, scene); css(box, { left: '80px', right: '80px', top: '640px' });
+    maskedLines(box, p.heading, 'heavy', a + .3).forEach(s => s.style.fontSize = '150px');
+    maskedLines(box, [p.italic], 'ital', a + .5, .1, C.orange)[0].style.fontSize = p.italic.length > 18 ? '86px' : '112px';
+    const card = el('div', 'abs', null, scene); css(card, { left: '80px', right: '80px', top: '1240px', background: C.cream, color: C.green, padding: '50px 54px', clipPath: cutCorner() });
+    K(card, [[a + .7, { y: 120, o: 0 }], [a + 1.3, { y: 0, o: 1 }], [b, { y: -14 }]], [E.out, E.lin]);
+    p.lines.forEach((l, i) => { const d = el('div', 'small', l, card); css(d, { fontWeight: i ? 500 : 700, fontSize: '44px' }); K(d, [[a + 1 + i * .12, { o: 0, x: 30 }], [a + 1.5 + i * .12, { o: 1, x: 0 }]]); });
+  },
+
+  benefit(scene, sc, a, b, p) {
+    background(scene, sc, a, b);
+    const icon = el('div', 'abs', star8(C.orange, 210), scene); css(icon, { left: '80px', top: '260px' }); K(icon, [[a + .2, { s: 0, r: -90 }], [a + .8, { s: 1, r: 0 }], [b, { r: 45 }]], [E.back, E.lin]);
+    const pctMark = el('div', 'abs', '<div style="font:900 86px DM;color:#235328">%</div>', scene); css(pctMark, { left: '142px', top: '312px' }); K(pctMark, [[a + .5, { o: 0 }], [a + .9, { o: 1 }]]);
+    const k = el('div', 'kicker', p.kicker, scene); css(k, { left: '330px', top: '336px', position: 'absolute', color: C.orange }); K(k, [[a + .3, { o: 0, x: 40 }], [a + .8, { o: 1, x: 0 }]]);
+    const box = el('div', 'abs', null, scene); css(box, { left: '80px', right: '80px', top: '560px' });
+    maskedLines(box, [p.big], 'heavy', a + .35).forEach(s => s.style.fontSize = '170px');
+    const t = el('div', 'desc', p.text, box); css(t, { marginTop: '36px', fontSize: '50px', fontWeight: 700, maxWidth: '900px' }); K(t, [[a + .8, { o: 0, y: 30 }], [a + 1.3, { o: 1, y: 0 }]]);
+    const card = el('div', 'abs', null, scene); css(card, { left: '80px', right: '80px', top: '1110px', background: C.green, color: C.cream, padding: '46px 54px', clipPath: cutCorner() });
+    card.innerHTML = `<div style="font:900 110px/1 DM;letter-spacing:-.05em;color:${C.orange}">${p.second.big}</div><div class="desc" style="font-size:46px;margin-top:14px">${p.second.text}</div>`;
+    K(card, [[a + 1.2, { y: 140, o: 0 }], [a + 1.8, { y: 0, o: 1 }], [b, { y: -12 }]], [E.out, E.lin]);
+    const foot = el('div', 'abs small', p.foot, scene); css(foot, { left: '80px', right: '80px', top: '1560px', fontWeight: 700, fontSize: '40px' }); K(foot, [[a + 1.8, { o: 0, y: 20 }], [a + 2.3, { o: 1, y: 0 }]]);
+  },
+
+  qr(scene, sc, a, b, p) {
+    background(scene, sc, a, b);
+    const box = el('div', 'abs', null, scene); css(box, { left: '80px', right: '80px', top: '210px' });
+    maskedLines(box, [p.heavy], 'heavy', a + .2).forEach(s => s.style.fontSize = '160px');
+    maskedLines(box, [p.italic], 'ital', a + .3, .1, C.orange)[0].style.fontSize = '120px';
+    const card = el('div', 'abs', `<div style="width:640px;height:640px">${window.ASSETS.qr}</div>`, scene);
+    css(card, { left: '190px', top: '700px', background: C.cream, padding: '40px', clipPath: cutCorner(700, 700, 80) });
+    card.querySelector('svg').setAttribute('width', '640'); card.querySelector('svg').setAttribute('height', '640');
+    K(card, [[a + .5, { s: .6, o: 0, r: -6 }], [a + 1.1, { s: 1, o: 1, r: 0 }], [b, { s: 1.03 }]], [E.back, E.lin]);
+    const ring = el('div', 'abs', rosette(C.orange, 980, 4), scene); css(ring, { left: '50px', top: '560px', zIndex: -0, opacity: .25 }); scene.insertBefore(ring, card);
+    K(ring, [[a, { r: 0, s: .85 }], [b, { r: 50, s: 1 }]], E.soft);
+    const lab = el('div', 'abs', `<span style="font:900 86px DM;letter-spacing:-.04em">${p.label}</span>`, scene); css(lab, { left: '0', right: '0', top: '1520px', textAlign: 'center' }); K(lab, [[a + 1, { o: 0, y: 30 }], [a + 1.5, { o: 1, y: 0 }]]);
+    const s = el('div', 'abs small', 'Apuntá la cámara del celular', scene); css(s, { left: '0', right: '0', top: '1640px', textAlign: 'center', fontWeight: 700 }); K(s, [[a + 1.2, { o: 0 }], [a + 1.7, { o: 1 }]]);
+  },
+
+  board(scene, sc, a, b, p, _, products) {
+    background(scene, sc, a, b);
+    const box = el('div', 'abs', null, scene); css(box, { left: '80px', right: '80px', top: '170px' });
+    maskedLines(box, [p.heavy], 'heavy', a + .15).forEach(s => s.style.fontSize = '150px');
+    maskedLines(box, [p.italic], 'ital', a + .25, .1, C.orange)[0].style.fontSize = '130px';
+    const list = el('div', 'abs', null, scene); css(list, { left: '70px', right: '70px', top: products.length > 3 ? '560px' : '620px', display: 'grid', gap: products.length > 3 ? '30px' : '60px' });
+    products.forEach((prod, i) => {
+      const r = el('div', 'row', `<div class="thumb"><img src="${prod.photo}" alt=""></div><div class="name">${prod.name}</div><div class="pr" style="color:${sc.bg === C.green ? C.orange : C.orange}">${fmt(prod.price)}</div><div></div><div class="lead"></div>`, list);
+      K(r, [[a + .5 + i * .14, { x: 900, o: 0 }], [a + 1.15 + i * .14, { x: 0, o: 1 }], [b, { x: 0 }]], [E.out, E.lin]);
+      K(r.querySelector('img'), [[a, { s: 1.25 }], [b, { s: 1.05 }]], E.lin);
+    });
+    if (products.length > 3) return;
+    const cal = el('div', 'abs', calligraphy(sc.bg === C.green ? C.orange : C.green), scene); css(cal, { left: '300px', top: '1640px', width: '480px', opacity: .9 }); cal.querySelector('svg').setAttribute('width', '480'); cal.querySelector('svg').removeAttribute('height');
+    K(cal, [[a + 1.2, { o: 0, y: 30 }], [a + 1.8, { o: .9, y: 0 }]]);
+  },
+};
+
+// ───────────────────────────── Construcción ─────────────────────────────
+window.build = function (video, catalog) {
+  const stage = document.getElementById('stage'); stage.innerHTML = ''; ANIMS.length = 0;
+  const pad = .35 + .55; // bumper de entrada
+  let t = pad; const plan = video.scenes.map(s => { const a = t; t += s.dur; return [s, a, t]; });
+  const total = t + .55 + .35;
+  plan.forEach(([s, a, b], i) => {
+    const scene = el('div', 'scene', null, stage), sc = SCHEME[s.bg];
+    const prod = s.product ? catalog[s.product] : null, prods = (s.items || s.photos || []).map(id => catalog[id]);
+    SCENES[s.type](scene, sc, a, b, s, prod, prods);
+    window_(scene, i === 0 ? 0 : a, i === plan.length - 1 ? total : b, total);
+    if (i > 0) wipe(stage, a, total, null, 1);
+  });
+  bumper(stage, total);
+  return { total, fonts: document.fonts.ready.then(() => true) };
+};
+window.seek = seek;
+function fitAll() {
+  for (const n of document.querySelectorAll('.mask>span')) {
+    const box = n.parentElement.parentElement, max = box.clientWidth || 920;
+    n.style.display = 'inline-block'; n.style.whiteSpace = 'nowrap';
+    let size = parseFloat(getComputedStyle(n).fontSize);
+    while (n.scrollWidth > max && size > 40) { size -= 4; n.style.fontSize = size + 'px'; }
+  }
+}
+window.ready = async () => { await document.fonts.ready; fitAll(); await Promise.all([...document.images].map(i => i.decode().catch(() => null))); return true; };
+</script>
+</body>
+</html>
