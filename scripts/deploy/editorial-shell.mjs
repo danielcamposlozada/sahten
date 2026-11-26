@@ -26,7 +26,7 @@ function headerMarkup(root,page) {
   return '<header id="snav" class="sahten-shell"><div class="sahten-shell-inner">'
     +'<a href="'+root+'" class="sahten-shell-logo" aria-label="Sahten · Inicio"><img src="'+root+'editorial/logo-verde-crema-naranja.svg" width="128" height="61" alt=""></a>'
     +'<nav class="sahten-shell-links" aria-label="Navegación principal">'+links+'</nav>'
-    +'<div class="sahten-shell-actions"><a class="sahten-shell-action" data-editorial-menu href="'+root+'pedir/#catalog-title">Ver menú <span aria-hidden="true">↗</span></a>'+cart+'</div>'
+    +'<div class="sahten-shell-actions"><a class="sahten-shell-action" data-editorial-menu href="'+root+'pedir/#catalog-title">Pedir online <span aria-hidden="true">↗</span></a>'+cart+'</div>'
     +'<details class="sahten-shell-menu"><summary aria-label="Secciones del sitio"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary><nav aria-label="Secciones del sitio">'+links+'</nav></details></div></header>';
 }
 

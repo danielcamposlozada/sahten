@@ -41,9 +41,10 @@ const VW=390,VH=800;                  // viewport capturado (CSS px)
 const SW=3.6,SH=SW*VH/VW;             // pantalla 3D (unidades)
 const BW=SW+.3,BH=SH+.34,BD=.4;      // cuerpo
 
-const STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedido',a:8.6,b:11.4},{n:'03',t:'Elegí entrega y pago',a:11.4,b:17.4}];
-const TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
-const PLAN=[[0.0,'01-carta'],[3.9,'02-lista'],[4.7,'03-antes-agregar'],[5.6,'04-agregado'],[6.5,'05-antes-agregar-2'],[7.3,'06-agregado-2'],[8.8,'07-antes-carrito'],[9.6,'08-carrito'],[11.6,'09-antes-continuar'],[12.4,'10-entrega-pago'],[13.4,'11-antes-retiro'],[14.1,'12-retiro'],[15.0,'13-antes-efectivo'],[15.6,'14-efectivo']];
+let STEP=[{n:'01',t:'Elegí tus platos',a:3.6,b:8.6},{n:'02',t:'Revisá tu pedido',a:8.6,b:11.4},{n:'03',t:'Elegí entrega y pago',a:11.4,b:17.4}];
+let TAPLIST=[[5.45,'03-antes-agregar','shawarma_carne'],[7.15,'05-antes-agregar-2','hummus'],[9.45,'07-antes-carrito'],[12.25,'09-antes-continuar'],[13.95,'11-antes-retiro'],[15.45,'13-antes-efectivo']];
+let PLAN=[[0.0,'01-carta'],[3.9,'02-lista'],[4.7,'03-antes-agregar'],[5.6,'04-agregado'],[6.5,'05-antes-agregar-2'],[7.3,'06-agregado-2'],[8.8,'07-antes-carrito'],[9.6,'08-carrito'],[11.6,'09-antes-continuar'],[12.4,'10-entrega-pago'],[13.4,'11-antes-retiro'],[14.1,'12-retiro'],[15.0,'13-antes-efectivo'],[15.6,'14-efectivo']];
+let SC={hook:{kicker:'sahten.online',l1:'Pedí',l1b:'online',ital:'en tres pasos',a:1.0,b:3.6},rise:[3.3,4.1],exitAt:16.6,outro:'qr',total:20.9,bumper:true,subs:[],listo:null};
 let SHOTS,IMGS={},TAPS,T_TOTAL,renderer,scene,camera,phone,screenTex,sctx,CAMKEYS;
 
 function patternSVG(color,op){const h=75,s=54;return `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pp" width="150" height="150" patternUnits="userSpaceOnUse"><g fill="none" stroke="${color}" stroke-width="3" opacity="${op}"><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}"/><rect x="${h-s}" y="${h-s}" width="${2*s}" height="${2*s}" transform="rotate(45 ${h} ${h})"/><circle cx="${h}" cy="${h}" r="23"/></g></pattern><radialGradient id="mg" cx="50%" cy="50%" r="62%"><stop offset="55%" stop-color="#000"/><stop offset="100%" stop-color="#fff"/></radialGradient><mask id="mm"><rect width="100%" height="100%" fill="url(#mg)"/></mask></defs><rect width="100%" height="100%" fill="url(#pp)" mask="url(#mm)"/></svg>`;}
@@ -97,16 +98,18 @@ function project(local){const v=local.clone();phone.localToWorld(v);v.project(ca
 function camKeys(){
   const N={zoom:1,fx:0,fy:0,ry:-.18,rx:.06,py:0};const k=[];
   k.push({t:0,zoom:.92,fx:0,fy:0,ry:-.75,rx:.3,py:-10});
-  k.push({t:1.2,zoom:.92,fx:0,fy:0,ry:-.6,rx:.22,py:-8});
-  k.push({t:2.6,zoom:.95,fx:0,fy:0,ry:-.38,rx:.12,py:-3.2});
-  k.push({t:3.3,zoom:.97,fx:0,fy:0,ry:-.3,rx:.1,py:-2.9});
-  k.push({t:4.1,...N});
+  k.push({t:Math.min(1.2,SC.rise[0]-.9),zoom:.92,fx:0,fy:0,ry:-.6,rx:.22,py:-8});
+  const [r0,r1]=SC.rise;
+  k.push({t:Math.min(2.6,r0-.4),zoom:.95,fx:0,fy:0,ry:-.38,rx:.12,py:-3.2});
+  k.push({t:r0,zoom:.97,fx:0,fy:0,ry:-.3,rx:.1,py:-2.9});
+  k.push({t:r1,...N});
   for(const tp of TAPS){const p=screenToLocal(tp.s.tap.x,tp.s.tap.y);
     k.push({t:tp.t-.65,zoom:1.06,fx:p.x*.3,fy:clamp(p.y*.3,-.1,.6),ry:-.13,rx:.05,py:0});
     k.push({t:tp.t+.25,zoom:1.18,fx:p.x*.45,fy:clamp(p.y*.45,-.15,.8),ry:-.09,rx:.03,py:0});}
-  k.push({t:16.6,...N,zoom:1.05});
-  k.push({t:17.3,zoom:.95,fx:0,fy:0,ry:.1,rx:.05,py:2.5});
-  k.push({t:17.9,zoom:.9,fx:0,fy:0,ry:.25,rx:.05,py:9});
+  const X=SC.exitAt;
+  k.push({t:X,...N,zoom:1.05});
+  k.push({t:X+.7,zoom:.95,fx:0,fy:0,ry:.1,rx:.05,py:2.5});
+  k.push({t:X+1.3,zoom:.9,fx:0,fy:0,ry:.25,rx:.05,py:9});
   k.push({t:99,zoom:.9,fx:0,fy:0,ry:.25,rx:.05,py:9});
   return k.sort((a,b)=>a.t-b.t);
 }
@@ -119,6 +122,7 @@ function camAt(t){
 }
 
 window.build=async(assets,data)=>{
+  if(data.script){const g=data.script;SC={...SC,...g};if(g.steps)STEP=g.steps;if(g.taps)TAPLIST=g.taps;if(g.plan)PLAN=g.plan;}
   SHOTS=data.shots;
   await Promise.all(SHOTS.map(s=>new Promise(r=>{const i=new Image();i.onload=()=>{IMGS[s.file.replace('.png','').replace(/^\d+-/,'').replace(/^/,'')]=i;IMGS[s.file.slice(0,-4)]=i;r();};i.src=data.base+s.file;})));
   // índice por nombre "NN-nombre"
@@ -131,13 +135,19 @@ window.build=async(assets,data)=>{
   scene.add(new THREE.AmbientLight(0xffffff,1.3));const sun=new THREE.DirectionalLight(0xfff1dc,1.9);sun.position.set(-3,4,6);scene.add(sun);
   phone=buildPhone();scene.add(phone);CAMKEYS=camKeys();
   const txt=$('txt');
-  txt.innerHTML=`<div id="hook"><div class="kicker" style="color:${C.cream};margin-bottom:28px">sahten.online</div><span class="mask"><span class="heavy" id="h1">Pedí</span></span><span class="mask"><span class="heavy" id="h1b">online</span></span><span class="mask"><span class="ital" id="h2" style="color:${C.cream};font-size:120px">en tres pasos</span></span></div>`+
+  const H=SC.hook;txt.innerHTML=`<div id="hook"><div class="kicker" style="color:${C.cream};margin-bottom:28px">${H.kicker}</div><span class="mask"><span class="heavy" id="h1" style="${H.size?'font-size:'+H.size+'px':''}">${H.l1}</span></span><span class="mask"><span class="heavy" id="h1b" style="${H.size?'font-size:'+H.size+'px':''}">${H.l1b}</span></span><span class="mask"><span class="ital" id="h2" style="color:${C.cream};font-size:120px">${H.ital}</span></span></div>`+
+    '';
+  // Subtítulos: cápsula verde oscura abajo, legible sobre cualquier fondo (también sobre el celular).
+  $('cta').insertAdjacentHTML('beforebegin',`<div class="abs" id="subs" style="left:0;right:0;bottom:110px;z-index:15;text-align:center">${SC.subs.map((x,i)=>`<div class="abs" id="sub${i}" style="left:0;right:0;bottom:0;text-align:center"><span style="display:inline-block;max-width:900px;background:${C.deep};color:${C.cream};font:700 54px/1.2 DM;letter-spacing:-.02em;padding:22px 40px;border-radius:44px;box-shadow:0 20px 40px rgba(0,0,0,.3)">${x.text}</span></div>`).join('')}</div>`);
+  txt.innerHTML+=
     STEP.map((s,i)=>`<div class="abs st" id="st${i}" style="left:0;right:0;top:0;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center"><div style="font:italic 400 190px/1 Lora;color:${C.cream};letter-spacing:-.05em">${s.n}</div><div style="font:900 92px/.95 DM;letter-spacing:-.05em">${s.t}</div></div>`).join('');
   $('fly').innerHTML=TAPS.filter(x=>x.dish).map((x,i)=>`<img id="d${i}" src="${assets.cutouts[x.dish]}" style="position:absolute;width:280px;height:280px;object-fit:cover;border-radius:50%;border:12px solid #FFF4D6;box-sizing:border-box;left:0;top:0;opacity:0;box-shadow:0 30px 40px rgba(0,0,0,.35)">`).join('');
   $('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><div style="position:absolute;left:90px;right:90px;top:230px;color:${C.cream}"><div class="kicker" style="color:${C.orange};margin-bottom:26px">Tu pedido en minutos</div><div class="heavy" style="font-size:170px">Escaneá</div><div class="ital" style="font-size:140px;color:${C.orange}">y pedí online</div></div><div id="qrbox" style="position:absolute;left:220px;top:820px;width:640px;height:640px;background:${C.cream};padding:40px;box-sizing:content-box;clip-path:polygon(0 0,100% 0,100% calc(100% - 80px),calc(100% - 80px) 100%,0 100%)">${assets.qr}</div><div style="position:absolute;left:0;right:0;top:1600px;text-align:center;font:900 86px DM;letter-spacing:-.04em;color:${C.cream}">sahten.online</div>`;
-  const q=$('cta').querySelector('svg');q.setAttribute('width','640');q.setAttribute('height','640');
-  $('bump').innerHTML='<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">';
-  T_TOTAL=20.9;return T_TOTAL;
+  const q=$('cta').querySelector('svg');if(q){q.setAttribute('width','640');q.setAttribute('height','640');}
+  if(SC.outro==='web'){$('cta').innerHTML=`<div style="position:absolute;inset:0;background:${C.green}"></div><img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px;opacity:.0" id="ctapat"><div style="position:absolute;left:0;right:0;top:640px;text-align:center"><div id="ctalogo" style="width:620px;margin:0 auto">${assets.logo}</div><div class="kicker" style="color:${C.orange};margin-top:40px">Gastronomía árabe</div><div class="ital" style="font-size:92px;color:${C.cream};margin-top:60px">Te esperamos en</div><div style="font:900 110px/1 DM;letter-spacing:-.04em;color:${C.cream};margin-top:16px">sahten.online</div></div>`;const l=$('cta').querySelector('#ctalogo svg');l.setAttribute('width','620');l.removeAttribute('height');}
+  if(SC.listo){$('fly').insertAdjacentHTML('beforeend',`<div id="listo" style="position:absolute;left:120px;right:120px;top:720px;background:${C.green};color:${C.cream};padding:56px 60px;border-radius:36px;box-shadow:0 40px 80px rgba(0,0,0,.35);text-align:center;opacity:0"><svg viewBox="0 0 32 32" width="120" height="120" style="display:block;margin:0 auto 24px"><circle cx="16" cy="16" r="15" fill="#25D366"/><path d="M9 23l1.3-3.8A7.5 7.5 0 1 1 13 22.1z" fill="#fff"/><path d="M13.2 12.4c.3-.6.6-.6.9-.6h.5c.2 0 .4 0 .6.5l.7 1.6c.1.2.1.4 0 .6l-.5.7c-.1.2-.2.3 0 .6.5.9 1.4 1.8 2.4 2.3.3.1.4.1.6-.1l.7-.8c.2-.2.3-.2.6-.1l1.6.8c.2.1.4.2.4.4 0 .6-.2 1.3-.7 1.7-.6.5-1.6.6-2.6.2-1.8-.7-3.3-2.1-4.2-3.8-.6-1.2-.6-2.2-.4-2.6z" fill="#25D366"/></svg><div style="font:900 96px/1 DM;letter-spacing:-.05em">¡Listo!</div><div style="font:700 50px/1.2 DM;margin-top:22px">Te escribimos por WhatsApp para confirmar tu pedido</div></div>`);}
+  if(SC.bumper)$('bump').innerHTML='<img src="bumper.png" style="position:absolute;inset:0;width:1080px;height:1920px">';
+  T_TOTAL=SC.total;return T_TOTAL;
 };
 
 window.frame=t=>{
@@ -155,12 +165,14 @@ window.frame=t=>{
     const from=project(screenToLocal(k.s.tap.x,k.s.tap.y-140));const x=lerp(from.x,bag.x,E.inout(u)),y=lerp(from.y,bag.y,E.inout(u))-Math.sin(u*Math.PI)*220;
     d.style.opacity=String(Math.min(1,u*5)*(1-seg(u,.8,1)));d.style.transform=`translate(${x-140}px,${y-140}px) scale(${lerp(1,.25,E.inout(u))})`;});
   // textos
-  const hIn=E.out(seg(t,1.0,1.8)),hOut=seg(t,3.2,3.6);
-  $('h1').style.transform=`translateY(${(1-hIn)*110}%)`;$('h1b').style.transform=`translateY(${(1-E.out(seg(t,1.08,1.88)))*110}%)`;$('h2').style.transform=`translateY(${(1-E.out(seg(t,1.15,1.95)))*110}%)`;$('hook').style.opacity=String(1-hOut);
+  const HA=SC.hook.a,HB=SC.hook.b;const hIn=E.out(seg(t,HA,HA+.8)),hOut=seg(t,HB-.4,HB);
+  $('h1').style.transform=`translateY(${(1-hIn)*110}%)`;$('h1b').style.transform=`translateY(${(1-E.out(seg(t,HA+.08,HA+.88)))*110}%)`;$('h2').style.transform=`translateY(${(1-E.out(seg(t,HA+.15,HA+.95)))*110}%)`;$('hook').style.opacity=String(1-hOut);
   STEP.forEach((s,i)=>{const u=E.out(seg(t,s.a+.05,s.a+.6)),o=1-seg(t,s.b-.25,s.b);const v=t>=s.a&&t<s.b?u*o:0;const st=$('st'+i);st.style.opacity=String(v);st.style.transform=`translateY(${(1-u)*40}px)`;});
-  const ct=E.inout(seg(t,17.4,17.95));$('cta').style.transform=`translateY(${(1-ct)*1920}px)`;
-  $('qrbox').style.transform=`scale(${.6+.4*E.back(seg(t,17.9,18.5))})`;
-  const bOut=E.inout(seg(t,.35,.9)),bIn=E.inout(seg(t,T_TOTAL-.9,T_TOTAL-.35));
+  SC.subs.forEach((x,i)=>{const u=E.out(seg(t,x.a,x.a+.45)),o=1-seg(t,x.b-.25,x.b);const el=$('sub'+i);el.style.opacity=String(t>=x.a&&t<x.b?u*o:0);el.style.transform=`translateY(${(1-u)*24}px)`;});
+  if(SC.listo){const L=SC.listo,u=E.back(seg(t,L.a,L.a+.5)),o=1-seg(t,L.b-.3,L.b);const el=$('listo');el.style.opacity=String(t>=L.a&&t<L.b?Math.min(1,u)*o:0);el.style.transform=`scale(${.7+.3*Math.min(1.05,u)})`;}
+  const X=SC.exitAt;const ct=E.inout(seg(t,X+.8,X+1.35));$('cta').style.transform=`translateY(${(1-ct)*1920}px)`;
+  const qb=$('qrbox');if(qb)qb.style.transform=`scale(${.6+.4*E.back(seg(t,X+1.3,X+1.9))})`;
+  const bOut=SC.bumper?E.inout(seg(t,.35,.9)):1,bIn=SC.bumper?E.inout(seg(t,T_TOTAL-.9,T_TOTAL-.35)):0;
   $('bump').style.transform=`translateY(${t<T_TOTAL/2?-bOut*1920:(1-bIn)*1920}px)`;
   $('pattern').style.transform=`translate(${-t*3}px,${-t*5}px)`;
   return true;
