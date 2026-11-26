@@ -11,3 +11,5 @@ Videos: cuatro archivos entregados por el dueño en Pictures/Sahten/Videos/Ads, 
 MapLibre, licencia incluida. Estilo claro de la propuesta aprobada con datos OpenFreeMap/OpenMapTiles/OpenStreetMap; créditos visibles. Fuentes DM Sans y Lora con sus licencias OFL en fonts/.
 
 El cliente web solo consulta datos públicos. El checkout conserva su validación de servidor. No hay claves privadas ni datos de pedidos en estos recursos.
+
+Tutorial (26/11/2026): `tutorial.mp4` y `tutorial.jpg` se rehicieron con imágenes nuevas: celular 3D y la interfaz actual de la tienda, capturada sin enviar pedidos. El **audio original no se modificó**: es la misma voz y la misma música, idénticas bit a bit. Se generan con `tools/pantalla/v2/render-tutorial-web.mjs`. `videos.json` guarda la duración que muestra la portada y la fecha de subida del VideoObject. Las URLs de los videos llevan una versión calculada a partir del contenido para evitar copias viejas en caché.
