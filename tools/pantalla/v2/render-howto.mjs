@@ -12,6 +12,7 @@ const { chromium } = require('playwright');
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, '../../..');
 const OUT = path.resolve(DIR, '../out');
+const PACE = 1.5; // reloj más lento para poder leer (decisión del dueño, 26/11)
 const FPS = 30, stills = process.argv.includes('--stills');
 
 const qr = execFileSync('python3', ['-I', '-c', `
@@ -19,7 +20,7 @@ import qrcode, qrcode.image.svg, sys, io
 img = qrcode.make(sys.argv[1], image_factory=qrcode.image.svg.SvgPathImage, box_size=10, border=1, error_correction=qrcode.constants.ERROR_CORRECT_M)
 b = io.BytesIO(); img.save(b); sys.stdout.write(b.getvalue().decode())`, 'https://sahten.online/pedir/?utm_source=local&utm_medium=pantalla&utm_campaign=como-comprar']).toString()
   .replace(/<\?xml[^>]*>/, '').replace(/fill="#000000"|style="fill:#000000;?[^"]*"/g, 'fill="#183d23"');
-const cut = id => pathToFileURL(path.resolve(DIR, '../recortes', id + '.png')).href;
+const cut = id => pathToFileURL(path.resolve(DIR, '../fotos', id + '.jpg')).href; // foto entera en círculo (sin recortes)
 const assets = { qr, logo: fs.readFileSync(path.join(ROOT, 'media/sahten-editorial/logo-verde-crema-naranja.svg'), 'utf8'), cutouts: { shawarma_carne: cut('shawarma_carne'), hummus: cut('hummus') } };
 const pasos = JSON.parse(fs.readFileSync(path.join(DIR, 'captura/pasos.json'), 'utf8'));
 const data = { shots: pasos.shots, base: pathToFileURL(path.join(DIR, 'captura')).href + '/' };
@@ -37,8 +38,8 @@ if (stills) {
   const file = path.join(OUT, '08-como-comprar.mp4');
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((res, rej) => ff.on('close', c => (c ? rej(new Error('ffmpeg ' + c)) : res())));
-  for (let f = 0, n = Math.round(total * FPS); f < n; f++) {
-    await page.evaluate(t => window.frame(t), f / FPS);
+  for (let f = 0, n = Math.round(total * FPS * PACE); f < n; f++) {
+    await page.evaluate(t => window.frame(t), f / (FPS * PACE));
     const buf = await stage.screenshot({ type: 'jpeg', quality: 92 });
     if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
   }

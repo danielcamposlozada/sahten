@@ -68,3 +68,12 @@ NODE_USE_ENV_PROXY=1 node tools/pantalla/render.mjs --stills   # cuadros de cont
   - `tiles.openfreemap.org` y `router.project-osrm.org`, para el mapa y la ruta;
   - `dtnbokdrxojdcvguuidk.supabase.co`, para las fotos;
   - `sahten.online`, para las capturas.
+
+### Decisión del dueño (26/11, tarde)
+
+- **Sin platos recortados**: los recortes automáticos mostraban errores. Todos los platos van con la foto entera en marcos limpios (arco o círculo). Los marcos v2 que usan recortes (`podium`, `weekstrip`, `calendar`, `orbit`, `kinetic`) quedan en `stage.html` pero **no se usan** en el guion.
+- **Se vuelve al diseño v1** de las promos, con **ritmo de lectura**:
+  - escenas más largas;
+  - reloj global ×1,3 (`PACE` en `videos.mjs`), así que un plato queda ~5,5 s y un tablero ~8 s;
+  - «Cómo comprar» con ×1,5 y «Delivery» con ×1,35.
+- Render de los 9 videos en paralelo, de a 4: `tools/pantalla/render-todo.sh`. Orden del loop: 01, 05, 02, 08, 06, 03, 09, 07, 04.

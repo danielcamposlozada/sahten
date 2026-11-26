@@ -8,7 +8,7 @@ import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { VIDEOS } from './videos.mjs';
+import { VIDEOS, PACE } from './videos.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -96,7 +96,7 @@ for (const v of VIDEOS.filter(v => !only || v.id === only)) {
   await page.evaluate(a => { window.ASSETS = a; }, A);
   const total = await page.evaluate(([video, cat]) => window.build(video, cat).total, [v, catalog]);
   await page.evaluate(() => window.ready());
-  const frames = Math.round(total * FPS);
+  const frames = Math.round(total * FPS * PACE);
   const stage = await page.$('#stage');
   if (stills) {
     let t = .9; const marks = v.scenes.map(s => { const m = t + Math.min(s.dur - .2, 1.8); t += s.dur; return m; });
@@ -107,12 +107,12 @@ for (const v of VIDEOS.filter(v => !only || v.id === only)) {
   const file = path.join(OUT, v.id + '.mp4'), enc = ffmpeg(file);
   const t0 = Date.now();
   for (let f = 0; f < frames; f++) { // [0, total): el último cuadro no repite el primero → loop sin salto
-    await page.evaluate(x => window.seek(x), f / FPS);
+    await page.evaluate(x => window.seek(x), f / (FPS * PACE));
     await enc.write(await stage.screenshot({ type: 'jpeg', quality: 92 }));
   }
   await enc.end();
-  report.push({ id: v.id, seconds: +total.toFixed(2), frames, renderSeconds: Math.round((Date.now() - t0) / 1000) });
-  console.log('✓', v.id, total.toFixed(1) + ' s');
+  report.push({ id: v.id, seconds: +(total * PACE).toFixed(2), frames, renderSeconds: Math.round((Date.now() - t0) / 1000) });
+  console.log('✓', v.id, (total * PACE).toFixed(1) + ' s');
 }
 await browser.close();
 if (!stills && !only) {

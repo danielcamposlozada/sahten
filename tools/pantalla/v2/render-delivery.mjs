@@ -12,6 +12,7 @@ const { chromium } = require('playwright');
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, '../../..');
 const OUT = path.resolve(DIR, '../out');
+const PACE = 1.35; // reloj más lento para poder leer (decisión del dueño, 26/11)
 const FPS = 30, stills = process.argv.includes('--stills');
 const BARRIOS = ['Vicente López', 'Olivos', 'Florida', 'La Lucila', 'Martínez', 'Núñez', 'Belgrano']; // confirmados por el dueño (26/11)
 
@@ -51,9 +52,9 @@ if (stills) {
   const file = path.join(OUT, '09-delivery.mp4');
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-movflags', '+faststart', file], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((res, rej) => ff.on('close', c => (c ? rej(new Error('ffmpeg ' + c)) : res())));
-  const frames = Math.round(total * FPS), t0 = Date.now();
+  const frames = Math.round(total * FPS * PACE), t0 = Date.now();
   for (let f = 0; f < frames; f++) {
-    await page.evaluate(t => window.frame(t), f / FPS);
+    await page.evaluate(t => window.frame(t), f / (FPS * PACE));
     const buf = await stage.screenshot({ type: 'jpeg', quality: 92 });
     if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
     if (f % 90 === 0) console.log(`cuadro ${f}/${frames} · ${Math.round((Date.now() - t0) / 1000)} s`);
