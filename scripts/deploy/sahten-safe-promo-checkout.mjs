@@ -13,8 +13,8 @@ import {localDateParts,scheduleMatches,activeCampaigns} from '../../src/core/pro
 import {salesPaused} from '../../src/core/sales-availability.js';
 import {parseStorefrontCart,storefrontCartKey,storefrontCartLabel} from '../../src/online/storefront.js';
 
-const SOURCE_DEPLOYMENT_ID='755d99fc-f1f8-4dc7-96da-b58a31417577';
-const PINNED_URL='https://755d99fc.sahten-menu.pages.dev';
+const SOURCE_DEPLOYMENT_ID='899d09c8-57b6-4295-842d-0953a55329e9'; // producción vigente desde el 14/11 (#137)
+const PINNED_URL='https://899d09c8.sahten-menu.pages.dev';
 const FILES=[
  '/apple-touch-icon.png','/brand/sahten-comida-arabe-og-1200x630.png',
  '/brand/sahten-icon-192.png','/brand/sahten-icon-512.png',

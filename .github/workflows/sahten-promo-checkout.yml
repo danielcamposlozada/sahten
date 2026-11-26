@@ -64,7 +64,7 @@ jobs:
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           const r=JSON.parse(fs.readFileSync('sahten-promo-export/_deployment-report.json','utf8'));
-          assert.equal(r.sourceDeploymentId,'755d99fc-f1f8-4dc7-96da-b58a31417577');
+          assert.equal(r.sourceDeploymentId,'899d09c8-57b6-4295-842d-0953a55329e9');
           assert.match(r.analyticsMeasurementId,/^G-[A-Z0-9]+$/);
           assert.ok(r.products>0);
           assert.equal(r.catalogPreserved,true);
@@ -137,7 +137,7 @@ jobs:
           current=$(echo "$data" | jq -er '.result.canonical_deployment.id')
           expected=$(node -p "require('./sahten-promo-export/_deployment-report.json').sourceDeploymentId")
           if [[ "$current" != "$expected" ]]; then
-            echo "::error::Cambió el deploy actual, se requiere reconciliar versión antes de publicar."
+            echo "::error::Cambió el deploy actual ($current, se esperaba $expected): se requiere reconciliar versión antes de publicar."
             exit 1
           fi
       - name: Rechazar un catálogo que cambió después de generar el paquete
