@@ -5,6 +5,7 @@
 <title>Sahten · Tenemos delivery</title>
 <link rel="stylesheet" href="../../../media/sahten-editorial/maplibre-gl.css">
 <script src="../../../media/sahten-editorial/maplibre-gl.js"></script>
+<script src="moto.js"></script>
 <style>
 @font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-500.woff2');font-weight:500}
 @font-face{font-family:DM;src:url('../../../media/sahten-editorial/fonts/dm-sans-700.woff2');font-weight:700}
@@ -116,7 +117,7 @@ function build(assets,data){
     <div style="width:120px;height:120px;border-radius:50%;background:${C.green};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)">${STAR(C.orange,70)}</div></div>
     <div class="chip" style="position:absolute;left:50%;top:166px;transform:translateX(-50%)">Sahten</div>`);
   OV.ringLabel=el('div','abs chip','Hasta 8 km');css(OV.ringLabel,{background:C.orange,color:C.deep});
-  OV.moto=el('div','abs',`<div class="speed" style="position:absolute;right:230px;top:60px;width:120px;height:70px;background:repeating-linear-gradient(180deg,${C.cream} 0 6px,transparent 6px 22px);opacity:.6;border-radius:6px"></div><div class="mbody">${MOTO}</div>`);
+  OV.moto=el('div','abs',`<div class="speed" style="position:absolute;right:400px;top:140px;width:120px;height:70px;background:repeating-linear-gradient(180deg,${C.cream} 0 6px,transparent 6px 22px);opacity:.6;border-radius:6px"></div><div class="mbody" style="filter:drop-shadow(0 0 3px rgba(255,244,214,.85))">${motoSVG(460)}</div>`);
   OV.home=el('div','abs',`<div style="width:130px;height:130px;border-radius:50%;background:${C.orange};border:8px solid ${C.cream};display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.5)"><svg viewBox="0 0 64 64" width="70"><path d="M8 30 L32 10 L56 30 V56 H8Z" fill="${C.cream}"/><rect x="26" y="38" width="12" height="18" fill="${C.green}"/></svg></div>`);
   OV.lleg=el('div','abs',`<span style="font:italic 400 120px Lora;color:${C.cream};text-shadow:0 8px 30px rgba(0,0,0,.6)">¡Llegó!</span>`);
   // barrios
@@ -185,12 +186,13 @@ function setOverlay(t){
   const p=E.inout(seg(t,S.ride[0]+.3,S.ride[1]));const rideVis=t>S.ride[0]+.2&&t<S.info[0]+.2;
   const m=along(p),mp=map.project(m.pt),ahead=map.project(along(clamp(p+.01)).pt),flip=ahead.x<mp.x;
   const bob=Math.sin(t*22)*3;const mIn=E.back(seg(t,S.ride[0]+.2,S.ride[0]+.7)),mOut=1-seg(t,S.arrive[0]+.6,S.arrive[0]+1.1);
-  css(OV.moto,{left:(mp.x-170)+'px',top:(mp.y-230+bob)+'px',opacity:rideVis?mOut:0,transform:`scale(${mIn*mOut}) scaleX(${flip?-1:1})`});
+  css(OV.moto,{left:(mp.x-230)+'px',top:(mp.y-290)+'px',opacity:rideVis?mOut:0,transform:`scale(${mIn*mOut}) scaleX(${flip?-1:1})`});
   OV.moto.querySelector('.speed').style.opacity=String(p>0&&p<1?.55:0);
+  motoPose(OV.moto,t,p>0&&p<1?1:(p>=1?.15:.35));
   // destino
   const dp=map.project(along(1).pt),hIn2=E.back(seg(t,S.arrive[0],S.arrive[0]+.5));const homeVis=t>S.arrive[0]&&t<S.info[0]+.6;
-  css(OV.home,{left:(dp.x-65)+'px',top:(dp.y-150-Math.abs(Math.sin((t-S.arrive[0])*6))*20*(1-seg(t,S.arrive[0],S.arrive[1])))+'px',opacity:homeVis?1-seg(t,S.info[0],S.info[0]+.6):0,transform:`scale(${homeVis?hIn2:0})`});
-  const lIn=E.back(seg(t,S.arrive[0]+.3,S.arrive[0]+.8));css(OV.lleg,{left:(dp.x-200)+'px',top:(dp.y-360)+'px',opacity:t>S.arrive[0]+.3&&t<S.info[0]?1-seg(t,S.info[0]-.4,S.info[0]):0,transform:`scale(${lIn}) rotate(-6deg)`});
+  css(OV.home,{left:(dp.x-65)+'px',top:(dp.y-470-Math.abs(Math.sin((t-S.arrive[0])*6))*20*(1-seg(t,S.arrive[0],S.arrive[1])))+'px',opacity:homeVis?1-seg(t,S.info[0],S.info[0]+.6):0,transform:`scale(${homeVis?hIn2:0})`});
+  const lIn=E.back(seg(t,S.arrive[0]+.3,S.arrive[0]+.8));css(OV.lleg,{left:(dp.x-200)+'px',top:(dp.y-640)+'px',opacity:t>S.arrive[0]+.3&&t<S.info[0]?1-seg(t,S.info[0]-.4,S.info[0]):0,transform:`scale(${lIn}) rotate(-6deg)`});
   // barrios
   const P=OV.barrios.map(b=>{const q=map.project(b.c);return {x:q.x,y:q.y,w:b.n.offsetWidth+16,h:b.n.offsetHeight+14};});
   const pin=map.project([-58.4818959,-34.5264314]);P.push({x:pin.x,y:pin.y,w:150,h:150,fixed:true});

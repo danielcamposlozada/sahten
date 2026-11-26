@@ -77,3 +77,12 @@ NODE_USE_ENV_PROXY=1 node tools/pantalla/render.mjs --stills   # cuadros de cont
   - reloj global ×1,3 (`PACE` en `videos.mjs`), así que un plato queda ~5,5 s y un tablero ~8 s;
   - «Cómo comprar» con ×1,5 y «Delivery» con ×1,35.
 - Render de los 9 videos en paralelo, de a 4: `tools/pantalla/render-todo.sh`. Orden del loop: 01, 05, 02, 08, 06, 03, 09, 07, 04.
+
+### Tele del local y moto (26/11)
+- **Orientación:** la tele está girada con el **lado derecho hacia abajo**. Hay que reproducir `00-loop-completo-tele-1920x1080.mp4`, que lleva el loop pre-girado 90° en sentido antihorario (`transpose=2`) y se ve derecho en esa tele. Lo generan `render-todo.sh` y `render-delivery-y-loop.sh`.
+- **Moto** (`v2/moto.js`): scooter de reparto ilustrado en los colores de marca.
+  - Ruedas con rayos que giran.
+  - Escudo, faro con brillo y humo del escape.
+  - Repartidor con casco naranja y campera crema.
+  - Caja térmica con volumen y la estrella.
+  - La animación depende solo de `t`.
