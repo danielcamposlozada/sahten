@@ -9,6 +9,8 @@
 
 ## Sin publicar
 
+- Web de Sahten: nuevo video «Cómo comprar» con la voz y la música originales, ahora con la tienda actual en un celular 3D y subtítulos. El botón del encabezado dice «Pedir online», como indica la voz. Los videos se sirven con versión para que no queden copias viejas en caché.
+
 - Mostrador · sugerencias en el pedido: el carrito muestra, con foto, la bebida o el acompañamiento que corresponde según las mismas reglas publicadas de la tienda web (Promociones › Recomendaciones). Se agrega con un toque a precio normal, sin descuentos; «No, gracias» la oculta solo para ese pedido. Las reglas pausadas no se ofrecen. Cada pedido guarda qué se ofreció y qué se aceptó para medir resultados, sin datos personales.
 
 - Mostrador · clientes y delivery: al elegir un cliente (o al pasar a Delivery con un cliente elegido) se carga su dirección guardada, con piso, departamento y referencia. Si la dirección tiene ubicación, se valida la zona sola; si no, se muestran sugerencias para confirmarla. Una dirección escrita a mano no se reemplaza. Al confirmar un delivery, la dirección usada queda como principal del cliente sin borrar las anteriores. «Nuevo cliente» propone la dirección del delivery en curso. El buscador de clientes muestra la dirección.
