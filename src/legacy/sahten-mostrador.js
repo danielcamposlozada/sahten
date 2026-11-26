@@ -233,6 +233,7 @@ function _renderPedidoTab() {
           <div class="most-cart-actions"><button class="most-cart-clear" onclick="mostradorClearCart()">Vaciar</button><button type="button" class="most-cart-close" onclick="mostradorSetCartOpen(false)" aria-label="Cerrar pedido">×</button></div>
         </div>
         <div class="most-cart-body"><div class="most-cart-items" id="most-cart-items"></div>
+        <div class="pos-upsell" id="most-cart-upsell" role="region" aria-label="Sugerencias para este pedido" hidden></div>
         <div class="most-cart-extras" id="most-cart-extras"></div></div>
         <div class="most-cart-totals" id="most-cart-totals"></div>
       </section>
@@ -328,7 +329,7 @@ function mostradorAddToCart(pid, cardEl) {
 }
 function mostradorRemoveItem(pid) { mostradorCart = mostradorCart.filter(it=>it.productId!==pid); _renderCartItems(); _renderCartTotals(); }
 function mostradorChangeQty(pid, delta) { const p=PRODUCTS.find(p=>p.id===pid);if(delta>0&&(!p||p.recetaOnly||SAHTEN.salesAvailability.isPaused(p)))return;const it=mostradorCart.find(x=>x.productId===pid); if(!it) return; it.qty+=delta; if(it.qty<=0) mostradorRemoveItem(pid); else { _renderCartItems(); _renderCartTotals(); } }
-function mostradorClearCart() { if(!mostradorCart.length) return; SAHTEN.customerPicker.reset();mostradorCashTendered='';mostradorEstimate='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
+function mostradorClearCart() { if(!mostradorCart.length) return; SAHTEN.customerPicker.reset();SAHTEN.posUpsell?.reset();mostradorCashTendered='';mostradorEstimate='';mostradorCart=[]; mostradorActiveDiscountId=null; mostradorActiveCustomerId=null; mostradorShipping=0; mostradorShipManual=false; mostradorDelivery=null; mostradorOrderType='retiro'; _renderCartExtras(); _renderCartItems(); _renderCartExtras(); _renderCartTotals(); }
 function mostradorToggleCart() { const c=document.getElementById('most-cart'); if(c) mostradorSetCartOpen(!c.classList.contains('expanded')); }
 function _mostCartIsOverlay() { return document.documentElement.dataset.orderLayout === 'overlay'; }
 function mostradorSetCartOpen(open, restoreFocus=true) {
@@ -410,7 +411,15 @@ function _renderCartItems() {
   } else {
     list.innerHTML = t.items.map(it => '<div class="most-cart-item"><div><div class="most-cart-item-name">'+_esc(it.product.name)+'</div><div class="most-cart-item-controls"><button class="most-cart-qty-btn" data-product-id="'+_esc(it.product.id)+'" data-cart-action="decrease" aria-label="Quitar una unidad de '+_esc(it.product.name)+'" onclick="mostradorChangeQty(\''+it.product.id+'\', -1)">−</button><span class="most-cart-qty">'+it.qty+'</span><button class="most-cart-qty-btn" data-product-id="'+_esc(it.product.id)+'" data-cart-action="increase" aria-label="Agregar una unidad de '+_esc(it.product.name)+'" onclick="mostradorChangeQty(\''+it.product.id+'\', 1)">+</button><button class="most-cart-item-remove" data-product-id="'+_esc(it.product.id)+'" data-cart-action="remove" aria-label="Quitar '+_esc(it.product.name)+' del pedido" onclick="mostradorRemoveItem(\''+it.product.id+'\')">×</button></div></div><div class="most-cart-item-price">$'+_fmt(it.lineTotal)+'</div></div>').join('');
   }
+  _mostRenderUpsell();
   if(pid && action) ([...list.querySelectorAll('[data-cart-action]')].find(el=>el.dataset.productId===pid&&el.dataset.cartAction===action)||list.querySelector('button')||document.querySelector('.most-cart-close'))?.focus({preventScroll:true});
+}
+
+// Sugerencias de bebida/acompañamiento a precio normal (mismas reglas publicadas que la web).
+function _mostRenderUpsell(){
+  const root=document.getElementById('most-cart-upsell'); if(!root||!SAHTEN.posUpsell) return;
+  const products=(typeof PRODUCTS!=='undefined'?PRODUCTS:[]).filter(p=>p&&p.name&&!p.recetaOnly).map(p=>({id:p.id,name:p.name,category:p.category||'',price:_mostPrice(p),salesAvailability:{paused:!!SAHTEN.salesAvailability.isPaused(p)}}));
+  SAHTEN.posUpsell.render(root,{products,cart:mostradorCart,add:id=>mostradorAddToCart(id),image:id=>getProductImageCached(id),onRender:_mostRenderUpsell});
 }
 
 // Extras (selectors) — rendered once, NOT on every keystroke
@@ -659,6 +668,7 @@ async function mostradorCheckout() {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     notes: del && del.note ? del.note : '',
+    ...(SAHTEN.posUpsell?.snapshot(mostradorCart)?{suggestions:SAHTEN.posUpsell.snapshot(mostradorCart)}:{}),
     orderType: mostradorOrderType,
     ...(del ? { source: 'delivery', address: del.address, lat: del.lat, lng: del.lng, distKm: del.distKm, deliveryZone: deliverySnapshot?.effectiveZone?.name || (del.zone ? del.zone.name : null) } : {}),
   };
@@ -667,6 +677,7 @@ async function mostradorCheckout() {
   // La dirección usada en el delivery queda como principal del cliente para el próximo pedido.
   if(cust&&del&&del.address&&SAHTEN.core.rememberCustomerAddress(cust,del))_saveCustomers();
   SAHTEN.receipts.enqueue(order,{origin:'local'});
+  SAHTEN.posUpsell?.reset();
   // Reset cart
   mostradorCashTendered=''; mostradorEstimate=''; mostradorCart = []; mostradorActiveDiscountId = null; mostradorActiveCustomerId = null; mostradorActivePaymentId = null; mostradorShipping = 0;
   mostradorShipManual = false; mostradorDelivery = null; mostradorOrderType = 'retiro';

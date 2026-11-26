@@ -14,6 +14,7 @@ import { installPricing } from './ui/pricing-editor.js';
 import { installLocalProfitUi } from './ui/local-profit.js';
 import { installInterfaceScale } from './ui/interface-scale.js';
 import { installCustomerImport } from './ui/customer-import.js';
+import { installPosUpsell } from './ui/pos-upsell.js';
 import { installDelivery } from './delivery/app.js';
 import { paymentBenefitPolicy, paymentDiscountQuote, paymentBenefitReport, savedPaymentDiscount } from './core/payment-benefit.js';
 import { paymentChoiceHtml } from './ui/payment-choice.js';
@@ -112,6 +113,7 @@ window.SAHTEN.inventory = installInventoryCatalog(window);
 installAdvancedProductTable(window);
 window.SAHTEN.customersImport = installCustomerImport(window);
 window.SAHTEN.customerPicker = installCustomerPicker(window);
+window.SAHTEN.posUpsell = installPosUpsell(window);
 events.beforeRender('applyData', () => window.SAHTEN.customerPicker.reset());
 window.SAHTEN.paymentChoices = { policy: paymentBenefitPolicy, quote: paymentDiscountQuote, report: paymentBenefitReport, snapshot: savedPaymentDiscount, html: paymentChoiceHtml };
 window.SAHTEN_SITE = siteModule;   // módulos del sitio web (editor de Menú Online)
