@@ -26,7 +26,7 @@ function headerMarkup(root,page) {
   return '<header id="snav" class="sahten-shell"><div class="sahten-shell-inner">'
     +'<a href="'+root+'" class="sahten-shell-logo" aria-label="Sahten · Inicio"><img src="'+root+'editorial/logo-verde-crema-naranja.svg" width="128" height="61" alt=""></a>'
     +'<nav class="sahten-shell-links" aria-label="Navegación principal">'+links+'</nav>'
-    +'<div class="sahten-shell-actions"><a class="sahten-shell-action" data-editorial-menu href="'+root+'pedir/#catalog-title">Ver menú <span aria-hidden="true">↗</span></a>'+cart+'</div>'
+    +'<div class="sahten-shell-actions"><a class="sahten-shell-action" data-editorial-menu href="'+root+'pedir/#catalog-title">Pedir online <span aria-hidden="true">↗</span></a>'+cart+'</div>'
     +'<details class="sahten-shell-menu"><summary aria-label="Secciones del sitio"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary><nav aria-label="Secciones del sitio">'+links+'</nav></details></div></header>';
 }
 
@@ -84,7 +84,8 @@ function refineInformationalPage(d,page,root) {
 }
 
 /** Solo la edición Sahten; no se integra en la plantilla general de la app. */
-export function applyEditorialShell(html,{page,homeFooter,version,cartStorageKey,hoursScript=''}) {
+export function applyEditorialShell(html,{page,homeFooter,version,cartStorageKey,hoursScript='',measurementId=''}) {
+  if(measurementId&&!/^G-[A-Z0-9]+$/.test(measurementId))throw new Error('ID de medición GA4 inválido');
   const dom=new JSDOM(html),d=dom.window.document;
   try{
     const before=seoSignature(d),order=page==='pedir',home=page==='home',root=home||order?'./':'../';
@@ -122,11 +123,16 @@ export function applyEditorialShell(html,{page,homeFooter,version,cartStorageKey
       if(!alreadyRefined)refineInformationalPage(d,page,root);
     }
     d.querySelectorAll('link[href*="/editorial/editorial-shell.css"],link[href*="/editorial/editorial-pages.css"],script[src*="/editorial/editorial-shell.js"]').forEach(el=>el.remove());
+    d.querySelectorAll('[data-sahten-analytics]').forEach(el=>el.remove());
     const asset=root+'editorial/';
     const file=path=>asset+path+'?v='+encodeURIComponent(version);
     if(!home&&!order)d.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="'+file('editorial-pages.css')+'">');
     d.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="'+file('editorial-shell.css')+'">');
     d.body.insertAdjacentHTML('beforeend','<script defer src="'+file('editorial-shell.js')+'"></script>');
+    if(measurementId){
+      d.head.insertAdjacentHTML('beforeend','<link data-sahten-analytics rel="stylesheet" href="'+file('analytics.css')+'">');
+      d.body.insertAdjacentHTML('beforeend','<script data-sahten-analytics defer src="'+file('analytics.js')+'" data-measurement-id="'+measurementId+'"></script>');
+    }
     assert.deepEqual(seoSignature(d),before,'Cambió el SEO de '+page+' al aplicar la cabecera común');
     return dom.serialize();
   }finally{dom.window.close();}

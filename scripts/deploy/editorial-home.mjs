@@ -7,6 +7,10 @@ for(const file of ['editorial-state.js','storefront.js'])versionHash.update(awai
 export const editorialAssetVersion=process.env.GITHUB_SHA||versionHash.digest('hex').slice(0,16);
 
 const descriptionRegistry=JSON.parse(await fs.readFile('media/sahten-editorial/product-descriptions.json','utf8')).products;
+// Metadatos de los videos (duración visible, fecha de subida) y versión por contenido para no servir copias viejas.
+const videoMeta=JSON.parse(await fs.readFile('media/sahten-editorial/videos.json','utf8').catch(()=>'{}'));
+const videoVersion=async id=>createHash('sha256').update(await fs.readFile('media/sahten-editorial/'+id+'.mp4')).update(await fs.readFile('media/sahten-editorial/'+id+'.jpg')).digest('hex').slice(0,12);
+const clock=s=>{const n=Math.round(Number(s)||0);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function accurateEditorialMenu(source){
  const menu=structuredClone(source);
@@ -61,8 +65,11 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  d.querySelector('.sitto figcaption').textContent=S.historia.familyCaption;
  const videos=[['celebrar','Tabla para Celebrar','tabla_celebrar'],['compartir','Tabla para Compartir',null],['supermix','Shawarma Supermix','p1779299917243'],['tutorial','Cómo comprar en Sahten',null]];
  const posters=[...d.querySelectorAll('.reel-poster'),d.querySelector('.tutorial-poster')];
+ const playLabel=d.querySelector('a.play span');if(playLabel&&videoMeta.tutorial?.seconds)playLabel.textContent=clock(videoMeta.tutorial.seconds);
+ const versions=Object.fromEntries(await Promise.all(videos.map(async([id])=>[id,await videoVersion(id)])));
  videos.forEach(([id,name,product],i)=>{
-  const host=posters[i];host.innerHTML='<video controls playsinline preload="none" poster="editorial/'+id+'.jpg" aria-label="'+esc(name)+'" width="540" height="960"><source src="editorial/'+id+'.mp4" type="video/mp4">Tu navegador no puede reproducir el video. <a href="editorial/'+id+'.mp4">Abrir video</a></video>';
+  const v='?v='+versions[id];
+  const host=posters[i];host.innerHTML='<video controls playsinline preload="none" poster="editorial/'+id+'.jpg'+v+'" aria-label="'+esc(name)+'" width="540" height="960"><source src="editorial/'+id+'.mp4'+v+'" type="video/mp4">Tu navegador no puede reproducir el video. <a href="editorial/'+id+'.mp4'+v+'">Abrir video</a></video>';
   if(i<3){const a=host.closest('article').querySelector('.text-link');a.href='pedir/#pedido/'+encodeURIComponent(i===2?'Sandwich':'Picadas');}
   if(i===1||i===2){
    const article=host.closest('article'),details=d.createElement('details');
@@ -74,6 +81,7 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  d.querySelector('.vida-mini-photo img').src=hero?.image||S.images.hero;
  d.querySelector('.vida-catering').insertAdjacentHTML('afterbegin','<img class="catering-photo" src="editorial/catering-mesa.webp" width="815" height="1080" loading="lazy" alt="Mesa de Sahten para compartir en un evento">');
  d.querySelector('.vida-catering>a').href='https://wa.me/'+String(menu.store.whatsapp).replace(/\D/g,'')+'?text='+encodeURIComponent('Hola, quiero consultar por catering');
+ d.querySelector('.vida-catering>a').dataset.whatsappPlacement='catering';
  const reviews=d.querySelector('.reviews');
  const quote=reviews.querySelector('blockquote');quote.innerHTML=(S.resenas.items||[]).map(r=>'<div class="review-quote">“'+esc(r.text)+'”<cite>'+esc(r.author)+' · '+esc(r.source)+'</cite></div>').join('');
  const reviewLink=reviews.querySelector('.review-call a');reviewLink.href=S.resenas.reviewUrl;reviewLink.target='_blank';reviewLink.rel='noopener noreferrer';
@@ -94,7 +102,7 @@ export async function buildEditorialHome(menu,{seoHead,hoursScript,openingHours=
  const enhancement=d.createElement('script');enhancement.src='editorial/home.js';enhancement.defer=true;d.body.appendChild(enhancement);
  d.body.insertAdjacentHTML('beforeend',hoursScript||'');
  for(const video of videos){
-  const [id,name]=video,ld=d.createElement('script');ld.type='application/ld+json';ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':'VideoObject',name,description:id==='tutorial'?'Cómo elegir productos, revisar el pedido y continuar con entrega y pago en Sahten.':'Un vistazo a '+name+' en la cocina de Sahten.',thumbnailUrl:['https://sahten.online/editorial/'+id+'.jpg'],contentUrl:'https://sahten.online/editorial/'+id+'.mp4',uploadDate:videoDates[id]||now.toISOString()});d.head.appendChild(ld);
+  const [id,name]=video,ld=d.createElement('script');ld.type='application/ld+json';ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':'VideoObject',name,description:id==='tutorial'?'Cómo elegir productos, revisar el pedido y continuar con entrega y pago en Sahten.':'Un vistazo a '+name+' en la cocina de Sahten.',thumbnailUrl:['https://sahten.online/editorial/'+id+'.jpg'],contentUrl:'https://sahten.online/editorial/'+id+'.mp4',uploadDate:videoMeta[id]?.uploadDate||videoDates[id]||now.toISOString(),...(videoMeta[id]?.seconds?{duration:'PT'+Math.round(videoMeta[id].seconds)+'S'}:{})});d.head.appendChild(ld);
  }
  for(const el of d.querySelectorAll('link[href^="editorial/"],script[src^="editorial/"]')){
   const attr=el.tagName==='LINK'?'href':'src';el.setAttribute(attr,el.getAttribute(attr)+'?v='+encodeURIComponent(editorialAssetVersion));
