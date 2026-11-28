@@ -90,6 +90,14 @@
   const header = document.querySelector('#s-nav, header.sahten-shell');
   if (header) header.after(banner);
   else document.body.prepend(banner);
+  // Presentación: la barra fija del aviso publica su altura para que el carrito y WhatsApp no queden debajo.
+  const root = document.documentElement;
+  function syncNoticeSpace() {
+    root.classList.toggle('sahten-analytics-notice-open', !banner.hidden);
+    root.style.setProperty('--sahten-analytics-notice-space', banner.hidden ? '0px' : Math.ceil(banner.getBoundingClientRect().height) + 'px');
+  }
+  if (window.ResizeObserver) new ResizeObserver(syncNoticeSpace).observe(banner);
+  syncNoticeSpace();
   const preferences = document.createElement('button');
   preferences.type = 'button';
   preferences.className = 'sahten-analytics-preferences';
@@ -99,6 +107,7 @@
   preferences.addEventListener('click', () => {
     openedFromPreferences = true;
     banner.hidden = false;
+    syncNoticeSpace();
     banner.querySelector('button').focus();
   });
   banner.addEventListener('click', event => {
@@ -107,6 +116,7 @@
     choice = next;
     try { localStorage.setItem(storageKey, choice); } catch {}
     banner.hidden = true;
+    syncNoticeSpace();
     if (openedFromPreferences) preferences.focus();
     openedFromPreferences = false;
     if (choice === 'granted') {

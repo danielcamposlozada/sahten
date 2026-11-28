@@ -69,6 +69,20 @@ describe('GA4 de sahten.online', () => {
     } finally { close(); }
   });
 
+  it('publica el espacio del aviso solo mientras está visible', () => {
+    const { document, click, close } = setup();
+    const root = document.documentElement;
+    try {
+      expect(root.classList.contains('sahten-analytics-notice-open')).toBe(true);
+      expect(root.style.getPropertyValue('--sahten-analytics-notice-space')).toMatch(/^\d+px$/);
+      click('[data-choice="denied"]');
+      expect(root.classList.contains('sahten-analytics-notice-open')).toBe(false);
+      expect(root.style.getPropertyValue('--sahten-analytics-notice-space')).toBe('0px');
+      click('.sahten-analytics-preferences');
+      expect(root.classList.contains('sahten-analytics-notice-open')).toBe(true);
+    } finally { close(); }
+  });
+
   it('recupera el consentimiento en el dominio autorizado y excluye vistas previas', () => {
     const production = setup('sahten.online', 'granted');
     const preview = setup('preview.pages.dev', 'granted');
@@ -80,5 +94,49 @@ describe('GA4 de sahten.online', () => {
       production.close();
       preview.close();
     }
+  });
+});
+
+describe('aviso de analítica: barra inferior táctil', () => {
+  const css = readFileSync(new URL('../media/sahten-editorial/analytics.css', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = selector => {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = css.match(new RegExp('(?:^|})\\s*' + escaped + '\\s*\\{([^}]*)\\}'));
+    if (!match) throw new Error('Falta la regla ' + selector);
+    return Object.fromEntries(match[1].split(';')
+      .map(part => part.split(/:(.*)/s).map(text => text.trim())).filter(([name]) => name));
+  };
+  const px = value => {
+    const number = parseFloat(value);
+    return /rem$/.test(value) ? number * 16 : number;
+  };
+  const fontSize = shorthand => px(shorthand.split(/\s+/).find(token => /^[\d.]+(px|rem)/.test(token)).split('/')[0]);
+
+  it('queda fija en el borde inferior y respeta el área segura', () => {
+    const notice = rule('.sahten-analytics-notice');
+    expect(notice.position).toBe('fixed');
+    expect(px(notice.bottom)).toBe(0);
+    expect(notice.top).toBeUndefined();
+    expect(notice.padding).toMatch(/env\(safe-area-inset-bottom/);
+    expect(Number(notice['z-index'])).toBeGreaterThan(8);
+    expect(Number(notice['z-index'])).toBeLessThan(20);
+    expect(fontSize(notice.font)).toBeGreaterThanOrEqual(12);
+  });
+
+  it('cada botón tiene al menos 44×44 px y texto de 12 px o más', () => {
+    const button = rule('.sahten-analytics-notice button');
+    expect(px(button['min-height'])).toBeGreaterThanOrEqual(44);
+    expect(px(button['min-width'])).toBeGreaterThanOrEqual(44);
+    expect(fontSize(button.font)).toBeGreaterThanOrEqual(12);
+    const denied = rule('.sahten-analytics-notice button[data-choice="denied"]');
+    expect(denied['font-size']).toBeUndefined();
+  });
+
+  it('sube el carrito y WhatsApp mientras el aviso está abierto', () => {
+    expect(rule('html.sahten-analytics-notice-open .bar,\nhtml.sahten-analytics-notice-open .fab').translate)
+      .toMatch(/var\(--sahten-analytics-notice-space/);
+    expect(rule('html.sahten-analytics-notice-open')['padding-bottom'])
+      .toMatch(/var\(--sahten-analytics-notice-space/);
   });
 });

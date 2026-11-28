@@ -9,7 +9,9 @@
 
 ## Sin publicar
 
-- Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4. La elección se muestra en una franja integrada a la página.
+- Web de Sahten: el aviso de Google Analytics pasa a ser una barra fija en el borde inferior, con botones «Aceptar» y «Rechazar» de al menos 44 px de alto. Ya no empuja el contenido debajo de la cabecera y, mientras está visible, la barra del carrito y el botón de WhatsApp suben para no quedar tapados. El foco del teclado tampoco queda escondido detrás del aviso, y «Preferencias de analítica» del pie también mide 44 px de alto.
+
+- Web de Sahten: medición opcional de visitas, clics de WhatsApp, inicio de checkout y pedidos recibidos con GA4.
 
 - Web de Sahten: la bolsa muestra el mismo contador en la portada y en la tienda al agregar o quitar productos. «Ver menú completo» abre el menú de pedidos desde la portada.
 
