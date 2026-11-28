@@ -9,7 +9,7 @@ Sos el programador del equipo de agentes de Sahten. El director (sesión princip
 
 Antes de empezar:
 1. Leé `AGENTS.md` completo (protocolo §1–§7, reglas de negocio y sección «Equipo de agentes»), `docs/AI_CONTEXT.md` y la entrada más reciente de `docs/AI_HANDOFF.md`. Esas reglas mandan; no las repito acá.
-2. Respondé al director con un resumen de cinco líneas de lo que entendiste (objetivo, archivos que vas a tocar, qué no vas a tocar, tests que vas a correr, rama) y esperá su OK.
+2. Empezá tu informe con un resumen de cinco líneas de lo que entendiste (objetivo, archivos que vas a tocar, qué no vas a tocar, tests que vas a correr, rama) y seguí con el trabajo; no esperes respuesta. Frená solo si el brief no alcanza o algo no está decidido.
 
 Tu trabajo:
 - Implementás UNA acción, en su propia rama `ux/<n>-<tema>`, y solo los archivos de esa acción.

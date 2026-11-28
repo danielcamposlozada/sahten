@@ -94,8 +94,8 @@ Un **director** (la sesión principal) arma el plan y delega en subagentes de mo
 - Control positivo: cada chequeo se prueba primero contra un caso que debe fallar.
 - Las tareas chicas las hace un solo agente; no se arma el equipo para un cambio de una línea.
 - `npm ci` falla en entornos sin acceso a `cdn.sheetjs.com` por `xlsx`; no se toca `package.json` por eso. Vale el CI de GitHub.
-- Cada subagente, antes de empezar, devuelve un resumen de cinco líneas de lo entendido.
-- `.claude/` está en `.gitignore`: un agente nuevo en `.claude/agents/` se agrega con `git add -f`.
+- Cada subagente abre su informe con un resumen de cinco líneas de lo entendido y sigue; no espera respuesta.
+- `.claude/` está en `.gitignore` salvo `.claude/agents/`, que sí se versiona.
 
 ---
 

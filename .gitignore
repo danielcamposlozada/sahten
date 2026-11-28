@@ -4,7 +4,8 @@ dist
 .tmp
 uploads/
 .thumbnail
-.claude/
+.claude/*
+!.claude/agents/
 Prompt Claude Code - Sahten.md
 src-tauri/target
 
