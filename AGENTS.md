@@ -73,6 +73,30 @@ Antes de cerrar una intervención:
 - Las decisiones comerciales o de diseño las toma el dueño. Si algo no está documentado como decidido, preguntá; no lo infieras.
 - Si descubrís un error en la documentación, corregilo en el mismo cambio o registralo como «problema de documentación» en el handoff.
 
+## Equipo de agentes (auditoría de UX)
+
+Un **director** (la sesión principal) arma el plan y delega en subagentes de modelo fijo, definidos en `.claude/agents/`. Todos siguen este archivo; sus definiciones no repiten reglas.
+
+| Rol | Archivo | Modelo | Hace | No hace |
+|---|---|---|---|---|
+| Director | sesión principal | — | brief, plan de despacho, integra informes | programar sin brief aprobado |
+| Programador | `programador.md` | opus | una acción por rama `ux/<n>-<tema>`, tests, CHANGELOG «Sin publicar» | decidir alcance, tocar otra acción, desplegar |
+| Lector-medidor | `lector-medidor.md` | sonnet | lee docs y ramas, mide a 390 px y 1366 px, compara capturas | editar código |
+| Buscador | `buscador.md` | haiku | ubica archivos, usos de colores, tamaños de fuente | opinar o corregir |
+| Revisor | `revisor.md` | opus | revisa el diff ajeno, corre tests, controla zonas protegidas | corregir lo que encuentra |
+
+**Ciclo:** el director escribe el brief y muestra el plan de despacho → OK del dueño → lectura y medición «antes» → programación en rama propia → tests y capturas «después» → revisor → PR en borrador → **publicar lo decide el dueño**.
+
+**Reglas de trabajo:**
+- Una rama y un PR en borrador por acción.
+- Un archivo, un dueño: las acciones que tocan `src/online/web/index.html` van en serie, nunca en paralelo.
+- Evidencia antes y después a 390 px y 1366 px.
+- Control positivo: cada chequeo se prueba primero contra un caso que debe fallar.
+- Las tareas chicas las hace un solo agente; no se arma el equipo para un cambio de una línea.
+- `npm ci` falla en entornos sin acceso a `cdn.sheetjs.com` por `xlsx`; no se toca `package.json` por eso. Vale el CI de GitHub.
+- Cada subagente, antes de empezar, devuelve un resumen de cinco líneas de lo entendido.
+- `.claude/` está en `.gitignore`: un agente nuevo en `.claude/agents/` se agrega con `git add -f`.
+
 ---
 
 ## Antes de empezar (obligatorio si tocás web, SEO, menú online, imágenes o perfiles externos)

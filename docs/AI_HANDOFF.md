@@ -29,6 +29,28 @@
 
 ---
 
+## 2026-11-28 — Equipo de agentes para la auditoría de UX y decisiones del dueño — Claude (subagente de una sesión de Claude Code)
+
+- **Fecha y agente:** 28/11/2026, Claude (subagente de una sesión de Claude Code sobre claude.ai, sesión remota sin acceso a la computadora del dueño). Trabajo delegado por el director (sesión principal).
+- **Objetivo solicitado:** dejar versionado en el repo el equipo de agentes con el que se aplica la auditoría de UX (director + programador/opus, lector-medidor/sonnet, buscador/haiku, revisor/opus), apoyado en el protocolo de la rama sin integrar `docs/protocolo-agentes-ia`, en un solo PR en borrador. Solo documentación y definiciones de agentes.
+- **Estado inicial observado:** clon superficial en `main` (`4cb503f`, #139), árbol limpio. `docs/protocolo-agentes-ia` en `554006f` (un commit sobre `7048311`); `main` tenía 4 commits más desde esa base. Ningún otro trabajo local.
+- **Archivos inspeccionados:** `AGENTS.md`, `docs/AI_CONTEXT.md`, `docs/AI_HANDOFF.md` (de la rama del protocolo), `on:` de los 10 workflows en `.github/workflows/`, `.gitignore`, `docs/DELIVERY-GEOGRAFICO.md` (L61, L170–171), ubicación de `begin_checkout`/`order_received` (`media/sahten-editorial/analytics.js`, `tests/sahten-analytics.test.js`).
+- **Archivos modificados / creados:** rama `ux/00-equipo-agentes` = protocolo de `docs/protocolo-agentes-ia` + merge de `main` (sin conflictos) + `AGENTS.md` (nueva sección «Equipo de agentes» después del §7; secciones existentes intactas), esta entrada, y `.claude/agents/{programador,lector-medidor,buscador,revisor}.md` (agregados con `git add -f` porque `.claude/` está en `.gitignore`; no se tocó `.gitignore`).
+- **Implementación (detalle técnico):** subagentes de proyecto con frontmatter `name`, `description`, `tools`, `model` (formato verificado en la documentación oficial de subagentes de Claude Code el 28/11/2026). Buscador: solo `Read, Grep, Glob`. Lector-medidor y revisor: `Read, Grep, Glob, Bash` con `disallowedTools: Edit, Write, NotebookEdit` (Bash les hace falta para medir y correr tests; la restricción de no escribir con Bash está en sus instrucciones, no es técnica).
+- **Decisiones del dueño registradas (28/11/2026):** (solo acá; llevarlas a otros documentos es tarea de acciones posteriores)
+  1. **Checkout por etapas:** se puede cambiar la pantalla para mostrar el horario (acción 1), plegar el cupón y explicar el botón Enviar deshabilitado (acción 3) y la carta en celular (acción 6). El selector único de pago (acción 7) se prepara **solo en local** hasta que el dueño vea el antes y después. La lógica de pedidos, pagos, descuentos, delivery, mapa y sincronización **no se toca**.
+  2. **Delivery:** viernes y sábado hasta las **22:45** (valor nuevo; los documentos decían 22:00 o 23:00). Mínimo de compra de zona 1 y zona 2: **$15.000** cada una. `docs/DELIVERY-GEOGRAFICO.md` (L61 y L170–171) sigue con los valores viejos: pendiente de corregir en la acción 4. La configuración en vivo la cambia el dueño desde la app.
+  3. El **PR #122** (`ux/beneficios-carrito`) queda como está; la acción 6 sale desde `main`.
+  4. **Medición con GA4 (acción 18):** ya está en `main` (#136, #137); solo resta verificar la configuración en GA4.
+- **Otras decisiones tomadas y motivos:** no se agregó entrada a `CHANGELOG.md` (no es un cambio visible para el usuario; el protocolo §6.3 solo la exige en ese caso). No se tocó `docs/AI_CONTEXT.md` (el equipo de agentes no cambia arquitectura ni reglas del producto).
+- **Cambios en base de datos o APIs:** ninguno.
+- **Pruebas realizadas y resultados:** `npm run check:versions` → «Versiones en orden: 0.4.55». No se corrió la suite (no hay cambios de código). Se revisaron los `on:` de los workflows: con el push de esta rama no corre ninguno; al abrir el PR solo corre `ci.yml` (el diff contra `main` no toca rutas de `sahten-promo-checkout.yml` ni de `native-printing.yml`, y el job de deploy exige `refs/heads/main`).
+- **Problemas encontrados:** `.claude/` está ignorado por git (ver arriba). `docs/DELIVERY-GEOGRAFICO.md` desactualizado respecto de la decisión 2.
+- **Funcionalidades pendientes:** no hay línea base del checkout de `/pedir/` (la demo no lo genera). Dos tests de `tests/pricing-import-app.test.js` no se pudieron validar sin la librería `xlsx` real.
+- **Estado de publicación o despliegue:** rama `ux/00-equipo-agentes`, PR en borrador contra `main`. **No integrar sin autorización del dueño.** Nada publicado; sin cambios en Supabase, Cloudflare ni GA4.
+- **Resumen:** Implementado: sección «Equipo de agentes» y cuatro subagentes en `.claude/agents/`, más el protocolo de `docs/protocolo-agentes-ia` · Probado: `check:versions`; revisión de disparadores de workflows · Publicado: nada · Pendiente: OK del dueño y merge; corregir `DELIVERY-GEOGRAFICO.md` (acción 4); línea base del checkout de `/pedir/`; validar los dos tests de `pricing-import-app` con `xlsx`; verificar la configuración en GA4 (acción 18).
+- **Instrucciones para continuar:** leé `AGENTS.md` (incluida «Equipo de agentes») y esta entrada. Cada acción de la auditoría sale desde `main` en su rama `ux/<n>-<tema>` y sigue el ciclo de esa sección. Las acciones que tocan `src/online/web/index.html` van de a una. Si esta rama todavía no está integrada, no la pises: basate en ella o esperá el OK del dueño.
+
 ## 2026-11-12 — Implantación del protocolo de colaboración entre agentes de IA — Claude (Claude Code, modelo Claude Sonnet 5.5)
 
 - **Fecha y agente:** 12/11/2026, Claude (Claude Code sobre claude.ai, sesión remota sin acceso a la computadora del dueño).
