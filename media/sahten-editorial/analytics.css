@@ -1,40 +1,51 @@
+/* Aviso de analítica: barra fija en el borde inferior, sin tapar la cabecera ni el primer contenido. */
 .sahten-analytics-notice {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9; /* sobre la barra del carrito (8), la cabecera (7) y el botón de WhatsApp (6); debajo de las hojas (20) */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: .25rem 1rem;
-  padding: .35rem 1rem;
-  border-bottom: 1px solid #23532830;
+  gap: .5rem 1rem;
+  padding: .5rem 1rem calc(.5rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #23532830;
+  box-shadow: 0 -4px 16px #2353281f;
   background: #fff4d6;
   color: #235328;
   font: .875rem/1.4 system-ui, sans-serif;
   text-align: center;
 }
 .sahten-analytics-notice[hidden] { display: none; }
-.sahten-analytics-notice p { margin: 0; }
-.sahten-analytics-notice div { display: flex; align-items: center; gap: .5rem; }
+.sahten-analytics-notice p { flex: 1 1 18rem; max-width: 40rem; margin: 0; }
+.sahten-analytics-notice div { display: flex; flex: 1 1 auto; max-width: 20rem; align-items: center; gap: .5rem; }
 .sahten-analytics-notice button {
-  min-height: 32px;
-  padding: .25rem .65rem;
-  border: 0;
-  border-radius: .25rem;
+  flex: 1 1 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem 1rem;
+  border: 1px solid #235328;
+  border-radius: .5rem;
   background: #235328;
   color: #fff4d6;
   cursor: pointer;
-  font: inherit;
+  font: 600 .9375rem/1.2 system-ui, sans-serif;
 }
 .sahten-analytics-notice button[data-choice="denied"] {
   background: transparent;
-  color: #43564a;
-  font-size: .8125rem;
-  text-decoration: underline;
-  text-underline-offset: .15em;
+  color: #235328;
 }
 .sahten-analytics-notice button:focus-visible {
   outline: 2px solid #235328;
   outline-offset: 2px;
 }
+/* Mientras el aviso está visible, la barra del carrito y el botón de WhatsApp suben por encima
+   y el final de la página queda alcanzable. La altura la publica analytics.js. */
+html.sahten-analytics-notice-open { padding-bottom: var(--sahten-analytics-notice-space, 0px); }
+html.sahten-analytics-notice-open .bar,
+html.sahten-analytics-notice-open .fab { translate: 0 calc(-1 * var(--sahten-analytics-notice-space, 0px)); }
 .sahten-analytics-preferences {
   margin: .5rem 1rem;
   border: 0;
